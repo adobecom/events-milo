@@ -70,6 +70,7 @@ async function autoUpdatePage(main, hash) {
             if (replacedSrc && parentPic) {
               parentPic.querySelectorAll('source', 'img').forEach((el) => {
                 try {
+                  console.log(el);
                   if (el.tagName === 'IMG') {
                     const currentImgUrl = new URL(`${window.location.host}${el.src.replace('./', '/')}`);
                     el.src = replacedSrc + currentImgUrl.search;
@@ -78,7 +79,7 @@ async function autoUpdatePage(main, hash) {
                     el.srcset = replacedSrc + currentImgUrl.search;
                   }
                 } catch (e) {
-                  window.lana?.log(`failed to convert optimized img from ${el} with dynamic data`);
+                  window.lana?.log(`failed to convert optimized img from ${el} with dynamic data: ${e}`);
                 }
               });
             }
