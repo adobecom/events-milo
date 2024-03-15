@@ -50,14 +50,16 @@ async function autoUpdatePage(main, hash) {
 
   if (json) {
     const [pageData] = json.cards;
-    if (!pageData) window.location.replace('/404');
+    if (!pageData) {
+      document.body.style.display = 'none';
+      window.location.replace('/404');
+    }
 
     const res = flattenObject(pageData);
     const findRegexMatch = (_match, p1) => res[p1] || '';
     const allElements = main.querySelectorAll('*');
     const reg = /\[\[(.*?)\]\]/g;
 
-    console.log(res);
 
     allElements.forEach((element) => {
       if (element.childNodes.length) {
