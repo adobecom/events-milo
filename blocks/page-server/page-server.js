@@ -57,6 +57,8 @@ async function autoUpdatePage(main, hash) {
     const allElements = main.querySelectorAll('*');
     const reg = /\[\[(.*?)\]\]/g;
 
+    console.log(res);
+
     allElements.forEach((element) => {
       if (element.childNodes.length) {
         element.childNodes.forEach((child) => {
