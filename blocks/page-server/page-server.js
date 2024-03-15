@@ -44,7 +44,7 @@ async function autoUpdatePage(main, hash) {
       return resp.json();
     }
 
-    window.lana?.log('Error while attempting to fetch /t3/event/default/metadata.json');
+    window.lana?.log('Error while attempting to fetch event data event service layer');
     return null;
   });
 
