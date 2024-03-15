@@ -4,16 +4,32 @@ import { getLibs } from '../../scripts/utils.js';
 const API_ENDPOINT = 'https://14257-chimera-dev.adobeioruntime.net/api/v1/web/chimera-0.0.1/sm-collection';
 const API_QUERY_PARAM = 'featuredCards';
 
-function flattenObject(obj, parent = '', res = {}) {
-  Object.entries(obj).forEach(([key, value]) => {
-    const newKey = parent ? `${parent}.${key}` : key;
-    if (value && typeof value === 'object' && !Array.isArray(value)) {
-      flattenObject(value, newKey, res);
+function flattenObject(obj, parentKey = '', result = {}) {
+  Object.keys(obj).forEach((key) => {
+    const value = obj[key];
+    const newKey = parentKey ? `${parentKey}.${key}` : key;
+
+    if (key === 'arbitrary' && Array.isArray(value)) {
+      value.forEach((item) => {
+        const itemKey = `${newKey}.${item.key}`;
+        result[itemKey] = item.value;
+      });
+    } else if (value && typeof value === 'object' && !Array.isArray(value)) {
+      flattenObject(value, newKey, result);
+    } else if (Array.isArray(value)) {
+      value.forEach((item, index) => {
+        if (typeof item === 'object' && !Array.isArray(item) && key !== 'arbitrary') {
+          flattenObject(item, `${newKey}[${index}]`, result);
+        } else {
+          result[`${newKey}[${index}]`] = item;
+        }
+      });
     } else {
-      res[newKey] = value;
+      result[newKey] = value;
     }
   });
-  return res;
+
+  return result;
 }
 
 // data -> dom gills
@@ -23,7 +39,7 @@ async function autoUpdatePage(main, hash) {
     return;
   }
 
-  const json = await fetch(`${API_ENDPOINT}?${API_QUERY_PARAM}=${'435a285b-ae9b-3cb1-9de0-cc6d11747926' || hash}`).then((resp) => {
+  const json = await fetch(`${API_ENDPOINT}?${API_QUERY_PARAM}=${hash}`).then((resp) => {
     if (resp.ok) {
       return resp.json();
     }
@@ -35,20 +51,12 @@ async function autoUpdatePage(main, hash) {
   if (json) {
     const [pageData] = json.cards;
     if (!pageData) window.location.replace('/404');
-    const flatData = flattenObject(pageData);
 
-    const findRegexMatch = (_match, p1) => {
-      if (Array.isArray(flatData[p1])) {
-        return flatData[p1].find((i) => i.key === p1).value;
-      }
-
-      return flatData[p1] || '';
-    };
-
-    console.log(flatData);
-
+    const res = flattenObject(pageData);
+    const findRegexMatch = (_match, p1) => res[p1] || '';
     const allElements = main.querySelectorAll('*');
     const reg = /\[\[(.*?)\]\]/g;
+
     allElements.forEach((element) => {
       if (element.childNodes.length) {
         element.childNodes.forEach((child) => {
@@ -58,10 +66,18 @@ async function autoUpdatePage(main, hash) {
             const replacedSrc = originalAlt.replace(reg, findRegexMatch).trim();
 
             if (replacedSrc && parentPic) {
-              parentPic.querySelectorAll('source').forEach((el) => {
-                console.log(el.srcset);
-                // const srcsetUrl = new URL(el.srcset);
-                // console.log(srcsetUrl);
+              parentPic.querySelectorAll('source', 'img').forEach((el) => {
+                try {
+                  if (el.tagName === 'IMG') {
+                    const currentImgUrl = new URL(`${window.location.host}${el.src.replace('./', '/')}`);
+                    el.src = replacedSrc + currentImgUrl.search;
+                  } else if (el.tagName === 'SOURCE') {
+                    const currentImgUrl = new URL(`${window.location.host}${el.srcset.replace('./', '/')}`);
+                    el.srcset = replacedSrc + currentImgUrl.search;
+                  }
+                } catch (e) {
+                  window.lana?.log(`failed to convert optimized img from ${el} with dynamic data`);
+                }
               });
             }
           }
