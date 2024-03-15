@@ -67,17 +67,20 @@ async function autoUpdatePage(main, hash) {
             const originalAlt = child.alt;
             const replacedSrc = originalAlt.replace(reg, findRegexMatch).trim();
 
-            if (replacedSrc && parentPic) {
-              parentPic.querySelectorAll('source', 'img').forEach((el) => {
+            if (replacedSrc && parentPic && replacedSrc !== originalAlt) {
+              parentPic.querySelectorAll('source').forEach((el) => {
                 try {
-                  console.log(el);
-                  if (el.tagName === 'IMG') {
-                    const currentImgUrl = new URL(`${window.location.host}${el.src.replace('./', '/')}`);
-                    el.src = replacedSrc + currentImgUrl.search;
-                  } else if (el.tagName === 'SOURCE') {
-                    const currentImgUrl = new URL(`${window.location.host}${el.srcset.replace('./', '/')}`);
-                    el.srcset = replacedSrc + currentImgUrl.search;
-                  }
+                  const currentImgUrl = new URL(`${window.location.host}${el.srcset.replace('./', '/')}`);
+                  el.srcset = replacedSrc + currentImgUrl.search;
+                } catch (e) {
+                  window.lana?.log(`failed to convert optimized picture source from ${el} with dynamic data: ${e}`);
+                }
+              });
+
+              parentPic.querySelectorAll('img').forEach((el) => {
+                try {
+                  const currentImgUrl = new URL(`${window.location.host}${el.src.replace('./', '/')}`);
+                  el.src = replacedSrc + currentImgUrl.search;
                 } catch (e) {
                   window.lana?.log(`failed to convert optimized img from ${el} with dynamic data: ${e}`);
                 }
