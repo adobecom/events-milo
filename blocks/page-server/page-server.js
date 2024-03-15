@@ -65,13 +65,12 @@ async function autoUpdatePage(main, hash) {
           if (child.tagName === 'IMG' && child.nodeType === 1) {
             const parentPic = child.closest('picture');
             const originalAlt = child.alt;
-            const replacedSrc = originalAlt.replace(reg, findRegexMatch).trim();
+            const replacedSrc = originalAlt.replace(reg, findRegexMatch);
 
             if (replacedSrc && parentPic && replacedSrc !== originalAlt) {
               parentPic.querySelectorAll('source').forEach((el) => {
                 try {
-                  const currentImgUrl = new URL(`${window.location.host}${el.srcset.replace('./', '/')}`);
-                  el.srcset = replacedSrc + currentImgUrl.search;
+                  el.srcset = el.srcset.replace(/.*\?/, `${replacedSrc}?`);
                 } catch (e) {
                   window.lana?.log(`failed to convert optimized picture source from ${el} with dynamic data: ${e}`);
                 }
@@ -79,8 +78,7 @@ async function autoUpdatePage(main, hash) {
 
               parentPic.querySelectorAll('img').forEach((el) => {
                 try {
-                  const currentImgUrl = new URL(`${window.location.host}${el.src.replace('./', '/')}`);
-                  el.src = replacedSrc + currentImgUrl.search;
+                  el.src = el.src.replace(/.*\?/, `${replacedSrc}?`);
                 } catch (e) {
                   window.lana?.log(`failed to convert optimized img from ${el} with dynamic data: ${e}`);
                 }
