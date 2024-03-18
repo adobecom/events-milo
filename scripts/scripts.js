@@ -22,7 +22,8 @@ const LIBS = '/libs';
 const CONFIG = {
   // codeRoot: '',
   // contentRoot: '',
-  imsClientId: 'adobedotcomdx',
+  // TODO: we need client ID for Events Milo
+  // imsClientId: 'adobedotcomdx',
   // imsScope: 'AdobeID,openid,gnav',
   // geoRouting: 'off',
   // fallbackRouting: 'off',

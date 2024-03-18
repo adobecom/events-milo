@@ -14,14 +14,28 @@ const RULE_OPERATORS = {
   excludes: 'exc',
 };
 
-function getProfile() {
+function snakeToCamel(str) {
+  return str
+    .split('_')
+    .map((word, index) => (index === 0 ? word : word.charAt(0).toUpperCase() + word.slice(1)))
+    .join('');
+}
+
+async function getProfile() {
   const { feds, adobeProfile, fedsConfig } = window;
   if (fedsConfig?.universalNav) {
     return feds?.services?.universalnav?.interface?.adobeProfile?.getUserProfile()
     || adobeProfile?.getUserProfile();
   }
   return feds?.services?.profile?.interface?.adobeProfile?.getUserProfile()
-    || adobeProfile?.getUserProfile();
+    || adobeProfile?.getUserProfile()
+    || {
+      display_name: 'Qiyun Dai',
+      first_name: 'Qiyun',
+      last_name: 'Dai',
+      email: 'cod87753@adobe.com',
+      avatar: 'https://pps-stage.services.adobe.com/api/profile/image/default/22c90d64-691f-439f-b7fd-7fe06ccb01a7/100',
+    };
 }
 
 function createSelect({ field, placeholder, options, defval, required }) {
@@ -301,11 +315,27 @@ async function createForm(formURL, thankYou, formData, actionUrl = '') {
   return form;
 }
 
+function prePopulateForm(form, resp) {
+  if (!resp) return;
+
+  Object.entries(resp).forEach(([key, value]) => {
+    const matchedInput = form.querySelector(`#${snakeToCamel(key)}`);
+    if (matchedInput) matchedInput.value = value;
+  });
+}
+
 export default async function decorate(block, formData = null) {
   const form = block.querySelector('a[href$=".json"]');
   const thankYou = block.querySelector(':scope > div:nth-of-type(2) > div');
   const eventAction = block.querySelector(':scope > div:last-of-type > div > a');
   thankYou.remove();
-  if (form) form.replaceWith(await createForm(form?.href, thankYou, formData, eventAction?.href));
-  console.log('hello', getProfile());
+  let constructedForm;
+  if (form) {
+    constructedForm = await createForm(form?.href, thankYou, formData, eventAction?.href);
+
+    if (constructedForm) form.replaceWith(constructedForm);
+    getProfile().then((resp) => {
+      prePopulateForm(constructedForm, resp);
+    });
+  }
 }
