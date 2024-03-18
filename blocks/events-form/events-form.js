@@ -14,6 +14,16 @@ const RULE_OPERATORS = {
   excludes: 'exc',
 };
 
+function getProfile() {
+  const { feds, adobeProfile, fedsConfig } = window;
+  if (fedsConfig?.universalNav) {
+    return feds?.services?.universalnav?.interface?.adobeProfile?.getUserProfile()
+    || adobeProfile?.getUserProfile();
+  }
+  return feds?.services?.profile?.interface?.adobeProfile?.getUserProfile()
+    || adobeProfile?.getUserProfile();
+}
+
 function createSelect({ field, placeholder, options, defval, required }) {
   const select = createTag('select', { id: field });
   if (placeholder) select.append(createTag('option', { selected: '', disabled: '' }, placeholder));
@@ -297,4 +307,5 @@ export default async function decorate(block, formData = null) {
   const eventAction = block.querySelector(':scope > div:last-of-type > div > a');
   thankYou.remove();
   if (form) form.replaceWith(await createForm(form?.href, thankYou, formData, eventAction?.href));
+  console.log('hello', getProfile());
 }

@@ -22,7 +22,7 @@ const LIBS = '/libs';
 const CONFIG = {
   // codeRoot: '',
   // contentRoot: '',
-  // imsClientId: 'college',
+  imsClientId: 'adobedotcomdx',
   // imsScope: 'AdobeID,openid,gnav',
   // geoRouting: 'off',
   // fallbackRouting: 'off',
@@ -57,8 +57,9 @@ const miloLibs = setLibs(LIBS);
 }());
 
 (async function loadPage() {
-  const { loadArea, setConfig } = await import(`${miloLibs}/utils/utils.js`);
+  const { loadArea, setConfig, loadDelayed } = await import(`${miloLibs}/utils/utils.js`);
   const config = setConfig({ ...CONFIG, miloLibs });
   console.log(config);
   await loadArea();
+  loadDelayed();
 }());
