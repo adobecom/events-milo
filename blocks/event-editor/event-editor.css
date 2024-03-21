@@ -1,0 +1,107 @@
+.event-editor {
+  padding: var(--spacing-s);
+}
+
+.event-editor form {
+  background-color: var(--background-color);
+  border: 1px solid var(--color-gray-300);
+  box-shadow: 0 2px 4px var(--color-gray-300);
+  border-radius: 4px;
+  padding: var(--spacing-s);
+  margin: auto;
+}
+
+.event-editor fieldset {
+  border: 1px solid var(--color-gray-300);
+  border-radius: 4px;
+  padding: var(--spacing-xs);
+  margin-bottom: var(--spacing-s);
+}
+
+.event-editor legend {
+  font-weight: bold;
+  color: var(--link-color);
+}
+
+.event-editor label {
+  display: block;
+  margin-bottom: var(--spacing-xs);
+  color: var(--color-gray-600);
+}
+
+.event-editor input[type="text"],
+.event-editor input[type="file"],
+.event-editor textarea,
+.event-editor button {
+  width: 100%;
+  padding: var(--spacing-xs);
+  margin-bottom: var(--spacing-s);
+  border: 1px solid var(--color-gray-300);
+  border-radius: 4px;
+  box-sizing: border-box;
+}
+
+.event-editor button {
+  background-color: var(--link-color);
+  color: var(--background-color);
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.event-editor button:hover {
+  background-color: var(--link-hover-color);
+}
+
+.add-participant-btn {
+  background-color: var(--color-accent); /* Accent color for add buttons */
+  color: var(--color-white);
+  border: none;
+  padding: var(--spacing-xs);
+  margin: var(--spacing-xs) var(--spacing-xs) var(--spacing-xs) 0;
+  cursor: pointer;
+}
+
+.add-participant-btn:hover {
+  background-color: var(--color-accent-hover); /* Darker on hover */
+}
+
+.remove-participant-btn {
+  background-color: var(--color-gray-500); /* Neutral color for remove */
+  color: var(--color-white);
+  border: none;
+  padding: var(--spacing-xs);
+  margin-top: var(--spacing-xs);
+  cursor: pointer;
+}
+
+.remove-participant-btn:hover {
+  background-color: var(--color-gray-600); /* Slightly darker on hover */
+}
+
+
+@media (min-width: 900px) {
+  .event-editor form {
+    padding: var(--spacing-m);
+  }
+
+  .event-editor fieldset {
+    padding: var(--spacing-s);
+  }
+
+  .event-editor input[type="text"],
+  .event-editor input[type="file"],
+  .event-editor textarea,
+  .event-editor button {
+    padding: var(--spacing-s);
+  }
+}
+
+@media (min-width: 1200px) {
+  .event-editor {
+    padding: var(--spacing-m);
+  }
+
+  .event-editor form {
+    max-width: 75%;
+  }
+}
