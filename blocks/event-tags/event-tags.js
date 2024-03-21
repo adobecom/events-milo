@@ -33,6 +33,7 @@ function getTagIcon(tag) {
 export default function init(el) {
   const tags = el.textContent.split(',');
   el.innerHTML = '';
+  const tagsWrapper = createTag('div', { class: 'tags-wrapper' });
 
   tags.forEach((tag) => {
     const tagEl = createTag('div', { class: 'tag' });
@@ -42,6 +43,8 @@ export default function init(el) {
 
     tagEl.append(icon, text);
 
-    el.append(tagEl);
+    tagsWrapper.append(tagEl);
   });
+
+  el.append(tagsWrapper);
 }
