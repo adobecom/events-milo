@@ -315,8 +315,8 @@ async function createForm(formURL, thankYou, formData, actionUrl = '') {
   return form;
 }
 
-function prePopulateForm(form, resp) {
-  if (!resp) return;
+function personalizeForm(form, resp) {
+  if (!resp || !form) return;
 
   Object.entries(resp).forEach(([key, value]) => {
     const matchedInput = form.querySelector(`#${snakeToCamel(key)}`);
@@ -324,18 +324,31 @@ function prePopulateForm(form, resp) {
   });
 }
 
+function decorateHero(heroEl) {
+  heroEl.classList.add('event-form-hero');
+}
+
 export default async function decorate(block, formData = null) {
-  const form = block.querySelector('a[href$=".json"]');
-  const thankYou = block.querySelector(':scope > div:nth-of-type(2) > div');
+  block.classList.add('loading');
+  const eventHero = block.querySelector(':scope > div:nth-of-type(1)');
+  const form = block.querySelector(':scope > div:nth-of-type(2) a[href$=".json"]');
+  const thankYou = block.querySelector(':scope > div:nth-of-type(3) > div');
   const eventAction = block.querySelector(':scope > div:last-of-type > div > a');
   thankYou.remove();
   let constructedForm;
+
+  decorateHero(eventHero);
+
   if (form) {
     constructedForm = await createForm(form?.href, thankYou, formData, eventAction?.href);
-
     if (constructedForm) form.replaceWith(constructedForm);
-    getProfile().then((resp) => {
-      prePopulateForm(constructedForm, resp);
-    });
   }
+
+  Promise.all([import(`${getLibs()}/utils/getUuid.js`), import('../page-server/page-server.js'), getProfile()]).then(async ([{ default: getUuid }, { autoUpdateContent, fetchPageData }, resp]) => {
+    const hash = await getUuid(window.location.pathname);
+    await autoUpdateContent(block, { ...await fetchPageData(hash), ...resp });
+    eventHero.classList.remove('loading');
+    personalizeForm(block, resp);
+    block.classList.remove('loading');
+  });
 }

@@ -9,6 +9,25 @@
   max-width: 800px;
   margin: 0 auto;
   color: #2C2C2C;
+  transition: opacity 0.4s;
+}
+
+.events-form.loading {
+  opacity: 0;
+}
+
+.events-form .event-form-hero {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.events-form .event-form-hero > div {
+  flex: 1 1 0;
+}
+
+.events-form .event-form-hero img {
+  display: block;
 }
 
 .events-form form {
