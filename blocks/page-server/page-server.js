@@ -56,7 +56,7 @@ async function autoUpdatePage(main, hash) {
     }
 
     const res = flattenObject(pageData);
-    console.log(res);
+    console.log('flatten data from CaaS:', res);
     const findRegexMatch = (_match, p1) => res[p1] || '';
     const allElements = main.querySelectorAll('*');
     const reg = /\[\[(.*?)\]\]/g;
