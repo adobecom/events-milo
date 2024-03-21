@@ -22,6 +22,7 @@ const LIBS = '/libs';
 const CONFIG = {
   // codeRoot: '',
   // contentRoot: '',
+  // TODO: we need client ID for Events Milo
   imsClientId: 'milo',
   // imsScope: 'AdobeID,openid,gnav',
   // geoRouting: 'off',
@@ -57,8 +58,9 @@ const miloLibs = setLibs(LIBS);
 }());
 
 (async function loadPage() {
-  const { loadArea, setConfig } = await import(`${miloLibs}/utils/utils.js`);
+  const { loadArea, setConfig, loadDelayed } = await import(`${miloLibs}/utils/utils.js`);
   const config = setConfig({ ...CONFIG, miloLibs });
   console.log(config);
   await loadArea();
+  loadDelayed();
 }());
