@@ -1,24 +1,38 @@
 .event-editor {
-  padding: var(--spacing-s);
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--spacing-s);
+  padding: var(--spacing-m);
 }
 
 .event-editor form {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: var(--spacing-m);
   background-color: var(--background-color);
   border: 1px solid var(--color-gray-300);
-  box-shadow: 0 2px 4px var(--color-gray-300);
+  box-shadow: 0 2px 4px var(--color-gray-100);
   border-radius: 4px;
-  padding: var(--spacing-s);
-  margin: auto;
+  padding: var(--spacing-m);
+}
+
+.event-editor form > div.sub-grid {
+  grid-column: 1 / -1;
+  display: grid;
 }
 
 .event-editor fieldset {
+  grid-column: 1 / -1; /* Make fieldsets span all columns */
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--spacing-s);
   border: 1px solid var(--color-gray-300);
   border-radius: 4px;
-  padding: var(--spacing-xs);
-  margin-bottom: var(--spacing-s);
+  padding: var(--spacing-m);
 }
 
 .event-editor legend {
+  grid-column: 1 / -1;
   font-weight: bold;
   color: var(--link-color);
 }
@@ -29,79 +43,46 @@
   color: var(--color-gray-600);
 }
 
+.event-editor input[type="text"][name="url"] {
+  grid-column: 1 / 3;
+}
+
 .event-editor input[type="text"],
 .event-editor input[type="file"],
 .event-editor textarea,
 .event-editor button {
   width: 100%;
   padding: var(--spacing-xs);
-  margin-bottom: var(--spacing-s);
   border: 1px solid var(--color-gray-300);
   border-radius: 4px;
   box-sizing: border-box;
 }
 
-.event-editor button {
-  background-color: var(--link-color);
-  color: var(--background-color);
+.event-editor button,
+.event-editor.add-participant-btn,
+.event-editor .remove-participant-btn {
+  width: max-content;
+  box-sizing: border-box;
+  margin: 8px;
+  height: max-content;
+  background-color: var(--color-accent);
+  color: var(--color-white);
+  border: none;
+  padding: var(--spacing-xs);
   cursor: pointer;
-  font-weight: bold;
+  align-self: end;
+}
+
+.event-editor .button[type="submit"] {
+  align-self: end;
 }
 
 .event-editor button:hover {
-  background-color: var(--link-hover-color);
+  opacity: 0.8;
 }
-
-.add-participant-btn {
-  background-color: var(--color-accent); /* Accent color for add buttons */
-  color: var(--color-white);
-  border: none;
-  padding: var(--spacing-xs);
-  margin: var(--spacing-xs) var(--spacing-xs) var(--spacing-xs) 0;
-  cursor: pointer;
-}
-
-.add-participant-btn:hover {
-  background-color: var(--color-accent-hover); /* Darker on hover */
-}
-
-.remove-participant-btn {
-  background-color: var(--color-gray-500); /* Neutral color for remove */
-  color: var(--color-white);
-  border: none;
-  padding: var(--spacing-xs);
-  margin-top: var(--spacing-xs);
-  cursor: pointer;
-}
-
-.remove-participant-btn:hover {
-  background-color: var(--color-gray-600); /* Slightly darker on hover */
-}
-
 
 @media (min-width: 900px) {
   .event-editor form {
-    padding: var(--spacing-m);
-  }
-
-  .event-editor fieldset {
-    padding: var(--spacing-s);
-  }
-
-  .event-editor input[type="text"],
-  .event-editor input[type="file"],
-  .event-editor textarea,
-  .event-editor button {
-    padding: var(--spacing-s);
-  }
-}
-
-@media (min-width: 1200px) {
-  .event-editor {
-    padding: var(--spacing-m);
-  }
-
-  .event-editor form {
-    max-width: 75%;
+    grid-template-columns: repeat(2, 1fr); /* Two columns for larger screens */
   }
 }

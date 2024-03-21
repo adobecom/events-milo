@@ -13,12 +13,10 @@ export default function init(el) {
           backgroundImage: 'https://summit.adobe.com/_assets/images/home/speakers-promo@2x.jpg',
           mnemonic: '',
         },
-        overlays: { videoButton: { url: '' } },
         arbitrary: [
           { key: 'promoId', value: 'splash-that|458926431' },
           { key: 'timezone', value: 'America/Los_Angeles' },
           { key: 'venue', value: 'La Costa Resort and Spa' },
-          // Add more fields as necessary
         ],
         contentArea: {
           detailText: 'detail',
@@ -43,22 +41,27 @@ export default function init(el) {
 
   // DynamicForm Component
   const DynamicForm = ({ data }) => {
-    const [speakers, setSpeakers] = useState([]);
+    // Updating state to handle both speakers and hosts
+    const [participants, setParticipants] = useState([]);
 
     const handleSubmit = (event) => {
       event.preventDefault();
-      console.log(event);
-      // Handle form submission logic here
-      console.log('Form submitted with updated data');
+      // Prepare and log the data to be submitted
+      const formData = new FormData(event.target);
+      // Example of handling form data here
+      console.log(formData, 'Form submitted with updated data');
       alert('Check the console for submitted data.');
     };
 
-    const addSpeaker = () => {
-      setSpeakers([...speakers, { id: Math.random().toString(16).slice(2) }]);
+    const addParticipant = (type) => {
+      setParticipants([
+        ...participants,
+        { id: Math.random().toString(16).slice(2), type },
+      ]);
     };
 
-    const removeSpeaker = (id) => {
-      setSpeakers((currentSpeakers) => currentSpeakers.filter((speaker) => speaker.id !== id));
+    const removeParticipant = (id) => {
+      setParticipants((current) => current.filter((p) => p.id !== id));
     };
 
     const renderInputField = (name, value, label) => html`
@@ -68,51 +71,55 @@ export default function init(el) {
       </div>
     `;
 
-    const renderSpeakerInputs = (speaker) => html`
-      <fieldset key=${speaker.id}>
-        <legend>Speaker Details</legend>
-        <div>
-          <label for=${`firstName-${speaker.id}`}>First Name</label>
-          <input type="text" id=${`firstName-${speaker.id}`} name=${`firstName-${speaker.id}`} placeholder="First Name" />
-        </div>
-        <div>
-          <label for=${`lastName-${speaker.id}`}>Last Name</label>
-          <input type="text" id=${`lastName-${speaker.id}`} name=${`lastName-${speaker.id}`} placeholder="Last Name" />
-        </div>
-        <div>
-          <label for=${`title-${speaker.id}`}>Title</label>
-          <input type="text" id=${`title-${speaker.id}`} name=${`title-${speaker.id}`} placeholder="Title" />
-        </div>
-        <div>
-          <label for=${`img-${speaker.id}`}>Image</label>
-          <input type="file" id=${`img-${speaker.id}`} name=${`img-${speaker.id}`} accept="image/*" />
-        </div>
-        <div>
-          <label for=${`bio-${speaker.id}`}>Bio</label>
-          <textarea id=${`bio-${speaker.id}`} name=${`bio-${speaker.id}`} placeholder="Short Bio"></textarea>
-        </div>
-        <button type="button" onClick=${() => removeSpeaker(speaker.id)} class="remove-speaker-btn">Remove Speaker</button>
-      </fieldset>
-    `;
+    const renderParticipantInputs = (participant) => html`
+          <fieldset key=${participant.id}>
+            <legend>${participant.type.charAt(0).toUpperCase() + participant.type.slice(1)} Details</legend>
+            <div>
+              <label for=${`firstName-${participant.id}`}>First Name</label>
+              <input type="text" id=${`firstName-${participant.id}`} name=${`firstName-${participant.id}`} placeholder="First Name" />
+            </div>
+            <div>
+              <label for=${`lastName-${participant.id}`}>Last Name</label>
+              <input type="text" id=${`lastName-${participant.id}`} name=${`lastName-${participant.id}`} placeholder="Last Name" />
+            </div>
+            <div>
+              <label for=${`title-${participant.id}`}>Title</label>
+              <input type="text" id=${`title-${participant.id}`} name=${`title-${participant.id}`} placeholder="Title" />
+            </div>
+            <div>
+              <label for=${`img-${participant.id}`}>Image</label>
+              <input type="file" id=${`img-${participant.id}`} name=${`img-${participant.id}`} accept="image/*" />
+            </div>
+            <div>
+              <label for=${`bio-${participant.id}`}>Bio</label>
+              <textarea id=${`bio-${participant.id}`} name=${`bio-${participant.id}`} placeholder="Short Bio"></textarea>
+            </div>
+            <button type="button" onClick=${() => removeParticipant(participant.id)} class="remove-participant-btn">
+              Remove ${participant.type.charAt(0).toUpperCase() + participant.type.slice(1)}
+            </button>
+          </fieldset>
+        `;
 
     return html`
-      <form onSubmit=${handleSubmit}>
-        ${Object.entries(data).map(([key, value]) => {
+        <form onSubmit=${handleSubmit}>
+          ${Object.entries(data).map(([key, value]) => {
     if (typeof value === 'object' && !Array.isArray(value) && value !== null) {
       return Object.entries(value).map(([subKey, subValue]) => renderInputField(`${key}.${subKey}`, subValue, `${subKey.charAt(0).toUpperCase() + subKey.slice(1)}`));
     } if (typeof value === 'string') {
       return renderInputField(key, value, `${key.charAt(0).toUpperCase() + key.slice(1)}`);
     }
-
     return null;
   })}
-        <div>
-          ${speakers.map(renderSpeakerInputs)}
-          <button type="button" onClick=${addSpeaker}>Add Speaker</button>
-        </div>
-        <button type="submit">Update</button>
-      </form>
-    `;
+          <div class="sub-grid">
+            ${participants.map(renderParticipantInputs)}
+            <div class="addition-button-wrapper">
+              <button type="button" onClick=${() => addParticipant('speaker')}>Add Speaker</button>
+              <button type="button" onClick=${() => addParticipant('host')}>Add Host</button>
+            </div>
+          </div>
+          <button type="submit">Update</button>
+        </form>
+      `;
   };
 
   // App Component
@@ -131,7 +138,7 @@ export default function init(el) {
       <div>
         ${!data ? html`
           <form onSubmit=${handleSubmit}>
-            <input type="text" name="url" placeholder="Enter URL or Pathname" ref=${inputRef} required />
+            <input type="text" name="url" placeholder="Enter URL or Pathname of your event details page" ref=${inputRef} required />
             <button type="submit">Submit</button>
           </form>
         ` : html`
