@@ -358,25 +358,8 @@ function decorateHero(heroEl) {
   heroEl.classList.add('event-form-hero');
 }
 
-export default async function decorate(block, formData = null) {
-  block.classList.add('loading');
-  const eventHero = block.querySelector(':scope > div:nth-of-type(1)');
-  const formContainer = block.querySelector(':scope > div:nth-of-type(2)');
-  const form = block.querySelector(':scope > div:nth-of-type(2) a[href$=".json"]');
-  const thankYou = block.querySelector(':scope > div:nth-of-type(3) > div');
-  const eventAction = block.querySelector(':scope > div:last-of-type > div > a');
-  thankYou.remove();
-  let constructedForm;
-
-  decorateHero(eventHero);
-
-  if (formContainer && form) {
-    formContainer.classList.add('form-container');
-    const avatar = formContainer.querySelector('div:first-of-type > picture');
-    constructedForm = await createForm(form.href, thankYou, formData, avatar, eventAction?.href);
-    if (constructedForm) form.replaceWith(constructedForm);
-  }
-
+async function updateDynamicContent(bp) {
+  const { block, eventHero } = bp;
   Promise.all([
     import(`${getLibs()}/utils/getUuid.js`),
     import('../../utils/caas-api.js'),
@@ -394,6 +377,37 @@ export default async function decorate(block, formData = null) {
     await autoUpdateContent(block, { ...await caasApiMod.default(hash), ...profile }, true);
     eventHero.classList.remove('loading');
     personalizeForm(block, profile);
-    block.classList.remove('loading');
   });
+}
+
+async function buildEventform(bp, formData) {
+  bp.formContainer.classList.add('form-container');
+  const avatar = bp.formContainer.querySelector('div:first-of-type > picture');
+  const constructedForm = await createForm(
+    bp.form?.href,
+    bp.thankYou,
+    formData,
+    avatar,
+    bp.eventAction?.href,
+  );
+  if (constructedForm) bp.form.replaceWith(constructedForm);
+}
+
+export default async function decorate(block, formData = null) {
+  // make bluepring to pass around;
+  const bp = {
+    block,
+    eventHero: block.querySelector(':scope > div:nth-of-type(1)'),
+    formContainer: block.querySelector(':scope > div:nth-of-type(2)'),
+    form: block.querySelector(':scope > div:nth-of-type(2) a[href$=".json"]'),
+    thankYou: block.querySelector(':scope > div:nth-of-type(3) > div'),
+    eventAction: block.querySelector(':scope > div:last-of-type > div > a'),
+  };
+
+  block.classList.add('loading');
+  bp.thankYou?.remove();
+  decorateHero(bp.eventHero);
+  if (bp.formContainer) await buildEventform(bp, formData);
+  await updateDynamicContent(bp);
+  block.classList.remove('loading');
 }
