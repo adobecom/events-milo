@@ -215,6 +215,10 @@ function createCheckGroup({ options, field, defval, required }, type) {
   );
 }
 
+function createDivider() {
+  return '';
+}
+
 function processNumRule(tf, operator, a, b) {
   /* c8 ignore next 3 */
   if (!tf.dataset.type.match(/(?:number|date)/)) {
@@ -288,6 +292,32 @@ function lowercaseKeys(obj) {
   }, {});
 }
 
+function insertAvatar(form, avatar) {
+  const firstFormDivider = form.querySelector('.divider');
+  const avatarContainerDiv = avatar.parentElement;
+  const avatarEl = avatarContainerDiv?.className === '' ? avatarContainerDiv : avatar;
+  if (!firstFormDivider) {
+    form.append(avatarEl);
+  } else {
+    const firstSec = createTag('div', { class: 'first-form-section events-form-full-width' });
+    const inputsWrapper = createTag('div', { class: 'first-form-section-input-wrapper' });
+    const firstFormSecEls = [];
+    let previousNode = firstFormDivider.previousElementSibling;
+
+    while (previousNode) {
+      if (['text', 'email', 'phone'].includes(previousNode.querySelector('input')?.type)) firstFormSecEls.push(previousNode);
+      previousNode = previousNode.previousElementSibling;
+    }
+
+    firstFormSecEls.forEach((el) => {
+      inputsWrapper.append(el);
+    });
+
+    form.prepend(firstSec);
+    firstSec.append(avatarEl, inputsWrapper);
+  }
+}
+
 async function createForm(formURL, thankYou, formData, avatar, actionUrl = '') {
   const { pathname } = new URL(formURL);
   let json = formData;
@@ -312,11 +342,11 @@ async function createForm(formURL, thankYou, formData, avatar, actionUrl = '') {
     'text-area': { fn: createTextArea, params: [], label: true, classes: [] },
     submit: { fn: createButton, params: [thankYou], label: false, classes: ['field-button-wrapper'] },
     clear: { fn: createButton, params: [thankYou], label: false, classes: ['field-button-wrapper'] },
+    divider: { fn: createDivider, params: [], label: false, classes: ['divider'] },
     default: { fn: createInput, params: [], label: true, classes: [] },
   };
 
   json.data.forEach((fd) => {
-    console.log(fd)
     fd.type = fd.type || 'text';
     const style = fd.extra ? ` events-form-${fd.extra}` : '';
     const fieldWrapper = createTag(
@@ -343,6 +373,8 @@ async function createForm(formURL, thankYou, formData, avatar, actionUrl = '') {
 
   form.addEventListener('input', () => applyRules(form, rules));
   applyRules(form, rules);
+
+  insertAvatar(form, avatar);
   return form;
 }
 
