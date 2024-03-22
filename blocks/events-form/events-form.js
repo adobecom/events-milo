@@ -22,20 +22,14 @@ function snakeToCamel(str) {
 }
 
 async function getProfile() {
-  const { feds, adobeProfile, fedsConfig } = window;
+  const { feds, adobeProfile, fedsConfig, adobeIMS } = window;
   if (fedsConfig?.universalNav) {
     return feds?.services?.universalnav?.interface?.adobeProfile?.getUserProfile()
     || adobeProfile?.getUserProfile();
   }
   return feds?.services?.profile?.interface?.adobeProfile?.getUserProfile()
     || adobeProfile?.getUserProfile()
-    || {
-      display_name: 'Qiyun Dai',
-      first_name: 'Qiyun',
-      last_name: 'Dai',
-      email: 'cod87753@adobe.com',
-      avatar: 'https://pps-stage.services.adobe.com/api/profile/image/default/22c90d64-691f-439f-b7fd-7fe06ccb01a7/100',
-    };
+    || adobeIMS?.getProfile();
 }
 
 function createSelect({ field, placeholder, options, defval, required }) {
