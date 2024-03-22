@@ -27,10 +27,6 @@
   flex: 1 1 0;
 }
 
-.events-form .event-form-hero h2 {
-  margin: 0;
-}
-
 .events-form .event-form-hero img {
   display: block;
 }
@@ -42,6 +38,7 @@
 }
 
 .events-form h2 {
+  margin: 0;
   padding: var(--spacing-s) 0;
   font-size: var(--type-heading-l-lh);
 }
