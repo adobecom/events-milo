@@ -23,17 +23,14 @@ function snakeToCamel(str) {
 
 async function getProfile() {
   const { feds, adobeProfile, fedsConfig, adobeIMS } = window;
-  try {
-    if (fedsConfig?.universalNav) {
-      return feds?.services?.universalnav?.interface?.adobeProfile?.getUserProfile()
-      || adobeProfile?.getUserProfile();
-    }
-    return feds?.services?.profile?.interface?.adobeProfile?.getUserProfile()
-      || adobeProfile?.getUserProfile()
-      || adobeIMS?.getProfile();
-  } catch {
-    return {};
+  if (fedsConfig?.universalNav) {
+    return feds?.services?.universalnav?.interface?.adobeProfile?.getUserProfile()
+    || adobeProfile?.getUserProfile();
   }
+
+  return feds?.services?.profile?.interface?.adobeProfile?.getUserProfile()
+    || adobeProfile?.getUserProfile()
+    || adobeIMS?.getProfile();
 }
 
 function createSelect({ field, placeholder, options, defval, required }) {
@@ -346,12 +343,19 @@ export default async function decorate(block, formData = null) {
     import(`${getLibs()}/utils/getUuid.js`),
     import('../../utils/caas-api.js'),
     import('../page-server/page-server.js'),
-    getProfile(),
-  ]).then(async ([{ default: getUuid }, caasApiMod, { autoUpdateContent }, resp]) => {
+  ]).then(async ([{ default: getUuid }, caasApiMod, { autoUpdateContent }]) => {
     const hash = await getUuid(window.location.pathname);
-    await autoUpdateContent(block, { ...await caasApiMod.default(hash), ...resp }, true);
+    let profile;
+
+    try {
+      profile = await getProfile();
+    } catch (e) {
+      eventHero.querySelectorAll('p')?.forEach((p) => p.remove());
+    }
+
+    await autoUpdateContent(block, { ...await caasApiMod.default(hash), ...profile }, true);
     eventHero.classList.remove('loading');
-    personalizeForm(block, resp);
+    personalizeForm(block, profile);
     block.classList.remove('loading');
   });
 }
