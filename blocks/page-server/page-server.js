@@ -44,6 +44,8 @@ export async function autoUpdateContent(parent, data, isStructured = false) {
                 window.lana?.log(`failed to convert optimized img from ${el} with dynamic data: ${e}`);
               }
             });
+          } else if (originalAlt.match(reg)) {
+            element.remove();
           }
         }
 

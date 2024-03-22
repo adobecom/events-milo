@@ -32,29 +32,40 @@ async function fetchAvatar() {
     redirect: 'follow',
   };
 
-  const avatar = fetch('https://cc-collab-stage.adobe.io/profile', requestOptions)
-    .then((response) => response.text())
+  const avatar = await fetch('https://cc-collab-stage.adobe.io/profile', requestOptions)
+    .then((response) => response.json())
     .then((result) => result)
     .catch((error) => console.error(error));
 
-  console.log(avatar);
-
   return avatar?.user?.avatar;
 }
+
 async function getProfile() {
   const { feds, adobeProfile, fedsConfig, adobeIMS } = window;
-  if (fedsConfig?.universalNav) {
-    return feds?.services?.universalnav?.interface?.adobeProfile?.getUserProfile()
-    || adobeProfile?.getUserProfile();
+  const getUserProfile = () => {
+    if (fedsConfig?.universalNav) {
+      return feds?.services?.universalnav?.interface?.adobeProfile?.getUserProfile()
+          || adobeProfile?.getUserProfile();
+    }
+
+    return (
+      feds?.services?.profile?.interface?.adobeProfile?.getUserProfile()
+      || adobeProfile?.getUserProfile()
+      || adobeIMS?.getProfile()
+    );
+  };
+
+  const [profile, avatar] = await Promise.all([
+    getUserProfile(),
+    fetchAvatar(),
+  ]);
+
+  if (profile) {
+    profile.avatar = avatar;
+    return profile;
   }
 
-  const profile = feds?.services?.profile?.interface?.adobeProfile?.getUserProfile()
-    || adobeProfile?.getUserProfile()
-    || adobeIMS?.getProfile();
-
-  profile.avatar = await fetchAvatar();
-
-  return profile;
+  return {};
 }
 
 function createSelect({ field, placeholder, options, defval, required }) {
