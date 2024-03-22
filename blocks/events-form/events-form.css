@@ -18,12 +18,17 @@
 
 .events-form .event-form-hero {
   display: flex;
+  flex-direction: column-reverse;
   align-items: center;
   gap: 16px;
 }
 
 .events-form .event-form-hero > div {
   flex: 1 1 0;
+}
+
+.events-form .event-form-hero h2 {
+  margin: 0;
 }
 
 .events-form .event-form-hero img {
@@ -272,7 +277,11 @@
   }
 }
 
-@media screen and (min-width: 900px) { 
+@media screen and (min-width: 900px) {
+  .events-form .event-form-hero {
+    flex-direction: row;
+  }
+
   .events-form .field-wrapper {
     display: flex;
   }
