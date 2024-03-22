@@ -23,13 +23,17 @@ function snakeToCamel(str) {
 
 async function getProfile() {
   const { feds, adobeProfile, fedsConfig, adobeIMS } = window;
-  if (fedsConfig?.universalNav) {
-    return feds?.services?.universalnav?.interface?.adobeProfile?.getUserProfile()
-    || adobeProfile?.getUserProfile();
+  try {
+    if (fedsConfig?.universalNav) {
+      return feds?.services?.universalnav?.interface?.adobeProfile?.getUserProfile()
+      || adobeProfile?.getUserProfile();
+    }
+    return feds?.services?.profile?.interface?.adobeProfile?.getUserProfile()
+      || adobeProfile?.getUserProfile()
+      || adobeIMS?.getProfile();
+  } catch {
+    return {};
   }
-  return feds?.services?.profile?.interface?.adobeProfile?.getUserProfile()
-    || adobeProfile?.getUserProfile()
-    || adobeIMS?.getProfile();
 }
 
 function createSelect({ field, placeholder, options, defval, required }) {
