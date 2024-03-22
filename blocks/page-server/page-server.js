@@ -1,36 +1,6 @@
 import { getMetadata } from '../../utils/utils.js';
+import fetchPageData, { flattenObject } from '../../utils/caas-api.js';
 import { getLibs } from '../../scripts/utils.js';
-
-const API_ENDPOINT = 'https://14257-chimera-dev.adobeioruntime.net/api/v1/web/chimera-0.0.1/sm-collection';
-const API_QUERY_PARAM = 'featuredCards';
-
-function flattenObject(obj, parentKey = '', result = {}) {
-  Object.keys(obj).forEach((key) => {
-    const value = obj[key];
-    const newKey = parentKey ? `${parentKey}.${key}` : key;
-
-    if (key === 'arbitrary' && Array.isArray(value)) {
-      value.forEach((item) => {
-        const itemKey = `${newKey}.${item.key}`;
-        result[itemKey] = item.value;
-      });
-    } else if (value && typeof value === 'object' && !Array.isArray(value)) {
-      flattenObject(value, newKey, result);
-    } else if (Array.isArray(value)) {
-      value.forEach((item, index) => {
-        if (typeof item === 'object' && !Array.isArray(item) && key !== 'arbitrary') {
-          flattenObject(item, `${newKey}[${index}]`, result);
-        } else {
-          result[`${newKey}[${index}]`] = item;
-        }
-      });
-    } else {
-      result[newKey] = value;
-    }
-  });
-
-  return result;
-}
 
 // data -> dom gills
 export async function autoUpdateContent(parent, data, isStructured = false) {
@@ -98,22 +68,6 @@ export async function autoUpdateContent(parent, data, isStructured = false) {
       window.lana?.log(`Error while attempting to replace link ${a.href}: ${e}`);
     }
   });
-}
-
-export async function fetchPageData(hash) {
-  const json = await fetch(`${API_ENDPOINT}?${API_QUERY_PARAM}=${hash}`).then((resp) => {
-    if (resp.ok) {
-      return resp.json();
-    }
-
-    window.lana?.log('Error while attempting to fetch event data event service layer');
-    return null;
-  });
-
-  if (!json) return null;
-
-  const [pageData] = json.cards;
-  return pageData;
 }
 
 export default async function init(el) {

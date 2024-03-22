@@ -344,9 +344,14 @@ export default async function decorate(block, formData = null) {
     if (constructedForm) form.replaceWith(constructedForm);
   }
 
-  Promise.all([import(`${getLibs()}/utils/getUuid.js`), import('../page-server/page-server.js'), getProfile()]).then(async ([{ default: getUuid }, { autoUpdateContent, fetchPageData }, resp]) => {
+  Promise.all([
+    import(`${getLibs()}/utils/getUuid.js`),
+    import('../../utils/caas-api.js'),
+    import('../page-server/page-server.js'),
+    getProfile(),
+  ]).then(async ([{ default: getUuid }, caasApiMod, { autoUpdateContent }, resp]) => {
     const hash = await getUuid(window.location.pathname);
-    await autoUpdateContent(block, { ...await fetchPageData(hash), ...resp }, true);
+    await autoUpdateContent(block, { ...await caasApiMod.default(hash), ...resp }, true);
     eventHero.classList.remove('loading');
     personalizeForm(block, resp);
     block.classList.remove('loading');
