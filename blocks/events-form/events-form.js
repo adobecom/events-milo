@@ -32,7 +32,12 @@ async function fetchAvatar() {
     redirect: 'follow',
   };
 
-  const avatar = await fetch('https://cc-collab-stage.adobe.io/profile', requestOptions);
+  const avatar = fetch('https://cc-collab-stage.adobe.io/profile', requestOptions)
+    .then((response) => response.text())
+    .then((result) => result)
+    .catch((error) => console.error(error));
+
+  console.log(avatar);
 
   return avatar?.user?.avatar;
 }
