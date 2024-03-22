@@ -21,6 +21,22 @@ function snakeToCamel(str) {
     .join('');
 }
 
+async function fetchAvatar() {
+  const te = await window.adobeIMS.tokenService.getTokenAndProfile();
+  const myHeaders = new Headers();
+  myHeaders.append('Authorization', `Bearer ${te.tokenFields.tokenValue}`);
+
+  const requestOptions = {
+    method: 'GET',
+    headers: myHeaders,
+    redirect: 'follow',
+  };
+
+  fetch('https://cc-collab-stage.adobe.io/profile', requestOptions)
+    .then((response) => response.text())
+    .then((result) => result.user.avatar)
+    .catch((error) => console.error(error));
+}
 async function getProfile() {
   const { feds, adobeProfile, fedsConfig, adobeIMS } = window;
   if (fedsConfig?.universalNav) {
@@ -28,9 +44,15 @@ async function getProfile() {
     || adobeProfile?.getUserProfile();
   }
 
-  return feds?.services?.profile?.interface?.adobeProfile?.getUserProfile()
+  const profile = feds?.services?.profile?.interface?.adobeProfile?.getUserProfile()
     || adobeProfile?.getUserProfile()
     || adobeIMS?.getProfile();
+
+  if (profile?.authId) {
+    profile.avatar = await fetchAvatar(profile.authId);
+  }
+
+  return profile;
 }
 
 function createSelect({ field, placeholder, options, defval, required }) {
@@ -253,7 +275,7 @@ function lowercaseKeys(obj) {
   }, {});
 }
 
-async function createForm(formURL, thankYou, formData, actionUrl = '') {
+async function createForm(formURL, thankYou, formData, avatar, actionUrl = '') {
   const { pathname } = new URL(formURL);
   let json = formData;
   /* c8 ignore next 4 */
@@ -326,6 +348,7 @@ function decorateHero(heroEl) {
 export default async function decorate(block, formData = null) {
   block.classList.add('loading');
   const eventHero = block.querySelector(':scope > div:nth-of-type(1)');
+  const formContainer = block.querySelector(':scope > div:nth-of-type(2)');
   const form = block.querySelector(':scope > div:nth-of-type(2) a[href$=".json"]');
   const thankYou = block.querySelector(':scope > div:nth-of-type(3) > div');
   const eventAction = block.querySelector(':scope > div:last-of-type > div > a');
@@ -334,8 +357,10 @@ export default async function decorate(block, formData = null) {
 
   decorateHero(eventHero);
 
-  if (form) {
-    constructedForm = await createForm(form?.href, thankYou, formData, eventAction?.href);
+  if (formContainer && form) {
+    formContainer.classList.add('form-container');
+    const avatar = formContainer.querySelector('div:first-of-type > picture');
+    constructedForm = await createForm(form.href, thankYou, formData, avatar, eventAction?.href);
     if (constructedForm) form.replaceWith(constructedForm);
   }
 

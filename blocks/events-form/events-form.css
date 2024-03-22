@@ -31,6 +31,12 @@
   display: block;
 }
 
+.events-form .form-container > div:first-of-type {
+  margin-bottom: -120px;
+  height: 120px;
+  width: 120px;
+}
+
 .events-form form {
   width: 100%;
   display: flex;
