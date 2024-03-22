@@ -316,6 +316,7 @@ async function createForm(formURL, thankYou, formData, avatar, actionUrl = '') {
   };
 
   json.data.forEach((fd) => {
+    console.log(fd)
     fd.type = fd.type || 'text';
     const style = fd.extra ? ` events-form-${fd.extra}` : '';
     const fieldWrapper = createTag(
@@ -381,10 +382,11 @@ async function updateDynamicContent(bp) {
 }
 
 async function buildEventform(bp, formData) {
+  if (!bp.formContainer || !bp.form) return;
   bp.formContainer.classList.add('form-container');
   const avatar = bp.formContainer.querySelector('div:first-of-type > picture');
   const constructedForm = await createForm(
-    bp.form?.href,
+    bp.form.href,
     bp.thankYou,
     formData,
     avatar,
@@ -404,10 +406,7 @@ export default async function decorate(block, formData = null) {
     eventAction: block.querySelector(':scope > div:last-of-type > div > a'),
   };
 
-  block.classList.add('loading');
   bp.thankYou?.remove();
   decorateHero(bp.eventHero);
-  if (bp.formContainer) await buildEventform(bp, formData);
-  await updateDynamicContent(bp);
-  block.classList.remove('loading');
+  await Promise.all([buildEventform(bp, formData), updateDynamicContent(bp)]);
 }
