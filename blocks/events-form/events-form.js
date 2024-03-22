@@ -32,10 +32,9 @@ async function fetchAvatar() {
     redirect: 'follow',
   };
 
-  fetch('https://cc-collab-stage.adobe.io/profile', requestOptions)
-    .then((response) => response.text())
-    .then((result) => result.user.avatar)
-    .catch((error) => window.lana?.log(error));
+  const avatar = await fetch('https://cc-collab-stage.adobe.io/profile', requestOptions);
+
+  return avatar?.user?.avatar;
 }
 async function getProfile() {
   const { feds, adobeProfile, fedsConfig, adobeIMS } = window;
