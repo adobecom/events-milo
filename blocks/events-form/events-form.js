@@ -35,7 +35,7 @@ async function fetchAvatar() {
   fetch('https://cc-collab-stage.adobe.io/profile', requestOptions)
     .then((response) => response.text())
     .then((result) => result.user.avatar)
-    .catch((error) => console.error(error));
+    .catch((error) => window.lana?.log(error));
 }
 async function getProfile() {
   const { feds, adobeProfile, fedsConfig, adobeIMS } = window;
@@ -48,9 +48,7 @@ async function getProfile() {
     || adobeProfile?.getUserProfile()
     || adobeIMS?.getProfile();
 
-  if (profile?.authId) {
-    profile.avatar = await fetchAvatar(profile.authId);
-  }
+  profile.avatar = await fetchAvatar();
 
   return profile;
 }
