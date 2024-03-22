@@ -304,7 +304,7 @@ function insertAvatar(form, avatar) {
     const firstFormSecEls = [];
     let previousNode = firstFormDivider.previousElementSibling;
 
-    while (previousNode) {
+    while (previousNode && firstFormSecEls.length <= 4) {
       if (['text', 'email', 'phone'].includes(previousNode.querySelector('input')?.type)) firstFormSecEls.push(previousNode);
       previousNode = previousNode.previousElementSibling;
     }
