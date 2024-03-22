@@ -310,7 +310,7 @@ function insertAvatar(form, avatar) {
     }
 
     firstFormSecEls.forEach((el) => {
-      inputsWrapper.append(el);
+      inputsWrapper.prepend(el);
     });
 
     form.prepend(firstSec);
