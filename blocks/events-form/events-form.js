@@ -396,7 +396,7 @@ function decorateHero(heroEl) {
 
 async function updateDynamicContent(bp) {
   const { block, eventHero } = bp;
-  Promise.all([
+  await Promise.all([
     import(`${getLibs()}/utils/getUuid.js`),
     import('../../utils/caas-api.js'),
     import('../page-server/page-server.js'),
