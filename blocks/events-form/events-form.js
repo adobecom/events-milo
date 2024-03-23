@@ -381,7 +381,7 @@ async function decorateRSVPStatus(bp, profile) {
   // if (data.registered) {
   if (data) {
     const successLabel = createTag('div', { class: 'rsvp-status-label' }, 'You have previously registered for this event. Feel free to use the form below to RSVP for another guest.');
-    bp.form.before(successLabel);
+    bp.formContainer.before(successLabel);
   }
 }
 
