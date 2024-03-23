@@ -73,6 +73,7 @@ export async function getProfile() {
 
   if (profile) {
     profile.avatar = avatar;
+    console.log('fetched user profile:', profile);
     return profile;
   }
 
@@ -92,7 +93,7 @@ export async function getAttendeeData(email, eventId) {
   fetch(`https://cchome-stage.adobe.io/lod/v1/events/st-${eventId}/attendees/${email}`, requestOptions)
     .then((response) => response.json())
     .then((result) => {
-      console.log(result);
+      console.log('fetched attendee data:', result);
       return result;
     })
     .catch((error) => console.error(error));
