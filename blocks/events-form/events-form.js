@@ -1,5 +1,5 @@
 import { getLibs } from '../../scripts/utils.js';
-import { getProfile } from '../../utils/event-apis.js';
+import { getAttendeeData, getProfile, getEventId } from '../../utils/event-apis.js';
 
 const { createTag } = await import(`${getLibs()}/utils/utils.js`);
 const { default: sanitizeComment } = await import(`${getLibs()}/utils/sanitizeComment.js`);
@@ -71,14 +71,28 @@ async function submitForm(form) {
     payload[key] = sanitizeComment(payload[key]);
     return true;
   });
-  /* c8 ignore next 7 */
-  const resp = await fetch(form.dataset.action, {
+
+  const myHeaders = new Headers();
+  myHeaders.append('x-api-key', 'CCHomeWeb1');
+  myHeaders.append('Content-Type', 'application/json');
+
+  const raw = JSON.stringify(payload);
+
+  const requestOptions = {
     method: 'POST',
-    cache: 'no-cache',
-    headers: { 'Content-type': 'application/json' },
-    body: JSON.stringify({ data: payload }),
-  });
-  await resp.text();
+    headers: myHeaders,
+    body: raw,
+    redirect: 'follow',
+  };
+
+  const eventId = getEventId();
+
+  if (!eventId) return false;
+
+  const resp = await fetch(`https://cchome-stage.adobe.io/lod/v1/events/st-${eventId}/attendees`, requestOptions).then((response) => response);
+
+  if (!resp.ok) return false;
+
   return payload;
 }
 
@@ -348,6 +362,11 @@ function decorateHero(heroEl) {
   heroEl.classList.add('event-form-hero');
 }
 
+async function decorateRSVPStatus(profile) {
+  const data = await getAttendeeData(profile.email, getEventId());
+  console.log(data);
+}
+
 async function updateDynamicContent(bp) {
   const { block, eventHero } = bp;
   await Promise.all([
@@ -362,6 +381,10 @@ async function updateDynamicContent(bp) {
       profile = await getProfile();
     } catch (e) {
       eventHero.querySelectorAll('p')?.forEach((p) => p.remove());
+    }
+
+    if (profile) {
+      await decorateRSVPStatus(profile);
     }
 
     await autoUpdateContent(block, { ...await caasApiMod.default(hash), ...profile }, true);
