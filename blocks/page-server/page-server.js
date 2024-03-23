@@ -103,7 +103,7 @@ async function handleRegisterCta(pd) {
         rsvpLink.textContent = currentCtaText;
         rsvpLink.classList.remove('no-event');
       } else {
-        const attendeeData = await getAttendeeData(imsProfile.email, pd.arbitrary.promoId);
+        const attendeeData = await getAttendeeData(newValue.email, pd.arbitrary.promoId);
         renderCtaState(attendeeData, currentCtaText);
       }
     });
