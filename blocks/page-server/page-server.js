@@ -1,5 +1,5 @@
 import { getMetadata } from '../../utils/utils.js';
-import fetchPageData, { flattenObject } from '../../utils/caas-api.js';
+import fetchPageData, { flattenObject } from '../../utils/event-apis.js';
 import { getLibs } from '../../scripts/utils.js';
 
 // data -> dom gills
@@ -9,10 +9,10 @@ export async function autoUpdateContent(parent, data, isStructured = false) {
     return;
   }
 
-  if (!data) {
-    document.body.style.display = 'none';
-    window.location.replace('/404');
-  }
+  // if (!data) {
+  //   document.body.style.display = 'none';
+  //   window.location.replace('/404');
+  // }
 
   const res = isStructured ? flattenObject(data) : data;
   console.log('replacing content with:', res);

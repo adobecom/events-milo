@@ -1,4 +1,5 @@
 import { getLibs } from '../../scripts/utils.js';
+import { getProfile } from '../../utils/event-apis.js';
 
 const { createTag } = await import(`${getLibs()}/utils/utils.js`);
 const { default: sanitizeComment } = await import(`${getLibs()}/utils/sanitizeComment.js`);
@@ -19,53 +20,6 @@ function snakeToCamel(str) {
     .split('_')
     .map((word, index) => (index === 0 ? word : word.charAt(0).toUpperCase() + word.slice(1)))
     .join('');
-}
-
-async function fetchAvatar() {
-  const te = await window.adobeIMS.tokenService.getTokenAndProfile();
-  const myHeaders = new Headers();
-  myHeaders.append('Authorization', `Bearer ${te.tokenFields.tokenValue}`);
-
-  const requestOptions = {
-    method: 'GET',
-    headers: myHeaders,
-    redirect: 'follow',
-  };
-
-  const avatar = await fetch('https://cc-collab-stage.adobe.io/profile', requestOptions)
-    .then((response) => response.json())
-    .then((result) => result)
-    .catch((error) => console.error(error));
-
-  return avatar?.user?.avatar;
-}
-
-async function getProfile() {
-  const { feds, adobeProfile, fedsConfig, adobeIMS } = window;
-  const getUserProfile = () => {
-    if (fedsConfig?.universalNav) {
-      return feds?.services?.universalnav?.interface?.adobeProfile?.getUserProfile()
-          || adobeProfile?.getUserProfile();
-    }
-
-    return (
-      feds?.services?.profile?.interface?.adobeProfile?.getUserProfile()
-      || adobeProfile?.getUserProfile()
-      || adobeIMS?.getProfile()
-    );
-  };
-
-  const [profile, avatar] = await Promise.all([
-    getUserProfile(),
-    fetchAvatar(),
-  ]);
-
-  if (profile) {
-    profile.avatar = avatar;
-    return profile;
-  }
-
-  return {};
 }
 
 function createSelect({ field, placeholder, options, defval, required }) {
@@ -398,7 +352,7 @@ async function updateDynamicContent(bp) {
   const { block, eventHero } = bp;
   await Promise.all([
     import(`${getLibs()}/utils/getUuid.js`),
-    import('../../utils/caas-api.js'),
+    import('../../utils/event-apis.js'),
     import('../page-server/page-server.js'),
   ]).then(async ([{ default: getUuid }, caasApiMod, { autoUpdateContent }]) => {
     const hash = await getUuid(window.location.pathname);
