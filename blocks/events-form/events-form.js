@@ -293,11 +293,12 @@ function lowercaseKeys(obj) {
 }
 
 function insertAvatar(form, avatar) {
+  if (!avatar) return;
+
   const firstFormDivider = form.querySelector('.divider');
-  const avatarContainerDiv = avatar.parentElement;
-  const avatarEl = avatarContainerDiv?.className === '' ? avatarContainerDiv : avatar;
+  const oldAvatarCont = avatar.parentElement;
   if (!firstFormDivider) {
-    form.append(avatarEl);
+    form.append(avatar);
   } else {
     const firstSec = createTag('div', { class: 'first-form-section events-form-full-width' });
     const inputsWrapper = createTag('div', { class: 'first-form-section-input-wrapper' });
@@ -314,8 +315,10 @@ function insertAvatar(form, avatar) {
     });
 
     form.prepend(firstSec);
-    firstSec.append(avatarEl, inputsWrapper);
+    firstSec.append(avatar, inputsWrapper);
   }
+
+  if (!oldAvatarCont?.innerHTML?.trim() && !oldAvatarCont?.className) oldAvatarCont.remove();
 }
 
 async function createForm(formURL, thankYou, formData, avatar, actionUrl = '') {
@@ -438,7 +441,10 @@ export default async function decorate(block, formData = null) {
     eventAction: block.querySelector(':scope > div:last-of-type > div > a'),
   };
 
+  block.style.opacity = 0;
   bp.thankYou?.remove();
   decorateHero(bp.eventHero);
-  await Promise.all([buildEventform(bp, formData), updateDynamicContent(bp)]);
+  await buildEventform(bp, formData);
+  await updateDynamicContent(bp);
+  block.style.opacity = 1;
 }
