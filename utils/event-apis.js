@@ -73,7 +73,7 @@ export async function getProfile() {
 
   if (profile) {
     profile.avatar = avatar;
-    console.log('fetched user profile:', profile);
+    console.log('Fetched user profile:', profile);
     return profile;
   }
 
@@ -95,7 +95,7 @@ export async function getAttendeeData(email, eventId) {
     .then((result) => result)
     .catch((error) => console.error(error));
 
-  console.log('fetched attendee data:', data);
+  console.log('Fetched attendee data:', data);
   return data;
 }
 
