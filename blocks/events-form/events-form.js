@@ -51,27 +51,7 @@ function constructPayload(form) {
   return payload;
 }
 
-async function submitForm(form) {
-  const payload = constructPayload(form);
-  payload.timestamp = new Date().toJSON();
-  Object.keys(payload).forEach((key) => {
-    const field = form.querySelector(`[data-field-id=${key}]`);
-    if (!payload[key] && field.querySelector('.group-container.required')) {
-      const el = form.querySelector(`input[name="${key}"]`);
-      el.setCustomValidity('A selection is required');
-      el.reportValidity();
-      const cb = () => {
-        el.setCustomValidity('');
-        el.reportValidity();
-        field.removeEventListener('input', cb);
-      };
-      field.addEventListener('input', cb);
-      return false;
-    }
-    payload[key] = sanitizeComment(payload[key]);
-    return true;
-  });
-
+async function submitToSplashThat(payload) {
   const myHeaders = new Headers();
   myHeaders.append('x-api-key', 'CCHomeWeb1');
   myHeaders.append('Content-Type', 'application/json');
@@ -99,6 +79,32 @@ async function submitForm(form) {
   if (!resp.ok) return false;
 
   return payload;
+}
+
+async function submitForm(form) {
+  const payload = constructPayload(form);
+  payload.timestamp = new Date().toJSON();
+  Object.keys(payload).forEach((key) => {
+    const field = form.querySelector(`[data-field-id=${key}]`);
+    if (!payload[key] && field.querySelector('.group-container.required')) {
+      const el = form.querySelector(`input[name="${key}"]`);
+      el.setCustomValidity('A selection is required');
+      el.reportValidity();
+      const cb = () => {
+        el.setCustomValidity('');
+        el.reportValidity();
+        field.removeEventListener('input', cb);
+      };
+      field.addEventListener('input', cb);
+      return false;
+    }
+    payload[key] = sanitizeComment(payload[key]);
+    return true;
+  });
+
+  const response = await submitToSplashThat(payload);
+
+  return response;
 }
 
 function clearForm(form) {
