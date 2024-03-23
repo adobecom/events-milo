@@ -441,10 +441,8 @@ export default async function decorate(block, formData = null) {
     eventAction: block.querySelector(':scope > div:last-of-type > div > a'),
   };
 
-  block.style.opacity = 0;
   bp.thankYou?.remove();
   decorateHero(bp.eventHero);
   await buildEventform(bp, formData);
   await updateDynamicContent(bp);
-  block.style.opacity = 1;
 }
