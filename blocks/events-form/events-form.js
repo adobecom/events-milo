@@ -431,7 +431,6 @@ async function buildEventform(bp, formData) {
 }
 
 export default async function decorate(block, formData = null) {
-  // make bluepring to pass around;
   const bp = {
     block,
     eventHero: block.querySelector(':scope > div:nth-of-type(1)'),
