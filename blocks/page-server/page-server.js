@@ -16,7 +16,7 @@ export async function autoUpdateContent(parent, data, isStructured = false) {
   }
 
   const res = isStructured ? flattenObject(data) : data;
-  console.log('replacing content with:', res);
+  console.log('Replacing content with:', res);
   const findRegexMatch = (_match, p1) => res[p1] || '';
   const allElements = parent.querySelectorAll('*');
   const reg = /\[\[(.*?)\]\]/g;
