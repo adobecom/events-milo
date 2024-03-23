@@ -92,7 +92,7 @@ async function submitForm(form) {
   const resp = await fetch(`https://cchome-stage.adobe.io/lod/v1/events/st-${eventId}/attendees`, requestOptions).then((response) => response);
 
   console.log('Submitted registration to SplashThat:', payload);
-  console.log('Event Service Layer response:', resp.json());
+  console.log('Event Service Layer response:', await resp.json());
 
   if (!resp.ok) return false;
 
