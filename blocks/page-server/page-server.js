@@ -1,18 +1,18 @@
 import { getMetadata } from '../../utils/utils.js';
-import fetchPageData, { flattenObject } from '../../utils/event-apis.js';
+import fetchPageData, { flattenObject, getAttendeeData } from '../../utils/event-apis.js';
 import { getLibs } from '../../scripts/utils.js';
 
 // data -> dom gills
 export async function autoUpdateContent(parent, data, isStructured = false) {
   if (!parent) {
     window.lana?.log('page server block cannot find its parent element');
-    return;
+    return null;
   }
 
-  // if (!data) {
-  //   document.body.style.display = 'none';
-  //   window.location.replace('/404');
-  // }
+  if (!data) {
+    document.body.style.display = 'none';
+    window.location.replace('/404');
+  }
 
   const res = isStructured ? flattenObject(data) : data;
   console.log('replacing content with:', res);
@@ -70,10 +70,49 @@ export async function autoUpdateContent(parent, data, isStructured = false) {
       window.lana?.log(`Error while attempting to replace link ${a.href}: ${e}`);
     }
   });
+
+  return res;
+}
+
+async function handleRegisterCta(pd) {
+  const rsvpLink = document.querySelector('a[href$="#rsvp-form"]');
+  if (!rsvpLink) return;
+
+  const renderCtaState = (attendeeData, fbText) => {
+    if (attendeeData.registered) {
+      rsvpLink.textContent = 'You are all set!';
+    } else {
+      rsvpLink.textContent = fbText;
+      rsvpLink.classList.remove('no-event');
+    }
+  };
+
+  rsvpLink.classList.add('no-event');
+  const currentCtaText = rsvpLink.textContent;
+  rsvpLink.textContent = '...';
+  const imsProfile = window.bm8tr.get('imsProfile');
+  if (imsProfile && !imsProfile.noProfile) {
+    const attendeeData = await getAttendeeData(imsProfile.email, pd.arbitrary.promoId);
+    renderCtaState(attendeeData, currentCtaText);
+  } else if (imsProfile?.noProfile) {
+    rsvpLink.textContent = currentCtaText;
+    rsvpLink.classList.remove('no-event');
+  } else {
+    window.bm8tr.subscribe('imsProfile', async ({ newValue }) => {
+      if (newValue.noProfile) {
+        rsvpLink.textContent = currentCtaText;
+        rsvpLink.classList.remove('no-event');
+      } else {
+        const attendeeData = await getAttendeeData(imsProfile.email, pd.arbitrary.promoId);
+        renderCtaState(attendeeData, currentCtaText);
+      }
+    });
+  }
 }
 
 export default async function init(el) {
   const { default: getUuid } = await import(`${getLibs()}/utils/getUuid.js`);
   const hash = await getUuid(window.location.pathname);
-  await autoUpdateContent(el.closest('main'), await fetchPageData(hash), true);
+  const flatPageData = await autoUpdateContent(el.closest('main'), await fetchPageData(hash), true);
+  handleRegisterCta(flatPageData);
 }

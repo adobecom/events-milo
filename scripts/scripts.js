@@ -59,6 +59,7 @@ const miloLibs = setLibs(LIBS);
 
 (async function loadPage() {
   const { loadArea, setConfig, loadDelayed } = await import(`${miloLibs}/utils/utils.js`);
+  window.bm8tr = await import('../deps/block-mediator.min.js');
   const config = setConfig({ ...CONFIG, miloLibs });
   console.log(config);
   await loadArea();

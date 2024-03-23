@@ -6,3 +6,9 @@
  * 
  *
  */
+
+ main a.button.no-event[href='#resp-form'] {
+  user-select: none;
+  pointer-events: none;
+  opacity: 0.5;
+ }

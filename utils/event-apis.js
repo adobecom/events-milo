@@ -1,9 +1,7 @@
 import BlockMediator from '../deps/block-mediator.min.js';
 
 const CAAS_API_ENDPOINT = 'https://14257-chimera-dev.adobeioruntime.net/api/v1/web/chimera-0.0.1/sm-collection';
-const ESP_API_ENDPOINT = 'https://cchome-stage.adobe.iop/lod/v1/events/{{eventId}}/attendees/{{attendeeEmail}}';
 const API_QUERY_PARAM = 'featuredCards';
-const ESP_REG = /\{\{(.*?)\}\}/g;
 
 const pageDataCache = {};
 
@@ -83,8 +81,23 @@ export async function getProfile() {
   return {};
 }
 
-async function fetchAttendeeData(pageData) {
-  const eventId = pageData?.arbitrary?.[0].value?.split('|')?.[1];
+export async function getAttendeeData(email, eventId) {
+  const myHeaders = new Headers();
+  myHeaders.append('x-api-key', 'CCHomeWeb1');
+
+  const requestOptions = {
+    method: 'GET',
+    headers: myHeaders,
+    redirect: 'follow',
+  };
+
+  fetch(`https://cchome-stage.adobe.io/lod/v1/events/st-${eventId}/attendees/${email}`, requestOptions)
+    .then((response) => response.json())
+    .then((result) => result)
+    .catch((error) => console.error(error));
+}
+
+function lazyCaptureProfile() {
   let attempCounter = 0;
   const profileRetryer = setInterval(async () => {
     if (!window.adobeIMS) {
@@ -99,9 +112,13 @@ async function fetchAttendeeData(pageData) {
     try {
       const profile = await getProfile();
       BlockMediator.set('imsProfile', profile);
-      console.log(profile);
       clearInterval(profileRetryer);
     } catch {
+      if (window.adobeIMS) {
+        clearInterval(profileRetryer);
+        BlockMediator.set('imsProfile', { noProfile: true });
+      }
+
       attempCounter += 1;
     }
   }, 1000);
@@ -127,7 +144,7 @@ export default async function fetchPageData(hash) {
     const [pageData] = json.cards;
     pageDataCache[hash] = pageData;
 
-    const attendeeData = await fetchAttendeeData(pageData);
+    lazyCaptureProfile(pageData);
 
     return pageData;
   } catch (error) {
