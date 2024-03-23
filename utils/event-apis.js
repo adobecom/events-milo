@@ -89,9 +89,12 @@ export async function getAttendeeData(email, eventId) {
     redirect: 'follow',
   };
 
-  await fetch(`https://cchome-stage.adobe.io/lod/v1/events/st-${eventId}/attendees/${email}`, requestOptions)
+  fetch(`https://cchome-stage.adobe.io/lod/v1/events/st-${eventId}/attendees/${email}`, requestOptions)
     .then((response) => response.json())
-    .then((result) => result)
+    .then((result) => {
+      console.log(result);
+      return result;
+    })
     .catch((error) => console.error(error));
 }
 
