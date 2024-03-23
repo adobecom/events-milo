@@ -364,6 +364,8 @@ function decorateHero(heroEl) {
 
 async function decorateRSVPStatus(bp, profile) {
   const data = await getAttendeeData(profile.email, getEventId());
+
+  console.log('rsvp data:', data);
   if (!data) return;
 
   if (data.registered) {
