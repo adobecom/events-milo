@@ -362,9 +362,14 @@ function decorateHero(heroEl) {
   heroEl.classList.add('event-form-hero');
 }
 
-async function decorateRSVPStatus(profile) {
+async function decorateRSVPStatus(bp, profile) {
   const data = await getAttendeeData(profile.email, getEventId());
-  console.log(data);
+  if (!data) return;
+
+  if (data.registered) {
+    const successLabel = createTag('div', { class: 'rsvp-status-label' }, 'You have previously registered for this event. Feel free to use the form below to RSVP for another guest.');
+    bp.form.before(successLabel);
+  }
 }
 
 async function updateDynamicContent(bp) {
@@ -384,7 +389,7 @@ async function updateDynamicContent(bp) {
     }
 
     if (profile) {
-      await decorateRSVPStatus(profile);
+      await decorateRSVPStatus(bp, profile);
     }
 
     await autoUpdateContent(block, { ...await caasApiMod.default(hash), ...profile }, true);
