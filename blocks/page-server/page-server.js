@@ -79,7 +79,7 @@ async function handleRegisterCta(pd) {
   if (!rsvpLink) return;
 
   const renderCtaState = (attendeeData, fbText) => {
-    if (attendeeData.registered) {
+    if (attendeeData?.registered) {
       rsvpLink.textContent = 'You are all set!';
     } else {
       rsvpLink.textContent = fbText;
