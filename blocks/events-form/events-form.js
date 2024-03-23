@@ -91,6 +91,9 @@ async function submitForm(form) {
 
   const resp = await fetch(`https://cchome-stage.adobe.io/lod/v1/events/st-${eventId}/attendees`, requestOptions).then((response) => response);
 
+  console.log('submitted registration to SplashThat:', payload);
+  console.log('Event Service Layer response:', resp);
+
   if (!resp.ok) return false;
 
   return payload;
@@ -365,7 +368,6 @@ function decorateHero(heroEl) {
 async function decorateRSVPStatus(bp, profile) {
   const data = await getAttendeeData(profile.email, getEventId());
 
-  console.log('rsvp data:', data);
   if (!data) return;
 
   if (data.registered) {
