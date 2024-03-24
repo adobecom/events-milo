@@ -68,8 +68,9 @@ async function submitToSplashThat(payload) {
   const eventId = getEventId();
 
   if (!eventId) return false;
-
-  const resp = await fetch(`https://cchome-stage.adobe.io/lod/v1/events/st-${eventId}/attendees`, requestOptions).then((response) => response);
+  // TODO: use real event ID when ready
+  const resp = await fetch('https://cchome-stage.adobe.io/lod/v1/events/st-458926431/attendees', requestOptions).then((response) => response);
+  // const resp = await fetch(`https://cchome-stage.adobe.io/lod/v1/events/st-${eventId}/attendees`, requestOptions).then((response) => response);
 
   console.log('Submitted registration to SplashThat:', payload);
   resp.json().then((json) => {
@@ -378,8 +379,7 @@ async function decorateRSVPStatus(bp, profile) {
 
   if (!data) return;
 
-  // if (data.registered) {
-  if (data) {
+  if (data.registered) {
     const successLabel = createTag('div', { class: 'rsvp-status-label' }, 'You have previously registered for this event. Feel free to use the form below to RSVP for another guest.');
     bp.formContainer.before(successLabel);
   }
