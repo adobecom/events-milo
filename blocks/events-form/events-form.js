@@ -1,5 +1,5 @@
 import { getLibs } from '../../scripts/utils.js';
-import { getAttendeeData, getProfile, getEventId } from '../../utils/event-apis.js';
+import { getAttendeeData, getProfile, getEventId, submitToSplashThat } from '../../utils/event-apis.js';
 
 const { createTag } = await import(`${getLibs()}/utils/utils.js`);
 const { default: sanitizeComment } = await import(`${getLibs()}/utils/sanitizeComment.js`);
@@ -48,37 +48,6 @@ function constructPayload(form) {
     }
     payload[fe.id] = fe.value;
   });
-  return payload;
-}
-
-async function submitToSplashThat(payload) {
-  const myHeaders = new Headers();
-  myHeaders.append('x-api-key', 'CCHomeWeb1');
-  myHeaders.append('Content-Type', 'application/json');
-
-  const raw = JSON.stringify(payload);
-
-  const requestOptions = {
-    method: 'POST',
-    headers: myHeaders,
-    body: raw,
-    redirect: 'follow',
-  };
-
-  const eventId = getEventId();
-
-  if (!eventId) return false;
-  // TODO: use real event ID when ready
-  const resp = await fetch('https://cchome-stage.adobe.io/lod/v1/events/st-458926431/attendees', requestOptions).then((response) => response);
-  // const resp = await fetch(`https://cchome-stage.adobe.io/lod/v1/events/st-${eventId}/attendees`, requestOptions).then((response) => response);
-
-  console.log('Submitted registration to SplashThat:', payload);
-  resp.json().then((json) => {
-    console.log('Event Service Layer response:', json);
-  });
-
-  if (!resp.ok) return false;
-
   return payload;
 }
 
@@ -375,8 +344,11 @@ function decorateHero(heroEl) {
 }
 
 async function decorateRSVPStatus(bp, profile) {
-  const data = await getAttendeeData(profile.email, getEventId());
-
+  const eventId = getEventId();
+  // const data = await getAttendeeData(profile.email, getEventId());
+  // TODO: remove getAttendeeData with test placeholder ID.
+  console.log(`For POC: Used placeholder event ID instead of real event ID: ${eventId}`);
+  const data = await getAttendeeData(profile.email);
   if (!data) return;
 
   if (data.registered) {
