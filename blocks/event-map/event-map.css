@@ -12,7 +12,7 @@
 
 .event-map .mapbox-container {
   height: 300px;
-  min-width: 400px;
+  min-width: calc(100vw - 20px);
 }
 
 @media (min-width: 900px) {
