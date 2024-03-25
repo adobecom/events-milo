@@ -439,8 +439,10 @@ export default async function decorate(block, formData = null) {
   bp.thankYou?.remove();
   decorateHero(bp.eventHero);
   buildEventform(bp, formData)
-    .then(() => { updateDynamicContent(bp) })
+    .then(() => { updateDynamicContent(bp); })
     .then(() => {
       block.style.opacity = 1;
+    }).catch(() => {
+      block.innerHTML = 'Failed to load registration form. Please refresh the page.';
     });
 }
