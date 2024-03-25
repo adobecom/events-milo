@@ -181,7 +181,7 @@ export default async function fetchPageData(hash, lazyLoadProfile = false) {
     const [pageData] = json.cards;
     pageDataCache[hash] = pageData;
 
-    if (lazyLoadProfile) lazyCaptureProfile(pageData);
+    if (lazyLoadProfile) lazyCaptureProfile();
     window.bm8tr.set('eventData', pageData);
     return pageData;
   } catch (error) {

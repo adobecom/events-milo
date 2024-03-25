@@ -75,46 +75,8 @@ export async function autoUpdateContent(parent, data, isStructured = false) {
   return res;
 }
 
-// async function handleRegisterCta(pd) {
-//   const rsvpLink = document.querySelector('a[href$="#rsvp-form"]');
-//   if (!rsvpLink) return;
-
-//   const renderCtaState = (attendeeData, fbText) => {
-//     if (attendeeData?.registered) {
-//       rsvpLink.textContent = 'You are all set!';
-//     } else {
-//       rsvpLink.textContent = fbText;
-//       rsvpLink.classList.remove('no-event');
-//     }
-//   };
-
-//   rsvpLink.classList.add('no-event');
-//   const currentCtaText = rsvpLink.textContent;
-//   rsvpLink.textContent = 'Checking your RSVP status...';
-//   const imsProfile = window.bm8tr.get('imsProfile');
-//   if (imsProfile && !imsProfile.noProfile) {
-//     const attendeeData = await getAttendeeData(imsProfile.email, pd.arbitrary.promoId);
-//     renderCtaState(attendeeData, currentCtaText);
-//   } else if (imsProfile?.noProfile) {
-//     rsvpLink.textContent = currentCtaText;
-//     rsvpLink.classList.remove('no-event');
-//   } else {
-//     window.bm8tr.subscribe('imsProfile', async ({ newValue }) => {
-//       if (newValue.noProfile) {
-//         rsvpLink.textContent = currentCtaText;
-//         rsvpLink.classList.remove('no-event');
-//       } else {
-//         const attendeeData = await getAttendeeData(newValue.email, pd['arbitrary.promoId']);
-//         renderCtaState(attendeeData, currentCtaText);
-//       }
-//     });
-//   }
-// }
-
 export default async function init(el) {
   const { default: getUuid } = await import(`${getLibs()}/utils/getUuid.js`);
   const hash = await getUuid(window.location.pathname);
   await autoUpdateContent(el.closest('main'), await fetchPageData(hash), true);
-  // const flatPD = await autoUpdateContent(el.closest('main'), await fetchPageData(hash), true);
-  // handleRegisterCta(flatPD);
 }
