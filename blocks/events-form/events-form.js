@@ -344,11 +344,7 @@ function decorateHero(heroEl) {
 }
 
 async function decorateRSVPStatus(bp, profile) {
-  const eventId = getEventId();
-  // const data = await getAttendeeData(profile.email, getEventId());
-  // TODO: remove getAttendeeData with test placeholder ID.
-  console.log(`For POC: Used placeholder event ID instead of real event ID: ${eventId}`);
-  const data = await getAttendeeData(profile.email);
+  const data = await getAttendeeData(profile.email, getEventId());
   if (!data) return;
 
   if (data.registered) {

@@ -84,8 +84,9 @@ export async function getProfile() {
   return {};
 }
 
-// TODO: remove placeholder event ID
-export async function getAttendeeData(email, eventId = '458926431') {
+export async function getAttendeeData(email, eventId) {
+  if (!email || !eventId) return null;
+
   const myHeaders = new Headers();
   myHeaders.append('x-api-key', 'CCHomeWeb1');
 
