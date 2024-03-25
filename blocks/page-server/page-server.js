@@ -113,7 +113,6 @@ async function handleRegisterCta(pd) {
 export default async function init(el) {
   const { default: getUuid } = await import(`${getLibs()}/utils/getUuid.js`);
   const hash = await getUuid(window.location.pathname);
-  // await autoUpdateContent(el.closest('main'), await fetchPageData(hash), true);
   const flatPD = await autoUpdateContent(el.closest('main'), await fetchPageData(hash, true), true);
   handleRegisterCta(flatPD);
 }
