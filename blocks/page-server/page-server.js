@@ -1,6 +1,5 @@
 import { getMetadata } from '../../utils/utils.js';
 import fetchPageData, { flattenObject } from '../../utils/event-apis.js';
-// import fetchPageData, { flattenObject, getAttendeeData } from '../../utils/event-apis.js';
 import { getLibs } from '../../scripts/utils.js';
 
 // data -> dom gills
