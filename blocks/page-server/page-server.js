@@ -79,6 +79,24 @@ function updateTextNode(child, matchCallback) {
   if (replacedText !== originalText) child.nodeValue = replacedText;
 }
 
+function autoUpdateMetadata(res) {
+  if (!res) return;
+
+  if (res['contentArea.title']) document.title = res['contentArea.title'];
+
+  if (!res['contentArea.description']) return;
+
+  const metaDescription = document.querySelector("meta[name='description']");
+  if (metaDescription) {
+    metaDescription.setAttribute('content', res['contentArea.description']);
+  } else {
+    const newMetaDescription = document.createElement('meta');
+    newMetaDescription.setAttribute('name', 'description');
+    newMetaDescription.setAttribute('content', res['contentArea.description']);
+    document.head.appendChild(newMetaDescription);
+  }
+}
+
 // data -> dom gills
 export async function autoUpdateContent(parent, data, isStructured = false) {
   if (!parent) {
@@ -110,9 +128,11 @@ export async function autoUpdateContent(parent, data, isStructured = false) {
     }
   });
 
-  // handle link replacement
+  // handle link replacement. To keep when switching to metadata based rendering
   autoUpdateLinks(parent);
 
+  // TODO: handle Metadata
+  autoUpdateMetadata(res);
   return res;
 }
 

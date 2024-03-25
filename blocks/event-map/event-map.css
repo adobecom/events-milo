@@ -16,10 +16,6 @@
 }
 
 @media (min-width: 900px) {
-  .event-map > div:first-of-type {
-    max-width: max-content;
-  }
-
   .event-map {
     flex: 1 1 0;
     flex-direction: row;
