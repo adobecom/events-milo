@@ -426,6 +426,7 @@ async function buildEventform(bp, formData) {
 }
 
 export default async function decorate(block, formData = null) {
+  block.style.opacity = 0;
   const bp = {
     block,
     eventHero: block.querySelector(':scope > div:nth-of-type(1)'),
@@ -437,6 +438,9 @@ export default async function decorate(block, formData = null) {
 
   bp.thankYou?.remove();
   decorateHero(bp.eventHero);
-  await buildEventform(bp, formData);
-  await updateDynamicContent(bp);
+  buildEventform(bp, formData)
+    .then(() => { updateDynamicContent(bp) })
+    .then(() => {
+      block.style.opacity = 1;
+    });
 }
