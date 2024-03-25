@@ -2,6 +2,8 @@ import { getMetadata } from '../../utils/utils.js';
 import fetchPageData, { flattenObject } from '../../utils/event-apis.js';
 import { getLibs } from '../../scripts/utils.js';
 
+const PLACEHOLDER_REG = /\[\[(.*?)\]\]/g;
+
 function handleRegisterButton(a) {
   const signIn = () => {
     if (typeof window.adobeIMS?.signIn !== 'function') {
@@ -45,6 +47,38 @@ function autoUpdateLinks(scope) {
   });
 }
 
+function updateImgTag(child, matchCallback, parentElement) {
+  const parentPic = child.closest('picture');
+  const originalAlt = child.alt;
+  const replacedSrc = originalAlt.replace(PLACEHOLDER_REG, matchCallback);
+
+  if (replacedSrc && parentPic && replacedSrc !== originalAlt) {
+    parentPic.querySelectorAll('source').forEach((el) => {
+      try {
+        el.srcset = el.srcset.replace(/.*\?/, `${replacedSrc}?`);
+      } catch (e) {
+        window.lana?.log(`failed to convert optimized picture source from ${el} with dynamic data: ${e}`);
+      }
+    });
+
+    parentPic.querySelectorAll('img').forEach((el) => {
+      try {
+        el.src = el.src.replace(/.*\?/, `${replacedSrc}?`);
+      } catch (e) {
+        window.lana?.log(`failed to convert optimized img from ${el} with dynamic data: ${e}`);
+      }
+    });
+  } else if (originalAlt.match(PLACEHOLDER_REG)) {
+    parentElement.remove();
+  }
+}
+
+function updateTextNode(child, matchCallback) {
+  const originalText = child.nodeValue;
+  const replacedText = originalText.replace(PLACEHOLDER_REG, matchCallback);
+  if (replacedText !== originalText) child.nodeValue = replacedText;
+}
+
 // data -> dom gills
 export async function autoUpdateContent(parent, data, isStructured = false) {
   if (!parent) {
@@ -61,41 +95,16 @@ export async function autoUpdateContent(parent, data, isStructured = false) {
   console.log('Replacing content with:', res);
   const findRegexMatch = (_match, p1) => res[p1] || '';
   const allElements = parent.querySelectorAll('*');
-  const reg = /\[\[(.*?)\]\]/g;
 
   allElements.forEach((element) => {
     if (element.childNodes.length) {
       element.childNodes.forEach((child) => {
         if (child.tagName === 'IMG' && child.nodeType === 1) {
-          const parentPic = child.closest('picture');
-          const originalAlt = child.alt;
-          const replacedSrc = originalAlt.replace(reg, findRegexMatch);
-
-          if (replacedSrc && parentPic && replacedSrc !== originalAlt) {
-            parentPic.querySelectorAll('source').forEach((el) => {
-              try {
-                el.srcset = el.srcset.replace(/.*\?/, `${replacedSrc}?`);
-              } catch (e) {
-                window.lana?.log(`failed to convert optimized picture source from ${el} with dynamic data: ${e}`);
-              }
-            });
-
-            parentPic.querySelectorAll('img').forEach((el) => {
-              try {
-                el.src = el.src.replace(/.*\?/, `${replacedSrc}?`);
-              } catch (e) {
-                window.lana?.log(`failed to convert optimized img from ${el} with dynamic data: ${e}`);
-              }
-            });
-          } else if (originalAlt.match(reg)) {
-            element.remove();
-          }
+          updateImgTag(child, findRegexMatch, element);
         }
 
         if (child.nodeType === 3) {
-          const originalText = child.nodeValue;
-          const replacedText = originalText.replace(reg, findRegexMatch);
-          if (replacedText !== originalText) child.nodeValue = replacedText;
+          updateTextNode(child, findRegexMatch);
         }
       });
     }
