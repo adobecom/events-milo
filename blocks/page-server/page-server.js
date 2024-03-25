@@ -2,6 +2,49 @@ import { getMetadata } from '../../utils/utils.js';
 import fetchPageData, { flattenObject } from '../../utils/event-apis.js';
 import { getLibs } from '../../scripts/utils.js';
 
+function handleRegisterButton(a) {
+  const signIn = () => {
+    if (typeof window.adobeIMS?.signIn !== 'function') {
+      window?.lana.log({ message: 'IMS signIn method not available', tags: 'errorType=warn,module=gnav' });
+      return;
+    }
+
+    window.adobeIMS.signIn();
+  };
+
+  a.addEventListener('click', (e) => {
+    e.preventDefault();
+    signIn();
+  });
+}
+
+function autoUpdateLinks(scope) {
+  scope.querySelectorAll('a[href*="#"]').forEach(async (a) => {
+    try {
+      let url = new URL(a.href);
+      if (getMetadata(url.hash.replace('#', ''))) {
+        a.href = getMetadata(url.hash.replace('#', ''));
+        url = new URL(a.href);
+      }
+
+      if (a.href.endsWith('#rsvp-form')) {
+        const profile = window.bm8tr.get('imsProfile');
+        if (profile?.noProfile) {
+          handleRegisterButton(a);
+        } else if (!profile) {
+          window.bm8tr.subscribe('imsProfile', ({ newValue }) => {
+            if (newValue?.noProfile) {
+              handleRegisterButton(a);
+            }
+          });
+        }
+      }
+    } catch (e) {
+      window.lana?.log(`Error while attempting to replace link ${a.href}: ${e}`);
+    }
+  });
+}
+
 // data -> dom gills
 export async function autoUpdateContent(parent, data, isStructured = false) {
   if (!parent) {
@@ -59,17 +102,7 @@ export async function autoUpdateContent(parent, data, isStructured = false) {
   });
 
   // handle link replacement
-  parent.querySelectorAll('a[href*="#"]').forEach((a) => {
-    try {
-      let url = new URL(a.href);
-      if (getMetadata(url.hash.replace('#', ''))) {
-        a.href = getMetadata(url.hash.replace('#', ''));
-        url = new URL(a.href);
-      }
-    } catch (e) {
-      window.lana?.log(`Error while attempting to replace link ${a.href}: ${e}`);
-    }
-  });
+  autoUpdateLinks(parent);
 
   return res;
 }
@@ -77,5 +110,5 @@ export async function autoUpdateContent(parent, data, isStructured = false) {
 export default async function init(el) {
   const { default: getUuid } = await import(`${getLibs()}/utils/getUuid.js`);
   const hash = await getUuid(window.location.pathname);
-  await autoUpdateContent(el.closest('main'), await fetchPageData(hash), true);
+  await autoUpdateContent(el.closest('main'), await fetchPageData(hash, true), true);
 }
