@@ -135,7 +135,7 @@ export async function submitToSplashThat(payload) {
   return payload;
 }
 
-function lazyCaptureProfile() {
+async function lazyCaptureProfile() {
   let attempCounter = 0;
   const profileRetryer = setInterval(async () => {
     if (!window.adobeIMS) {
@@ -181,7 +181,7 @@ export default async function fetchPageData(hash, lazyLoadProfile = false) {
     const [pageData] = json.cards;
     pageDataCache[hash] = pageData;
 
-    if (lazyLoadProfile) lazyCaptureProfile(pageData);
+    if (lazyLoadProfile) lazyCaptureProfile();
     window.bm8tr.set('eventData', pageData);
     return pageData;
   } catch (error) {
