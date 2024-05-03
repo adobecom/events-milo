@@ -13,11 +13,6 @@
 import { setLibs, decorateArea } from './utils.js';
 import { captureProfile } from '../utils/event-apis.js';
 
-function getImsClientID() {
-  const meta = document.head.querySelector('meta[name="internal"]');
-  return meta?.content === 'true' ? 'ecc-milo' : 'events-milo';
-}
-
 // Add project-wide style path here.
 const STYLES = '';
 
@@ -28,7 +23,7 @@ const LIBS = '/libs';
 const CONFIG = {
   // codeRoot: '',
   // contentRoot: '',
-  imsClientId: getImsClientID(),
+  imsClientId: 'events-milo',
   // imsScope: 'AdobeID,openid,gnav',
   // geoRouting: 'off',
   // fallbackRouting: 'off',
