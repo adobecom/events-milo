@@ -4,7 +4,7 @@ import { getIcon, handlize, generateToolTip } from '../../utils/utils.js';
 const { createTag } = await import(`${getLibs()}/utils/utils.js`);
 
 function decorateField(row, type = 'text') {
-  row.classList.add('text=field-row');
+  row.classList.add('text-field-row');
   const cols = row.querySelectorAll(':scope > div');
   if (!cols.length) return;
   const [placeholderCol, maxLengthCol] = cols;
@@ -24,9 +24,18 @@ function decorateField(row, type = 'text') {
 
   if (maxCharNum) input.setAttribute('maxlength', maxCharNum);
 
-  const wrapper = createTag('div', { class: 'info-field-wrapper' });
+  const component = createTag('div');
   row.innerHTML = '';
-  wrapper.append(input, attrTextEl);
+  component.append(input, attrTextEl);
+
+  // TODO Remove after validation.
+  const deleteButton = createTag('div', { class: 'delete-button' });
+  deleteButton.append(getIcon('delete'));
+  deleteButton.classList.add('hidden');
+
+  const wrapper = createTag('div', { class: 'info-field-wrapper' });
+  wrapper.append(component);
+  wrapper.append(deleteButton);
   row.append(wrapper);
 }
 
@@ -87,14 +96,30 @@ function decorateDateTimeFields(row) {
   });
 }
 
+function addRepeater(element) {
+  element.lastChild.setAttribute('repeatIdx', 0);
+
+  const tag = createTag('div');
+  tag.classList.add('trial-repeater');
+  const plusIcon = getIcon('add-circle');
+  tag.append(plusIcon);
+  element.append(tag);
+}
+
 export default function init(el) {
   el.classList.add('form-component');
   generateToolTip(el);
 
   const rows = el.querySelectorAll(':scope > div');
   rows.forEach((r, i) => {
-    if (i === 1) decorateField(r, 'text');
-    if (i === 2) decorateField(r, 'textarea');
+    if (i === 1) {
+      decorateField(r, 'text');
+      addRepeater(r);
+    }
+    if (i === 2) {
+      decorateField(r, 'textarea');
+      addRepeater(r);
+    }
     if (i === 3) decorateDateTimeFields(r);
   });
 }

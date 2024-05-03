@@ -257,3 +257,7 @@
   background-color: var(--color-info-accent-light);
   z-index: -1;
 }
+
+.hidden {
+  display: none;
+}
