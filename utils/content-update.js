@@ -30,9 +30,6 @@ function autoUpdateLinks(scope) {
   scope.querySelectorAll('a[href*="#"]').forEach((a) => {
     try {
       const url = new URL(a.href);
-      if (getMetadata(url.hash.replace('#', ''))) {
-        a.href = getMetadata(url.hash.replace('#', ''));
-      }
 
       if (a.href.endsWith('#rsvp-form')) {
         const profile = window.bm8tr.get('imsProfile');
@@ -44,6 +41,25 @@ function autoUpdateLinks(scope) {
               handleRegisterButton(a);
             }
           });
+        }
+      }
+
+      if (getMetadata(url.hash.replace('#', ''))) {
+        if (a.href.endsWith('#event-template')) {
+          const params = new URLSearchParams(document.location.search);
+          const testStartDate = params.get('test-start-date');
+
+          if (!testStartDate) {
+            a.href = getMetadata(url.hash.replace('#', ''));
+          } else {
+            const today = new Date();
+            const eventStartTime = new Date(testStartDate);
+            const timeSuffix = eventStartTime > today ? 'pre' : 'post';
+            console.log(`${getMetadata(url.hash.replace('#', ''))}-${timeSuffix}`);
+            a.href = `${getMetadata(url.hash.replace('#', ''))}-${timeSuffix}`;
+          }
+        } else {
+          a.href = getMetadata(url.hash.replace('#', ''));
         }
       }
     } catch (e) {
