@@ -7,6 +7,11 @@
  *
  */
 
+:root {
+  --stroke-color-divider: #6E6E6E;
+  --color-red: #EB1000;
+}
+
 main a.con-button.no-event {
   user-select: none;
   pointer-events: none;
@@ -15,4 +20,9 @@ main a.con-button.no-event {
 
 .preserve-format {
   white-space: pre-wrap;
+}
+
+fieldset {
+  border: none;
+  padding: 0;
 }
