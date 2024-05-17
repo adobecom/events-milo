@@ -1,10 +1,10 @@
-/* global mapboxgl */
-
 import { getLibs } from '../../scripts/utils.js';
 
-const { loadScript, loadStyle } = await import(`${getLibs()}/utils/utils.js`);
+const { createTag } = await import(`${getLibs()}/utils/utils.js`);
 
-const MAPBOX_API_TOKEN = 'cGsuZXlKMUlqb2ljV2w1ZFc1a1lXa2lMQ0poSWpvaVkydHJOSEp3ZVdsMk1XczRaVEp2YjNSck5IcDBiVFl5WVNKOS5QZ25PR0NWcVluU3VnUlBYb2ZKYWtR';
+const ENCODED_API_KEY = 'QUl6YVN5RHZ5cXdhVXMtSXZNS1BTb3RkV2JVRFJETmtUbkhXMlpB';
+const SIGNATURE = 'strata';
+const GOOGLE_MAP_ID = 'd3555ecb8ace8a82';
 
 function loadMapboxConfigs(el) {
   const configs = {};
@@ -25,8 +25,12 @@ function loadMapboxConfigs(el) {
 function decorateMapContainer(configs) {
   const { mapContainer } = configs;
   mapContainer.innerHTML = '';
-  mapContainer.classList.add('mapbox-container');
-  mapContainer.id = 'mapbox-container';
+  mapContainer.classList.add('map-container');
+  mapContainer.id = 'map-container';
+
+  const coordString = `${configs.coordinates[1]},${configs.coordinates[0]}`;
+  const img = createTag('img', { src: `https://maps.googleapis.com/maps/api/staticmap?map_id=${GOOGLE_MAP_ID}&center=${coordString}&zoom=${configs.zoom}&size=600x400&key=${window.atob(ENCODED_API_KEY)}&markers=color:red%7C${coordString}` });
+  mapContainer.append(img);
 }
 
 export default async function init(el) {
@@ -34,20 +38,4 @@ export default async function init(el) {
   if (!configs) return;
 
   decorateMapContainer(configs);
-  loadStyle('https://api.mapbox.com/mapbox-gl-js/v3.2.0/mapbox-gl.css');
-  loadScript('https://api.mapbox.com/mapbox-gl-js/v3.2.0/mapbox-gl.js', 'module').then(() => {
-    window.mapboxgl.accessToken = window.atob(MAPBOX_API_TOKEN);
-    const map = new mapboxgl.Map({
-      container: 'mapbox-container',
-      style: configs.mapStyle,
-      center: configs.coordinates,
-      zoom: configs.zoom,
-    });
-
-    const marker1 = new mapboxgl.Marker()
-      .setLngLat(configs.coordinates)
-      .addTo(map);
-
-    console.log(marker1);
-  });
 }
