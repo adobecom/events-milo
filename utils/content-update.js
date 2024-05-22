@@ -47,15 +47,15 @@ function autoUpdateLinks(scope) {
       if (getMetadata(url.hash.replace('#', ''))) {
         if (a.href.endsWith('#event-template')) {
           const params = new URLSearchParams(document.location.search);
-          const testStartDate = params.get('test-start-date');
+          const testTiming = params.get('timing');
+          const currentDate = new Date();
+          const currentTimestamp = currentDate.getTime();
 
-          if (!testStartDate) {
-            a.href = getMetadata(url.hash.replace('#', ''));
+          if (!testTiming) {
+            const timeSuffix = currentTimestamp > +getMetadata('localEndTimeMillis') ? 'post' : 'pre';
+            a.href = `${getMetadata(url.hash.replace('#', ''))}-${timeSuffix}`;
           } else {
-            const today = new Date();
-            const eventStartTime = new Date(testStartDate);
-            const timeSuffix = eventStartTime > today ? 'pre' : 'post';
-            console.log(`${getMetadata(url.hash.replace('#', ''))}-${timeSuffix}`);
+            const timeSuffix = currentTimestamp > +testTiming ? 'post' : 'pre';
             a.href = `${getMetadata(url.hash.replace('#', ''))}-${timeSuffix}`;
           }
         } else {
