@@ -50,14 +50,15 @@ function autoUpdateLinks(scope) {
           const testTiming = params.get('timing');
           const currentDate = new Date();
           const currentTimestamp = currentDate.getTime();
+          let timeSuffix = '';
 
           if (!testTiming) {
-            const timeSuffix = currentTimestamp > +getMetadata('localEndTimeMillis') ? 'post' : 'pre';
-            a.href = `${getMetadata(url.hash.replace('#', ''))}-${timeSuffix}`;
+            timeSuffix = currentTimestamp > +getMetadata('localEndTimeMillis') ? '-post' : '-pre';
           } else {
-            const timeSuffix = currentTimestamp > +testTiming ? 'post' : 'pre';
-            a.href = `${getMetadata(url.hash.replace('#', ''))}-${timeSuffix}`;
+            timeSuffix = currentTimestamp > +testTiming ? '-post' : '-pre';
           }
+
+          a.href = `${getMetadata('eventTemplate')}${timeSuffix}`;
         } else {
           a.href = getMetadata(url.hash.replace('#', ''));
         }
