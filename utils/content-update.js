@@ -45,7 +45,7 @@ function autoUpdateLinks(scope) {
       }
 
       if (getMetadata(url.hash.replace('#', ''))) {
-        if (a.href.endsWith('#event-template')) {
+        if (a.href.endsWith('#eventTemplate')) {
           const params = new URLSearchParams(document.location.search);
           const testTiming = params.get('timing');
           const currentDate = new Date();
