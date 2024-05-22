@@ -48,13 +48,13 @@ function autoUpdateLinks(scope) {
         if (a.href.endsWith('#event-template')) {
           const params = new URLSearchParams(document.location.search);
           const testTiming = params.get('timing');
-          const currentDate = new Date();
-          const currentTimestamp = currentDate.getTime();
           let timeSuffix = '';
 
           if (testTiming) {
-            timeSuffix = currentTimestamp > +testTiming ? '-post' : '-pre';
+            timeSuffix = +testTiming > +getMetadata('localEndTimeMillis') ? '-post' : '-pre';
           } else {
+            const currentDate = new Date();
+            const currentTimestamp = currentDate.getTime();
             timeSuffix = currentTimestamp > +getMetadata('localEndTimeMillis') ? '-post' : '-pre';
           }
 
