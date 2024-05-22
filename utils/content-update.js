@@ -45,7 +45,7 @@ function autoUpdateLinks(scope) {
       }
 
       if (getMetadata(url.hash.replace('#', ''))) {
-        if (a.href.endsWith('#eventTemplate')) {
+        if (a.href.endsWith('#event-template')) {
           const params = new URLSearchParams(document.location.search);
           const testTiming = params.get('timing');
           const currentDate = new Date();
@@ -58,7 +58,7 @@ function autoUpdateLinks(scope) {
             timeSuffix = currentTimestamp > +getMetadata('localEndTimeMillis') ? '-post' : '-pre';
           }
 
-          a.href = `${getMetadata('eventTemplate')}${timeSuffix}`;
+          a.href = `${getMetadata('event-template')}${timeSuffix}`;
         } else {
           a.href = getMetadata(url.hash.replace('#', ''));
         }
