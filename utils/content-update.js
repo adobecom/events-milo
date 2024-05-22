@@ -51,11 +51,11 @@ function autoUpdateLinks(scope) {
           let timeSuffix = '';
 
           if (testTiming) {
-            timeSuffix = +testTiming > +getMetadata('localEndTimeMillis') ? '-post' : '-pre';
+            timeSuffix = +testTiming > +getMetadata('localendtimemillis') ? '-post' : '-pre';
           } else {
             const currentDate = new Date();
             const currentTimestamp = currentDate.getTime();
-            timeSuffix = currentTimestamp > +getMetadata('localEndTimeMillis') ? '-post' : '-pre';
+            timeSuffix = currentTimestamp > +getMetadata('localendtimemillis') ? '-post' : '-pre';
           }
 
           a.href = `${getMetadata('event-template')}${timeSuffix}`;
