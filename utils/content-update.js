@@ -52,10 +52,10 @@ function autoUpdateLinks(scope) {
           const currentTimestamp = currentDate.getTime();
           let timeSuffix = '';
 
-          if (!testTiming) {
-            timeSuffix = currentTimestamp > +getMetadata('localEndTimeMillis') ? '-post' : '-pre';
-          } else {
+          if (testTiming) {
             timeSuffix = currentTimestamp > +testTiming ? '-post' : '-pre';
+          } else {
+            timeSuffix = currentTimestamp > +getMetadata('localEndTimeMillis') ? '-post' : '-pre';
           }
 
           a.href = `${getMetadata('eventTemplate')}${timeSuffix}`;
