@@ -110,11 +110,11 @@ function autoUpdateLinks(scope) {
           let timeSuffix = '';
 
           if (testTiming) {
-            timeSuffix = +testTiming > +getMetadata('localendtimemillis') ? '-post' : '-pre';
+            timeSuffix = +testTiming > +getMetadata('local-end-time-millis') ? '-post' : '-pre';
           } else {
             const currentDate = new Date();
             const currentTimestamp = currentDate.getTime();
-            timeSuffix = currentTimestamp > +getMetadata('localendtimemillis') ? '-post' : '-pre';
+            timeSuffix = currentTimestamp > +getMetadata('local-end-time-millis') ? '-post' : '-pre';
           }
 
           a.href = `${getMetadata('event-template')}${timeSuffix}`;
