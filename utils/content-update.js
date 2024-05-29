@@ -1,7 +1,7 @@
 export const REG = /\[\[(.*?)\]\]/g;
 
 const preserveFormatKeys = [
-  'event-description',
+  'description',
 ];
 
 function getMetadata(name, doc = document) {
@@ -11,6 +11,11 @@ function getMetadata(name, doc = document) {
 }
 
 function handleRegisterButton(a) {
+  const urlParams = new URLSearchParams(window.location.search);
+  const devMode = urlParams.get('devMode');
+
+  if (devMode) return;
+
   const signIn = () => {
     if (typeof window.adobeIMS?.signIn !== 'function') {
       window?.lana.log({ message: 'IMS signIn method not available', tags: 'errorType=warn,module=gnav' });
@@ -90,7 +95,7 @@ function autoUpdateLinks(scope) {
     try {
       const url = new URL(a.href);
 
-      if (a.href.endsWith('#rsvp-form')) {
+      if (/#rsvp-form.*/.test(a.href)) {
         const profile = window.bm8tr.get('imsProfile');
         if (profile?.noProfile) {
           handleRegisterButton(a);

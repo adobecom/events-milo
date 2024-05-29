@@ -1,7 +1,9 @@
 import { getLibs } from '../../scripts/utils.js';
 import { getAttendeeData, getProfile, getEventId, submitToSplashThat } from '../../utils/event-apis.js';
+import HtmlSanitizer from '../../deps/html-sanitizer.js';
 
 const { createTag } = await import(`${getLibs()}/utils/utils.js`);
+const { closeModal } = await import(`${getLibs()}/blocks/modal/modal.js`);
 const { default: sanitizeComment } = await import(`${getLibs()}/utils/sanitizeComment.js`);
 
 const RULE_OPERATORS = {
@@ -55,6 +57,7 @@ async function submitForm(form) {
   const payload = constructPayload(form);
   payload.timestamp = new Date().toJSON();
   Object.keys(payload).forEach((key) => {
+    if (!key) return false;
     const field = form.querySelector(`[data-field-id=${key}]`);
     if (!payload[key] && field.querySelector('.group-container.required')) {
       const el = form.querySelector(`input[name="${key}"]`);
@@ -74,7 +77,7 @@ async function submitForm(form) {
 
   const response = await submitToSplashThat(payload);
 
-  return response;
+  return response || true;
 }
 
 function clearForm(form) {
@@ -87,27 +90,23 @@ function clearForm(form) {
   });
 }
 
-function createButton({ type, label }, thankYou) {
+function createButton({ type, label }, successMsg) {
   const button = createTag('button', { class: 'button' }, label);
   if (type === 'submit') {
     button.addEventListener('click', async (event) => {
       const form = button.closest('form');
       if (form.checkValidity()) {
         event.preventDefault();
-        button.setAttribute('disabled', '');
+        button.setAttribute('disabled', true);
         const submission = await submitForm(form);
         button.removeAttribute('disabled');
         if (!submission) return;
         clearForm(form);
-        const handleThankYou = thankYou.querySelector('a') ? thankYou.querySelector('a').href : thankYou.innerHTML;
-        if (!thankYou.innerHTML.includes('href')) {
-          const thanksText = createTag('h4', { class: 'thank-you' }, handleThankYou);
-          form.append(thanksText);
-          setTimeout(() => thanksText.remove(), 2000);
-          /* c8 ignore next 3 */
-        } else {
-          window.location.href = handleThankYou;
-        }
+        const block = button.closest('.events-form');
+        const hero = block.querySelector('.event-form-hero');
+        form.classList.add('hidden');
+        hero.classList.add('hidden');
+        successMsg.classList.remove('hidden');
       }
     });
   }
@@ -241,36 +240,68 @@ function lowercaseKeys(obj) {
   }, {});
 }
 
-function insertAvatar(form, avatar) {
-  if (!avatar) return;
+function addTerms(form, terms) {
+  const none = (arr, callback) => !arr.some(callback);
+  const submitWrapper = form.querySelector('.events-form-submit-wrapper');
+  const submit = submitWrapper.querySelector('button');
+  const termsWrapper = createTag('div', { class: 'field-wrapper events-form-full-width terms-and-conditions-wrapper' });
+  const termsTexts = terms.querySelectorAll('p');
+  const lis = terms.querySelectorAll('li');
+  const checkboxes = [];
 
-  const firstFormDivider = form.querySelector('.divider');
-  const oldAvatarCont = avatar.parentElement;
-  if (!firstFormDivider) {
-    form.append(avatar);
-  } else {
-    const firstSec = createTag('div', { class: 'first-form-section events-form-full-width' });
-    const inputsWrapper = createTag('div', { class: 'first-form-section-input-wrapper' });
-    const firstFormSecEls = [];
-    let previousNode = firstFormDivider.previousElementSibling;
+  termsTexts.forEach((t) => {
+    termsWrapper.append(t);
+  });
 
-    while (previousNode && firstFormSecEls.length <= 4) {
-      if (['text', 'email', 'phone'].includes(previousNode.querySelector('input')?.type)) firstFormSecEls.push(previousNode);
-      previousNode = previousNode.previousElementSibling;
-    }
+  lis.forEach((li, i) => {
+    const checkboxWrapper = createTag('div', { class: 'checkbox-wrapper' });
+    const checkbox = createTag('input', { id: 'terms-and-conditions', type: 'checkbox', class: 'checkbox', 'data-field-id': `terms-and-condition-check-${i + 1}` });
+    const label = createTag('label', { class: 'checkbox-label', for: 'terms-and-conditions' }, HtmlSanitizer.SanitizeHtml(li.innerHTML));
 
-    firstFormSecEls.forEach((el) => {
-      inputsWrapper.prepend(el);
+    checkboxWrapper.append(checkbox, label);
+    termsWrapper.append(checkboxWrapper);
+    checkboxes.push(checkbox);
+  });
+
+  terms.remove();
+
+  submitWrapper.before(termsWrapper);
+
+  checkboxes.forEach((cb) => {
+    cb.addEventListener('change', () => {
+      submit.disabled = none(Array.from(checkboxes), (c) => c.checked);
     });
+  });
 
-    form.prepend(firstSec);
-    firstSec.append(avatar, inputsWrapper);
-  }
-
-  if (!oldAvatarCont?.innerHTML?.trim() && !oldAvatarCont?.className) oldAvatarCont.remove();
+  submit.disabled = none(Array.from(checkboxes), (c) => c.checked);
 }
 
-async function createForm(formURL, thankYou, formData, avatar, actionUrl = '') {
+function decorateSuccessMsg(form, successMsg) {
+  const ctas = successMsg.querySelectorAll('a');
+
+  ctas.forEach((cta, i) => {
+    if (i === 0) {
+      cta.classList.add('con-button', 'outline');
+    } else if (i === 1) {
+      cta.classList.add('con-button', 'black');
+    }
+
+    cta.addEventListener('click', (e) => {
+      e.preventDefault();
+
+      if (i === 0) {
+        // TODO: POST call to cancel RSVP
+      }
+
+      const modal = form.closest('.dialog-modal');
+      closeModal(modal);
+    });
+  });
+
+  successMsg.classList.add('hidden');
+}
+
+async function createForm(formURL, successMsg, formData, terms) {
   const { pathname } = new URL(formURL);
   let json = formData;
   /* c8 ignore next 4 */
@@ -282,7 +313,7 @@ async function createForm(formURL, thankYou, formData, avatar, actionUrl = '') {
   const form = createTag('form');
   const rules = [];
   const [action] = pathname.split('.json');
-  form.dataset.action = actionUrl || action;
+  form.dataset.action = action;
 
   const typeToElement = {
     select: { fn: createSelect, params: [], label: true, classes: [] },
@@ -292,8 +323,8 @@ async function createForm(formURL, thankYou, formData, avatar, actionUrl = '') {
     'checkbox-group': { fn: createCheckGroup, params: ['checkbox'], label: true, classes: ['field-group-wrapper'] },
     'radio-group': { fn: createCheckGroup, params: ['radio'], label: true, classes: ['field-group-wrapper'] },
     'text-area': { fn: createTextArea, params: [], label: true, classes: [] },
-    submit: { fn: createButton, params: [thankYou], label: false, classes: ['field-button-wrapper'] },
-    clear: { fn: createButton, params: [thankYou], label: false, classes: ['field-button-wrapper'] },
+    submit: { fn: createButton, params: [successMsg], label: false, classes: ['field-button-wrapper'] },
+    clear: { fn: createButton, params: [successMsg], label: false, classes: ['field-button-wrapper'] },
     divider: { fn: createDivider, params: [], label: false, classes: ['divider'] },
     default: { fn: createInput, params: [], label: true, classes: [] },
   };
@@ -323,10 +354,12 @@ async function createForm(formURL, thankYou, formData, avatar, actionUrl = '') {
     form.append(fieldWrapper);
   });
 
+  addTerms(form, terms);
+  decorateSuccessMsg(form, successMsg);
+
   form.addEventListener('input', () => applyRules(form, rules));
   applyRules(form, rules);
 
-  insertAvatar(form, avatar);
   return form;
 }
 
@@ -355,40 +388,31 @@ async function decorateRSVPStatus(bp, profile) {
 
 async function updateDynamicContent(bp) {
   const { block, eventHero } = bp;
-  await Promise.all([
-    import(`${getLibs()}/utils/getUuid.js`),
-    import('../../utils/event-apis.js'),
-    import('../../utils/utils.js'),
-  ]).then(async ([{ default: getUuid }, caasApiMod, { autoUpdateContent }]) => {
-    const hash = await getUuid(window.location.pathname);
-    let profile;
+  let profile;
 
-    try {
-      profile = await getProfile();
-    } catch (e) {
-      eventHero.querySelectorAll('p')?.forEach((p) => p.remove());
-    }
+  try {
+    profile = await getProfile();
+  } catch (e) {
+    eventHero.querySelectorAll('p')?.forEach((p) => p.remove());
+  }
 
-    if (profile) {
-      await decorateRSVPStatus(bp, profile);
-    }
+  if (profile) {
+    await decorateRSVPStatus(bp, profile);
+  }
 
-    autoUpdateContent(block, { ...await caasApiMod.default(hash), ...profile });
-    eventHero.classList.remove('loading');
-    personalizeForm(block, profile);
-  });
+  eventHero.classList.remove('loading');
+  personalizeForm(block, profile);
 }
 
 async function buildEventform(bp, formData) {
   if (!bp.formContainer || !bp.form) return;
   bp.formContainer.classList.add('form-container');
-  const avatar = bp.formContainer.querySelector('div:first-of-type > picture');
+  bp.successMsg.classList.add('form-success-msg');
   const constructedForm = await createForm(
     bp.form.href,
-    bp.thankYou,
+    bp.successMsg,
     formData,
-    avatar,
-    bp.eventAction?.href,
+    bp.terms,
   );
   if (constructedForm) bp.form.replaceWith(constructedForm);
 }
@@ -400,14 +424,13 @@ export default async function decorate(block, formData = null) {
     eventHero: block.querySelector(':scope > div:nth-of-type(1)'),
     formContainer: block.querySelector(':scope > div:nth-of-type(2)'),
     form: block.querySelector(':scope > div:nth-of-type(2) a[href$=".json"]'),
-    thankYou: block.querySelector(':scope > div:nth-of-type(3) > div'),
-    eventAction: block.querySelector(':scope > div:last-of-type > div > a'),
+    terms: block.querySelector(':scope > div:nth-of-type(3)'),
+    successMsg: block.querySelector(':scope > div:last-of-type > div'),
   };
 
-  bp.thankYou?.remove();
   decorateHero(bp.eventHero);
   buildEventform(bp, formData)
-    .then(async () => { await updateDynamicContent(bp); })
+    .then(() => { updateDynamicContent(bp); })
     .then(() => {
       block.style.opacity = 1;
     }).catch(() => {
