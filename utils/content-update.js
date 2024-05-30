@@ -103,24 +103,22 @@ function autoUpdateLinks(scope) {
         }
       }
 
-      if (getMetadata(url.hash.replace('#', ''))) {
-        if (a.href.endsWith('#event-template')) {
-          const params = new URLSearchParams(document.location.search);
-          const testTiming = params.get('timing');
-          let timeSuffix = '';
+      if (a.href.endsWith('#event-template')) {
+        const params = new URLSearchParams(document.location.search);
+        const testTiming = params.get('timing');
+        let timeSuffix = '';
 
-          if (testTiming) {
-            timeSuffix = +testTiming > +getMetadata('local-end-time-millis') ? '-post' : '-pre';
-          } else {
-            const currentDate = new Date();
-            const currentTimestamp = currentDate.getTime();
-            timeSuffix = currentTimestamp > +getMetadata('local-end-time-millis') ? '-post' : '-pre';
-          }
-
-          a.href = `${getMetadata('event-template')}${timeSuffix}`;
+        if (testTiming) {
+          timeSuffix = +testTiming > +getMetadata('local-end-time-millis') ? '-post' : '-pre';
         } else {
-          a.href = getMetadata(url.hash.replace('#', ''));
+          const currentDate = new Date();
+          const currentTimestamp = currentDate.getTime();
+          timeSuffix = currentTimestamp > +getMetadata('local-end-time-millis') ? '-post' : '-pre';
         }
+
+        a.href = `${getMetadata('template-id')}${timeSuffix}`;
+      } else if (getMetadata(url.hash.replace('#', ''))) {
+        a.href = getMetadata(url.hash.replace('#', ''));
       }
     } catch (e) {
       window.lana?.log(`Error while attempting to replace link ${a.href}: ${e}`);
@@ -163,7 +161,17 @@ function updateImgTag(child, matchCallback, parentElement) {
 function updateTextNode(child, matchCallback) {
   const originalText = child.nodeValue;
   const replacedText = originalText.replace(REG, (_match, p1) => matchCallback(_match, p1, child));
-  if (replacedText !== originalText) child.nodeValue = replacedText;
+  if (replacedText !== originalText) {
+    const lines = replacedText.split('\\n');
+    lines.forEach((line, index) => {
+      const textNode = document.createTextNode(line);
+      child.parentElement.appendChild(textNode);
+      if (index < lines.length - 1) {
+        child.parentElement.appendChild(document.createElement('br'));
+      }
+    });
+    child.remove();
+  }
 }
 
 // data -> dom gills
