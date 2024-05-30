@@ -24,6 +24,10 @@
   color: var(--color-white);
 }
 
+.events-form .event-form-hero h4 {
+  margin: 0;
+}
+
 .events-form .event-form-hero > div {
   flex: 1 1 0;
 }
