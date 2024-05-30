@@ -1,4 +1,5 @@
 import { getLibs } from '../../scripts/utils.js';
+import { getMetadata } from '../../utils/utils.js';
 import { getAttendeeData, getProfile, getEventId, submitToSplashThat } from '../../utils/event-apis.js';
 import HtmlSanitizer from '../../deps/html-sanitizer.js';
 
@@ -302,6 +303,7 @@ function decorateSuccessMsg(form, successMsg) {
 }
 
 async function createForm(formURL, successMsg, formData, terms) {
+  const [{ required }, { visible }] = JSON.parse(getMetadata('rsvp'));
   const { pathname } = new URL(formURL);
   let json = formData;
   /* c8 ignore next 4 */
@@ -309,7 +311,14 @@ async function createForm(formURL, successMsg, formData, terms) {
     const resp = await fetch(pathname);
     json = await resp.json();
   }
-  json.data = json.data.map((obj) => lowercaseKeys(obj));
+  json.data = json.data
+    .map((obj) => {
+      const lowkey = lowercaseKeys(obj);
+      if (required.includes(lowkey.field)) lowkey.required = 'x';
+      return lowkey;
+    })
+    .filter((f) => visible.includes(f.field) || ['clear', 'submit'].includes(f.field));
+
   const form = createTag('form');
   const rules = [];
   const [action] = pathname.split('.json');

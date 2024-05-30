@@ -1,14 +1,10 @@
+import { getMetadata } from './utils.js';
+
 export const REG = /\[\[(.*?)\]\]/g;
 
 const preserveFormatKeys = [
   'description',
 ];
-
-function getMetadata(name, doc = document) {
-  const attr = name && name.includes(':') ? 'property' : 'name';
-  const meta = doc.head.querySelector(`meta[${attr}="${name}"]`);
-  return meta && meta.content;
-}
 
 function handleRegisterButton(a) {
   const urlParams = new URLSearchParams(window.location.search);

@@ -26,6 +26,12 @@ export function yieldToMain() {
   });
 }
 
+export function getMetadata(name, doc = document) {
+  const attr = name && name.includes(':') ? 'property' : 'name';
+  const meta = doc.head.querySelector(`meta[${attr}="${name}"]`);
+  return meta && meta.content;
+}
+
 export function handlize(str) {
   return str.toLowerCase().trim().replaceAll(' ', '-');
 }
