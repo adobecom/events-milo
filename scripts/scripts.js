@@ -68,6 +68,3 @@ window.bm8tr = await import('../deps/block-mediator.min.js').then((mod) => mod.d
     captureProfile();
   });
 }());
-
-console.log('progress, new computer works');
-console.log('LETS DOIT');
