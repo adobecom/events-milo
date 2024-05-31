@@ -18,6 +18,9 @@ export default function init (el) {
     console.log('el', el);
     console.log('eventPartnersSection', eventPartnersSection);
 
+    
+    // [...partnersData, ...partnersData].forEach((partner) => {
+
     partnersData.forEach((partner) => {
         const aTag = createTag('a', {href: `${partner.externalLink}`});
 
