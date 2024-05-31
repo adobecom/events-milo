@@ -10,7 +10,6 @@
  * governing permissions and limitations under the License.
  */
 
-
 import { setLibs, decorateArea } from './utils.js';
 import { captureProfile } from '../utils/event-apis.js';
 
