@@ -10,6 +10,7 @@
  * governing permissions and limitations under the License.
  */
 
+
 import { setLibs, decorateArea } from './utils.js';
 import { captureProfile } from '../utils/event-apis.js';
 
@@ -67,3 +68,6 @@ window.bm8tr = await import('../deps/block-mediator.min.js').then((mod) => mod.d
     captureProfile();
   });
 }());
+
+console.log('progress, new computer works');
+console.log('LETS DOIT');

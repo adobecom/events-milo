@@ -1,0 +1,30 @@
+.event-partners {    
+    padding-bottom: 200px;
+    max-width: 1200px;
+    margin: 0 auto 0;
+}
+
+.event-partners h2 {    
+    text-align: center;
+}
+
+
+.event-partners.images {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(auto-fill, 50px);
+    grid-row-gap: 5rem;
+    grid-column-gap: 3rem;
+    padding: 40px 0;
+    height: 181px;
+}
+
+.event-partners.logo {
+    width: 306px;
+    height: 181px;
+}
+
+.event-partners.logo > img {
+    width: 100%;
+    height: 100%;
+}
