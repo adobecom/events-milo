@@ -23,6 +23,9 @@
     width: 306px;
     height: 181px;
 }
+.event-partners.logo a {
+    height: 100%;
+}
 
 .event-partners.logo > img {
     width: 100%;

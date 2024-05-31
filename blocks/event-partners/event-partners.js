@@ -19,11 +19,14 @@ export default function init (el) {
     console.log('eventPartnersSection', eventPartnersSection);
 
     partnersData.forEach((partner) => {
+        const aTag = createTag('a', {href: `${partner.externalLink}`});
+
         const article = createTag('article', { class: 'event-partners logo'});
-        const img = createTag('img', {src: `${partner.imageUrl}`}); 
+        aTag.append(article);
+        const img = createTag('img', {src: `${partner.imageUrl}`});
         article.append(img);
         console.log('partner.imageUrl', partner.imageUrl)
-        eventPartnersSection.append(article);
+        eventPartnersSection.append(aTag);
     });
 
 
