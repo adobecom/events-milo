@@ -3,7 +3,7 @@
 
 .event-partners {    
     padding-bottom: 200px;
-    max-width: 1200px;
+    max-width: 1015px;
     margin: 0 auto 0;
 }
 
@@ -42,7 +42,7 @@
 }
 
 
-@media screen and (max-width: 768px) {
+@media screen and (max-width: 900px) {
     .event-partners {
         padding-bottom: 200px; /* this is for the footer keeps coming up, should remove before merging */
         max-width: 300px;
