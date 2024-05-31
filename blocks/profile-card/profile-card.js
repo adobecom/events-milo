@@ -4,7 +4,7 @@ import buildCarousel from './carousel.js'; // Adjust the import path as needed
 
 const { createTag } = await import(`${getLibs()}/utils/utils.js`);
 
-function decorateImage(cardContainer, imgSrc, variant, position = 'left') {
+function decorateImage(cardContainer, imgSrc, variant, position = 'left',altText) {
   const imgElement = createTag('img', {
     src: imgSrc,
     alt: 'Card Image',
@@ -46,7 +46,7 @@ function decorateContent(cardContainer, data) {
 function decorate1up(data, cardsWrapper, position = 'left') {
   const cardContainer = createTag('div', { class: 'card-container card-1up' });
 
-  decorateImage(cardContainer, data.speakerImage, '1', position);
+  decorateImage(cardContainer, data.speakerImage, '1', position,data.altText);
   decorateContent(cardContainer, data);
 
   cardsWrapper.append(cardContainer);
@@ -61,7 +61,6 @@ async function decorate3up(data, cardsWrapper) {
 
     cardsWrapper.append(cardContainer);
   });
-  await Promise.all(promises);
 }
 
 async function decorateDouble(data, cardsWrapper) {
@@ -118,16 +117,9 @@ async function decorateCards(data, cardsWrapper, dataFull) {
     const position = (dataFull.length === 2 && data[0].speakerType === "speaker") ? 'right' : 'left';
     decorate1up(data[0], cardsWrapper, position);
     cardsWrapper.classList.add('c1up');
-  } else if (data.length === 2) {
-    const host = data.find(speaker => speaker.speakerType === 'host');
-    const speaker = data.find(speaker => speaker.speakerType === 'speaker');
-    if (host && speaker) {
-      decorate1up(host, cardsWrapper, 'left');
-      decorate1up(speaker, cardsWrapper, 'right');
-    } else {
+  } else if (data.length === 2) {1
       await decorateDouble(data, cardsWrapper);
       cardsWrapper.classList.add('cdouble');
-    }
   } else if (data.length <= 3) {
     await decorate3up(data, cardsWrapper);
     cardsWrapper.classList.add('c3up');
@@ -159,7 +151,7 @@ export default async function init(el) {
 
     const filteredData = data.filter(speaker => speaker.speakerType === speakertype);
 
-    el.classList.add('form-component');
+    
     el.innerHTML = "";
     generateToolTip(el);
 

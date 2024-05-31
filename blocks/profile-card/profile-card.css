@@ -207,7 +207,7 @@
   display: inline-block;
   position: relative;
   height: auto;
-  width: calc(100% - (2 * 32px));
+  width: 1236px;
   margin-bottom: 24px;
   padding: 0 5px;
 }
