@@ -303,7 +303,7 @@ function decorateSuccessMsg(form, successMsg) {
 }
 
 async function createForm(formURL, successMsg, formData, terms) {
-  const [{ required }, { visible }] = JSON.parse(getMetadata('rsvp'));
+  const [{ required }, { visible }] = JSON.parse(getMetadata('rsvp-form-fields'));
   const { pathname } = new URL(formURL);
   let json = formData;
   /* c8 ignore next 4 */
