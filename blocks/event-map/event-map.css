@@ -1,5 +1,5 @@
 .event-map {
-  max-width: 1440px;
+  max-width: 1750px;
   margin: auto;
   box-sizing: content-box;
   padding: 20px;
@@ -55,13 +55,13 @@
 
   .event-map .text-wrapper {
     padding: 0;
-    padding-left: calc((100vw - var(--grid-container-width) - 80px) / 2);
+    padding-left: calc((100% - var(--grid-container-width) - 80px) / 2);
     padding-right: 20px;
   }
 }
 
 @media (min-width: 1440px) {
   .event-map .text-wrapper {
-    padding-left: calc((1440px - var(--grid-container-width)) / 2)
+    padding-left: calc((100% - var(--grid-container-width)) / 2)
   }
 }
