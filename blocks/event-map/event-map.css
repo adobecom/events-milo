@@ -31,6 +31,10 @@
   height: 270px;
 }
 
+.event-map .map-container picture {
+  width: 100%;
+}
+
 .event-map .map-container img {
   width: 100%;
   height: 100%;
