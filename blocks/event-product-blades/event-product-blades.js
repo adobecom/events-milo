@@ -1,7 +1,10 @@
 export default async function init(el) {
   const mediaBlocks = el.querySelectorAll('.media');
 
+  if (Array.from(mediaBlocks).every((b) => b.className.includes('rounded-corners'))) el.classList.add('contained');
+
   mediaBlocks.forEach((blade, i) => {
-    if (i % 2 === 0) blade.classList.add('reverse');
+    blade.classList.remove('media-reverse-mobile');
+    if (Math.abs(i % 2) === 1) blade.classList.add('media-reversed');
   });
 }

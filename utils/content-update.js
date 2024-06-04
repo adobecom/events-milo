@@ -4,6 +4,28 @@ const preserveFormatKeys = [
   'event-description',
 ];
 
+function createTag(tag, attributes, html, options = {}) {
+  const el = document.createElement(tag);
+  if (html) {
+    if (html instanceof HTMLElement
+      || html instanceof SVGElement
+      || html instanceof DocumentFragment) {
+      el.append(html);
+    } else if (Array.isArray(html)) {
+      el.append(...html);
+    } else {
+      el.insertAdjacentHTML('beforeend', html);
+    }
+  }
+  if (attributes) {
+    Object.entries(attributes).forEach(([key, val]) => {
+      el.setAttribute(key, val);
+    });
+  }
+  options.parent?.append(el);
+  return el;
+}
+
 function getMetadata(name, doc = document) {
   const attr = name && name.includes(':') ? 'property' : 'name';
   const meta = doc.head.querySelector(`meta[${attr}="${name}"]`);
@@ -174,6 +196,21 @@ function updateTextNode(child, matchCallback) {
   }
 }
 
+function injectFragments(parent) {
+  const productBlades = parent.querySelector('.event-product-blades');
+
+  if (productBlades) {
+    const relatedProducts = getMetadata('related-products');
+    if (relatedProducts) {
+      const bladesDiv = productBlades.querySelector(':scope > div > div');
+      const fragmentLinks = relatedProducts.split(',');
+      fragmentLinks.forEach((l) => {
+        createTag('a', { href: new URL(l).pathname }, l, { parent: bladesDiv });
+      });
+    }
+  }
+}
+
 // data -> dom gills
 export default function autoUpdateContent(parent, extraData) {
   if (!parent) {
@@ -216,4 +253,5 @@ export default function autoUpdateContent(parent, extraData) {
 
   // handle link replacement. To keep when switching to metadata based rendering
   autoUpdateLinks(parent);
+  injectFragments(parent);
 }
