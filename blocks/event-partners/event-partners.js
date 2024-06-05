@@ -3,20 +3,37 @@ import { getLibs } from '../../scripts/utils.js';
 const { createTag, getMetadata } = await import(`${getLibs()}/utils/utils.js`);
 
 export default function init(el) {
-  const partnersData = JSON.parse(getMetadata('partners'));
+  let partnersData;
 
-  const eventPartnersSection = createTag('section', { class: 'event-partners images' });
+  try {
+    partnersData = JSON.parse(getMetadata('partners'));
+  } catch (error) {
+    window.lana?.log('Failed to parse partners metadata:', error);
+    el.remove();
+    return;
+  }
+
+  if (!partnersData.length) {
+    el.remove();
+    return;
+  }
+
+  const eventPartners = createTag('div', { class: 'event-partners images' });
 
   partnersData.forEach((partner) => {
-    const aTag = createTag('a', { href: `${partner.externalLink}` }, '', { parent: eventPartnersSection });
+    const logoWrapper = createTag('div', { class: 'event-partners logo' });
+    createTag('img', { src: `${partner.imageUrl}` }, '', { parent: logoWrapper });
 
-    const article = createTag('article', { class: 'event-partners logo' }, '', { parent: aTag });
-    createTag('img', { src: `${partner.imageUrl}` }, '', { parent: article });
-
-    eventPartnersSection.append(aTag);
+    if (partner.externalLink) {
+      const aTag = createTag('a', { href: partner.externalLink }, '', { parent: eventPartners });
+      eventPartners.append(aTag);
+      aTag.append(logoWrapper);
+    } else {
+      eventPartners.append(logoWrapper);
+    }
   });
 
-  el.append(eventPartnersSection);
+  el.append(eventPartners);
 }
 
 export { init };

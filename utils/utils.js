@@ -103,7 +103,7 @@ export function getIcon(tag) {
 }
 
 function sanitizeJsonInput(input) {
-  const sanitizedInput = input.replace(/[^,:{}\[\]0-9.\-+Eaeflnr-u \n\r\t]/g, '');
+  const sanitizedInput = input.replace(/[^,:0-9.\-+Eaeflnr-u \n\r\t]/g, '');
   return sanitizedInput;
 }
 
@@ -124,7 +124,7 @@ function escapeHtml(str) {
 }
 
 // Function to safely parse JSON
-function safeJsonParse(jsonString) {
+export function safeJsonParse(jsonString) {
   const sanitizedJsonString = sanitizeJsonInput(jsonString);
   try {
     return JSON.parse(sanitizedJsonString);
