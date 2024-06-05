@@ -1,24 +1,9 @@
 import { getLibs } from '../../scripts/utils.js';
+import { createOptimizedPicture } from '../../utils/utils.js';
 
 const { createTag } = await import(`${getLibs()}/utils/utils.js`);
 
 const ENCODED_API_KEY = 'QUl6YVN5RHZ5cXdhVXMtSXZNS1BTb3RkV2JVRFJETmtUbkhXMlpB';
-
-function loadMapboxConfigs(el) {
-  const configs = {};
-  const configsDiv = el.querySelector(':scope > div:last-of-type');
-
-  if (!configsDiv) return null;
-
-  Array.from(configsDiv.children).forEach((col, i) => {
-    if (i === 0) configs.mapId = col.textContent.trim();
-    if (i === 1) configs.coordinates = col.textContent;
-    if (i === 2) configs.zoom = parseInt(col.textContent.trim(), 10);
-  });
-
-  configs.mapContainer = configsDiv;
-  return configs;
-}
 
 function decorateTextContainer(el) {
   const wrapper = el.querySelector('.event-map-wrapper');
@@ -30,13 +15,16 @@ function decorateTextContainer(el) {
   wrapper.append(textContentWrapper);
 }
 
-function decorateMapContainer(el, configs) {
-  const wrapper = el.querySelector('.event-map-wrapper');
+function decorateMapContainer(el) {
+  const configs = {
+    mapId: 'd3555ecb8ace8a82',
+    coordinates: '33.092360452674576, -117.26431350671739',
+    zoom: 9,
+  };
 
-  const { mapContainer } = configs;
-  mapContainer.innerHTML = '';
-  mapContainer.classList.add('map-container');
-  mapContainer.id = 'map-container';
+  const wrapper = el.querySelector('.event-map-wrapper');
+  const mapContainer = createTag('div', { id: 'map-container', class: 'map-container' });
+  wrapper.append(mapContainer);
 
   const img = createTag('img', { src: `https://maps.googleapis.com/maps/api/staticmap?map_id=${configs.mapId}&center=${configs.coordinates}&zoom=${configs.zoom}&size=600x400&key=${window.atob(ENCODED_API_KEY)}&markers=color:red%7C${configs.coordinates}` });
   mapContainer.append(img);
@@ -44,12 +32,9 @@ function decorateMapContainer(el, configs) {
 }
 
 export default async function init(el) {
-  const configs = loadMapboxConfigs(el);
-  if (!configs) return;
-
   const wrapper = createTag('div', { class: 'event-map-wrapper' });
   el.append(wrapper);
 
   decorateTextContainer(el);
-  decorateMapContainer(el, configs);
+  decorateMapContainer(el);
 }

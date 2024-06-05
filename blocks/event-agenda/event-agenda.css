@@ -1,63 +1,78 @@
-.event-map {
+.event-agenda {
   max-width: 1750px;
   margin: auto;
   box-sizing: content-box;
   padding: 20px;
 }
 
-.event-map > .event-map-wrapper {
-  background-color: var(--color-red);
-  display: flex;
-  flex-direction: column-reverse;
-  margin: 0 auto;
-  border-radius: 10px;
-  overflow: hidden;
-  color: var(--color-white);
+.event-agenda h2 {
+  text-align: center;
 }
 
-.event-map > .event-map-wrapper > div {
+.event-agenda .agenda-container {
+  margin: 40px auto 0;
+}
+
+.event-agenda.blade .agenda-container {
+  background-color: var(--color-gray-100);
+  display: flex;
+  flex-direction: column-reverse;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.event-agenda.blade > .agenda-container > div {
   flex: 1 1 0;
 }
 
-.event-map h4 {
+.event-agenda .agenda-item-wrapper {
+  margin: 24px 0;
   font-size: var(--type-body-l-size);
-  margin: 8px 0;
 }
 
-.event-map .map-container {
+.event-agenda .agenda-item-wrapper .agenda-time {
+  font-weight: 700;
+  margin-right: 8px;
+}
+
+.event-agenda .venue-img-col {
   min-width: calc(100vw - 20px);
   display: flex;
   justify-content: center;
   height: 270px;
 }
 
-.event-map .map-container picture {
+.event-agenda .venue-img-col picture {
   width: 100%;
 }
 
-.event-map .map-container img {
+.event-agenda .venue-img-col img {
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
 
-.event-map .text-wrapper {
-  padding: 40px 20px;
+.event-agenda .agenda-items-col {
+  padding: 16px 20px;
 }
 
 @media (min-width: 900px) {
-  .event-map > .event-map-wrapper {
+  .event-agenda.blade h2 {
+    text-align: left;
+  }
+
+  .event-agenda.blade .agenda-container {
     flex-direction: row;
     justify-content: center;
     align-items: center;
   }
 
-  .event-map .map-container {
+  .event-agenda .venue-img-col {
     min-width: 50%;
     height: 400px;
   }
 
-  .event-map .text-wrapper {
+  .event-agenda .agenda-items-col {
     padding: 0;
     padding-left: calc((100% - var(--grid-container-width) - 80px) / 2);
     padding-right: 20px;
@@ -65,7 +80,7 @@
 }
 
 @media (min-width: 1440px) {
-  .event-map .text-wrapper {
+  .event-agenda .agenda-items-col {
     padding-left: calc((100% - var(--grid-container-width)) / 2)
   }
 }
