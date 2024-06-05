@@ -26,6 +26,12 @@ export function yieldToMain() {
   });
 }
 
+export function getMetadata(name, doc = document) {
+  const attr = name && name.includes(':') ? 'property' : 'name';
+  const meta = doc.head.querySelector(`meta[${attr}="${name}"]`);
+  return meta && meta.content;
+}
+
 export function handlize(str) {
   return str.toLowerCase().trim().replaceAll(' ', '-');
 }
@@ -94,4 +100,36 @@ export function getIcon(tag) {
   img.alt = tag;
 
   return img;
+}
+
+function sanitizeJsonInput(input) {
+  const sanitizedInput = input.replace(/[^,:{}\[\]0-9.\-+Eaeflnr-u \n\r\t]/g, '');
+  return sanitizedInput;
+}
+
+// Function to escape JSON data for HTML output
+function escapeHtml(str) {
+  const map = {
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;',
+    '/': '&#x2F;',
+    '`': '&#x60;',
+    '=': '&#x3D;',
+  };
+  // eslint-disable-next-line no-useless-escape
+  return String(str).replace(/[&<>"'`=\/]/g, (s) => map[s]);
+}
+
+// Function to safely parse JSON
+function safeJsonParse(jsonString) {
+  const sanitizedJsonString = sanitizeJsonInput(jsonString);
+  try {
+    return JSON.parse(sanitizedJsonString);
+  } catch (e) {
+    console.error('Invalid JSON input:', e);
+    return null;
+  }
 }
