@@ -18,6 +18,11 @@ main a.con-button.no-event {
   opacity: 0.5;
 }
 
+a.con-button.black {
+  background-color: var(--color-black);
+  color: var(--color-white);
+}
+
 .preserve-format {
   white-space: pre-wrap;
 }
