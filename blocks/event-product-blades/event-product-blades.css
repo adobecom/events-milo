@@ -1,0 +1,9 @@
+.event-product-blades.contained {
+  max-width: 1440px;
+  margin: auto;
+  padding: 0 40px;
+}
+
+.event-product-blades.contained .media {
+  margin: 24px 0;
+}
