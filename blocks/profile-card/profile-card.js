@@ -1,5 +1,4 @@
-import { decorateArea, getLibs, checkProfileCard } from '../../scripts/utils.js';
-import { generateToolTip } from '../../utils/utils.js';
+import { getLibs, checkProfileCard } from '../../scripts/utils.js';
 import buildCarousel from './carousel.js';
 
 const { createTag } = await import(`${getLibs()}/utils/utils.js`);
@@ -184,7 +183,6 @@ export default async function init(el) {
     const filteredData = data.filter(speaker => speaker.speakerType === speakertype);
 
     el.innerHTML = "";
-    generateToolTip(el);
 
     const cardsWrapper = createTag('div', { class: 'cards-wrapper' });
     el.append(cardsWrapper);
