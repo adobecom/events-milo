@@ -103,13 +103,12 @@
   background-color: #f9f9f9;
 }
 
-.card-double .card-image-container,
-.card-image-container {
+.card-container.card-double .card-image-container, .card-image-container {
+  border-radius: 10px 10px 0px 0px;
   flex: none;
   width: auto;
   height: 306px;
 }
-
 .card-container .card-image-container,
 .card-image-container {
   flex: none;
@@ -122,6 +121,7 @@
   flex: none;
   width: 576px;
   height: 396px;
+  border-radius: 10px 0px 0px 10px;
 }
 
 .card-image-container {
@@ -143,8 +143,8 @@
   overflow: hidden;
   color: var(--Text-text, #2C2C2C);
   text-overflow: ellipsis;
-  font-family: "Adobe Clean";
-  font-size: 14px;
+  font-size: var(--type-body-xs-size);
+  font-family: var(--body-font-family);
   font-style: normal;
   font-weight: 400;
   line-height: 21px;
@@ -158,8 +158,8 @@
   overflow: hidden;
   color: var(--Text-text, #2C2C2C);
   text-overflow: ellipsis;
-  font-family: "Adobe Clean";
-  font-size: 14px;
+  font-size: var(--type-body-xs-size);
+  font-family: var(--body-font-family);
   font-style: normal;
   font-weight: 400;
   line-height: 21px;
@@ -175,8 +175,8 @@
 
 .card-desc {
   color: var(--Text-text, #2C2C2C);
-  font-family: "Adobe Clean";
-  font-size: 14px;
+  font-family: var(--body-font-family);
+  font-size: var(--type-body-xxs-size);
   font-style: normal;
   font-weight: 400;
   line-height: 21px;
@@ -187,9 +187,17 @@
   display: flex;
   align-items: flex-end;
   gap: 17px;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.card-social-icon {
+  list-style: none;
 }
 
 .social-icon {
+  display: block;
   width: 20px;
   height: 20px;
 }
@@ -201,6 +209,8 @@
 
 .cards-wrapper.carousel .card-container {
   width: calc((100% / 3) - 32px);
+  height: 612px;
+
 }
 
 .carousel-container {
@@ -227,7 +237,6 @@
   scrollbar-width: none;
   scroll-snap-type: x mandatory;
   scroll-behavior: smooth;
-  max-height: 600px;
   padding-top: 4px;
   padding-bottom: 6px;
   gap: 32px;
@@ -251,11 +260,12 @@
   width: 60px;
   align-items: center;
   top: 0;
-  left: 0;
+  left: 0; /* Adjust to keep the arrow within the card area */
   transition: opacity 0.2s, display 0.2s;
   cursor: pointer;
   -webkit-tap-highlight-color: rgba(0,0,0,0);
   z-index: 1;
+  margin-left: -20px; /* Adjust margin for proper spacing */
 }
 
 .carousel-fader-right {
@@ -266,12 +276,13 @@
   width: 60px;
   align-items: center;
   top: 0;
-  right: 0;
+  right: 0; /* Adjust to keep the arrow within the card area */
   flex-direction: row-reverse;
   transition: opacity 0.2s;
   cursor: pointer;
   -webkit-tap-highlight-color: rgba(0,0,0,0);
   z-index: 1;
+  margin-right: 8px; /* Adjust margin for proper spacing */
 }
 
 .carousel-arrow {
@@ -326,33 +337,33 @@
 
 /* Media Queries for Mobile Devices */
 @media (max-width: 768px) {
+  .cards-wrapper.c1up, .cards-wrapper.cdouble, .cards-wrapper.c3up, .cards-wrapper.carousel {
+    flex-direction: column;
+    gap: 16px;
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+
   .cards-wrapper.c1up .card-container.card-1up,
   .cards-wrapper.c1up .card-container.card-1up-left,
-  .cards-wrapper.c1up .card-container.card-1up-right {
+  .cards-wrapper.c1up .card-container.card-1up-right,
+  .cards-wrapper.cdouble .card-container,
+  .cards-wrapper.c3up .card-container,
+   .card-container {
     width: 100%;
     height: auto;
     flex-direction: column;
   }
 
   .card-1up .card-image-container,
-  .card-1up-right .card-image-container {
+  .card-1up-right .card-image-container,
+  .card-double .card-image-container,
+  .card-image-container {
     width: 100%;
-    height: 306px;
+    height: auto;
   }
 
   .card-container {
-    width: 100%;
-    height: auto;
-    flex-direction: column;
-  }
-
-  .cards-wrapper.c3up .card-container {
-    width: 100%;
-    height: auto;
-    flex-direction: column;
-  }
-
-  .cards-wrapper.carousel .card-container {
     width: 100%;
     height: auto;
     flex-direction: column;
@@ -371,5 +382,9 @@
   .cards-wrapper.c1up .card-social-icons {
     margin-left: 0;
   }
-}
 
+  .carousel-fader-left,
+  .carousel-fader-right {
+    display: none;
+  }
+}

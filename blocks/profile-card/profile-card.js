@@ -1,13 +1,13 @@
-import { getLibs } from '../../scripts/utils.js';
+import { decorateArea, getLibs, checkProfileCard } from '../../scripts/utils.js';
 import { generateToolTip } from '../../utils/utils.js';
-import buildCarousel from './carousel.js'; // Adjust the import path as needed
+import buildCarousel from './carousel.js';
 
 const { createTag } = await import(`${getLibs()}/utils/utils.js`);
 
-function decorateImage(cardContainer, imgSrc, variant, position = 'left',altText) {
+function decorateImage(cardContainer, imgSrc, variant, position = 'left', altText) {
   const imgElement = createTag('img', {
     src: imgSrc,
-    alt: 'Card Image',
+    alt: altText,
     class: 'card-image'
   });
 
@@ -29,24 +29,24 @@ function decorateImage(cardContainer, imgSrc, variant, position = 'left',altText
 
 function decorateContent(cardContainer, data) {
   const contentContainer = createTag('div', { class: 'card-content' });
-  
+
   const textContainer = createTag('div', { class: 'card-text-container' });
   const title = createTag('p', { class: 'card-title' }, data.title);
   const name = createTag('h2', { class: 'card-name' }, `${data.firstName} ${data.lastName}`);
   const description = createTag('p', { class: 'card-desc' }, data.bio);
-  
+
   textContainer.append(title, name, description);
   contentContainer.append(textContainer);
-  
+
   decorateSocialIcons(contentContainer, data.socialLinks || []);
-  
+
   cardContainer.append(contentContainer);
 }
 
 function decorate1up(data, cardsWrapper, position = 'left') {
   const cardContainer = createTag('div', { class: 'card-container card-1up' });
 
-  decorateImage(cardContainer, data.speakerImage, '1', position,data.altText);
+  decorateImage(cardContainer, data.speakerImage, '1', position, data.altText);
   decorateContent(cardContainer, data);
 
   cardsWrapper.append(cardContainer);
@@ -75,51 +75,83 @@ async function decorateDouble(data, cardsWrapper) {
   await Promise.all(promises);
 }
 
-function decorateSocialIcons(cardContainer, socialLinks) {
-  const iconMapping = {
-    instagram: 'instagram.svg',
-    facebook: 'facebook.svg',
-    twitter: 'twitter.svg',
-    youtube: 'youtube.svg'
-  };
+async function decorateSocialIcons(cardContainer, socialLinks) {
+  const SUPPORTED_SOCIAL = ['instagram', 'facebook', 'twitter', 'youtube'];
+  const svgPath = '/icons/social-icons.svg';
+  const socialList = createTag('ul', { class: 'card-social-icons' });
 
-  const socialIconsContainer = createTag('div', { class: 'card-social-icons' });
-  console.log('Social Links:', socialLinks);
+  const svgEls = await getSVGsfromFile(svgPath, SUPPORTED_SOCIAL);
+  if (!svgEls || svgEls.length === 0) return null;
 
-  socialLinks.forEach(link => {
-    const keyword = Object.keys(iconMapping).find(key => link.toLowerCase().includes(key));
-    if (keyword) {
-      const icon = createTag('img', {
-        src: `/icons/${iconMapping[keyword]}`,
-        alt: `${keyword} icon`,
-        class: 'social-icon'
-      });
+  socialLinks.forEach((link) => {
+    const platform = SUPPORTED_SOCIAL.find((platform) => link.toLowerCase().includes(platform));
+    const svg = svgEls.find((el) => el.name === platform);
+    if (!platform || !svg) return;
+    const icon = svg.svg;
+    const li = createTag('li', { class: 'card-social-icon' });
+    icon.classList.add('card-social-icon');
+    icon.setAttribute('alt', `${platform} logo`);
+    icon.setAttribute('height', 20);
+    icon.setAttribute('width', 20);
 
-      const linkElement = createTag('a', {
-        href: link,
-        target: '_blank',
-        rel: 'noopener noreferrer'
-      });
-      linkElement.append(icon);
-      socialIconsContainer.append(linkElement);
-    }
+    const a = createTag('a', {
+      href: link,
+      target: '_blank',
+      rel: 'noopener noreferrer',
+      'aria-label': platform
+    });
+    a.textContent = '';
+    a.append(icon);
+    li.append(a);
+    socialList.append(li);
   });
 
-  if (socialIconsContainer.children.length > 0) {
-    cardContainer.append(socialIconsContainer);
+  if (socialList.children.length > 0) {
+    cardContainer.append(socialList);
   } else {
     console.warn('No valid social icons found for:', socialLinks);
   }
 }
+export async function getSVGsfromFile(path, selectors) {
+  if (!path) return null;
+  const resp = await fetch(path);
+  if (!resp.ok) return null;
 
-async function decorateCards(data, cardsWrapper, dataFull) {
+  const text = await resp.text();
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(text, 'image/svg+xml');
+
+  if (!selectors) {
+    const svg = doc.querySelector('svg');
+    if (svg) return [{ svg }];
+    return null;
+  }
+  if (!(selectors instanceof Array)) {
+    selectors = [selectors];
+  }
+
+  return selectors.map((selector) => {
+    const symbol = doc.querySelector(`#${selector}`);
+    if (!symbol) return null;
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    while (symbol.firstChild) svg.appendChild(symbol.firstChild);
+    [...symbol.attributes].forEach((attr) => svg.attributes.setNamedItem(attr.cloneNode()));
+    svg.classList.add('icon');
+    svg.classList.add(`icon-${selector}`);
+    svg.removeAttribute('id');
+    return { svg, name: selector };
+  });
+}
+
+
+async function decorateCards(data, cardsWrapper, dataFull, firstSpeaker) {
   if (data.length === 1) {
-    const position = (dataFull.length === 2 && data[0].speakerType === "speaker") ? 'right' : 'left';
+    const position = (dataFull.length === 2 && firstSpeaker !== data[0].speakerType) ? 'right' : 'left';
     decorate1up(data[0], cardsWrapper, position);
     cardsWrapper.classList.add('c1up');
-  } else if (data.length === 2) {1
-      await decorateDouble(data, cardsWrapper);
-      cardsWrapper.classList.add('cdouble');
+  } else if (data.length === 2) {
+    await decorateDouble(data, cardsWrapper);
+    cardsWrapper.classList.add('cdouble');
   } else if (data.length <= 3) {
     await decorate3up(data, cardsWrapper);
     cardsWrapper.classList.add('c3up');
@@ -133,17 +165,17 @@ async function decorateCards(data, cardsWrapper, dataFull) {
 export default async function init(el) {
   const miloLibs = getLibs();
   await Promise.all([
-    import(`${miloLibs}/deps/lit-all.min.js`),
     import(`${miloLibs}/features/spectrum-web-components/dist/textfield.js`),
     import(`${miloLibs}/features/spectrum-web-components/dist/checkbox.js`),
   ]);
 
   try {
-    const response = await fetch('/blocks/profile-card/speakers/speakers.json'); // Adjust the path to your local JSON file
+    const response = await fetch('/blocks/profile-card/speakers/speakers.json');
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
+    let firstSpeaker = checkProfileCard();
     const rows = [...el.querySelectorAll(':scope > div')];
     const cols = rows[0].querySelectorAll(':scope > div');
     const speakertype = cols[1].textContent.toLowerCase().trim();
@@ -151,14 +183,13 @@ export default async function init(el) {
 
     const filteredData = data.filter(speaker => speaker.speakerType === speakertype);
 
-    
     el.innerHTML = "";
     generateToolTip(el);
 
     const cardsWrapper = createTag('div', { class: 'cards-wrapper' });
     el.append(cardsWrapper);
 
-    await decorateCards(filteredData, cardsWrapper, data);
+    await decorateCards(filteredData, cardsWrapper, data, firstSpeaker);
   } catch (error) {
     console.error('Error fetching or parsing JSON:', error);
   }
