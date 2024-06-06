@@ -68,4 +68,9 @@
   .event-map .text-wrapper {
     padding-left: calc((100% - var(--grid-container-width)) / 2)
   }
+
+  .event-map .map-container {
+    min-width: 50%;
+    height: 560px;
+  }
 }
