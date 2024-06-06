@@ -3,6 +3,11 @@
   display: flex;
   max-width: 308px;
   margin: 40px auto;
+  position: relative;
+}
+
+.bento-cards.carousel-plugin .carousel-wrapper {
+  padding: 40px 0;
 }
 
 .bento-cards .bento-cards-wrapper {
@@ -29,14 +34,14 @@
   position: relative;
 }
 
-.bento-cards .bento-card-top {
+.bento-cards .bento-card-content {
   padding: 16px;
   display: flex;
   flex-direction: column;
   flex-basis: 50%;
 }
 
-.bento-cards .multi-card-2 .bento-card-top {
+.bento-cards .multi-card-2 .bento-card-content {
   flex-basis: 100%;
 }
 
@@ -76,9 +81,14 @@
   height: 100%;
   object-fit: cover;
   object-position: bottom;
+  /* mask-image: linear-gradient(to top, rgb(0 0 0 / 100%) 60px, rgb(0 0 0 / 100%) calc(100% - 60px), transparent); */
 }
 
-.bento-card .bento-card-top .action-area {
+.bento-cards .bento-card.reversed .bento-background picture img {
+  /* mask-image: linear-gradient(to bottom, rgb(0 0 0 / 100%) 60px, rgb(0 0 0 / 100%) calc(100% - 60px), transparent); */
+}
+
+.bento-card .bento-card-content .action-area {
   flex-grow: 1;
   display: flex;
   align-items: flex-end;
@@ -92,6 +102,10 @@
 @media screen and (min-width: 900px) {
   .bento-cards {
     margin: 80px auto;
-    max-width: var(--grid-container-width);
+    max-width: 1200px;
+  }
+
+  .bento-cards.carousel-plugin .carousel-wrapper {
+    padding: 0;
   }
 }

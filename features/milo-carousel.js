@@ -327,7 +327,7 @@ export default function buildMiloCarousel(el, slides) {
   return new Promise((resolve) => {
     loadStyle('/features/milo-carousel.css', () => {
       const parentArea = el.closest('.fragment') || document;
-      el.classList.add('carousel');
+      el.classList.add('carousel-plugin');
 
       const fragment = new DocumentFragment();
       const nextPreviousBtns = decorateNextPreviousBtns();
