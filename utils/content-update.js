@@ -34,13 +34,15 @@ function getMetadata(name, doc = document) {
   return meta && meta.content;
 }
 
-async function updateRSVPButtonState(espData, rsvpBtn, miloLibs) {
+async function updateRSVPButtonState(rsvpData, rsvpBtn, miloLibs) {
+  if (rsvpData) return;
+
   const { getConfig } = await import(`${miloLibs}/utils/utils.js`);
   const { replaceKey } = await import(`${miloLibs}/features/placeholders.js`);
   const config = getConfig();
 
   rsvpBtn.textContent = await replaceKey('rsvp-loading-cta-text', config);
-  const attendeeData = await getAttendee(espData.eventId, espData.attendeeId);
+  const attendeeData = await getAttendee(rsvpData.eventId || getMetadata('event-id'), rsvpData.attendeeId);
 
   if (attendeeData.id) {
     rsvpBtn.textContent = await replaceKey('registered-cta-text', config);
@@ -71,12 +73,14 @@ function handleRegisterButton(a, miloLibs) {
     signIn();
   });
 
-  window.bm8tr.subscribe('rsvpstatus', ({ newValue }) => {
-    const rsvpBtn = {
-      el: a,
-      originalText: a.textContent,
-    };
+  const rsvpBtn = {
+    el: a,
+    originalText: a.textContent,
+  };
 
+  updateRSVPButtonState(window.bm8tr.get('rsvpdata'), rsvpBtn, miloLibs);
+
+  window.bm8tr.subscribe('rsvpdata', ({ newValue }) => {
     updateRSVPButtonState(newValue, rsvpBtn, miloLibs);
   });
 }

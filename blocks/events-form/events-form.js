@@ -92,7 +92,7 @@ function clearForm(form) {
   });
 }
 
-function createButton({ type, label }, successMsg, espData) {
+function createButton({ type, label }, successMsg, rsvpData) {
   const button = createTag('button', { class: 'button' }, label);
   if (type === 'submit') {
     button.addEventListener('click', async (event) => {
@@ -100,13 +100,13 @@ function createButton({ type, label }, successMsg, espData) {
       if (form.checkValidity()) {
         event.preventDefault();
         button.setAttribute('disabled', true);
-        const submissionResp = await submitForm(form, espData);
+        const submissionResp = await submitForm(form, rsvpData);
         button.removeAttribute('disabled');
         if (!submissionResp) return;
 
-        espData.attendeeId = submissionResp.attendeeId;
-        espData.resp = submissionResp;
-        window.bm8tr.set('rsvpstatus', espData);
+        rsvpData.attendeeId = submissionResp.attendeeId;
+        rsvpData.resp = submissionResp;
+        window.bm8tr.set('rsvpdata', rsvpData);
 
         clearForm(form);
         const block = button.closest('.events-form');
@@ -283,7 +283,7 @@ function addTerms(form, terms) {
   submit.disabled = none(Array.from(checkboxes), (c) => c.checked);
 }
 
-function decorateSuccessMsg(form, successMsg, espData) {
+function decorateSuccessMsg(form, successMsg, rsvpData) {
   const ctas = successMsg.querySelectorAll('a');
 
   ctas.forEach((cta, i) => {
@@ -297,9 +297,9 @@ function decorateSuccessMsg(form, successMsg, espData) {
       e.preventDefault();
 
       if (i === 0) {
-        const resp = await deleteAttendee(espData.eventId, espData.attendeeId);
-        espData.resp = resp;
-        window.bm8tr.set('rsvpstatus', espData);
+        const resp = await deleteAttendee(rsvpData.eventId, rsvpData.attendeeId);
+        rsvpData.resp = resp;
+        window.bm8tr.set('rsvpdata', rsvpData);
       }
 
       const modal = form.closest('.dialog-modal');
@@ -319,8 +319,8 @@ async function createForm(formURL, successMsg, formData, terms) {
     window.lana?.log('Failed to parse partners metadata:', error);
   }
 
-  const espData = { eventId: getMetadata('event-id') || '', attendeeId: '' };
-  window.bm8tr.set('rsvpstatus', espData);
+  const rsvpData = { eventId: getMetadata('event-id') || '', attendeeId: '' };
+  window.bm8tr.set('rsvpdata', rsvpData);
 
   const { pathname } = new URL(formURL);
   let json = formData;
@@ -361,8 +361,8 @@ async function createForm(formURL, successMsg, formData, terms) {
     'checkbox-group': { fn: createCheckGroup, params: ['checkbox'], label: true, classes: ['field-group-wrapper'] },
     'radio-group': { fn: createCheckGroup, params: ['radio'], label: true, classes: ['field-group-wrapper'] },
     'text-area': { fn: createTextArea, params: [], label: true, classes: [] },
-    submit: { fn: createButton, params: [successMsg, espData], label: false, classes: ['field-button-wrapper'] },
-    clear: { fn: createButton, params: [successMsg, espData], label: false, classes: ['field-button-wrapper'] },
+    submit: { fn: createButton, params: [successMsg, rsvpData], label: false, classes: ['field-button-wrapper'] },
+    clear: { fn: createButton, params: [successMsg, rsvpData], label: false, classes: ['field-button-wrapper'] },
     divider: { fn: createDivider, params: [], label: false, classes: ['divider'] },
     default: { fn: createInput, params: [], label: true, classes: [] },
   };
@@ -393,7 +393,7 @@ async function createForm(formURL, successMsg, formData, terms) {
   });
 
   addTerms(form, terms);
-  decorateSuccessMsg(form, successMsg, espData);
+  decorateSuccessMsg(form, successMsg, rsvpData);
 
   form.addEventListener('input', () => applyRules(form, rules));
   applyRules(form, rules);
