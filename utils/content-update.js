@@ -78,9 +78,9 @@ function handleRegisterButton(a, miloLibs) {
     originalText: a.textContent,
   };
 
-  updateRSVPButtonState(window.bm8tr.get('rsvpdata'), rsvpBtn, miloLibs);
+  updateRSVPButtonState(window.bm8tr.get('rsvpData'), rsvpBtn, miloLibs);
 
-  window.bm8tr.subscribe('rsvpdata', ({ newValue }) => {
+  window.bm8tr.subscribe('rsvpData', ({ newValue }) => {
     updateRSVPButtonState(newValue, rsvpBtn, miloLibs);
   });
 }
