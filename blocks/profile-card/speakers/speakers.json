@@ -1,0 +1,102 @@
+[
+
+  
+ {
+    "speakerType" : "host",
+    "seriesId": "b75765b5-ceba-484c-9afc-c96955afabfb",
+    "speakerId": "54e42157-1e63-4af7-9744-04a60d698b9f",
+    "firstName": "Rayyan Dené",
+    "lastName": "Ellis",
+    "title": "Community Relationship Manager, Adobe Express",
+    "bio": "Hallease Narvaez, known simply as Hallease, is a filmmaker, digital storyteller, and creative entrepreneur based in Atlanta. She's produced original online content for PBS Digital Studios, Target, Google, and YouTube through her creative production company StumbleWell. She is a former YouTube Black Voices recipient and a former Adobe Creative Resident. When she's not telling stories online and sparking creative conversations with fellow artists through her podcast Tryna Be Somebody, she teaches everything she knows about storytelling via Skillshare.",
+    "speakerImage": "http://localhost:3000/drafts/rkhan/media_1cc875d22844d9d0937374f5810fd444787b23858.jpeg?width=750&format=jpeg&optimize=medium",
+    "altText": "Test alt",
+    "creationTime": 1714544820000,
+    "modificationTime": 1714544820000,
+    "socialLinks": ["https://instagram.com/speaker1", "https://facebook.com/speaker2"]
+  },
+  
+  {
+    "speakerType" : "speaker",
+    "seriesId": "b75765b5-ceba-484c-9afc-c96955afabfb",
+    "speakerId": "54e42157-1e63-4af7-9744-04a60d698b9f",
+    "firstName": "Jordan Dené",
+    "lastName": "Ellis",
+    "title": "Community Relationship Manager, Adobe Express",
+    "bio": "Hallease Narvaez, known simply as Hallease, is a filmmaker, digital storyteller, and creative entrepreneur based in Atlanta. She's produced original online content for PBS Digital Studios, Target, Google, and YouTube through her creative production company StumbleWell. She is a former YouTube Black Voices recipient and a former Adobe Creative Resident. When she's not telling stories online and sparking creative conversations with fellow artists through her podcast Tryna Be Somebody, she teaches everything she knows about storytelling via Skillshare.",
+    "speakerImage": "http://localhost:3000/drafts/rkhan/media_1cc875d22844d9d0937374f5810fd444787b23858.jpeg?width=750&format=jpeg&optimize=medium",
+    "altText": "Test alt",
+    "creationTime": 1714544820000,
+    "modificationTime": 1714544820000,
+    "socialLinks": ["https://instagram.com/speaker1", "https://facebook.com/speaker2"]
+  },{
+    "speakerType" : "speaker",
+    "seriesId": "b75765b5-ceba-484c-9afc-c96955afabfb",
+    "speakerId": "54e42157-1e63-4af7-9744-04a60d698b9f",
+    "firstName": "Jordan Dené",
+    "lastName": "Ellis",
+    "title": "Community Relationship Manager, Adobe Express",
+    "bio": "Hallease Narvaez, known simply as Hallease, is a filmmaker, digital storyteller, and creative entrepreneur based in Atlanta. She's produced original online content for PBS Digital Studios, Target, Google, and YouTube through her creative production company StumbleWell. She is a former YouTube Black Voices recipient and a former Adobe Creative Resident. When she's not telling stories online and sparking creative conversations with fellow artists through her podcast Tryna Be Somebody, she teaches everything she knows about storytelling via Skillshare.",
+    "speakerImage": "http://localhost:3000/drafts/rkhan/media_1cc875d22844d9d0937374f5810fd444787b23858.jpeg?width=750&format=jpeg&optimize=medium",
+    "altText": "Test alt",
+    "creationTime": 1714544820000,
+    "modificationTime": 1714544820000,
+    "socialLinks": ["https://instagram.com/speaker1", "https://facebook.com/speaker2"]
+  }
+,{
+  "speakerType" : "speaker",
+  "seriesId": "b75765b5-ceba-484c-9afc-c96955afabfb",
+  "speakerId": "54e42157-1e63-4af7-9744-04a60d698b9f",
+  "firstName": "Jordan Dené",
+  "lastName": "Ellis",
+  "title": "Community Relationship Manager, Adobe Express",
+  "bio": "Hallease Narvaez, known simply as Hallease, is a filmmaker, digital storyteller, and creative entrepreneur based in Atlanta. She's produced original online content for PBS Digital Studios, Target, Google, and YouTube through her creative production company StumbleWell. She is a former YouTube Black Voices recipient and a former Adobe Creative Resident. When she's not telling stories online and sparking creative conversations with fellow artists through her podcast Tryna Be Somebody, she teaches everything she knows about storytelling via Skillshare.",
+  "speakerImage": "http://localhost:3000/drafts/rkhan/media_1cc875d22844d9d0937374f5810fd444787b23858.jpeg?width=750&format=jpeg&optimize=medium",
+  "altText": "Test alt",
+  "creationTime": 1714544820000,
+  "modificationTime": 1714544820000,
+  "socialLinks": ["https://instagram.com/speaker1", "https://facebook.com/speaker2"]
+},
+{
+  "speakerType" : "speaker",
+  "seriesId": "b75765b5-ceba-484c-9afc-c96955afabfb",
+  "speakerId": "54e42157-1e63-4af7-9744-04a60d698b9f",
+  "firstName": "Jordan Dené",
+  "lastName": "Ellis",
+  "title": "Community Relationship Manager, Adobe Express",
+  "bio": "Hallease Narvaez, known simply as Hallease, is a filmmaker, digital storyteller, and creative entrepreneur based in Atlanta. She's produced original online content for PBS Digital Studios, Target, Google, and YouTube through her creative production company StumbleWell. She is a former YouTube Black Voices recipient and a former Adobe Creative Resident. When she's not telling stories online and sparking creative conversations with fellow artists through her podcast Tryna Be Somebody, she teaches everything she knows about storytelling via Skillshare.",
+  "speakerImage": "http://localhost:3000/drafts/rkhan/media_1cc875d22844d9d0937374f5810fd444787b23858.jpeg?width=750&format=jpeg&optimize=medium",
+  "altText": "Test alt",
+  "creationTime": 1714544820000,
+  "modificationTime": 1714544820000,
+  "socialLinks": ["https://instagram.com/speaker1", "https://facebook.com/speaker2"]
+}
+,{
+    "speakerType" : "speaker",
+    "seriesId": "b75765b5-ceba-484c-9afc-c96955afabfb",
+    "speakerId": "54e42157-1e63-4af7-9744-04a60d698b9f",
+    "firstName": "Jordan Dené",
+    "lastName": "Ellis",
+    "title": "Community Relationship Manager, Adobe Express",
+    "bio": "Hallease Narvaez, known simply as Hallease, is a filmmaker, digital storyteller, and creative entrepreneur based in Atlanta. She's produced original online content for PBS Digital Studios, Target, Google, and YouTube through her creative production company StumbleWell. She is a former YouTube Black Voices recipient and a former Adobe Creative Resident. When she's not telling stories online and sparking creative conversations with fellow artists through her podcast Tryna Be Somebody, she teaches everything she knows about storytelling via Skillshare.",
+    "speakerImage": "http://localhost:3000/drafts/rkhan/media_1cc875d22844d9d0937374f5810fd444787b23858.jpeg?width=750&format=jpeg&optimize=medium",
+    "altText": "Test alt",
+    "creationTime": 1714544820000,
+    "modificationTime": 1714544820000,
+    "socialLinks": ["https://instagram.com/speaker1", "https://facebook.com/speaker2"]
+  },{
+    "speakerType" : "speaker",
+    "seriesId": "b75765b5-ceba-484c-9afc-c96955afabfb",
+    "speakerId": "54e42157-1e63-4af7-9744-04a60d698b9f",
+    "firstName": "Jordan Dené",
+    "lastName": "Ellis",
+    "title": "Community Relationship Manager, Adobe Express",
+    "bio": "Hallease Narvaez, known simply as Hallease, is a filmmaker, digital storyteller, and creative entrepreneur based in Atlanta. She's produced original online content for PBS Digital Studios, Target, Google, and YouTube through her creative production company StumbleWell. She is a former YouTube Black Voices recipient and a former Adobe Creative Resident. When she's not telling stories online and sparking creative conversations with fellow artists through her podcast Tryna Be Somebody, she teaches everything she knows about storytelling via Skillshare.",
+    "speakerImage": "http://localhost:3000/drafts/rkhan/media_1cc875d22844d9d0937374f5810fd444787b23858.jpeg?width=750&format=jpeg&optimize=medium",
+    "altText": "Test alt",
+    "creationTime": 1714544820000,
+    "modificationTime": 1714544820000,
+    "socialLinks": ["https://instagram.com/speaker1", "https://facebook.com/speaker2"]
+  }
+
+]

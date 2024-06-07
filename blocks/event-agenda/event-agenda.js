@@ -12,7 +12,15 @@ export default async function init(el) {
 
   if (!agendaMeta) return;
 
-  const agendaArray = JSON.parse(agendaMeta);
+  let agendaArray;
+
+  try {
+    agendaArray = JSON.parse(agendaMeta);
+  } catch (error) {
+    console.error('Failed to parse agenda metadata:', error);
+    el.remove();
+    return;
+  }
 
   if (agendaArray.length <= 0) {
     el.remove();

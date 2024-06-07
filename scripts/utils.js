@@ -60,6 +60,41 @@ export function decorateArea(area = document) {
   autoUpdateContent(area);
 }
 
+export function checkProfileCard() {
+  console.log("hi");
+  let profileCards = document.querySelectorAll("div.profile-card");
+  console.log(profileCards);
+
+  if (profileCards.length > 0) {
+    // Select the first profile card
+    let firstProfileCard = profileCards[0];
+
+    // Select the first inner div inside the first profile card
+    let innerDiv = firstProfileCard.querySelector('div');
+
+    if (innerDiv) {
+      // Select the second div inside the innerDiv
+      let secondInnerDiv = innerDiv.querySelectorAll('div')[1];
+
+      if (secondInnerDiv) {
+        console.log(secondInnerDiv.textContent);
+        return secondInnerDiv.textContent;
+      } else {
+        console.log('No second inner div found inside the first inner div.');
+        return null;
+      }
+    } else {
+      console.log('No inner div found inside the first profile card.');
+      return null;
+    }
+  } else {
+    console.log('No profile cards found.');
+    return null;
+  }
+}
+
+
+
 export async function importMiloUtils() {
   return import(`${getLibs()}/utils/utils.js`);
 }

@@ -83,4 +83,8 @@
   .event-agenda .agenda-items-col {
     padding-left: calc((100% - var(--grid-container-width)) / 2)
   }
+
+  .event-agenda .venue-img-col {
+    height: 560px;
+  }
 }
