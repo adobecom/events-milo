@@ -150,7 +150,7 @@ function checkFirstProfileCardsBlockType() {
   return null;
 }
 
-async function decorateDouble(data, cardsWrapper) {
+function decorateDouble(data, cardsWrapper) {
   data.forEach((speaker) => {
     const cardContainer = createTag('div', { class: 'card-container card-double' });
 
@@ -161,7 +161,7 @@ async function decorateDouble(data, cardsWrapper) {
   });
 }
 
-async function decorateCards(el, data) {
+function decorateCards(el, data) {
   const cardsWrapper = el.querySelector('.cards-wrapper');
   const rows = el.querySelectorAll(':scope > div');
   const configRow = rows[1];
@@ -182,13 +182,13 @@ async function decorateCards(el, data) {
     decorate1up(filteredData[0], cardsWrapper, position);
     cardsWrapper.classList.add('c1up');
   } else if (filteredData.length === 2) {
-    await decorateDouble(filteredData, cardsWrapper);
+    decorateDouble(filteredData, cardsWrapper);
     cardsWrapper.classList.add('cdouble');
   } else if (filteredData.length <= 3) {
-    await decorate3up(filteredData, cardsWrapper);
+    decorate3up(filteredData, cardsWrapper);
     cardsWrapper.classList.add('c3up');
   } else {
-    await decorate3up(filteredData, cardsWrapper);
+    decorate3up(filteredData, cardsWrapper);
     cardsWrapper.classList.add('carousel-plugin', 'show-3');
     el.classList.add('with-carousel');
 
@@ -201,5 +201,5 @@ export default async function init(el) {
   const cardsWrapper = createTag('div', { class: 'cards-wrapper' });
   el.append(cardsWrapper);
 
-  await decorateCards(el, data);
+  decorateCards(el, data);
 }
