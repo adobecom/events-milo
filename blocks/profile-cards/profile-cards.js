@@ -1,9 +1,10 @@
-import { getLibs, checkProfileCard } from '../../scripts/utils.js';
+import { getLibs } from '../../scripts/utils.js';
 import buildMiloCarousel from '../../features/milo-carousel.js';
+import { getMetadata } from '../../utils/utils.js';
 
 const { createTag } = await import(`${getLibs()}/utils/utils.js`);
 
-function decorateImage(cardContainer, imgSrc, variant, position = 'left', altText) {
+function decorateImage(cardContainer, imgSrc, variant, altText, position = 'left') {
   const imgElement = createTag('img', {
     src: imgSrc,
     alt: altText,
@@ -82,7 +83,7 @@ async function decorateSocialIcons(cardContainer, socialLinks) {
       href: link,
       target: '_blank',
       rel: 'noopener noreferrer',
-      'aria-label': platform
+      'aria-label': platform,
     });
     a.textContent = '';
     a.append(icon);
@@ -92,8 +93,6 @@ async function decorateSocialIcons(cardContainer, socialLinks) {
 
   if (socialList.children.length > 0) {
     cardContainer.append(socialList);
-  } else {
-    console.warn('No valid social icons found for:', socialLinks);
   }
 }
 
@@ -116,7 +115,7 @@ function decorateContent(cardContainer, data) {
 function decorate1up(data, cardsWrapper, position = 'left') {
   const cardContainer = createTag('div', { class: 'card-container card-1up' });
 
-  decorateImage(cardContainer, data.speakerImage, '1', position, data.altText);
+  decorateImage(cardContainer, data.speakerImage, '1', data.altText, position);
   decorateContent(cardContainer, data);
 
   cardsWrapper.append(cardContainer);
@@ -133,6 +132,24 @@ async function decorate3up(data, cardsWrapper) {
   });
 }
 
+function checkFirstProfileCardsBlockType() {
+  const profileCards = document.querySelectorAll('div.profile-card');
+
+  if (profileCards.length > 0) {
+    const firstProfileCard = profileCards[0];
+    const innerDiv = firstProfileCard.querySelector('div');
+    if (innerDiv) {
+      const secondInnerDiv = innerDiv.querySelectorAll('div')[1];
+      if (secondInnerDiv) {
+        return secondInnerDiv.textContent;
+      }
+      return null;
+    }
+    return null;
+  }
+  return null;
+}
+
 async function decorateDouble(data, cardsWrapper) {
   data.forEach((speaker) => {
     const cardContainer = createTag('div', { class: 'card-container card-double' });
@@ -144,47 +161,45 @@ async function decorateDouble(data, cardsWrapper) {
   });
 }
 
-async function decorateCards(data, cardsWrapper, dataFull, firstSpeaker) {
-  if (data.length === 1) {
-    const position = (dataFull.length === 2 && firstSpeaker !== data[0].speakerType) ? 'right' : 'left';
-    decorate1up(data[0], cardsWrapper, position);
+async function decorateCards(el, data) {
+  const cardsWrapper = el.querySelector('.cards-wrapper');
+  const rows = el.querySelectorAll(':scope > div');
+  const configRow = rows[1];
+  const speakertype = configRow?.querySelectorAll(':scope > div')?.[1]?.textContent.toLowerCase().trim();
+  const filteredData = data.filter((speaker) => speaker.speakerType === speakertype);
+
+  if (filteredData.length === 0) {
+    el.remove();
+    return;
+  }
+
+  const firstProfileCardsType = checkFirstProfileCardsBlockType();
+
+  configRow.remove();
+
+  if (filteredData.length === 1) {
+    const position = (data.length === 2 && firstProfileCardsType !== filteredData[0].speakerType) ? 'right' : 'left';
+    decorate1up(filteredData[0], cardsWrapper, position);
     cardsWrapper.classList.add('c1up');
-  } else if (data.length === 2) {
-    await decorateDouble(data, cardsWrapper);
+  } else if (filteredData.length === 2) {
+    await decorateDouble(filteredData, cardsWrapper);
     cardsWrapper.classList.add('cdouble');
-  } else if (data.length <= 3) {
-    await decorate3up(data, cardsWrapper);
+  } else if (filteredData.length <= 3) {
+    await decorate3up(filteredData, cardsWrapper);
     cardsWrapper.classList.add('c3up');
   } else {
-    await decorate3up(data, cardsWrapper);
+    await decorate3up(filteredData, cardsWrapper);
     cardsWrapper.classList.add('carousel-plugin', 'show-3');
+    el.classList.add('with-carousel');
 
-    // buildMiloCarousel(cardsWrapper, Array.from(cardsWrapper.querySelectorAll('.card-container')));
+    buildMiloCarousel(cardsWrapper, Array.from(cardsWrapper.querySelectorAll('.card-container')));
   }
 }
 
 export default async function init(el) {
-  try {
-    const response = await fetch('/blocks/profile-card/speakers/speakers.json');
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
+  const data = JSON.parse(getMetadata('speakers'));
+  const cardsWrapper = createTag('div', { class: 'cards-wrapper' });
+  el.append(cardsWrapper);
 
-    const firstSpeaker = checkProfileCard();
-    const rows = [...el.querySelectorAll(':scope > div')];
-    const cols = rows[0].querySelectorAll(':scope > div');
-    const speakertype = cols[1].textContent.toLowerCase().trim();
-    const data = await response.json();
-
-    const filteredData = data.filter((speaker) => speaker.speakerType === speakertype);
-
-    el.innerHTML = '';
-
-    const cardsWrapper = createTag('div', { class: 'cards-wrapper' });
-    el.append(cardsWrapper);
-
-    await decorateCards(filteredData, cardsWrapper, data, firstSpeaker);
-  } catch (error) {
-    console.error('Error fetching or parsing JSON:', error);
-  }
+  await decorateCards(el, data);
 }
