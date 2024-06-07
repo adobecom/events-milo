@@ -19,7 +19,7 @@ export async function createAttendee(eventId, attendeeData) {
   const raw = JSON.stringify(attendeeData);
   const options = constructRequestOptions('POST', raw);
 
-  const resp = await fetch(`http://localhost:8500/v1/events/${eventId}/attendees`, options).then((res) => res.json()).catch((error) => console.log(error));
+  const resp = await fetch(`http://localhost:8499/v1/events/${eventId}/attendees`, options).then((res) => res.json()).catch((error) => console.log(error));
   return resp;
 }
 
@@ -29,7 +29,7 @@ export async function updateAttendee(eventId, attendeeData) {
   const raw = JSON.stringify(attendeeData);
   const options = constructRequestOptions('PUT', raw);
 
-  const resp = await fetch(`http://localhost:8500/v1/events/${eventId}/attendees/${attendeeId}`, options).then((res) => res.json()).catch((error) => console.log(error));
+  const resp = await fetch(`http://localhost:8499/v1/events/${eventId}/attendees/${attendeeId}`, options).then((res) => res.json()).catch((error) => console.log(error));
   return resp;
 }
 
@@ -38,7 +38,7 @@ export async function deleteAttendee(eventId, attendeeId) {
 
   const options = constructRequestOptions('DELETE');
 
-  const resp = await fetch(`http://localhost:8500/v1/events/${eventId}/attendees/${attendeeId}`, options).then((res) => res.json()).catch((error) => console.log(error));
+  const resp = await fetch(`http://localhost:8499/v1/events/${eventId}/attendees/${attendeeId}`, options).then((res) => res.json()).catch((error) => console.log(error));
   return resp;
 }
 
@@ -47,7 +47,7 @@ export async function getAttendees(eventId) {
 
   const options = constructRequestOptions('GET');
 
-  const resp = await fetch(`http://localhost:8500/v1/events/${eventId}/attendees`, options).then((res) => res.json()).catch((error) => console.log(error));
+  const resp = await fetch(`http://localhost:8499/v1/events/${eventId}/attendees`, options).then((res) => res.json()).catch((error) => console.log(error));
   return resp;
 }
 
@@ -56,6 +56,6 @@ export async function getAttendee(eventId, attendeeId) {
 
   const options = constructRequestOptions('GET');
 
-  const resp = await fetch(`http://localhost:8500/v1/events/${eventId}/attendees/${attendeeId}`, options).then((res) => res.json()).catch((error) => console.log(error));
+  const resp = await fetch(`http://localhost:8499/v1/events/${eventId}/attendees/${attendeeId}`, options).then((res) => res.json()).catch((error) => console.log(error));
   return resp;
 }
