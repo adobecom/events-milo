@@ -1,7 +1,5 @@
 .events-form {
   --input-border-radius: 4px;
-
-  padding: var(--spacing-xl);
   border-radius: var(--card-border-radius-l);
   filter: var(--image-filter-drop-shadow-small);
   border: solid 1px var(--bg-color-grey);
@@ -21,6 +19,13 @@
   flex-direction: column-reverse;
   align-items: center;
   gap: 16px;
+  padding: var(--spacing-xl);
+  background-color: var(--color-black);
+  color: var(--color-white);
+}
+
+.events-form .event-form-hero h4 {
+  margin: 0;
 }
 
 .events-form .event-form-hero > div {
@@ -35,7 +40,9 @@
   width: 100%;
   display: flex;
   flex-wrap: wrap;
+  padding: var(--spacing-xl);
   padding-top: 24px;
+  box-sizing: border-box;
 }
 
 .events-form form .first-form-section {
@@ -262,6 +269,35 @@
   background: var(--color-gray-200);
 }
 
+.events-form .terms-and-conditions-wrapper .checkbox-wrapper {
+  display: flex;
+  align-items: flex-start;
+}
+
+.events-form .terms-and-conditions-wrapper .checkbox-wrapper input[type='checkbox'] {
+  width: auto;
+  margin: 6px 8px;
+}
+
+.events-form .field-wrapper.events-form-submit-wrapper button {
+  background-color: var(--color-black);
+}
+
+.events-form .form-success-msg {
+  text-align: center;
+  padding: 80px 40px;
+}
+
+.events-form .form-success-msg h3,
+.events-form .form-success-msg p {
+  padding-top: 0;
+  max-width: 630px;
+}
+
+.events-form *.hidden {
+  display: none;
+}
+
 @media screen and (min-width: 600px) {
   .events-form form {
     display: grid;
@@ -326,5 +362,9 @@
 
   .events-form label {
     width: 72%;
+  }
+
+  .events-form .terms-and-conditions-wrapper .checkbox-wrapper label {
+    width: auto;
   }
 }

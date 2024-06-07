@@ -1,0 +1,66 @@
+.event-partners {
+  max-width: 300px;
+  margin: 0 auto;
+}
+
+.event-partners h2 {    
+  text-align: center;
+  font-size: var(--type-heading-l-size);
+}
+
+.event-partners.images {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: 59px;
+  padding: 12px 0;
+  grid-auto-rows: 59px;
+  gap: 1rem;
+}
+
+.event-partners.logo {
+  width: 89px;
+  height: 59px;
+}
+.event-partners.logo a {
+  height: 100%;
+}
+
+.event-partners.logo > img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+
+@media screen and (min-width: 900px) {
+  .event-partners {    
+    max-width: 1015px;
+  }
+  
+  .event-partners h2 {    
+    text-align: center;
+    font-size: var(--type-heading-xl-size);
+  }
+  
+  .event-partners.images {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: 181px;
+    padding: 40px 0;
+    grid-auto-rows: 181px;
+    gap: 3rem;
+  }
+  
+  .event-partners.logo {
+    width: 306px;
+    height: 181px;
+  }
+  .event-partners.logo a {
+    height: 100%;
+  }
+  
+  .event-partners.logo > img {
+    width: 100%;
+    height: 100%;
+  }
+}

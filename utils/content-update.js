@@ -1,8 +1,30 @@
 export const REG = /\[\[(.*?)\]\]/g;
 
 const preserveFormatKeys = [
-  'event-description',
+  'description',
 ];
+
+function createTag(tag, attributes, html, options = {}) {
+  const el = document.createElement(tag);
+  if (html) {
+    if (html instanceof HTMLElement
+      || html instanceof SVGElement
+      || html instanceof DocumentFragment) {
+      el.append(html);
+    } else if (Array.isArray(html)) {
+      el.append(...html);
+    } else {
+      el.insertAdjacentHTML('beforeend', html);
+    }
+  }
+  if (attributes) {
+    Object.entries(attributes).forEach(([key, val]) => {
+      el.setAttribute(key, val);
+    });
+  }
+  options.parent?.append(el);
+  return el;
+}
 
 function getMetadata(name, doc = document) {
   const attr = name && name.includes(':') ? 'property' : 'name';
@@ -11,6 +33,11 @@ function getMetadata(name, doc = document) {
 }
 
 function handleRegisterButton(a) {
+  const urlParams = new URLSearchParams(window.location.search);
+  const devMode = urlParams.get('devMode');
+
+  if (devMode) return;
+
   const signIn = () => {
     if (typeof window.adobeIMS?.signIn !== 'function') {
       window?.lana.log({ message: 'IMS signIn method not available', tags: 'errorType=warn,module=gnav' });
@@ -90,7 +117,7 @@ function autoUpdateLinks(scope) {
     try {
       const url = new URL(a.href);
 
-      if (a.href.endsWith('#rsvp-form')) {
+      if (/#rsvp-form.*/.test(a.href)) {
         const profile = window.bm8tr.get('imsProfile');
         if (profile?.noProfile) {
           handleRegisterButton(a);
@@ -103,24 +130,22 @@ function autoUpdateLinks(scope) {
         }
       }
 
-      if (getMetadata(url.hash.replace('#', ''))) {
-        if (a.href.endsWith('#event-template')) {
-          const params = new URLSearchParams(document.location.search);
-          const testTiming = params.get('timing');
-          let timeSuffix = '';
+      if (a.href.endsWith('#event-template')) {
+        const params = new URLSearchParams(document.location.search);
+        const testTiming = params.get('timing');
+        let timeSuffix = '';
 
-          if (testTiming) {
-            timeSuffix = +testTiming > +getMetadata('local-end-time-millis') ? '-post' : '-pre';
-          } else {
-            const currentDate = new Date();
-            const currentTimestamp = currentDate.getTime();
-            timeSuffix = currentTimestamp > +getMetadata('local-end-time-millis') ? '-post' : '-pre';
-          }
-
-          a.href = `${getMetadata('event-template')}${timeSuffix}`;
+        if (testTiming) {
+          timeSuffix = +testTiming > +getMetadata('local-end-time-millis') ? '-post' : '-pre';
         } else {
-          a.href = getMetadata(url.hash.replace('#', ''));
+          const currentDate = new Date();
+          const currentTimestamp = currentDate.getTime();
+          timeSuffix = currentTimestamp > +getMetadata('local-end-time-millis') ? '-post' : '-pre';
         }
+
+        a.href = `${getMetadata('template-id')}${timeSuffix}`;
+      } else if (getMetadata(url.hash.replace('#', ''))) {
+        a.href = getMetadata(url.hash.replace('#', ''));
       }
     } catch (e) {
       window.lana?.log(`Error while attempting to replace link ${a.href}: ${e}`);
@@ -163,7 +188,32 @@ function updateImgTag(child, matchCallback, parentElement) {
 function updateTextNode(child, matchCallback) {
   const originalText = child.nodeValue;
   const replacedText = originalText.replace(REG, (_match, p1) => matchCallback(_match, p1, child));
-  if (replacedText !== originalText) child.nodeValue = replacedText;
+  if (replacedText !== originalText) {
+    const lines = replacedText.split('\\n');
+    lines.forEach((line, index) => {
+      const textNode = document.createTextNode(line);
+      child.parentElement.appendChild(textNode);
+      if (index < lines.length - 1) {
+        child.parentElement.appendChild(document.createElement('br'));
+      }
+    });
+    child.remove();
+  }
+}
+
+function injectFragments(parent) {
+  const productBlades = parent.querySelector('.event-product-blades');
+
+  if (productBlades) {
+    const relatedProducts = getMetadata('related-products');
+    if (relatedProducts) {
+      const bladesDiv = productBlades.querySelector(':scope > div > div');
+      const fragmentLinks = relatedProducts.split(',');
+      fragmentLinks.forEach((l) => {
+        createTag('a', { href: new URL(l).pathname }, l, { parent: bladesDiv });
+      });
+    }
+  }
 }
 
 // data -> dom gills
@@ -208,4 +258,5 @@ export default function autoUpdateContent(parent, extraData) {
 
   // handle link replacement. To keep when switching to metadata based rendering
   autoUpdateLinks(parent);
+  injectFragments(parent);
 }
