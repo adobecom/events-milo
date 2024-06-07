@@ -164,12 +164,6 @@ async function decorateCards(data, cardsWrapper, dataFull, firstSpeaker) {
 }
 
 export default async function init(el) {
-  const miloLibs = getLibs();
-  await Promise.all([
-    import(`${miloLibs}/features/spectrum-web-components/dist/textfield.js`),
-    import(`${miloLibs}/features/spectrum-web-components/dist/checkbox.js`),
-  ]);
-
   try {
     const response = await fetch('/blocks/profile-card/speakers/speakers.json');
     if (!response.ok) {
