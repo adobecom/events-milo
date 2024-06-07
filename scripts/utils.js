@@ -57,7 +57,7 @@ export function decorateArea(area = document) {
     eagerLoad(marquee, 'div:last-child > div:last-child img');
   }());
 
-  autoUpdateContent(area);
+  autoUpdateContent(area, getLibs());
 }
 
 export async function importMiloUtils() {

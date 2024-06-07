@@ -1,7 +1,8 @@
 import { getLibs } from '../../scripts/utils.js';
 import { getMetadata } from '../../utils/utils.js';
-import { getAttendeeData, getProfile, getEventId, submitToSplashThat } from '../../utils/event-apis.js';
+import { getProfile } from '../../utils/event-apis.js';
 import HtmlSanitizer from '../../deps/html-sanitizer.js';
+import { createAttendee, deleteAttendee } from '../../utils/esp-controller.js';
 
 const { createTag } = await import(`${getLibs()}/utils/utils.js`);
 const { closeModal } = await import(`${getLibs()}/blocks/modal/modal.js`);
@@ -54,7 +55,7 @@ function constructPayload(form) {
   return payload;
 }
 
-async function submitForm(form) {
+async function submitForm(form, espData) {
   const payload = constructPayload(form);
   payload.timestamp = new Date().toJSON();
   Object.keys(payload).forEach((key) => {
@@ -76,9 +77,9 @@ async function submitForm(form) {
     return true;
   });
 
-  const response = await submitToSplashThat(payload);
+  const response = await createAttendee(espData.eventId, payload);
 
-  return response || true;
+  return response || false;
 }
 
 function clearForm(form) {
@@ -91,7 +92,7 @@ function clearForm(form) {
   });
 }
 
-function createButton({ type, label }, successMsg) {
+function createButton({ type, label }, successMsg, espData) {
   const button = createTag('button', { class: 'button' }, label);
   if (type === 'submit') {
     button.addEventListener('click', async (event) => {
@@ -99,9 +100,14 @@ function createButton({ type, label }, successMsg) {
       if (form.checkValidity()) {
         event.preventDefault();
         button.setAttribute('disabled', true);
-        const submission = await submitForm(form);
+        const submissionResp = await submitForm(form, espData);
         button.removeAttribute('disabled');
-        if (!submission) return;
+        if (!submissionResp) return;
+
+        espData.attendeeId = submissionResp.attendeeId;
+        espData.resp = submissionResp;
+        window.bm8tr.set('rsvpstatus', espData);
+
         clearForm(form);
         const block = button.closest('.events-form');
         const hero = block.querySelector('.event-form-hero');
@@ -277,7 +283,7 @@ function addTerms(form, terms) {
   submit.disabled = none(Array.from(checkboxes), (c) => c.checked);
 }
 
-function decorateSuccessMsg(form, successMsg) {
+function decorateSuccessMsg(form, successMsg, espData) {
   const ctas = successMsg.querySelectorAll('a');
 
   ctas.forEach((cta, i) => {
@@ -287,11 +293,13 @@ function decorateSuccessMsg(form, successMsg) {
       cta.classList.add('con-button', 'black');
     }
 
-    cta.addEventListener('click', (e) => {
+    cta.addEventListener('click', async (e) => {
       e.preventDefault();
 
       if (i === 0) {
-        // TODO: POST call to cancel RSVP
+        const resp = await deleteAttendee(espData.eventId, espData.attendeeId);
+        espData.resp = resp;
+        window.bm8tr.set('rsvpstatus', espData);
       }
 
       const modal = form.closest('.dialog-modal');
@@ -303,7 +311,17 @@ function decorateSuccessMsg(form, successMsg) {
 }
 
 async function createForm(formURL, successMsg, formData, terms) {
-  const [{ required }, { visible }] = JSON.parse(getMetadata('rsvp-form-fields'));
+  let rsvpFieldsData;
+
+  try {
+    rsvpFieldsData = JSON.parse(getMetadata('rsvp-form-fields'));
+  } catch (error) {
+    window.lana?.log('Failed to parse partners metadata:', error);
+  }
+
+  const espData = { eventId: getMetadata('event-id') || '', attendeeId: '' };
+  window.bm8tr.set('rsvpstatus', espData);
+
   const { pathname } = new URL(formURL);
   let json = formData;
   /* c8 ignore next 4 */
@@ -311,13 +329,24 @@ async function createForm(formURL, successMsg, formData, terms) {
     const resp = await fetch(pathname);
     json = await resp.json();
   }
-  json.data = json.data
-    .map((obj) => {
-      const lowkey = lowercaseKeys(obj);
-      if (required.includes(lowkey.field)) lowkey.required = 'x';
-      return lowkey;
-    })
-    .filter((f) => visible.includes(f.field) || ['clear', 'submit'].includes(f.field));
+
+  if (rsvpFieldsData) {
+    const [{ required, visible }] = rsvpFieldsData;
+    json.data = json.data
+      .map((obj) => {
+        const lowkey = lowercaseKeys(obj);
+        if (required.includes(lowkey.field)) lowkey.required = 'x';
+        return lowkey;
+      })
+      .filter((f) => visible.includes(f.field) || ['clear', 'submit'].includes(f.field));
+  } else {
+    json.data = json.data
+      .map((obj) => {
+        const lowkey = lowercaseKeys(obj);
+        return lowkey;
+      })
+      .filter((f) => ['clear', 'submit'].includes(f.field));
+  }
 
   const form = createTag('form');
   const rules = [];
@@ -332,8 +361,8 @@ async function createForm(formURL, successMsg, formData, terms) {
     'checkbox-group': { fn: createCheckGroup, params: ['checkbox'], label: true, classes: ['field-group-wrapper'] },
     'radio-group': { fn: createCheckGroup, params: ['radio'], label: true, classes: ['field-group-wrapper'] },
     'text-area': { fn: createTextArea, params: [], label: true, classes: [] },
-    submit: { fn: createButton, params: [successMsg], label: false, classes: ['field-button-wrapper'] },
-    clear: { fn: createButton, params: [successMsg], label: false, classes: ['field-button-wrapper'] },
+    submit: { fn: createButton, params: [successMsg, espData], label: false, classes: ['field-button-wrapper'] },
+    clear: { fn: createButton, params: [successMsg, espData], label: false, classes: ['field-button-wrapper'] },
     divider: { fn: createDivider, params: [], label: false, classes: ['divider'] },
     default: { fn: createInput, params: [], label: true, classes: [] },
   };
@@ -364,7 +393,7 @@ async function createForm(formURL, successMsg, formData, terms) {
   });
 
   addTerms(form, terms);
-  decorateSuccessMsg(form, successMsg);
+  decorateSuccessMsg(form, successMsg, espData);
 
   form.addEventListener('input', () => applyRules(form, rules));
   applyRules(form, rules);
@@ -385,16 +414,6 @@ function decorateHero(heroEl) {
   heroEl.classList.add('event-form-hero');
 }
 
-async function decorateRSVPStatus(bp, profile) {
-  const data = await getAttendeeData(profile.email, getEventId());
-  if (!data) return;
-
-  if (data.registered) {
-    const successLabel = createTag('div', { class: 'rsvp-status-label' }, 'You have previously registered for this event. Feel free to use the form below to RSVP for another guest.');
-    bp.formContainer.before(successLabel);
-  }
-}
-
 async function updateDynamicContent(bp) {
   const { block, eventHero } = bp;
   let profile;
@@ -403,10 +422,6 @@ async function updateDynamicContent(bp) {
     profile = await getProfile();
   } catch (e) {
     eventHero.querySelectorAll('p')?.forEach((p) => p.remove());
-  }
-
-  if (profile) {
-    await decorateRSVPStatus(bp, profile);
   }
 
   eventHero.classList.remove('loading');
@@ -440,9 +455,7 @@ export default async function decorate(block, formData = null) {
   decorateHero(bp.eventHero);
   buildEventform(bp, formData)
     .then(() => { updateDynamicContent(bp); })
-    .then(() => {
+    .finally(() => {
       block.style.opacity = 1;
-    }).catch(() => {
-      block.innerHTML = 'Failed to load registration form. Please refresh the page.';
     });
 }

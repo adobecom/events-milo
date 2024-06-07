@@ -3,10 +3,6 @@ const API_QUERY_PARAM = 'featuredCards';
 
 const pageDataCache = {};
 
-export function getEventId() {
-  return window.bm8tr.get('eventData')?.arbitrary?.[0]?.value;
-}
-
 export function flattenObject(obj, parentKey = '', result = {}) {
   Object.keys(obj).forEach((key) => {
     const value = obj[key];

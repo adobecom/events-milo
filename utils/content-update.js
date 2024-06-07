@@ -1,3 +1,5 @@
+import { getAttendee } from './esp-controller.js';
+
 export const REG = /\[\[(.*?)\]\]/g;
 
 const preserveFormatKeys = [
@@ -32,7 +34,24 @@ function getMetadata(name, doc = document) {
   return meta && meta.content;
 }
 
-function handleRegisterButton(a) {
+async function updateRSVPButtonState(espData, rsvpBtn, miloLibs) {
+  const { getConfig } = await import(`${miloLibs}/utils/utils.js`);
+  const { replaceKey } = await import(`${miloLibs}/features/placeholders.js`);
+  const config = getConfig();
+
+  rsvpBtn.textContent = await replaceKey('rsvp-loading-cta-text', config);
+  const attendeeData = await getAttendee(espData.eventId, espData.attendeeId);
+
+  if (attendeeData.id) {
+    rsvpBtn.textContent = await replaceKey('registered-cta-text', config);
+  } else {
+    rsvpBtn.textContent = rsvpBtn.originalText;
+  }
+
+  // FIXME: no waitlisted state yet.
+}
+
+function handleRegisterButton(a, miloLibs) {
   const urlParams = new URLSearchParams(window.location.search);
   const devMode = urlParams.get('devMode');
 
@@ -50,6 +69,15 @@ function handleRegisterButton(a) {
   a.addEventListener('click', (e) => {
     e.preventDefault();
     signIn();
+  });
+
+  window.bm8tr.subscribe('rsvpstatus', ({ newValue }) => {
+    const rsvpBtn = {
+      el: a,
+      originalText: a.textContent,
+    };
+
+    updateRSVPButtonState(newValue, rsvpBtn, miloLibs);
   });
 }
 
@@ -217,7 +245,7 @@ function injectFragments(parent) {
 }
 
 // data -> dom gills
-export default function autoUpdateContent(parent, extraData) {
+export default function autoUpdateContent(parent, miloLibs, extraData) {
   if (!parent) {
     window.lana?.log('page server block cannot find its parent element');
     return;
