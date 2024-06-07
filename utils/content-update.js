@@ -144,7 +144,7 @@ export function removeIrrelevantSections(area) {
   });
 }
 
-function autoUpdateLinks(scope) {
+function autoUpdateLinks(scope, miloLibs) {
   scope.querySelectorAll('a[href*="#"]').forEach((a) => {
     try {
       const url = new URL(a.href);
@@ -152,11 +152,11 @@ function autoUpdateLinks(scope) {
       if (/#rsvp-form.*/.test(a.href)) {
         const profile = window.bm8tr.get('imsProfile');
         if (profile?.noProfile) {
-          handleRegisterButton(a);
+          handleRegisterButton(a, miloLibs);
         } else if (!profile) {
           window.bm8tr.subscribe('imsProfile', ({ newValue }) => {
             if (newValue?.noProfile) {
-              handleRegisterButton(a);
+              handleRegisterButton(a, miloLibs);
             }
           });
         }
@@ -289,6 +289,6 @@ export default function autoUpdateContent(parent, miloLibs, extraData) {
   });
 
   // handle link replacement. To keep when switching to metadata based rendering
-  autoUpdateLinks(parent);
+  autoUpdateLinks(parent, miloLibs);
   injectFragments(parent);
 }
