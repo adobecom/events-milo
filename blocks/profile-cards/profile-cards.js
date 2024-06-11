@@ -133,22 +133,16 @@ async function decorate3up(data, cardsWrapper) {
 }
 
 function checkFirstProfileCardsBlockType() {
-  const profileCards = document.querySelectorAll('div.profile-card');
+  const profileCards = document.querySelectorAll('div.profile-cards');
 
   if (profileCards.length > 0) {
     const firstProfileCard = profileCards[0];
     const innerDiv = firstProfileCard.querySelector('div');
-    if (innerDiv) {
-      const secondInnerDiv = innerDiv.querySelectorAll('div')[1];
-      if (secondInnerDiv) {
-        return secondInnerDiv.textContent;
-      }
-      return null;
+        return innerDiv.textContent.trim();     
     }
     return null;
   }
-  return null;
-}
+ 
 
 function decorateDouble(data, cardsWrapper) {
   data.forEach((speaker) => {
@@ -178,7 +172,7 @@ function decorateCards(el, data) {
   configRow.remove();
 
   if (filteredData.length === 1) {
-    const position = (data.length === 2 && firstProfileCardsType !== filteredData[0].speakerType) ? 'right' : 'left';
+    const position = (data.length === 2 && firstProfileCardsType.toLowerCase() !== filteredData[0].speakerType.toLowerCase()) ? 'right' : 'left';
     decorate1up(filteredData[0], cardsWrapper, position);
     cardsWrapper.classList.add('c1up');
   } else if (filteredData.length === 2) {

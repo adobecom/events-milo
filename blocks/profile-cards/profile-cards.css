@@ -114,17 +114,23 @@
 .profile-cards .card-1up .card-image-container,
 .profile-cards .card-1up-right .card-image-container {
   width: 100%;
-  border-radius: 10px 10px 0 0;
+}
+.profile-cards .card-1up-right .card-image-container img {
+  border-radius: 0px 10px 10px 0px;
+}
+
+.profile-cards .card-1up-left .card-image-container img {
+  border-radius: 10px 0px 0px 10px;
 }
 
 .profile-cards .card-image-container {
   position: relative;
-  overflow: hidden;
 }
 
 .profile-cards .card-image-container img {
   width: 100%;
   height: 100%;
+  border-radius: 10px 10px 0px 0px;
   object-fit: cover;
 }
 
