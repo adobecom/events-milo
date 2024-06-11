@@ -239,11 +239,33 @@ function injectFragments(parent) {
   if (productBlades) {
     const relatedProducts = getMetadata('related-products');
     if (relatedProducts) {
-      const bladesDiv = productBlades.querySelector(':scope > div > div');
-      const fragmentLinks = relatedProducts.split(',');
-      fragmentLinks.forEach((l) => {
-        createTag('a', { href: new URL(l).pathname }, l, { parent: bladesDiv });
-      });
+      let products;
+
+      try {
+        products = JSON.parse(relatedProducts);
+      } catch (e) {
+        window.lana?.log('Invalid JSON metadata for product blades:', e);
+      }
+
+      if (products) {
+        const bladesToShow = products.filter((p) => p.showProductBlade).map((o) => o.name);
+        const relatedPairs = { 'lightroom-photoshop': ['photoshop', 'lightroom'] };
+
+        Object.entries(relatedPairs).forEach(([joinedName, [p1, p2]]) => {
+          const [i1, i2] = [bladesToShow.indexOf(p1), bladesToShow.indexOf(p2)];
+
+          if (i1 > 0 && i2 > 0) {
+            bladesToShow.splice(Math.min(i1, i2), 1, joinedName);
+            bladesToShow.splice(Math.max(i1, i2), 1);
+          }
+        });
+
+        const bladesDiv = productBlades.querySelector(':scope > div > div');
+        bladesToShow.forEach((p) => {
+          const fragmentLink = `/fragments/product-blades/${p}`;
+          createTag('a', { href: fragmentLink }, fragmentLink, { parent: bladesDiv });
+        });
+      }
     }
   }
 }
