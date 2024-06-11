@@ -1,3 +1,5 @@
+import { getAttendee } from './esp-controller.js';
+
 export const REG = /\[\[(.*?)\]\]/g;
 
 const preserveFormatKeys = [
@@ -32,7 +34,26 @@ function getMetadata(name, doc = document) {
   return meta && meta.content;
 }
 
-function handleRegisterButton(a) {
+async function updateRSVPButtonState(rsvpData, rsvpBtn, miloLibs) {
+  if (rsvpData) return;
+
+  const { getConfig } = await import(`${miloLibs}/utils/utils.js`);
+  const { replaceKey } = await import(`${miloLibs}/features/placeholders.js`);
+  const config = getConfig();
+
+  rsvpBtn.textContent = await replaceKey('rsvp-loading-cta-text', config);
+  const attendeeData = await getAttendee(rsvpData.eventId || getMetadata('event-id'), rsvpData.attendeeId);
+
+  if (attendeeData.id) {
+    rsvpBtn.textContent = await replaceKey('registered-cta-text', config);
+  } else {
+    rsvpBtn.textContent = rsvpBtn.originalText;
+  }
+
+  // FIXME: no waitlisted state yet.
+}
+
+function handleRegisterButton(a, miloLibs) {
   const urlParams = new URLSearchParams(window.location.search);
   const devMode = urlParams.get('devMode');
 
@@ -50,6 +71,17 @@ function handleRegisterButton(a) {
   a.addEventListener('click', (e) => {
     e.preventDefault();
     signIn();
+  });
+
+  const rsvpBtn = {
+    el: a,
+    originalText: a.textContent,
+  };
+
+  updateRSVPButtonState(window.bm8tr.get('rsvpData'), rsvpBtn, miloLibs);
+
+  window.bm8tr.subscribe('rsvpData', ({ newValue }) => {
+    updateRSVPButtonState(newValue, rsvpBtn, miloLibs);
   });
 }
 
@@ -112,7 +144,7 @@ export function removeIrrelevantSections(area) {
   });
 }
 
-function autoUpdateLinks(scope) {
+function autoUpdateLinks(scope, miloLibs) {
   scope.querySelectorAll('a[href*="#"]').forEach((a) => {
     try {
       const url = new URL(a.href);
@@ -120,11 +152,11 @@ function autoUpdateLinks(scope) {
       if (/#rsvp-form.*/.test(a.href)) {
         const profile = window.bm8tr.get('imsProfile');
         if (profile?.noProfile) {
-          handleRegisterButton(a);
+          handleRegisterButton(a, miloLibs);
         } else if (!profile) {
           window.bm8tr.subscribe('imsProfile', ({ newValue }) => {
             if (newValue?.noProfile) {
-              handleRegisterButton(a);
+              handleRegisterButton(a, miloLibs);
             }
           });
         }
@@ -217,7 +249,7 @@ function injectFragments(parent) {
 }
 
 // data -> dom gills
-export default function autoUpdateContent(parent, extraData) {
+export default function autoUpdateContent(parent, miloLibs, extraData) {
   if (!parent) {
     window.lana?.log('page server block cannot find its parent element');
     return;
@@ -257,6 +289,6 @@ export default function autoUpdateContent(parent, extraData) {
   });
 
   // handle link replacement. To keep when switching to metadata based rendering
-  autoUpdateLinks(parent);
+  autoUpdateLinks(parent, miloLibs);
   injectFragments(parent);
 }

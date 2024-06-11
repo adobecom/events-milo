@@ -3,10 +3,6 @@ const API_QUERY_PARAM = 'featuredCards';
 
 const pageDataCache = {};
 
-export function getEventId() {
-  return window.bm8tr.get('eventData')?.arbitrary?.[0]?.value;
-}
-
 export function flattenObject(obj, parentKey = '', result = {}) {
   Object.keys(obj).forEach((key) => {
     const value = obj[key];
@@ -103,35 +99,6 @@ export async function getAttendeeData(email, eventId) {
 
   console.log('Fetched attendee data:', data);
   return data;
-}
-
-export async function submitToSplashThat(payload) {
-  const myHeaders = new Headers();
-  myHeaders.append('x-api-key', 'CCHomeWeb1');
-  myHeaders.append('Content-Type', 'application/json');
-
-  const raw = JSON.stringify(payload);
-
-  const requestOptions = {
-    method: 'POST',
-    headers: myHeaders,
-    body: raw,
-    redirect: 'follow',
-  };
-
-  const eventId = getEventId();
-
-  if (!eventId) return false;
-  const resp = await fetch(`https://cchome-stage.adobe.io/lod/v1/events/${eventId}/attendees`, requestOptions).then((response) => response);
-
-  console.log('Submitted registration to SplashThat:', payload);
-  resp.json().then((json) => {
-    console.log('Event Service Layer response:', json);
-  });
-
-  if (!resp.ok) return false;
-
-  return payload;
 }
 
 export async function captureProfile() {
