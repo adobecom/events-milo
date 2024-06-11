@@ -250,21 +250,30 @@ function injectFragments(parent) {
       if (products) {
         const bladesToShow = products.filter((p) => p.showProductBlade).map((o) => o.name);
         const relatedPairs = { 'lightroom-photoshop': ['photoshop', 'lightroom'] };
-
-        Object.entries(relatedPairs).forEach(([joinedName, [p1, p2]]) => {
-          const [i1, i2] = [bladesToShow.indexOf(p1), bladesToShow.indexOf(p2)];
-
-          if (i1 > 0 && i2 > 0) {
-            bladesToShow.splice(Math.min(i1, i2), 1, joinedName);
-            bladesToShow.splice(Math.max(i1, i2), 1);
-          }
-        });
-
         const bladesDiv = productBlades.querySelector(':scope > div > div');
-        bladesToShow.forEach((p) => {
-          const fragmentLink = `/fragments/product-blades/${p}`;
-          createTag('a', { href: fragmentLink }, fragmentLink, { parent: bladesDiv });
-        });
+
+        if (bladesToShow.length >= 4) {
+          createTag(
+            'a',
+            { href: '/fragments/product-blades/explore-creative-cloud' },
+            '/fragments/product-blades/explore-creative-cloud',
+            { parent: bladesDiv },
+          );
+        } else {
+          Object.entries(relatedPairs).forEach(([joinedName, [p1, p2]]) => {
+            const [i1, i2] = [bladesToShow.indexOf(p1), bladesToShow.indexOf(p2)];
+
+            if (i1 > 0 && i2 > 0) {
+              bladesToShow.splice(Math.min(i1, i2), 1, joinedName);
+              bladesToShow.splice(Math.max(i1, i2), 1);
+            }
+          });
+
+          bladesToShow.forEach((p) => {
+            const fragmentLink = `/fragments/product-blades/${p}`;
+            createTag('a', { href: fragmentLink }, fragmentLink, { parent: bladesDiv });
+          });
+        }
       }
     }
   }
