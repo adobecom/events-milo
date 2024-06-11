@@ -12,7 +12,7 @@ function isReversed(card) {
 export default async function init(el) {
   decorateButtons(el);
   const rows = el.querySelectorAll(':scope > div');
-  el.classList.add(`show-${rows.length}`);
+  el.classList.add(`show-${rows.length}`, 'container');
   let cards = [];
 
   rows.forEach((r) => {
