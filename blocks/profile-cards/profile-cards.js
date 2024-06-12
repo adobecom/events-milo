@@ -138,11 +138,10 @@ function checkFirstProfileCardsBlockType() {
   if (profileCards.length > 0) {
     const firstProfileCard = profileCards[0];
     const innerDiv = firstProfileCard.querySelector('div');
-        return innerDiv.textContent.trim();     
-    }
-    return null;
+    return innerDiv.textContent.trim();
   }
- 
+  return null;
+}
 
 function decorateDouble(data, cardsWrapper) {
   data.forEach((speaker) => {

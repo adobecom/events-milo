@@ -103,7 +103,8 @@ function createButton({ type, label }, successMsg, rsvpData) {
         button.setAttribute('disabled', true);
         const submissionResp = await submitForm(form, rsvpData);
         button.removeAttribute('disabled');
-        if (!submissionResp) return;
+        // if (!submissionResp) return;
+        // FIXME: letting the flow through regardless for demo
 
         rsvpData.attendeeId = submissionResp.attendeeId;
         rsvpData.resp = submissionResp;
