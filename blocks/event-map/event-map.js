@@ -17,8 +17,8 @@ function decorateTextContainer(el) {
 function decorateMapContainer(el) {
   const configs = {
     mapId: 'd3555ecb8ace8a82',
-    coordinates: '33.092360452674576, -117.26431350671739',
-    zoom: 9,
+    coordinates: '41.8871,-87.6612',
+    zoom: 12,
   };
 
   const wrapper = el.querySelector('.event-map-wrapper');
