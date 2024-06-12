@@ -24,7 +24,7 @@
 
 .profile-cards .card-content {
   display: flex;
-  padding: 20px 20px 24px 20px;
+  padding: 20px 20px 24px;
   flex-direction: column;
   justify-content: space-between;
   flex: 1 0 0;
@@ -84,9 +84,15 @@
 
 .profile-cards .cards-wrapper {
   display: flex;
+  flex-direction: column;
   flex-wrap: nowrap;
   justify-content: center;
   overflow: hidden;
+  gap: 32px;
+}
+
+.profile-cards.with-carousel .cards-wrapper {
+  flex-direction: unset;
 }
 
 .profile-cards .card-container {
@@ -114,17 +120,24 @@
 .profile-cards .card-1up .card-image-container,
 .profile-cards .card-1up-right .card-image-container {
   width: 100%;
-  border-radius: 10px 10px 0 0;
+}
+
+.profile-cards .card-1up-right .card-image-container img {
+  border-radius: 0 10px 10px 0;
+}
+
+.profile-cards .card-1up-left .card-image-container img {
+  border-radius: 10px 0 0 10px;
 }
 
 .profile-cards .card-image-container {
   position: relative;
-  overflow: hidden;
 }
 
 .profile-cards .card-image-container img {
   width: 100%;
   height: 100%;
+  border-radius: 10px 10px 0 0;
   object-fit: cover;
 }
 
@@ -204,6 +217,11 @@
   .profile-cards .carousel-wrapper {
     max-width: 1232px;
     margin: auto;
+  }
+
+  .profile-cards .cards-wrapper {
+    gap: 0;
+    flex-direction: row;
   }
 
   .profile-cards .cards-wrapper.c1up .card-container.card-1up,
