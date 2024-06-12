@@ -1,5 +1,4 @@
 import { getLibs } from '../../scripts/utils.js';
-import { createOptimizedPicture } from '../../utils/utils.js';
 
 const { createTag } = await import(`${getLibs()}/utils/utils.js`);
 

@@ -33,7 +33,7 @@ export default async function init(el) {
     const h2 = el.querySelector('h2');
     agendaItemsCol.prepend(h2);
     venueImageCol.append(createOptimizedPicture(venueImage));
-    container.append(venueImage);
+    container.append(venueImageCol);
   }
 
   agendaArray.forEach((a) => {
