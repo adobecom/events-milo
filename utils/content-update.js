@@ -265,7 +265,7 @@ function injectFragments(parent) {
           Object.entries(relatedPairs).forEach(([joinedName, [p1, p2]]) => {
             const [i1, i2] = [bladesToShow.indexOf(p1), bladesToShow.indexOf(p2)];
 
-            if (i1 > 0 && i2 > 0) {
+            if (i1 >= 0 && i2 >= 0) {
               bladesToShow.splice(Math.min(i1, i2), 1, joinedName);
               bladesToShow.splice(Math.max(i1, i2), 1);
             }
