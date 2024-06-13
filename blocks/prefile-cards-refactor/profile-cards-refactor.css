@@ -38,10 +38,6 @@
   flex: 1 1 0;
 }
 
-.profile-cards.with-carousel .cards-wrapper .card-container {
-  min-width: calc(100% - 34px);
-}
-
 .profile-cards .cards-wrapper .card-container.card-double {
   display: flex;
   height: 593px;

@@ -121,39 +121,6 @@ function decorate1up(data, cardsWrapper, position = 'left') {
   cardsWrapper.append(cardContainer);
 }
 
-async function decorate3up(data, cardsWrapper) {
-  data.forEach((speaker) => {
-    const cardContainer = createTag('div', { class: 'card-container' });
-
-    decorateImage(cardContainer, speaker.speakerImage);
-    decorateContent(cardContainer, speaker);
-
-    cardsWrapper.append(cardContainer);
-  });
-}
-
-function checkFirstProfileCardsBlockType() {
-  const profileCards = document.querySelectorAll('div.profile-cards');
-
-  if (profileCards.length > 0) {
-    const firstProfileCard = profileCards[0];
-    const innerDiv = firstProfileCard.querySelector('div');
-    return innerDiv.textContent.trim();
-  }
-  return null;
-}
-
-function decorateDouble(data, cardsWrapper) {
-  data.forEach((speaker) => {
-    const cardContainer = createTag('div', { class: 'card-container card-double' });
-
-    decorateImage(cardContainer, speaker.speakerImage, 'double');
-    decorateContent(cardContainer, speaker);
-
-    cardsWrapper.append(cardContainer);
-  });
-}
-
 function decorateCards(el, data) {
   const cardsWrapper = el.querySelector('.cards-wrapper');
   const rows = el.querySelectorAll(':scope > div');
@@ -170,18 +137,22 @@ function decorateCards(el, data) {
 
   configRow.remove();
 
+  filteredData.forEach((speaker) => {
+    const cardContainer = createTag('div', { class: 'card-container' });
+
+    decorateImage(cardContainer, speaker.speakerImage);
+    decorateContent(cardContainer, speaker);
+
+    cardsWrapper.append(cardContainer);
+  });
+
   if (filteredData.length === 1) {
-    const position = (data.length === 2 && firstProfileCardsType.toLowerCase() !== filteredData[0].speakerType.toLowerCase()) ? 'right' : 'left';
-    decorate1up(filteredData[0], cardsWrapper, position);
-    cardsWrapper.classList.add('c1up');
+    cardsWrapper.classList.add('single');
   } else if (filteredData.length === 2) {
-    decorateDouble(filteredData, cardsWrapper);
-    cardsWrapper.classList.add('cdouble');
+    cardsWrapper.classList.add('double');
   } else if (filteredData.length === 3) {
-    decorate3up(filteredData, cardsWrapper);
-    cardsWrapper.classList.add('c3up');
-  } else {
-    decorate3up(filteredData, cardsWrapper);
+    cardsWrapper.classList.add('three-up');
+  } else if (filteredData.length > 3) {
     cardsWrapper.classList.add('carousel-plugin', 'show-3');
     el.classList.add('with-carousel');
 
