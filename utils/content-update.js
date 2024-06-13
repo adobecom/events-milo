@@ -42,8 +42,8 @@ async function updateRSVPButtonState(rsvpData, rsvpBtn, miloLibs) {
   const config = getConfig();
 
   rsvpBtn.textContent = await replaceKey('rsvp-loading-cta-text', config);
-  const eventId = rsvpData.eventId || getMetadata('event-id');
-  const attendeeId = rsvpData.attendeeId || window.bm8tr.get('imsProfile')?.userId;
+  const eventId = rsvpData.eventId ?? getMetadata('event-id');
+  const attendeeId = rsvpData.attendeeId ?? window.bm8tr.get('imsProfile')?.userId;
   const attendeeData = await getAttendee(eventId, attendeeId);
 
   if (attendeeData.id) {
