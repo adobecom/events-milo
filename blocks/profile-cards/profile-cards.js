@@ -61,7 +61,7 @@ export async function getSVGsfromFile(path, selectors) {
 }
 
 async function decorateSocialIcons(cardContainer, socialLinks) {
-  const SUPPORTED_SOCIAL = ['instagram', 'facebook', 'twitter', 'youtube'];
+  const SUPPORTED_SOCIAL = ['instagram', 'facebook', 'twitter', 'linkedin', 'youtube', 'pinterest', 'discord', 'behance'];
   const svgPath = '/icons/social-icons.svg';
   const socialList = createTag('ul', { class: 'card-social-icons' });
 
@@ -69,9 +69,8 @@ async function decorateSocialIcons(cardContainer, socialLinks) {
   if (!svgEls || svgEls.length === 0) return;
 
   socialLinks.forEach((link) => {
-    const platform = SUPPORTED_SOCIAL.find((p) => link.toLowerCase().includes(p));
+    const platform = SUPPORTED_SOCIAL.find((p) => link.toLowerCase().includes(p)) || 'social-media';
     const svg = svgEls.find((el) => el.name === platform);
-    if (!platform || !svg) return;
     const icon = svg.svg;
     const li = createTag('li', { class: 'card-social-icon' });
     icon.classList.add('card-social-icon');
@@ -85,6 +84,7 @@ async function decorateSocialIcons(cardContainer, socialLinks) {
       rel: 'noopener noreferrer',
       'aria-label': platform,
     });
+
     a.textContent = '';
     a.append(icon);
     li.append(a);

@@ -193,6 +193,10 @@
   list-style: none;
 }
 
+.profile-cards .card-social-icon a {
+  color: var(--color-black);
+}
+
 .profile-cards .social-icon {
   display: block;
   width: 20px;
