@@ -19,7 +19,7 @@ import BlockMediator from '../deps/block-mediator.min.js';
  * to update. Should very litle to non visibile impact on the
  * decorateAra function executions'
  */
-window.bm8tr = BlockMediator;
+window.bm8r = BlockMediator;
 
 // Add project-wide style path here.
 const STYLES = '';
