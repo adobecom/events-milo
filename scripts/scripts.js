@@ -12,6 +12,9 @@
 
 import { setLibs, decorateArea } from './utils.js';
 import { captureProfile } from '../utils/event-apis.js';
+import BlockMediator from '../deps/block-mediator.min.js';
+
+window.bm8r = BlockMediator;
 
 // Add project-wide style path here.
 const STYLES = '';
@@ -45,8 +48,6 @@ decorateArea();
  */
 
 const miloLibs = setLibs(LIBS);
-
-window.bm8tr = await import('../deps/block-mediator.min.js').then((mod) => mod.default);
 
 (function loadStyles() {
   const paths = [`${miloLibs}/styles/styles.css`];

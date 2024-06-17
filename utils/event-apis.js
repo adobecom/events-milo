@@ -104,10 +104,10 @@ export async function getAttendeeData(email, eventId) {
 export async function captureProfile() {
   try {
     const profile = await getProfile();
-    window.bm8tr.set('imsProfile', profile);
+    window.bm8r.set('imsProfile', profile);
   } catch {
     if (window.adobeIMS) {
-      window.bm8tr.set('imsProfile', { noProfile: true });
+      window.bm8r.set('imsProfile', { noProfile: true });
     }
   }
 }
@@ -126,12 +126,12 @@ function lazyCaptureProfile() {
 
     try {
       const profile = await getProfile();
-      window.bm8tr.set('imsProfile', profile);
+      window.bm8r.set('imsProfile', profile);
       clearInterval(profileRetryer);
     } catch {
       if (window.adobeIMS) {
         clearInterval(profileRetryer);
-        window.bm8tr.set('imsProfile', { noProfile: true });
+        window.bm8r.set('imsProfile', { noProfile: true });
       }
 
       attempCounter += 1;
@@ -159,7 +159,7 @@ export default async function fetchPageData(hash, lazyLoadProfile = false) {
     pageDataCache[hash] = pageData;
 
     if (lazyLoadProfile) lazyCaptureProfile();
-    window.bm8tr.set('eventData', pageData);
+    window.bm8r.set('eventData', pageData);
     return pageData;
   } catch (error) {
     window.lana?.log('Fetch error:', error);
