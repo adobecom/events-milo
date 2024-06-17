@@ -16,7 +16,6 @@ import BlockMediator from '../deps/block-mediator.min.js';
 
 /**
  * Moving mediator up since it is not loading in time for autolinks
- * to update. Should very litle to non visibile impact on the
  * decorateAra function executions'
  */
 window.bm8r = BlockMediator;
