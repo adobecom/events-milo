@@ -67,6 +67,7 @@ function handleRegisterButton(a, miloLibs) {
       return;
     }
 
+    // add custom SUSI page id: adobeIMS.signIn({dctx_id: 'v:2,s,bg:expressUpsell,85709a30-0d87-11ef-a91c-2be7a9b482cb'})
     window.adobeIMS.signIn();
   };
 
