@@ -15,7 +15,6 @@ import { captureProfile } from '../utils/event-apis.js';
 import BlockMediator from '../deps/block-mediator.min.js';
 
 /**
- * Moving mediator up since it is not loading in time for autolinks
  * decorateAra function executions'
  */
 window.bm8r = BlockMediator;
