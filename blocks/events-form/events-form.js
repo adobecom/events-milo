@@ -328,7 +328,7 @@ async function createForm(formURL, successMsg, formData, terms) {
   let json = formData;
   /* c8 ignore next 4 */
   if (!formData) {
-    const resp = await fetch(pathname);
+    const resp = await fetch(pathname, { headers: { authorization: 'token milo-events-ecc' } });
     json = await resp.json();
   }
 
