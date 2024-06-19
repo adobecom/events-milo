@@ -291,11 +291,14 @@ export default function autoUpdateContent(parent, miloLibs, extraData) {
 
   const getContent = (_match, p1, n) => {
     let content;
-    if (document.title === 'Event Preview') {
-      const queryString = window.location.search;
-      const urlParams = new URLSearchParams(queryString);
-      const eventId = urlParams.get('eventId');
-      content = JSON.parse(localStorage.getItem(eventId))[p1] || '';
+    if (p1.includes('.')) {
+      const [key, subKey] = p1.split('.');
+      try {
+        const [nestedData] = JSON.parse(getMetadata(key));
+        content = nestedData[subKey] || extraData?.[p1] || '';
+      } catch (e) {
+        window.lana?.log(`Error while attempting to replace ${p1}: ${e}`);
+      }
     } else {
       content = getMetadata(p1) || extraData?.[p1] || '';
     }
