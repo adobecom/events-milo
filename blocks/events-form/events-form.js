@@ -408,7 +408,10 @@ function personalizeForm(form, resp) {
 
   Object.entries(resp).forEach(([key, value]) => {
     const matchedInput = form.querySelector(`#${snakeToCamel(key)}`);
-    if (matchedInput) matchedInput.value = value;
+    if (matchedInput) {
+      matchedInput.value = value;
+      matchedInput.disabled = "true";
+    }
   });
 }
 
