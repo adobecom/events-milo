@@ -294,7 +294,7 @@ export default function autoUpdateContent(parent, miloLibs, extraData) {
     if (p1.includes('.')) {
       const [key, subKey] = p1.split('.');
       try {
-        const [nestedData] = JSON.parse(getMetadata(key));
+        const nestedData = JSON.parse(getMetadata(key));
         content = nestedData[subKey] || extraData?.[p1] || '';
       } catch (e) {
         window.lana?.log(`Error while attempting to replace ${p1}: ${e}`);
