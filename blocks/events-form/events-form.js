@@ -410,7 +410,7 @@ function personalizeForm(form, resp) {
     const matchedInput = form.querySelector(`#${snakeToCamel(key)}`);
     if (matchedInput) {
       matchedInput.value = value;
-      matchedInput.disabled = "true";
+      matchedInput.disabled = true;
     }
   });
 }
