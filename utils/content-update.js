@@ -43,7 +43,7 @@ async function updateRSVPButtonState(rsvpData, rsvpBtn, miloLibs) {
 
   rsvpBtn.textContent = await replaceKey('rsvp-loading-cta-text', config);
   const eventId = rsvpData.eventId ?? getMetadata('event-id');
-  const attendeeId = rsvpData.attendeeId ?? window.bm8tr.get('imsProfile')?.userId;
+  const attendeeId = rsvpData.attendeeId ?? window.bm8r.get('imsProfile')?.userId;
   const attendeeData = await getAttendee(eventId, attendeeId);
 
   if (attendeeData.id) {
@@ -81,9 +81,9 @@ function handleRegisterButton(a, miloLibs) {
     originalText: a.textContent,
   };
 
-  updateRSVPButtonState(window.bm8tr.get('rsvpData'), rsvpBtn, miloLibs);
+  updateRSVPButtonState(window.bm8r.get('rsvpData'), rsvpBtn, miloLibs);
 
-  window.bm8tr.subscribe('rsvpData', ({ newValue }) => {
+  window.bm8r.subscribe('rsvpData', ({ newValue }) => {
     updateRSVPButtonState(newValue, rsvpBtn, miloLibs);
   });
 }
@@ -153,11 +153,11 @@ function autoUpdateLinks(scope, miloLibs) {
       const url = new URL(a.href);
 
       if (/#rsvp-form.*/.test(a.href)) {
-        const profile = window.bm8tr.get('imsProfile');
+        const profile = window.bm8r.get('imsProfile');
         if (profile?.noProfile) {
           handleRegisterButton(a, miloLibs);
         } else if (!profile) {
-          window.bm8tr.subscribe('imsProfile', ({ newValue }) => {
+          window.bm8r.subscribe('imsProfile', ({ newValue }) => {
             if (newValue?.noProfile) {
               handleRegisterButton(a, miloLibs);
             }
