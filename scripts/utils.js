@@ -21,6 +21,7 @@
  * ------------------------------------------------------------
  */
 import autoUpdateContent from '../utils/content-update.js';
+import { getMetadata } from '../utils/utils.js';
 
 export const [setLibs, getLibs] = (() => {
   let libs;
@@ -37,6 +38,24 @@ export const [setLibs, getLibs] = (() => {
     }, () => libs,
   ];
 })();
+
+export function parsePhotosData(area) {
+  const output = {};
+
+  if (!area) return output;
+
+  try {
+    const photosData = JSON.parse(getMetadata('photos'));
+
+    photosData.forEach((photo) => {
+      output[photo.imageKind] = photo;
+    });
+  } catch (e) {
+    window.lana?.log('Failed to parse photos metadata:', e);
+  }
+
+  return output;
+}
 
 export function decorateArea(area = document) {
   const eagerLoad = (parent, selector) => {
@@ -57,7 +76,13 @@ export function decorateArea(area = document) {
     eagerLoad(marquee, 'div:last-child > div:last-child img');
   }());
 
-  autoUpdateContent(area, getLibs());
+  const photosData = parsePhotosData(area);
+  const eventTitle = getMetadata('event-title') || document.title;
+
+  autoUpdateContent(area, getLibs(), {
+    ...photosData,
+    'event-title': eventTitle,
+  });
 }
 
 export async function importMiloUtils() {

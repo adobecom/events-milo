@@ -13,7 +13,7 @@ export default function init(el) {
     return;
   }
 
-  if (!partnersData.length) {
+  if (!partnersData || !partnersData.length) {
     el.remove();
     return;
   }
