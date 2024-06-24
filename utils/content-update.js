@@ -188,35 +188,47 @@ function autoUpdateLinks(scope, miloLibs) {
   });
 }
 
+function updatePictureElement(imageUrl, parentPic, altText) {
+  parentPic.querySelectorAll('source').forEach((el) => {
+    try {
+      el.srcset = el.srcset.replace(/.*\?/, `${imageUrl}?`);
+    } catch (e) {
+      window.lana?.log(`failed to convert optimized picture source from ${el} with dynamic data: ${e}`);
+    }
+  });
+
+  parentPic.querySelectorAll('img').forEach((el) => {
+    const onImgLoad = () => {
+      el.removeEventListener('load', onImgLoad);
+    };
+
+    try {
+      el.src = el.src.replace(/.*\?/, `${imageUrl}?`);
+      el.alt = altText;
+    } catch (e) {
+      window.lana?.log(`failed to convert optimized img from ${el} with dynamic data: ${e}`);
+    }
+
+    el.addEventListener('load', onImgLoad);
+  });
+}
+
 function updateImgTag(child, matchCallback, parentElement) {
   const parentPic = child.closest('picture');
   const originalAlt = child.alt;
-  const replacedSrc = originalAlt.replace(REG, (_match, p1) => matchCallback(_match, p1, child));
+  const photoMeta = originalAlt.replace(REG, (_match, p1) => matchCallback(_match, p1, child));
 
-  if (replacedSrc && parentPic && replacedSrc !== originalAlt) {
-    parentPic.querySelectorAll('source').forEach((el) => {
-      try {
-        el.srcset = el.srcset.replace(/.*\?/, `${replacedSrc}?`);
-      } catch (e) {
-        window.lana?.log(`failed to convert optimized picture source from ${el} with dynamic data: ${e}`);
-      }
-    });
+  try {
+    const photoData = JSON.parse(photoMeta);
+    const { imageUrl, altText } = photoData;
 
-    parentPic.querySelectorAll('img').forEach((el) => {
-      const onImgLoad = () => {
-        el.removeEventListener('load', onImgLoad);
-      };
-
-      try {
-        el.src = el.src.replace(/.*\?/, `${replacedSrc}?`);
-      } catch (e) {
-        window.lana?.log(`failed to convert optimized img from ${el} with dynamic data: ${e}`);
-      }
-
-      el.addEventListener('load', onImgLoad);
-    });
-  } else if (originalAlt.match(REG)) {
-    parentElement.remove();
+    if (imageUrl && parentPic && imageUrl !== originalAlt) {
+      updatePictureElement(imageUrl, parentPic, altText);
+    } else if (originalAlt.match(REG)) {
+      parentElement.remove();
+    }
+  } catch (e) {
+    window.lana?.log(`Error while attempting to update image: ${e}`);
   }
 }
 
@@ -289,6 +301,32 @@ export default function autoUpdateContent(parent, miloLibs, extraData) {
     return;
   }
 
+  const getImgData = (_match, p1, n) => {
+    let data;
+    if (p1.includes('.')) {
+      const [key, subKey] = p1.split('.');
+      try {
+        const nestedData = JSON.parse(getMetadata(key));
+        data = nestedData[subKey] || extraData?.[p1] || '';
+      } catch (e) {
+        window.lana?.log(`Error while attempting to replace ${p1}: ${e}`);
+        return '';
+      }
+    } else {
+      try {
+        data = JSON.parse(getMetadata(p1)) || extraData?.[p1] || {};
+      } catch (e) {
+        window.lana?.log(`Error while attempting to parse ${p1}: ${e}`);
+        return '';
+      }
+    }
+
+    if (preserveFormatKeys.includes(p1)) {
+      n.parentNode?.classList.add('preserve-format');
+    }
+    return JSON.stringify(data);
+  };
+
   const getContent = (_match, p1, n) => {
     let content;
     if (p1.includes('.')) {
@@ -315,7 +353,7 @@ export default function autoUpdateContent(parent, miloLibs, extraData) {
     if (element.childNodes.length) {
       element.childNodes.forEach((n) => {
         if (n.tagName === 'IMG' && n.nodeType === 1) {
-          updateImgTag(n, getContent, element);
+          updateImgTag(n, getImgData, element);
         }
 
         if (n.nodeType === 3) {

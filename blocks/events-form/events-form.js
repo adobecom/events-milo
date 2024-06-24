@@ -333,7 +333,7 @@ async function createForm(formURL, successMsg, formData, terms) {
   }
 
   if (rsvpFieldsData) {
-    const [{ required, visible }] = rsvpFieldsData;
+    const { required, visible } = rsvpFieldsData;
     json.data = json.data
       .map((obj) => {
         const lowkey = lowercaseKeys(obj);
