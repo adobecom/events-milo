@@ -44,10 +44,7 @@
 
 .profile-cards .cards-wrapper .card-container.card-double {
   display: flex;
-  height: 593px;
   width: auto;
-  min-width: 378.67px;
-  max-width: 584px;
   flex-direction: column;
   flex: 1 0 0;
 }
@@ -256,10 +253,6 @@
 
   .profile-cards  .carousel-plugin .carousel-next {
     right: 2px;
-  }
-
-  .profile-cards .cards-wrapper .card-container {
-    height: 610px;
   }
 
   .profile-cards.with-carousel .cards-wrapper .card-container {
