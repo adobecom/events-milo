@@ -1,4 +1,4 @@
-import { getLibs } from '../../scripts/utils.js';
+import { getLibs } from '../../events/scripts/utils.js';
 import { getIcon } from '../../utils/utils.js';
 
 const { createTag, getMetadata } = await import(`${getLibs()}/utils/utils.js`);

@@ -1,4 +1,4 @@
-import { getLibs } from '../../scripts/utils.js';
+import { getLibs } from '../../events/scripts/utils.js';
 import buildMiloCarousel from '../../features/milo-carousel.js';
 import { getMetadata } from '../../utils/utils.js';
 
