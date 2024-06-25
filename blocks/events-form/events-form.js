@@ -1,4 +1,4 @@
-import { getLibs } from '../../scripts/utils.js';
+import { getLibs } from '../../events/scripts/utils.js';
 import { getMetadata } from '../../utils/utils.js';
 import { getProfile } from '../../utils/event-apis.js';
 import HtmlSanitizer from '../../deps/html-sanitizer.js';
