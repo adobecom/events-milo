@@ -1,5 +1,5 @@
 import buildMiloCarousel from '../../features/milo-carousel.js';
-import { getLibs } from '../../events/scripts/utils.js';
+import { getLibs } from '../../scripts/utils.js';
 
 const { createTag } = await import(`${getLibs()}/utils/utils.js`);
 const { decorateButtons } = await import(`${getLibs()}/utils/decorate.js`);

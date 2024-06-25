@@ -1,4 +1,4 @@
-import { getLibs } from '../../events/scripts/utils.js';
+import { getLibs } from '../../scripts/utils.js';
 import buildMiloCarousel from '../../features/milo-carousel.js';
 import { getMetadata } from '../../utils/utils.js';
 
@@ -60,18 +60,18 @@ export async function getSVGsfromFile(path, selectors) {
   });
 }
 
-async function decorateSocialIcons(cardContainer, socialLinks) {
-  const SUPPORTED_SOCIAL = ['instagram', 'facebook', 'twitter', 'youtube'];
-  const svgPath = '/icons/social-icons.svg';
+async function decorateSocialIcons(cardContainer, socialMedia) {
+  const SUPPORTED_SOCIAL = ['instagram', 'facebook', 'twitter', 'linkedin', 'youtube', 'pinterest', 'discord', 'behance'];
+  const svgPath = `${window.miloConfig.codeRoot}/icons/social-icons.svg`;
   const socialList = createTag('ul', { class: 'card-social-icons' });
 
   const svgEls = await getSVGsfromFile(svgPath, SUPPORTED_SOCIAL);
   if (!svgEls || svgEls.length === 0) return;
 
-  socialLinks.forEach((link) => {
-    const platform = SUPPORTED_SOCIAL.find((p) => link.toLowerCase().includes(p));
+  socialMedia.forEach((account) => {
+    const { link } = account;
+    const platform = SUPPORTED_SOCIAL.find((p) => link.toLowerCase().includes(p)) || 'social-media';
     const svg = svgEls.find((el) => el.name === platform);
-    if (!platform || !svg) return;
     const icon = svg.svg;
     const li = createTag('li', { class: 'card-social-icon' });
     icon.classList.add('card-social-icon');
@@ -85,6 +85,7 @@ async function decorateSocialIcons(cardContainer, socialLinks) {
       rel: 'noopener noreferrer',
       'aria-label': platform,
     });
+
     a.textContent = '';
     a.append(icon);
     li.append(a);
@@ -107,7 +108,7 @@ function decorateContent(cardContainer, data) {
   textContainer.append(title, name, description);
   contentContainer.append(textContainer);
 
-  decorateSocialIcons(contentContainer, data.socialLinks || []);
+  decorateSocialIcons(contentContainer, data.socialMedia || []);
 
   cardContainer.append(contentContainer);
 }
@@ -115,10 +116,43 @@ function decorateContent(cardContainer, data) {
 function decorate1up(data, cardsWrapper, position = 'left') {
   const cardContainer = createTag('div', { class: 'card-container card-1up' });
 
-  decorateImage(cardContainer, data.speakerImage, '1', data.altText, position);
+  decorateImage(cardContainer, data.photo.imageUrl, '1', data.altText, position);
   decorateContent(cardContainer, data);
 
   cardsWrapper.append(cardContainer);
+}
+
+async function decorate3up(data, cardsWrapper) {
+  data.forEach((speaker) => {
+    const cardContainer = createTag('div', { class: 'card-container' });
+
+    decorateImage(cardContainer, speaker.photo.imageUrl);
+    decorateContent(cardContainer, speaker);
+
+    cardsWrapper.append(cardContainer);
+  });
+}
+
+function checkFirstProfileCardsBlockType() {
+  const profileCards = document.querySelectorAll('div.profile-cards');
+
+  if (profileCards.length > 0) {
+    const firstProfileCard = profileCards[0];
+    const innerDiv = firstProfileCard.querySelector('div');
+    return innerDiv.textContent.trim();
+  }
+  return null;
+}
+
+function decorateDouble(data, cardsWrapper) {
+  data.forEach((speaker) => {
+    const cardContainer = createTag('div', { class: 'card-container card-double' });
+
+    decorateImage(cardContainer, speaker.photo.imageUrl, 'double');
+    decorateContent(cardContainer, speaker);
+
+    cardsWrapper.append(cardContainer);
+  });
 }
 
 function decorateCards(el, data) {
@@ -126,7 +160,7 @@ function decorateCards(el, data) {
   const rows = el.querySelectorAll(':scope > div');
   const configRow = rows[1];
   const speakertype = configRow?.querySelectorAll(':scope > div')?.[1]?.textContent.toLowerCase().trim();
-  const filteredData = data.filter((speaker) => speaker.speakerType === speakertype);
+  const filteredData = data.filter((speaker) => speaker.type.toLowerCase() === speakertype);
 
   if (filteredData.length === 0) {
     el.remove();
@@ -137,22 +171,18 @@ function decorateCards(el, data) {
 
   configRow.remove();
 
-  filteredData.forEach((speaker) => {
-    const cardContainer = createTag('div', { class: 'card-container' });
-
-    decorateImage(cardContainer, speaker.speakerImage);
-    decorateContent(cardContainer, speaker);
-
-    cardsWrapper.append(cardContainer);
-  });
-
   if (filteredData.length === 1) {
-    cardsWrapper.classList.add('single');
+    const position = (data.length === 2 && firstProfileCardsType.toLowerCase() !== filteredData[0].type.toLowerCase()) ? 'right' : 'left';
+    decorate1up(filteredData[0], cardsWrapper, position);
+    cardsWrapper.classList.add('c1up');
   } else if (filteredData.length === 2) {
-    cardsWrapper.classList.add('double');
+    decorateDouble(filteredData, cardsWrapper);
+    cardsWrapper.classList.add('cdouble');
   } else if (filteredData.length === 3) {
-    cardsWrapper.classList.add('three-up');
-  } else if (filteredData.length > 3) {
+    decorate3up(filteredData, cardsWrapper);
+    cardsWrapper.classList.add('c3up');
+  } else {
+    decorate3up(filteredData, cardsWrapper);
     cardsWrapper.classList.add('carousel-plugin', 'show-3');
     el.classList.add('with-carousel');
 

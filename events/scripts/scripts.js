@@ -24,7 +24,7 @@ const LIBS = '/libs';
 
 // Add any config options.
 const CONFIG = {
-  // codeRoot: '',
+  codeRoot: '/events',
   // contentRoot: '',
   imsClientId: 'events-milo',
   // imsScope: 'AdobeID,openid,gnav',
