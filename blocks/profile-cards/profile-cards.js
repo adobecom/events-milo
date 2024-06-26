@@ -72,6 +72,9 @@ async function decorateSocialIcons(cardContainer, socialMedia) {
     const { link } = account;
     const platform = SUPPORTED_SOCIAL.find((p) => link.toLowerCase().includes(p)) || 'social-media';
     const svg = svgEls.find((el) => el.name === platform);
+
+    if (!svg) return;
+
     const icon = svg.svg;
     const li = createTag('li', { class: 'card-social-icon' });
     icon.classList.add('card-social-icon');
