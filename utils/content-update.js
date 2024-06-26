@@ -1,4 +1,5 @@
 import { getAttendee } from './esp-controller.js';
+import { handlize } from './utils.js';
 
 export const REG = /\[\[(.*?)\]\]/g;
 
@@ -263,7 +264,9 @@ function injectFragments(parent) {
       }
 
       if (products) {
-        const bladesToShow = products.filter((p) => p.showProductBlade).map((o) => o.name);
+        const bladesToShow = products
+          .filter((p) => p.showProductBlade)
+          .map((o) => handlize(o.name));
         const relatedPairs = { 'lightroom-photoshop': ['photoshop', 'lightroom'] };
         const bladesDiv = productBlades.querySelector(':scope > div > div');
 

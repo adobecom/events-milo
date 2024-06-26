@@ -119,7 +119,7 @@ function decorateContent(cardContainer, data) {
 function decorate1up(data, cardsWrapper, position = 'left') {
   const cardContainer = createTag('div', { class: 'card-container card-1up' });
 
-  decorateImage(cardContainer, data.photo.imageUrl, '1', data.altText, position);
+  decorateImage(cardContainer, data.photo?.imageUrl, '1', data.altText, position);
   decorateContent(cardContainer, data);
 
   cardsWrapper.append(cardContainer);
@@ -129,7 +129,7 @@ async function decorate3up(data, cardsWrapper) {
   data.forEach((speaker) => {
     const cardContainer = createTag('div', { class: 'card-container' });
 
-    decorateImage(cardContainer, speaker.photo.imageUrl);
+    decorateImage(cardContainer, speaker.photo?.imageUrl);
     decorateContent(cardContainer, speaker);
 
     cardsWrapper.append(cardContainer);
@@ -151,7 +151,7 @@ function decorateDouble(data, cardsWrapper) {
   data.forEach((speaker) => {
     const cardContainer = createTag('div', { class: 'card-container card-double' });
 
-    decorateImage(cardContainer, speaker.photo.imageUrl, 'double');
+    decorateImage(cardContainer, speaker.photo?.imageUrl, 'double');
     decorateContent(cardContainer, speaker);
 
     cardsWrapper.append(cardContainer);
