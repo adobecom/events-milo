@@ -11,8 +11,8 @@
  */
 
 import { setLibs, decorateArea } from './utils.js';
-import { captureProfile } from '../../utils/event-apis.js';
-import BlockMediator from '../../deps/block-mediator.min.js';
+import { captureProfile } from '../utils/event-apis.js';
+import BlockMediator from '../deps/block-mediator.min.js';
 
 window.bm8r = BlockMediator;
 
