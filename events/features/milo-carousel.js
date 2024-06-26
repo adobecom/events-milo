@@ -325,7 +325,7 @@ function handleChangingSlides(carouselElements) {
 
 export default function buildMiloCarousel(el, slides) {
   return new Promise((resolve) => {
-    loadStyle('/features/milo-carousel.css', () => {
+    loadStyle(`${window.miloConfig.codeRoot}/features/milo-carousel.css`, () => {
       const parentArea = el.closest('.fragment') || document;
       el.classList.add('carousel-plugin');
 
