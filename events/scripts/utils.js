@@ -20,8 +20,8 @@
  * Note: This file should have no self-invoking functions.
  * ------------------------------------------------------------
  */
-import autoUpdateContent from '../../utils/content-update.js';
-import { getMetadata } from '../../utils/utils.js';
+import autoUpdateContent from '../utils/content-update.js';
+import { getMetadata } from '../utils/utils.js';
 
 export const [setLibs, getLibs] = (() => {
   let libs;

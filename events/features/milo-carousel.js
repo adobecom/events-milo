@@ -1,4 +1,4 @@
-import { getLibs } from '../events/scripts/utils.js';
+import { getLibs } from '../scripts/utils.js';
 
 const { createTag, getConfig, MILO_EVENTS, loadStyle } = await import(`${getLibs()}/utils/utils.js`);
 
@@ -325,7 +325,7 @@ function handleChangingSlides(carouselElements) {
 
 export default function buildMiloCarousel(el, slides) {
   return new Promise((resolve) => {
-    loadStyle('/features/milo-carousel.css', () => {
+    loadStyle(`${window.miloConfig.codeRoot}/features/milo-carousel.css`, () => {
       const parentArea = el.closest('.fragment') || document;
       el.classList.add('carousel-plugin');
 
