@@ -8,7 +8,13 @@ export default async function init(el) {
   const agendaItemsCol = createTag('div', { class: 'agenda-items-col' }, '', { parent: container });
 
   const agendaMeta = getMetadata('agenda');
-  const venueImage = getMetadata('venue-image');
+  let venueImage;
+
+  try {
+    venueImage = JSON.parse(getMetadata('photos')).find((p) => p.imageKind === 'venue-image');
+  } catch (error) {
+    window.lana?.error('Failed to parse venue image metadata:', error);
+  }
 
   if (!agendaMeta) return;
 
@@ -17,7 +23,7 @@ export default async function init(el) {
   try {
     agendaArray = JSON.parse(agendaMeta);
   } catch (error) {
-    console.error('Failed to parse agenda metadata:', error);
+    window.lana?.error('Failed to parse agenda metadata:', error);
     el.remove();
     return;
   }
