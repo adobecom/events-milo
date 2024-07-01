@@ -1,3 +1,4 @@
+import BlockMediator from '../deps/block-mediator.min.js';
 import { getAttendee } from './esp-controller.js';
 import { handlize } from './utils.js';
 
@@ -64,7 +65,7 @@ async function updateRSVPButtonState(rsvpData, rsvpBtn, miloLibs) {
 
   rsvpBtn.textContent = await replaceKey('rsvp-loading-cta-text', config);
   const eventId = rsvpData.eventId ?? getMetadata('event-id');
-  const attendeeId = rsvpData.attendeeId ?? window.bm8r.get('imsProfile')?.userId;
+  const attendeeId = rsvpData.attendeeId ?? BlockMediator.get('imsProfile')?.userId;
   const attendeeData = await getAttendee(eventId, attendeeId);
 
   if (attendeeData.id) {
@@ -104,9 +105,9 @@ function handleRegisterButton(a, miloLibs) {
     originalText: a.textContent,
   };
 
-  updateRSVPButtonState(window.bm8r.get('rsvpData'), rsvpBtn, miloLibs);
+  updateRSVPButtonState(BlockMediator.get('rsvpData'), rsvpBtn, miloLibs);
 
-  window.bm8r.subscribe('rsvpData', ({ newValue }) => {
+  BlockMediator.subscribe('rsvpData', ({ newValue }) => {
     updateRSVPButtonState(newValue, rsvpBtn, miloLibs);
   });
 }
@@ -176,11 +177,11 @@ function autoUpdateLinks(scope, miloLibs) {
       const url = new URL(a.href);
 
       if (/#rsvp-form.*/.test(a.href)) {
-        const profile = window.bm8r.get('imsProfile');
+        const profile = BlockMediator.get('imsProfile');
         if (profile?.noProfile) {
           handleRegisterButton(a, miloLibs);
         } else if (!profile) {
-          window.bm8r.subscribe('imsProfile', ({ newValue }) => {
+          BlockMediator.subscribe('imsProfile', ({ newValue }) => {
             if (newValue?.noProfile) {
               handleRegisterButton(a, miloLibs);
             }

@@ -21,8 +21,6 @@ export const LIBS = (() => {
   return branch.includes('--') ? `https://${branch}.hlx.live/libs` : `https://${branch}--milo--adobecom.hlx.live/libs`;
 })();
 
-export const BlockMediator = await import('../deps/block-mediator.min.js').then((mod) => mod.default);
-
 export function decorateArea(area = document) {
   const getMetadata = (name) => {
     const attr = name && name.includes(':') ? 'property' : 'name';

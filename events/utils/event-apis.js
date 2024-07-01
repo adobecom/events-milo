@@ -1,3 +1,5 @@
+import BlockMediator from '../deps/block-mediator.min.js';
+
 const CAAS_API_ENDPOINT = 'https://14257-chimera-dev.adobeioruntime.net/api/v1/web/chimera-0.0.1/sm-collection';
 const API_QUERY_PARAM = 'featuredCards';
 
@@ -104,10 +106,10 @@ export async function getAttendeeData(email, eventId) {
 export async function captureProfile() {
   try {
     const profile = await getProfile();
-    window.bm8r.set('imsProfile', profile);
+    BlockMediator.set('imsProfile', profile);
   } catch {
     if (window.adobeIMS) {
-      window.bm8r.set('imsProfile', { noProfile: true });
+      BlockMediator.set('imsProfile', { noProfile: true });
     }
   }
 }
@@ -126,12 +128,12 @@ function lazyCaptureProfile() {
 
     try {
       const profile = await getProfile();
-      window.bm8r.set('imsProfile', profile);
+      BlockMediator.set('imsProfile', profile);
       clearInterval(profileRetryer);
     } catch {
       if (window.adobeIMS) {
         clearInterval(profileRetryer);
-        window.bm8r.set('imsProfile', { noProfile: true });
+        BlockMediator.set('imsProfile', { noProfile: true });
       }
 
       attempCounter += 1;
@@ -159,7 +161,7 @@ export default async function fetchPageData(hash, lazyLoadProfile = false) {
     pageDataCache[hash] = pageData;
 
     if (lazyLoadProfile) lazyCaptureProfile();
-    window.bm8r.set('eventData', pageData);
+    BlockMediator.set('eventData', pageData);
     return pageData;
   } catch (error) {
     window.lana?.log('Fetch error:', error);
