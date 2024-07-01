@@ -9,10 +9,11 @@ const preserveFormatKeys = [
 
 function getECCEnv(miloConfig) {
   const { env } = miloConfig;
+  console.log(env)
 
-  if (env === 'prod') return 'prod';
+  if (env.name === 'prod') return 'prod';
 
-  if (env === 'stage') {
+  if (env.name === 'stage') {
     const { host, search } = window.location;
     const usp = new URLSearchParams(search);
     const eccEnv = usp.get('eccEnv');
