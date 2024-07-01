@@ -320,9 +320,8 @@ function injectFragments(parent) {
   }
 }
 
-async function getNonProdData(env) {
-  const resp = await fetch(`default/${env}/metadata.json`);
-  console.log(resp);
+async function getNonProdData(env, config) {
+  const resp = await fetch(`/${config.contentRoot}/default/${env}/metadata.json`);
   if (resp.ok) {
     const json = await resp.json();
     const pageData = json.data.find((d) => d.url === window.location.pathname);
@@ -352,7 +351,7 @@ export default async function autoUpdateContent(parent, miloLibs, extraData) {
     const eccEnv = getECCEnv(miloConfig);
 
     if (eccEnv !== 'prod') {
-      const nonProdData = await getNonProdData(eccEnv);
+      const nonProdData = await getNonProdData(eccEnv, miloConfig);
       nonMetaData = { ...nonMetaData, ...nonProdData };
     }
   }
