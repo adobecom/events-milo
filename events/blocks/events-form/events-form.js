@@ -1,12 +1,12 @@
-import { getLibs } from '../../scripts/utils.js';
+import { LIBS } from '../../scripts/scripts.js';
 import { getMetadata } from '../../utils/utils.js';
 import { getProfile } from '../../utils/event-apis.js';
 import HtmlSanitizer from '../../deps/html-sanitizer.js';
 import { createAttendee, deleteAttendee } from '../../utils/esp-controller.js';
 
-const { createTag } = await import(`${getLibs()}/utils/utils.js`);
-const { closeModal } = await import(`${getLibs()}/blocks/modal/modal.js`);
-const { default: sanitizeComment } = await import(`${getLibs()}/utils/sanitizeComment.js`);
+const { createTag } = await import(`${LIBS}/utils/utils.js`);
+const { closeModal } = await import(`${LIBS}/blocks/modal/modal.js`);
+const { default: sanitizeComment } = await import(`${LIBS}/utils/sanitizeComment.js`);
 
 const RULE_OPERATORS = {
   equal: '=',

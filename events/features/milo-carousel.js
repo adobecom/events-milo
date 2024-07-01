@@ -1,6 +1,6 @@
-import { getLibs } from '../scripts/utils.js';
+import { LIBS } from '../scripts/scripts.js';
 
-const { createTag, getConfig, MILO_EVENTS, loadStyle } = await import(`${getLibs()}/utils/utils.js`);
+const { createTag, getConfig, MILO_EVENTS, loadStyle } = await import(`${LIBS}/utils/utils.js`);
 
 const { miloLibs, codeRoot } = getConfig();
 const base = miloLibs || codeRoot;
