@@ -24,7 +24,7 @@ function getECCEnv(miloConfig) {
   }
 
   // fallback to Milo env
-  return env;
+  return env.name;
 }
 
 function createTag(tag, attributes, html, options = {}) {
