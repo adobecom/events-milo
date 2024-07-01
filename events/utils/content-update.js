@@ -320,7 +320,7 @@ function injectFragments(parent) {
 }
 
 async function getNonProdData(env) {
-  const resp = await fetch(`${env}/metadata.json`);
+  const resp = await fetch(`default/${env}/metadata.json`);
   console.log(resp);
   if (resp.ok) {
     const json = await resp.json();
