@@ -9,7 +9,6 @@ const preserveFormatKeys = [
 
 function getECCEnv(miloConfig) {
   const { env } = miloConfig;
-  console.log(env)
 
   if (env.name === 'prod') return 'prod';
 
@@ -320,8 +319,8 @@ function injectFragments(parent) {
   }
 }
 
-async function getNonProdData(env, config) {
-  const resp = await fetch(`${config.contentRoot}/events/${env}/metadata.json`);
+async function getNonProdData(env) {
+  const resp = await fetch(`${env}/metadata.json`);
   console.log(resp);
   if (resp.ok) {
     const json = await resp.json();
@@ -352,7 +351,7 @@ export default async function autoUpdateContent(parent, miloLibs, extraData) {
     const eccEnv = getECCEnv(miloConfig);
 
     if (eccEnv !== 'prod') {
-      const nonProdData = await getNonProdData(eccEnv, miloConfig);
+      const nonProdData = await getNonProdData(eccEnv);
       nonMetaData = { ...nonMetaData, ...nonProdData };
     }
   }
