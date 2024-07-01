@@ -8,26 +8,6 @@ const preserveFormatKeys = [
   'description',
 ];
 
-function getECCEnv(miloConfig) {
-  const { env } = miloConfig;
-
-  if (env.name === 'prod') return 'prod';
-
-  if (env.name === 'stage') {
-    const { host, search } = window.location;
-    const usp = new URLSearchParams(search);
-    const eccEnv = usp.get('eccEnv');
-
-    if (eccEnv) return eccEnv;
-
-    if (host.startsWith('stage--') || host.startsWith('www.stage')) return 'stage';
-    if (host.startsWith('dev--') || host.startsWith('www.dev')) return 'dev';
-  }
-
-  // fallback to Milo env
-  return env.name;
-}
-
 function createTag(tag, attributes, html, options = {}) {
   const el = document.createElement(tag);
   if (html) {
@@ -320,7 +300,7 @@ function injectFragments(parent) {
   }
 }
 
-async function getNonProdData(env, config) {
+export async function getNonProdData(env) {
   const resp = await fetch(`/events/default/${env}/metadata.json`);
   if (resp.ok) {
     const json = await resp.json();
@@ -343,33 +323,20 @@ export default async function autoUpdateContent(parent, miloLibs, extraData) {
     return;
   }
 
-  let nonMetaData = extraData;
-  const eventId = getMetadata('event-id');
-  if (!eventId) {
-    const { getConfig } = await import(`${miloLibs}/utils/utils.js`);
-    const miloConfig = getConfig();
-    const eccEnv = getECCEnv(miloConfig);
-
-    if (eccEnv !== 'prod') {
-      const nonProdData = await getNonProdData(eccEnv, miloConfig);
-      nonMetaData = { ...nonMetaData, ...nonProdData };
-    }
-  }
-
   const getImgData = (_match, p1, n) => {
     let data;
     if (p1.includes('.')) {
       const [key, subKey] = p1.split('.');
       try {
         const nestedData = JSON.parse(getMetadata(key));
-        data = nestedData[subKey] || nonMetaData?.[p1] || '';
+        data = nestedData[subKey] || extraData?.[p1] || '';
       } catch (e) {
         window.lana?.log(`Error while attempting to replace ${p1}: ${e}`);
         return '';
       }
     } else {
       try {
-        data = JSON.parse(getMetadata(p1)) || nonMetaData?.[p1] || {};
+        data = JSON.parse(getMetadata(p1)) || extraData?.[p1] || {};
       } catch (e) {
         window.lana?.log(`Error while attempting to parse ${p1}: ${e}`);
         return '';
@@ -388,12 +355,12 @@ export default async function autoUpdateContent(parent, miloLibs, extraData) {
       const [key, subKey] = p1.split('.');
       try {
         const nestedData = JSON.parse(getMetadata(key));
-        content = nestedData[subKey] || nonMetaData?.[p1] || '';
+        content = nestedData[subKey] || extraData?.[p1] || '';
       } catch (e) {
         window.lana?.log(`Error while attempting to replace ${p1}: ${e}`);
       }
     } else {
-      content = getMetadata(p1) || nonMetaData?.[p1] || '';
+      content = getMetadata(p1) || extraData?.[p1] || '';
     }
 
     if (preserveFormatKeys.includes(p1)) {

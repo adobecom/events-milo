@@ -11,7 +11,7 @@
  */
 
 import { captureProfile } from '../utils/event-apis.js';
-import autoUpdateContent from '../utils/content-update.js';
+import autoUpdateContent, { getNonProdData } from '../utils/content-update.js';
 
 export const LIBS = (() => {
   const { hostname, search } = window.location;
@@ -21,13 +21,13 @@ export const LIBS = (() => {
   return branch.includes('--') ? `https://${branch}.hlx.live/libs` : `https://${branch}--milo--adobecom.hlx.live/libs`;
 })();
 
-export function decorateArea(area = document) {
-  const getMetadata = (name) => {
-    const attr = name && name.includes(':') ? 'property' : 'name';
-    const meta = document.head.querySelector(`meta[${attr}="${name}"]`);
-    return meta && meta.content;
-  };
+function getMetadata(name) {
+  const attr = name && name.includes(':') ? 'property' : 'name';
+  const meta = document.head.querySelector(`meta[${attr}="${name}"]`);
+  return meta && meta.content;
+}
 
+export function decorateArea(area = document) {
   const parsePhotosData = () => {
     const output = {};
 
@@ -93,7 +93,7 @@ const CONFIG = {
 };
 
 const { loadArea, setConfig, loadLana } = await import(`${LIBS}/utils/utils.js`);
-setConfig({ ...CONFIG, miloLibs: LIBS });
+const miloConfig = setConfig({ ...CONFIG, miloLibs: LIBS });
 
 // Decorate the page with site specific needs.
 decorateArea();
@@ -121,3 +121,33 @@ decorateArea();
     captureProfile();
   });
 }());
+
+function getECCEnv() {
+  const { env } = miloConfig;
+
+  if (env.name === 'prod') return 'prod';
+
+  if (env.name === 'stage') {
+    const { host, search } = window.location;
+    const usp = new URLSearchParams(search);
+    const eccEnv = usp.get('eccEnv');
+
+    if (eccEnv) return eccEnv;
+
+    if (host.startsWith('stage--') || host.startsWith('www.stage')) return 'stage';
+    if (host.startsWith('dev--') || host.startsWith('www.dev')) return 'dev';
+  }
+
+  // fallback to Milo env
+  return env.name;
+}
+
+const eventId = getMetadata('event-id');
+if (!eventId) {
+  const eccEnv = getECCEnv();
+
+  if (eccEnv !== 'prod') {
+    const nonProdData = await getNonProdData(eccEnv, miloConfig);
+    console.log(nonProdData);
+  }
+}
