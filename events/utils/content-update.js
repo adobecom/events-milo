@@ -323,7 +323,7 @@ export async function getNonProdData(env) {
 }
 
 // data -> dom gills
-export default async function autoUpdateContent(parent, miloLibs, extraData) {
+export default function autoUpdateContent(parent, miloLibs, extraData) {
   if (!parent) {
     window.lana?.log('page server block cannot find its parent element');
     return;
