@@ -11,7 +11,7 @@
  */
 
 import { captureProfile } from '../utils/event-apis.js';
-import autoUpdateContent, { getNonProdData } from '../utils/content-update.js';
+import autoUpdateContent, { getNonProdData, setMetadata } from '../utils/content-update.js';
 
 export const LIBS = (() => {
   const { hostname, search } = window.location;
@@ -148,6 +148,11 @@ if (!eventId) {
 
   if (eccEnv !== 'prod') {
     const nonProdData = await getNonProdData(eccEnv, miloConfig);
-    console.log(nonProdData);
+    Object.entries(nonProdData).forEach(([key, value]) => {
+      setMetadata(key, value);
+    });
+
+    decorateArea();
+    loadArea();
   }
 }

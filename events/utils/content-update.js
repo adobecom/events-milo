@@ -36,6 +36,12 @@ function getMetadata(name, doc = document) {
   return meta && meta.content;
 }
 
+export function setMetadata(name, value, doc = document) {
+  const attr = name && name.includes(':') ? 'property' : 'name';
+  const meta = doc.head.querySelector(`meta[${attr}="${name}"]`);
+  if (meta) meta.content = value;
+}
+
 async function updateRSVPButtonState(rsvpData, rsvpBtn, miloLibs) {
   if (rsvpData) return;
 
