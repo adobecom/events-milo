@@ -321,7 +321,7 @@ function injectFragments(parent) {
 }
 
 async function getNonProdData(env, config) {
-  const resp = await fetch(`/${config.contentRoot}/default/${env}/metadata.json`);
+  const resp = await fetch(`/events/default/${env}/metadata.json`);
   if (resp.ok) {
     const json = await resp.json();
     const pageData = json.data.find((d) => d.url === window.location.pathname);
