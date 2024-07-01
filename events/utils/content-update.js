@@ -176,19 +176,21 @@ function autoUpdateLinks(scope, miloLibs) {
       }
 
       if (a.href.endsWith('#event-template')) {
-        const params = new URLSearchParams(document.location.search);
-        const testTiming = params.get('timing');
-        let timeSuffix = '';
+        if (getMetadata('template-id')) {
+          const params = new URLSearchParams(document.location.search);
+          const testTiming = params.get('timing');
+          let timeSuffix = '';
 
-        if (testTiming) {
-          timeSuffix = +testTiming > +getMetadata('local-end-time-millis') ? '-post' : '-pre';
-        } else {
-          const currentDate = new Date();
-          const currentTimestamp = currentDate.getTime();
-          timeSuffix = currentTimestamp > +getMetadata('local-end-time-millis') ? '-post' : '-pre';
+          if (testTiming) {
+            timeSuffix = +testTiming > +getMetadata('local-end-time-millis') ? '-post' : '-pre';
+          } else {
+            const currentDate = new Date();
+            const currentTimestamp = currentDate.getTime();
+            timeSuffix = currentTimestamp > +getMetadata('local-end-time-millis') ? '-post' : '-pre';
+          }
+
+          a.href = `${getMetadata('template-id')}${timeSuffix}`;
         }
-
-        a.href = `${getMetadata('template-id')}${timeSuffix}`;
       } else if (getMetadata(url.hash.replace('#', ''))) {
         a.href = getMetadata(url.hash.replace('#', ''));
       }
