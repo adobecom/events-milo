@@ -21,31 +21,33 @@ export const LIBS = (() => {
   return branch.includes('--') ? `https://${branch}.hlx.live/libs` : `https://${branch}--milo--adobecom.hlx.live/libs`;
 })();
 
-export function getMetadata(name, doc = document) {
-  const attr = name && name.includes(':') ? 'property' : 'name';
-  const meta = doc.head.querySelector(`meta[${attr}="${name}"]`);
-  return meta && meta.content;
-}
-
-export function parsePhotosData(area) {
-  const output = {};
-
-  if (!area) return output;
-
-  try {
-    const photosData = JSON.parse(getMetadata('photos'));
-
-    photosData.forEach((photo) => {
-      output[photo.imageKind] = photo;
-    });
-  } catch (e) {
-    window.lana?.log('Failed to parse photos metadata:', e);
-  }
-
-  return output;
-}
+export const BlockMediator = await import('../deps/block-mediator.min.js').then((mod) => mod.default);
 
 export function decorateArea(area = document) {
+  const getMetadata = (name) => {
+    const attr = name && name.includes(':') ? 'property' : 'name';
+    const meta = document.head.querySelector(`meta[${attr}="${name}"]`);
+    return meta && meta.content;
+  };
+
+  const parsePhotosData = () => {
+    const output = {};
+
+    if (!area) return output;
+
+    try {
+      const photosData = JSON.parse(getMetadata('photos'));
+
+      photosData.forEach((photo) => {
+        output[photo.imageKind] = photo;
+      });
+    } catch (e) {
+      window.lana?.log('Failed to parse photos metadata:', e);
+    }
+
+    return output;
+  };
+
   const eagerLoad = (parent, selector) => {
     const img = parent.querySelector(selector);
     img?.removeAttribute('loading');
@@ -92,7 +94,8 @@ const CONFIG = {
   },
 };
 
-export const BlockMediator = await import('../deps/block-mediator.min.js').then((mod) => mod.default);
+const { loadArea, setConfig, loadLana } = await import(`${LIBS}/utils/utils.js`);
+setConfig({ ...CONFIG, miloLibs: LIBS });
 
 // Decorate the page with site specific needs.
 decorateArea();
@@ -115,9 +118,6 @@ decorateArea();
 }());
 
 (async function loadPage() {
-  const { loadArea, setConfig, loadLana } = await import(`${LIBS}/utils/utils.js`);
-  const config = setConfig({ ...CONFIG, LIBS });
-  window.miloConfig = config;
   await loadLana({ clientId: 'events-milo' });
   await loadArea().then(() => {
     captureProfile();

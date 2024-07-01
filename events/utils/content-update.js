@@ -7,6 +7,26 @@ const preserveFormatKeys = [
   'description',
 ];
 
+function getECCEnv(miloConfig) {
+  const { env } = miloConfig;
+
+  if (env === 'prod') return 'prod';
+
+  if (env === 'stage') {
+    const { host, search } = window.location;
+    const usp = new URLSearchParams(search);
+    const eccEnv = usp.get('eccEnv');
+
+    if (eccEnv) return eccEnv;
+
+    if (host.startsWith('stage--') || host.startsWith('www.stage')) return 'stage';
+    if (host.startsWith('dev--') || host.startsWith('www.dev')) return 'dev';
+  }
+
+  // fallback to Milo env
+  return env;
+}
+
 function createTag(tag, attributes, html, options = {}) {
   const el = document.createElement(tag);
   if (html) {
@@ -299,11 +319,41 @@ function injectFragments(parent) {
   }
 }
 
+async function getNonProdData(env, config) {
+  const resp = await fetch(`${config.contentRoot}/events/${env}/metadata.json`);
+  console.log(resp);
+  if (resp.ok) {
+    const json = await resp.json();
+    const pageData = json.data.find((d) => d.url === window.location.pathname);
+
+    if (pageData) return pageData;
+
+    window.lana?.log('Failed to find non-prod metadata for current page');
+    return null;
+  }
+
+  window.lana?.log('Failed to fetch non-prod metadata:', resp);
+  return null;
+}
+
 // data -> dom gills
-export default function autoUpdateContent(parent, miloLibs, extraData) {
+export default async function autoUpdateContent(parent, miloLibs, extraData) {
   if (!parent) {
     window.lana?.log('page server block cannot find its parent element');
     return;
+  }
+
+  let nonMetaData = extraData;
+  const eventId = getMetadata('event-id');
+  if (!eventId) {
+    const { getConfig } = await import(`${miloLibs}/utils/utils.js`);
+    const miloConfig = getConfig();
+    const eccEnv = getECCEnv(miloConfig);
+
+    if (eccEnv !== 'prod') {
+      const nonProdData = await getNonProdData(eccEnv, miloConfig);
+      nonMetaData = { ...nonMetaData, ...nonProdData };
+    }
   }
 
   const getImgData = (_match, p1, n) => {
@@ -312,14 +362,14 @@ export default function autoUpdateContent(parent, miloLibs, extraData) {
       const [key, subKey] = p1.split('.');
       try {
         const nestedData = JSON.parse(getMetadata(key));
-        data = nestedData[subKey] || extraData?.[p1] || '';
+        data = nestedData[subKey] || nonMetaData?.[p1] || '';
       } catch (e) {
         window.lana?.log(`Error while attempting to replace ${p1}: ${e}`);
         return '';
       }
     } else {
       try {
-        data = JSON.parse(getMetadata(p1)) || extraData?.[p1] || {};
+        data = JSON.parse(getMetadata(p1)) || nonMetaData?.[p1] || {};
       } catch (e) {
         window.lana?.log(`Error while attempting to parse ${p1}: ${e}`);
         return '';
@@ -338,12 +388,12 @@ export default function autoUpdateContent(parent, miloLibs, extraData) {
       const [key, subKey] = p1.split('.');
       try {
         const nestedData = JSON.parse(getMetadata(key));
-        content = nestedData[subKey] || extraData?.[p1] || '';
+        content = nestedData[subKey] || nonMetaData?.[p1] || '';
       } catch (e) {
         window.lana?.log(`Error while attempting to replace ${p1}: ${e}`);
       }
     } else {
-      content = getMetadata(p1) || extraData?.[p1] || '';
+      content = getMetadata(p1) || nonMetaData?.[p1] || '';
     }
 
     if (preserveFormatKeys.includes(p1)) {
@@ -353,7 +403,6 @@ export default function autoUpdateContent(parent, miloLibs, extraData) {
   };
 
   const allElements = parent.querySelectorAll('*');
-
   allElements.forEach((element) => {
     if (element.childNodes.length) {
       element.childNodes.forEach((n) => {
