@@ -325,7 +325,6 @@ async function createForm(formURL, successMsg, formData, terms) {
   }
 
   const rsvpData = { eventId: getMetadata('event-id') || '', attendeeId: '' };
-  BlockMediator.set('rsvpData', rsvpData);
 
   const { pathname } = new URL(formURL);
   let json = formData;
