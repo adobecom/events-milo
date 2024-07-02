@@ -153,6 +153,6 @@ if (!eventId) {
     });
 
     decorateArea();
-    await loadArea();
+    loadArea();
   }
 }
