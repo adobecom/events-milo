@@ -8,6 +8,24 @@ const preserveFormatKeys = [
   'description',
 ];
 
+async function miloReplaceKey(miloLibs, key) {
+  try {
+    const [utils, placeholders] = await Promise.all([
+      import(`${miloLibs}/utils/utils.js`),
+      import(`${miloLibs}/features/placeholders.js`),
+    ]);
+
+    const { getConfig } = utils;
+    const { replaceKey } = placeholders;
+    const config = getConfig();
+
+    return await replaceKey(key, config);
+  } catch (error) {
+    window.lana?.log('Error trying to replace placeholder:', error);
+    return 'RSVP';
+  }
+}
+
 function createTag(tag, attributes, html, options = {}) {
   const el = document.createElement(tag);
   if (html) {
@@ -32,16 +50,13 @@ function createTag(tag, attributes, html, options = {}) {
 
 async function updateRSVPButtonState(rsvpBtn, miloLibs) {
   const rsvpData = BlockMediator.get('rsvpData');
-  const { getConfig } = await import(`${miloLibs}/utils/utils.js`);
-  const { replaceKey } = await import(`${miloLibs}/features/placeholders.js`);
-  const config = getConfig();
 
   const eventId = rsvpData?.eventId || getMetadata('event-id');
   const attendeeId = rsvpData?.attendeeId || BlockMediator.get('imsProfile')?.userId;
   const attendeeData = await getAttendee(eventId, attendeeId);
 
   if (attendeeData.attendeeId) {
-    rsvpBtn.textContent = await replaceKey('registered-cta-text', config);
+    rsvpBtn.textContent = await miloReplaceKey(miloLibs, 'registered-cta-text');
   } else {
     rsvpBtn.textContent = rsvpBtn.originalText;
   }
@@ -68,10 +83,9 @@ async function handleRSVPBtnBasedOnProfile(rsvpBtn, miloLibs, profile) {
       signIn();
     });
   } else if (profile) {
-    console.log(profile)
     const rsvpData = getAttendee(getMetadata('event-id'), profile.userId);
     BlockMediator.set('rsvpData', rsvpData);
-  
+
     if (rsvpData) {
       updateRSVPButtonState(rsvpBtn, miloLibs);
     } else {
@@ -88,25 +102,21 @@ async function handleRegisterButton(a, miloLibs) {
   if (devMode) return;
 
   a.classList.add('disabled');
-    const rsvpBtn = {
+  const rsvpBtn = {
     el: a,
     originalText: a.textContent,
   };
-  
-  const { getConfig } = await import(`${miloLibs}/utils/utils.js`);
-  const { replaceKey } = await import(`${miloLibs}/features/placeholders.js`);
-  const config = getConfig();
 
-  a.textContent = await replaceKey('rsvp-loading-cta-text', config);
+  a.textContent = await miloReplaceKey(miloLibs, 'rsvp-loading-cta-text');
 
   const profile = BlockMediator.get('imsProfile');
   if (profile) {
     a.classList.remove('disabled');
-    handleRSVPBtnBasedOnProfile(rsvpBtn, miloLibs, profile)
+    handleRSVPBtnBasedOnProfile(rsvpBtn, miloLibs, profile);
   } else {
     BlockMediator.subscribe('imsProfile', ({ newValue }) => {
       a.classList.remove('disabled');
-      handleRSVPBtnBasedOnProfile(rsvpBtn, miloLibs, newValue)
+      handleRSVPBtnBasedOnProfile(rsvpBtn, miloLibs, newValue);
     });
   }
 }

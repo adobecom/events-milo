@@ -13,7 +13,7 @@ export default async function init(el) {
   try {
     venueImage = JSON.parse(getMetadata('photos')).find((p) => p.imageKind === 'venue-image');
   } catch (error) {
-    window.lana?.error('Failed to parse venue image metadata:', error);
+    window.lana?.log('Failed to parse venue image metadata:', error);
   }
 
   if (!agendaMeta) return;
@@ -23,7 +23,7 @@ export default async function init(el) {
   try {
     agendaArray = JSON.parse(agendaMeta);
   } catch (error) {
-    window.lana?.error('Failed to parse agenda metadata:', error);
+    window.lana?.log('Failed to parse agenda metadata:', error);
     el.remove();
     return;
   }
