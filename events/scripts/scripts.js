@@ -118,19 +118,17 @@ function getECCEnv() {
   return env.name;
 }
 
-const eventId = getMetadata('event-id');
-if (!eventId) {
+if (!getMetadata('event-id')) {
   const eccEnv = getECCEnv();
 
   if (eccEnv !== 'prod') {
     const nonProdData = await getNonProdData(eccEnv, miloConfig);
     Object.entries(nonProdData).forEach(([key, value]) => {
-      if (key === 'title') {
-        document.title = value;
-        return;
+      if (key === 'event-title') {
+        setMetadata(key, nonProdData.title);
+      } else {
+        setMetadata(key, value);
       }
-
-      setMetadata(key, value);
     });
 
     decorateArea();

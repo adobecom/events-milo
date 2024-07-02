@@ -33,25 +33,6 @@ export function flattenObject(obj, parentKey = '', result = {}) {
   return result;
 }
 
-export async function fetchAvatar() {
-  const te = await window.adobeIMS.tokenService.getTokenAndProfile();
-  const myHeaders = new Headers();
-  myHeaders.append('Authorization', `Bearer ${te.tokenFields.tokenValue}`);
-
-  const requestOptions = {
-    method: 'GET',
-    headers: myHeaders,
-    redirect: 'follow',
-  };
-
-  const avatar = await fetch('https://cc-collab-stage.adobe.io/profile', requestOptions)
-    .then((response) => response.json())
-    .then((result) => result)
-    .catch((error) => console.error(error));
-
-  return avatar?.user?.avatar;
-}
-
 export async function getProfile() {
   const { feds, adobeProfile, fedsConfig, adobeIMS } = window;
 
@@ -68,39 +49,9 @@ export async function getProfile() {
     );
   };
 
-  const [profile, avatar] = await Promise.all([
-    getUserProfile(),
-    fetchAvatar(),
-  ]);
+  const profile = await getUserProfile();
 
-  if (profile) {
-    profile.avatar = avatar;
-    console.log('Fetched user profile:', profile);
-    return profile;
-  }
-
-  return {};
-}
-
-export async function getAttendeeData(email, eventId) {
-  if (!email || !eventId) return null;
-
-  const myHeaders = new Headers();
-  myHeaders.append('x-api-key', 'CCHomeWeb1');
-
-  const requestOptions = {
-    method: 'GET',
-    headers: myHeaders,
-    redirect: 'follow',
-  };
-
-  const data = await fetch(`https://cchome-stage.adobe.io/lod/v1/events/${eventId}/attendees/${email}`, requestOptions)
-    .then((response) => response.json())
-    .then((result) => result)
-    .catch((error) => console.error(error));
-
-  console.log('Fetched attendee data:', data);
-  return data;
+  return profile || {};
 }
 
 export async function captureProfile() {

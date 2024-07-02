@@ -39,6 +39,9 @@ function getMetadata(name, doc = document) {
 export function setMetadata(name, value, doc = document) {
   const attr = name && name.includes(':') ? 'property' : 'name';
   const meta = doc.head.querySelector(`meta[${attr}="${name}"]`);
+
+  if (name === 'title') document.title = value;
+
   if (meta) {
     meta.content = value;
   } else {
