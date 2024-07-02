@@ -98,30 +98,6 @@ const miloConfig = setConfig({ ...CONFIG, miloLibs: LIBS });
 // Decorate the page with site specific needs.
 decorateArea();
 
-/*
- * ------------------------------------------------------------
- * Edit below at your own risk
- * ------------------------------------------------------------
- */
-
-(function loadStyles() {
-  const paths = [`${LIBS}/styles/styles.css`];
-  if (STYLES) { paths.push(STYLES); }
-  paths.forEach((path) => {
-    const link = document.createElement('link');
-    link.setAttribute('rel', 'stylesheet');
-    link.setAttribute('href', path);
-    document.head.appendChild(link);
-  });
-}());
-
-(async function loadPage() {
-  await loadLana({ clientId: 'events-milo' });
-  await loadArea().then(() => {
-    captureProfile();
-  });
-}());
-
 function getECCEnv() {
   const { env } = miloConfig;
 
@@ -156,3 +132,27 @@ if (!eventId) {
     loadArea();
   }
 }
+
+/*
+ * ------------------------------------------------------------
+ * Edit below at your own risk
+ * ------------------------------------------------------------
+ */
+
+(function loadStyles() {
+  const paths = [`${LIBS}/styles/styles.css`];
+  if (STYLES) { paths.push(STYLES); }
+  paths.forEach((path) => {
+    const link = document.createElement('link');
+    link.setAttribute('rel', 'stylesheet');
+    link.setAttribute('href', path);
+    document.head.appendChild(link);
+  });
+}());
+
+(async function loadPage() {
+  await loadLana({ clientId: 'events-milo' });
+  await loadArea().then(() => {
+    captureProfile();
+  });
+}());
