@@ -10,9 +10,11 @@
  * governing permissions and limitations under the License.
  */
 
-import { captureProfile } from '../utils/event-apis.js';
+import { lazyCaptureProfile } from '../utils/profile.js';
 import autoUpdateContent, { getNonProdData, setMetadata } from '../utils/content-update.js';
-import { getECCEnv } from '../utils/utils.js';
+import BlockMediator from '../deps/block-mediator.min.js';
+
+BlockMediator.set('imsProfile', null);
 
 export const LIBS = (() => {
   const { hostname, search } = window.location;
@@ -26,6 +28,26 @@ function getMetadata(name) {
   const attr = name && name.includes(':') ? 'property' : 'name';
   const meta = document.head.querySelector(`meta[${attr}="${name}"]`);
   return meta && meta.content;
+}
+
+function getECCEnv(miloConfig) {
+  const { env } = miloConfig;
+
+  if (env.name === 'prod') return 'prod';
+
+  if (env.name === 'stage') {
+    const { host, search } = window.location;
+    const usp = new URLSearchParams(search);
+    const eccEnv = usp.get('eccEnv');
+
+    if (eccEnv) return eccEnv;
+
+    if (host.startsWith('stage--') || host.startsWith('www.stage')) return 'stage';
+    if (host.startsWith('dev--') || host.startsWith('www.dev')) return 'dev';
+  }
+
+  // fallback to Milo env name
+  return env.name;
 }
 
 export function decorateArea(area = document) {
@@ -94,15 +116,15 @@ const CONFIG = {
 };
 
 const { loadArea, setConfig, loadLana } = await import(`${LIBS}/utils/utils.js`);
-const miloConfig = setConfig({ ...CONFIG, miloLibs: LIBS });
-const eccEnv = getECCEnv(miloConfig);
+export const MILO_CONFIG = setConfig({ ...CONFIG, miloLibs: LIBS });
+window.eccEnv = getECCEnv(MILO_CONFIG);
 
 // Decorate the page with site specific needs.
 decorateArea();
 
-if ((eccEnv === 'stage' || eccEnv === 'dev') && !getMetadata('event-id')) {
+if ((window.eccEnv === 'stage' || window.eccEnv === 'dev') && !getMetadata('event-id')) {
   // Load non-prod data for stage and dev environments
-  const nonProdData = await getNonProdData(eccEnv, miloConfig);
+  const nonProdData = await getNonProdData(window.eccEnv, MILO_CONFIG);
   Object.entries(nonProdData).forEach(([key, value]) => {
     if (key === 'event-title') {
       setMetadata(key, nonProdData.title);
@@ -134,6 +156,6 @@ if ((eccEnv === 'stage' || eccEnv === 'dev') && !getMetadata('event-id')) {
 (async function loadPage() {
   await loadLana({ clientId: 'events-milo' });
   await loadArea().then(() => {
-    captureProfile();
+    lazyCaptureProfile();
   });
 }());
