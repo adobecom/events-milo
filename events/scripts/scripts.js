@@ -125,7 +125,7 @@ if (!eventId) {
   if (eccEnv !== 'prod') {
     const nonProdData = await getNonProdData(eccEnv, miloConfig);
     Object.entries(nonProdData).forEach(([key, value]) => {
-      if (key === 'event-title') {
+      if (key === 'title') {
         document.title = value;
         return;
       }
