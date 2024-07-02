@@ -303,7 +303,7 @@ function decorateSuccessMsg(form, successMsg, rsvpData) {
       e.preventDefault();
 
       if (i === 0) {
-        const resp = await deleteAttendee(rsvpData.eventId, rsvpData.attendeeId);
+        const resp = await deleteAttendee(rsvpData.eventId);
         rsvpData.resp = resp;
         BlockMediator.set('rsvpData', rsvpData);
       }

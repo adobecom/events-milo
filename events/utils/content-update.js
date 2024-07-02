@@ -83,6 +83,7 @@ async function handleRSVPBtnBasedOnProfile(rsvpBtn, miloLibs, profile) {
     BlockMediator.set('rsvpData', rsvpData);
     updateRSVPButtonState(rsvpBtn, miloLibs);
     BlockMediator.subscribe('rsvpData', () => {
+      console.log('triggered button state update because rsvpData got updated');
       updateRSVPButtonState(rsvpBtn, miloLibs);
     });
   }
