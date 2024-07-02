@@ -26,39 +26,6 @@ export function yieldToMain() {
   });
 }
 
-// FIXME: Compromise due to cyclic dependency
-function miloGetEnvName() {
-  const { host } = window.location;
-  if (host.includes('localhost')) return 'local';
-  if (host.includes('hlx.page')
-    || host.includes('hlx.live')
-    || host.includes('stage.adobe')
-    || host.includes('corp.adobe')) {
-    return 'stage';
-  }
-  return 'prod';
-}
-
-export function getECCEnv() {
-  const env = miloGetEnvName();
-
-  if (env === 'prod') return 'prod';
-
-  if (env === 'stage') {
-    const { host, search } = window.location;
-    const usp = new URLSearchParams(search);
-    const eccEnv = usp.get('eccEnv');
-
-    if (eccEnv) return eccEnv;
-
-    if (host.startsWith('stage--') || host.startsWith('www.stage')) return 'stage';
-    if (host.startsWith('dev--') || host.startsWith('www.dev')) return 'dev';
-  }
-
-  // fallback to Milo env name
-  return env;
-}
-
 export function getMetadata(name, doc = document) {
   const attr = name && name.includes(':') ? 'property' : 'name';
   const meta = doc.head.querySelector(`meta[${attr}="${name}"]`);
@@ -67,6 +34,34 @@ export function getMetadata(name, doc = document) {
 
 export function handlize(str) {
   return str.toLowerCase().trim().replaceAll(' ', '-');
+}
+
+export function flattenObject(obj, parentKey = '', result = {}) {
+  Object.keys(obj).forEach((key) => {
+    const value = obj[key];
+    const newKey = parentKey ? `${parentKey}.${key}` : key;
+
+    if (key === 'arbitrary' && Array.isArray(value)) {
+      value.forEach((item) => {
+        const itemKey = `${newKey}.${item.key}`;
+        result[itemKey] = item.value;
+      });
+    } else if (value && typeof value === 'object' && !Array.isArray(value)) {
+      flattenObject(value, newKey, result);
+    } else if (Array.isArray(value)) {
+      value.forEach((item, index) => {
+        if (typeof item === 'object' && !Array.isArray(item) && key !== 'arbitrary') {
+          flattenObject(item, `${newKey}[${index}]`, result);
+        } else {
+          result[`${newKey}[${index}]`] = item;
+        }
+      });
+    } else {
+      result[newKey] = value;
+    }
+  });
+
+  return result;
 }
 
 export function createOptimizedPicture(src, alt = '', eager = false, breakpoints = [{ media: '(min-width: 400px)', width: '2000' }, { width: '750' }]) {
