@@ -125,6 +125,11 @@ if (!eventId) {
   if (eccEnv !== 'prod') {
     const nonProdData = await getNonProdData(eccEnv, miloConfig);
     Object.entries(nonProdData).forEach(([key, value]) => {
+      if (key === 'event-title') {
+        document.title = value;
+        return;
+      }
+
       setMetadata(key, value);
     });
 
