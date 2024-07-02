@@ -341,6 +341,8 @@ export default function autoUpdateContent(parent, miloLibs, extraData) {
     return;
   }
 
+  if (!getMetadata('event-id')) return;
+
   const getImgData = (_match, p1, n) => {
     let data;
     if (p1.includes('.')) {

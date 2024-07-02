@@ -12,6 +12,7 @@
 
 import { captureProfile } from '../utils/event-apis.js';
 import autoUpdateContent, { getNonProdData, setMetadata } from '../utils/content-update.js';
+import { getECCEnv } from '../utils/utils.js';
 
 export const LIBS = (() => {
   const { hostname, search } = window.location;
@@ -98,28 +99,8 @@ const miloConfig = setConfig({ ...CONFIG, miloLibs: LIBS });
 // Decorate the page with site specific needs.
 decorateArea();
 
-function getECCEnv() {
-  const { env } = miloConfig;
-
-  if (env.name === 'prod') return 'prod';
-
-  if (env.name === 'stage') {
-    const { host, search } = window.location;
-    const usp = new URLSearchParams(search);
-    const eccEnv = usp.get('eccEnv');
-
-    if (eccEnv) return eccEnv;
-
-    if (host.startsWith('stage--') || host.startsWith('www.stage')) return 'stage';
-    if (host.startsWith('dev--') || host.startsWith('www.dev')) return 'dev';
-  }
-
-  // fallback to Milo env
-  return env.name;
-}
-
 if (!getMetadata('event-id')) {
-  const eccEnv = getECCEnv();
+  const eccEnv = getECCEnv(miloConfig);
 
   if (eccEnv !== 'prod') {
     // Load non-prod data for stage and dev environments
