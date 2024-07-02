@@ -50,7 +50,7 @@ export function setMetadata(name, value, doc = document) {
 }
 
 async function updateRSVPButtonState(rsvpData, rsvpBtn, miloLibs) {
-  if (rsvpData) return;
+  if (!rsvpData) return;
 
   const { getConfig } = await import(`${miloLibs}/utils/utils.js`);
   const { replaceKey } = await import(`${miloLibs}/features/placeholders.js`);
