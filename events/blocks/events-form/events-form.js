@@ -104,8 +104,11 @@ function createButton({ type, label }, successMsg, rsvpData) {
         button.setAttribute('disabled', true);
         const submissionResp = await submitForm(form, rsvpData);
         button.removeAttribute('disabled');
-        // if (!submissionResp) return;
-        // FIXME: letting the flow through regardless for demo
+        if (!submissionResp) {
+          // FIXME: return a false positive to test rsvp UI flow
+          BlockMediator.set('rsvpData', { attendeeId: 'foobar' });
+          return;
+        }
 
         rsvpData.attendeeId = submissionResp.attendeeId;
         rsvpData.resp = submissionResp;

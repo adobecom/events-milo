@@ -50,11 +50,12 @@ function createTag(tag, attributes, html, options = {}) {
 
 async function updateRSVPButtonState(rsvpBtn, miloLibs) {
   const rsvpData = BlockMediator.get('rsvpData');
-
+  console.log(rsvpBtn)
   if (rsvpData?.attendeeId) {
-    rsvpBtn.textContent = await miloReplaceKey(miloLibs, 'registered-cta-text');
+    rsvpBtn.el.textContent = await miloReplaceKey(miloLibs, 'registered-cta-text');
   } else {
-    rsvpBtn.textContent = rsvpBtn.originalText;
+
+    rsvpBtn.el.textContent = rsvpBtn.originalText;
   }
 
   // FIXME: no waitlisted state yet.
@@ -82,14 +83,10 @@ async function handleRSVPBtnBasedOnProfile(rsvpBtn, miloLibs, profile) {
   } else if (profile) {
     const rsvpData = await getAttendee(getMetadata('event-id'));
     BlockMediator.set('rsvpData', rsvpData);
-
-    if (rsvpData) {
+    updateRSVPButtonState(rsvpBtn, miloLibs);
+    BlockMediator.subscribe('rsvpData', () => {
       updateRSVPButtonState(rsvpBtn, miloLibs);
-    } else {
-      BlockMediator.subscribe('rsvpData', () => {
-        updateRSVPButtonState(rsvpBtn, miloLibs);
-      });
-    }
+    });
   }
 }
 
