@@ -1,3 +1,5 @@
+import { fetchThrottledMemoized } from './utils';
+
 export const getCaasTags = (() => {
   let cache;
   let promise;
@@ -33,7 +35,8 @@ export const getCaasTags = (() => {
 function getESLConfig() {
   return {
     local: { host: 'http://localhost:8499' },
-    stage: { host: 'https://wcms-events-service-layer-deploy-ethos102-stage-va-9c3ecd.stage.cloud.adobe.io' },
+    stage: { host: 'https://wcms-events-service-layer-deploy-ethos102-dev-va-9c3ecd.stage.cloud.adobe.io' },
+    dev: { host: 'https://wcms-events-service-layer-deploy-ethos102-stage-va-9c3ecd.stage.cloud.adobe.io' },
     prod: { host: 'https://wcms-events-service-layer-deploy-ethos102-stage-va-9c3ecd.stage.cloud.adobe.io' },
   };
 }
@@ -73,7 +76,7 @@ export async function getEvent(eventId) {
   const { host } = getESLConfig()[window.eccEnv];
   const options = await constructRequestOptions('GET');
 
-  const resp = await fetch(`${host}/v1/events/${eventId}`, options)
+  const resp = await fetchThrottledMemoized(`${host}/v1/events/${eventId}`, options)
     .then((res) => res.json())
     .catch((error) => window.lana?.log(`Failed to get details for event ${eventId}. Error: ${error}`));
   return resp;
@@ -86,7 +89,7 @@ export async function createAttendee(eventId, attendeeData) {
   const raw = JSON.stringify(attendeeData);
   const options = await constructRequestOptions('POST', raw);
 
-  const resp = await fetch(`${host}/v1/events/${eventId}/attendees`, options)
+  const resp = await fetchThrottledMemoized(`${host}/v1/events/${eventId}/attendees`, options)
     .then((res) => res.json())
     .catch((error) => window.lana?.log(`Failed to create attendee for event ${eventId}. Error: ${error}`));
   return resp;
@@ -99,7 +102,7 @@ export async function updateAttendee(eventId, attendeeId, attendeeData) {
   const raw = JSON.stringify(attendeeData);
   const options = await constructRequestOptions('PUT', raw);
 
-  const resp = await fetch(`${host}/v1/events/${eventId}/attendees/${attendeeId}`, options)
+  const resp = await fetchThrottledMemoized(`${host}/v1/events/${eventId}/attendees/me`, options)
     .then((res) => res.json())
     .catch((error) => window.lana?.log(`Failed to update attendee ${attendeeId} for event ${eventId}. Error: ${error}`));
   return resp;
@@ -111,7 +114,7 @@ export async function deleteAttendee(eventId, attendeeId) {
   const { host } = getESLConfig()[window.eccEnv];
   const options = await constructRequestOptions('DELETE');
 
-  const resp = await fetch(`${host}/v1/events/${eventId}/attendees/${attendeeId}`, options)
+  const resp = await fetchThrottledMemoized(`${host}/v1/events/${eventId}/attendees/me`, options)
     .then((res) => res.json())
     .catch((error) => window.lana?.log(`Failed to delete attendee ${attendeeId} for event ${eventId}. Error: ${error}`));
   return resp;
@@ -123,7 +126,7 @@ export async function getAttendees(eventId) {
   const { host } = getESLConfig()[window.eccEnv];
   const options = await constructRequestOptions('GET');
 
-  const resp = await fetch(`${host}/v1/events/${eventId}/attendees`, options)
+  const resp = await fetchThrottledMemoized(`${host}/v1/events/${eventId}/attendees`, options)
     .then((res) => res.json())
     .catch((error) => window.lana?.log(`Failed to fetch attendees for event ${eventId}. Error: ${error}`));
   return resp;
@@ -135,7 +138,7 @@ export async function getAttendee(eventId, attendeeId) {
   const { host } = getESLConfig()[window.eccEnv];
   const options = await constructRequestOptions('GET');
 
-  const resp = await fetch(`${host}/v1/events/${eventId}/attendees/${attendeeId}`, options)
+  const resp = await fetchThrottledMemoized(`${host}/v1/events/${eventId}/attendees/me`, options)
     .then((res) => res.json())
     .catch((error) => window.lana?.log(`Failed to get details of attendee ${attendeeId} for event ${eventId}. Error: ${error}`));
   return resp;

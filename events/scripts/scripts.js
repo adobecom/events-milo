@@ -11,10 +11,8 @@
  */
 
 import { lazyCaptureProfile } from '../utils/profile.js';
-import autoUpdateContent, { getNonProdData, setMetadata } from '../utils/content-update.js';
-import BlockMediator from '../deps/block-mediator.min.js';
-
-BlockMediator.set('imsProfile', null);
+import autoUpdateContent, { getNonProdData } from '../utils/content-update.js';
+import { setMetadata } from '../utils/utils.js';
 
 export const LIBS = (() => {
   const { hostname, search } = window.location;
