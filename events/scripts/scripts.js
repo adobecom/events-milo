@@ -122,6 +122,7 @@ if (!getMetadata('event-id')) {
   const eccEnv = getECCEnv();
 
   if (eccEnv !== 'prod') {
+    // Load non-prod data for stage and dev environments
     const nonProdData = await getNonProdData(eccEnv, miloConfig);
     Object.entries(nonProdData).forEach(([key, value]) => {
       if (key === 'event-title') {
