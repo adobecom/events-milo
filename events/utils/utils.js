@@ -26,12 +26,25 @@ export function yieldToMain() {
   });
 }
 
-export function getECCEnv(miloConfig) {
-  const { env } = miloConfig;
+// FIXME: Compromise due to cyclic dependency
+function miloGetEnvName() {
+  const { host } = window.location;
+  if (host.includes('localhost')) return 'local';
+  if (host.includes('hlx.page')
+    || host.includes('hlx.live')
+    || host.includes('stage.adobe')
+    || host.includes('corp.adobe')) {
+    return 'stage';
+  }
+  return 'prod';
+}
 
-  if (env.name === 'prod') return 'prod';
+export function getECCEnv() {
+  const env = miloGetEnvName();
 
-  if (env.name === 'stage') {
+  if (env === 'prod') return 'prod';
+
+  if (env === 'stage') {
     const { host, search } = window.location;
     const usp = new URLSearchParams(search);
     const eccEnv = usp.get('eccEnv');
@@ -42,8 +55,8 @@ export function getECCEnv(miloConfig) {
     if (host.startsWith('dev--') || host.startsWith('www.dev')) return 'dev';
   }
 
-  // fallback to Milo env
-  return env.name;
+  // fallback to Milo env name
+  return env;
 }
 
 export function getMetadata(name, doc = document) {

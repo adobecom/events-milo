@@ -70,7 +70,7 @@ async function constructRequestOptions(method, body = null) {
 }
 
 export async function getEvent(eventId) {
-  const { host } = getESLConfig()[window.miloConfig.env.name];
+  const { host } = getESLConfig()[window.eccEnv];
   const options = await constructRequestOptions('GET');
 
   const resp = await fetch(`${host}/v1/events/${eventId}`, options)
@@ -82,7 +82,7 @@ export async function getEvent(eventId) {
 export async function createAttendee(eventId, attendeeData) {
   if (!eventId || !attendeeData) return false;
 
-  const { host } = getESLConfig()[window.miloConfig.env.name];
+  const { host } = getESLConfig()[window.eccEnv];
   const raw = JSON.stringify(attendeeData);
   const options = await constructRequestOptions('POST', raw);
 
@@ -95,7 +95,7 @@ export async function createAttendee(eventId, attendeeData) {
 export async function updateAttendee(eventId, attendeeId, attendeeData) {
   if (!eventId || !attendeeData) return false;
 
-  const { host } = getESLConfig()[window.miloConfig.env.name];
+  const { host } = getESLConfig()[window.eccEnv];
   const raw = JSON.stringify(attendeeData);
   const options = await constructRequestOptions('PUT', raw);
 
@@ -108,7 +108,7 @@ export async function updateAttendee(eventId, attendeeId, attendeeData) {
 export async function deleteAttendee(eventId, attendeeId) {
   if (!eventId || !attendeeId) return false;
 
-  const { host } = getESLConfig()[window.miloConfig.env.name];
+  const { host } = getESLConfig()[window.eccEnv];
   const options = await constructRequestOptions('DELETE');
 
   const resp = await fetch(`${host}/v1/events/${eventId}/attendees/${attendeeId}`, options)
@@ -120,7 +120,7 @@ export async function deleteAttendee(eventId, attendeeId) {
 export async function getAttendees(eventId) {
   if (!eventId) return false;
 
-  const { host } = getESLConfig()[window.miloConfig.env.name];
+  const { host } = getESLConfig()[window.eccEnv];
   const options = await constructRequestOptions('GET');
 
   const resp = await fetch(`${host}/v1/events/${eventId}/attendees`, options)
@@ -132,7 +132,7 @@ export async function getAttendees(eventId) {
 export async function getAttendee(eventId, attendeeId) {
   if (!eventId || !attendeeId) return false;
 
-  const { host } = getESLConfig()[window.miloConfig.env.name];
+  const { host } = getESLConfig()[window.eccEnv];
   const options = await constructRequestOptions('GET');
 
   const resp = await fetch(`${host}/v1/events/${eventId}/attendees/${attendeeId}`, options)

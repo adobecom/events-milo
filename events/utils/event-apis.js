@@ -51,7 +51,7 @@ export async function getProfile() {
 
   const profile = await getUserProfile();
 
-  return profile || {};
+  return profile;
 }
 
 export async function captureProfile() {

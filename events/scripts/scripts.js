@@ -13,6 +13,9 @@
 import { captureProfile } from '../utils/event-apis.js';
 import autoUpdateContent, { getNonProdData, setMetadata } from '../utils/content-update.js';
 import { getECCEnv } from '../utils/utils.js';
+import BlockMediator from '../deps/block-mediator.min.js';
+
+BlockMediator.set('imsProfile', null);
 
 export const LIBS = (() => {
   const { hostname, search } = window.location;
@@ -94,15 +97,15 @@ const CONFIG = {
 };
 
 const { loadArea, setConfig, loadLana } = await import(`${LIBS}/utils/utils.js`);
-const miloConfig = setConfig({ ...CONFIG, miloLibs: LIBS });
-const eccEnv = getECCEnv(miloConfig);
+export const MILO_CONFIG = setConfig({ ...CONFIG, miloLibs: LIBS });
+window.eccEnv = getECCEnv(MILO_CONFIG);
 
 // Decorate the page with site specific needs.
 decorateArea();
 
-if ((eccEnv === 'stage' || eccEnv === 'dev') && !getMetadata('event-id')) {
+if ((window.eccEnv === 'stage' || window.eccEnv === 'dev') && !getMetadata('event-id')) {
   // Load non-prod data for stage and dev environments
-  const nonProdData = await getNonProdData(eccEnv, miloConfig);
+  const nonProdData = await getNonProdData(window.eccEnv, MILO_CONFIG);
   Object.entries(nonProdData).forEach(([key, value]) => {
     if (key === 'event-title') {
       setMetadata(key, nonProdData.title);
