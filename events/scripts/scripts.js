@@ -95,14 +95,13 @@ const CONFIG = {
 
 const { loadArea, setConfig, loadLana } = await import(`${LIBS}/utils/utils.js`);
 const miloConfig = setConfig({ ...CONFIG, miloLibs: LIBS });
+const eccEnv = getECCEnv(miloConfig);
 
 // Decorate the page with site specific needs.
 decorateArea();
 
-if (!getMetadata('event-id')) {
-  const eccEnv = getECCEnv(miloConfig);
-
-  if (eccEnv !== 'prod') {
+if (eccEnv === 'stage' || eccEnv === 'dev') {
+  if (!getMetadata('event-id')) {
     // Load non-prod data for stage and dev environments
     const nonProdData = await getNonProdData(eccEnv, miloConfig);
     Object.entries(nonProdData).forEach(([key, value]) => {
