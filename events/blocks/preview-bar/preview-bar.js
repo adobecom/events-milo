@@ -1,7 +1,7 @@
-import { getLibs } from '../../scripts/utils.js';
+import { LIBS } from '../../scripts/scripts.js';
 import { getIcon } from '../../utils/utils.js';
 
-const { createTag, getMetadata } = await import(`${getLibs()}/utils/utils.js`);
+const { createTag, getMetadata } = await import(`${LIBS}/utils/utils.js`);
 
 function removeURLParameter(url, parameter) {
   const params = new URLSearchParams(url.search);

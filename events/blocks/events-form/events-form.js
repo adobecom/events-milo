@@ -1,12 +1,13 @@
-import { getLibs } from '../../scripts/utils.js';
+import { LIBS } from '../../scripts/scripts.js';
 import { getMetadata } from '../../utils/utils.js';
 import { getProfile } from '../../utils/event-apis.js';
 import HtmlSanitizer from '../../deps/html-sanitizer.js';
 import { createAttendee, deleteAttendee } from '../../utils/esp-controller.js';
+import BlockMediator from '../../deps/block-mediator.min.js';
 
-const { createTag } = await import(`${getLibs()}/utils/utils.js`);
-const { closeModal } = await import(`${getLibs()}/blocks/modal/modal.js`);
-const { default: sanitizeComment } = await import(`${getLibs()}/utils/sanitizeComment.js`);
+const { createTag } = await import(`${LIBS}/utils/utils.js`);
+const { closeModal } = await import(`${LIBS}/blocks/modal/modal.js`);
+const { default: sanitizeComment } = await import(`${LIBS}/utils/sanitizeComment.js`);
 
 const RULE_OPERATORS = {
   equal: '=',
@@ -108,7 +109,7 @@ function createButton({ type, label }, successMsg, rsvpData) {
 
         rsvpData.attendeeId = submissionResp.attendeeId;
         rsvpData.resp = submissionResp;
-        window.bm8r.set('rsvpData', rsvpData);
+        BlockMediator.set('rsvpData', rsvpData);
 
         clearForm(form);
         const block = button.closest('.events-form');
@@ -301,7 +302,7 @@ function decorateSuccessMsg(form, successMsg, rsvpData) {
       if (i === 0) {
         const resp = await deleteAttendee(rsvpData.eventId, rsvpData.attendeeId);
         rsvpData.resp = resp;
-        window.bm8r.set('rsvpData', rsvpData);
+        BlockMediator.set('rsvpData', rsvpData);
       }
 
       const modal = form.closest('.dialog-modal');
@@ -322,7 +323,7 @@ async function createForm(formURL, successMsg, formData, terms) {
   }
 
   const rsvpData = { eventId: getMetadata('event-id') || '', attendeeId: '' };
-  window.bm8r.set('rsvpData', rsvpData);
+  BlockMediator.set('rsvpData', rsvpData);
 
   const { pathname } = new URL(formURL);
   let json = formData;

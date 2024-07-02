@@ -1,6 +1,6 @@
-import { getLibs } from '../../scripts/utils.js';
+import { LIBS } from '../../scripts/scripts.js';
 
-const { createTag } = await import(`${getLibs()}/utils/utils.js`);
+const { createTag } = await import(`${LIBS}/utils/utils.js`);
 
 const ENCODED_API_KEY = 'QUl6YVN5RHZ5cXdhVXMtSXZNS1BTb3RkV2JVRFJETmtUbkhXMlpB';
 

@@ -1,3 +1,4 @@
+import BlockMediator from '../deps/block-mediator.min.js';
 import { getAttendee } from './esp-controller.js';
 import { handlize } from './utils.js';
 
@@ -35,8 +36,24 @@ function getMetadata(name, doc = document) {
   return meta && meta.content;
 }
 
+export function setMetadata(name, value, doc = document) {
+  const attr = name && name.includes(':') ? 'property' : 'name';
+  const meta = doc.head.querySelector(`meta[${attr}="${name}"]`);
+
+  if (name === 'title') document.title = value;
+
+  if (meta) {
+    meta.content = value;
+  } else {
+    const newMeta = doc.createElement('meta');
+    newMeta.setAttribute(attr, name);
+    newMeta.content = value;
+    doc.head.appendChild(newMeta);
+  }
+}
+
 async function updateRSVPButtonState(rsvpData, rsvpBtn, miloLibs) {
-  if (rsvpData) return;
+  if (!rsvpData) return;
 
   const { getConfig } = await import(`${miloLibs}/utils/utils.js`);
   const { replaceKey } = await import(`${miloLibs}/features/placeholders.js`);
@@ -44,7 +61,7 @@ async function updateRSVPButtonState(rsvpData, rsvpBtn, miloLibs) {
 
   rsvpBtn.textContent = await replaceKey('rsvp-loading-cta-text', config);
   const eventId = rsvpData.eventId ?? getMetadata('event-id');
-  const attendeeId = rsvpData.attendeeId ?? window.bm8r.get('imsProfile')?.userId;
+  const attendeeId = rsvpData.attendeeId ?? BlockMediator.get('imsProfile')?.userId;
   const attendeeData = await getAttendee(eventId, attendeeId);
 
   if (attendeeData.id) {
@@ -68,7 +85,9 @@ function handleRegisterButton(a, miloLibs) {
       return;
     }
 
-    // add custom SUSI page id: adobeIMS.signIn({dctx_id: 'v:2,s,bg:expressUpsell,85709a30-0d87-11ef-a91c-2be7a9b482cb'})
+    // add custom SUSI page id, sth like this:
+    // adobeIMS.signIn({dctx_id: 'v:2,s,bg:expressUpsell,85709a30-0d87-11ef-a91c-2be7a9b482cb'})
+
     window.adobeIMS.signIn();
   };
 
@@ -82,9 +101,9 @@ function handleRegisterButton(a, miloLibs) {
     originalText: a.textContent,
   };
 
-  updateRSVPButtonState(window.bm8r.get('rsvpData'), rsvpBtn, miloLibs);
+  updateRSVPButtonState(BlockMediator.get('rsvpData'), rsvpBtn, miloLibs);
 
-  window.bm8r.subscribe('rsvpData', ({ newValue }) => {
+  BlockMediator.subscribe('rsvpData', ({ newValue }) => {
     updateRSVPButtonState(newValue, rsvpBtn, miloLibs);
   });
 }
@@ -154,11 +173,11 @@ function autoUpdateLinks(scope, miloLibs) {
       const url = new URL(a.href);
 
       if (/#rsvp-form.*/.test(a.href)) {
-        const profile = window.bm8r.get('imsProfile');
+        const profile = BlockMediator.get('imsProfile');
         if (profile?.noProfile) {
           handleRegisterButton(a, miloLibs);
         } else if (!profile) {
-          window.bm8r.subscribe('imsProfile', ({ newValue }) => {
+          BlockMediator.subscribe('imsProfile', ({ newValue }) => {
             if (newValue?.noProfile) {
               handleRegisterButton(a, miloLibs);
             }
@@ -167,19 +186,21 @@ function autoUpdateLinks(scope, miloLibs) {
       }
 
       if (a.href.endsWith('#event-template')) {
-        const params = new URLSearchParams(document.location.search);
-        const testTiming = params.get('timing');
-        let timeSuffix = '';
+        if (getMetadata('template-id')) {
+          const params = new URLSearchParams(document.location.search);
+          const testTiming = params.get('timing');
+          let timeSuffix = '';
 
-        if (testTiming) {
-          timeSuffix = +testTiming > +getMetadata('local-end-time-millis') ? '-post' : '-pre';
-        } else {
-          const currentDate = new Date();
-          const currentTimestamp = currentDate.getTime();
-          timeSuffix = currentTimestamp > +getMetadata('local-end-time-millis') ? '-post' : '-pre';
+          if (testTiming) {
+            timeSuffix = +testTiming > +getMetadata('local-end-time-millis') ? '-post' : '-pre';
+          } else {
+            const currentDate = new Date();
+            const currentTimestamp = currentDate.getTime();
+            timeSuffix = currentTimestamp > +getMetadata('local-end-time-millis') ? '-post' : '-pre';
+          }
+
+          a.href = `${getMetadata('template-id')}${timeSuffix}`;
         }
-
-        a.href = `${getMetadata('template-id')}${timeSuffix}`;
       } else if (getMetadata(url.hash.replace('#', ''))) {
         a.href = getMetadata(url.hash.replace('#', ''));
       }
@@ -297,12 +318,30 @@ function injectFragments(parent) {
   }
 }
 
+export async function getNonProdData(env) {
+  const resp = await fetch(`/events/default/${env}/metadata.json`);
+  if (resp.ok) {
+    const json = await resp.json();
+    const pageData = json.data.find((d) => d.url === window.location.pathname);
+
+    if (pageData) return pageData;
+
+    window.lana?.log('Failed to find non-prod metadata for current page');
+    return null;
+  }
+
+  window.lana?.log('Failed to fetch non-prod metadata:', resp);
+  return null;
+}
+
 // data -> dom gills
 export default function autoUpdateContent(parent, miloLibs, extraData) {
   if (!parent) {
     window.lana?.log('page server block cannot find its parent element');
     return;
   }
+
+  if (!getMetadata('event-id')) return;
 
   const getImgData = (_match, p1, n) => {
     let data;
@@ -351,7 +390,6 @@ export default function autoUpdateContent(parent, miloLibs, extraData) {
   };
 
   const allElements = parent.querySelectorAll('*');
-
   allElements.forEach((element) => {
     if (element.childNodes.length) {
       element.childNodes.forEach((n) => {
