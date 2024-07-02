@@ -152,7 +152,11 @@ if (!eventId) {
       setMetadata(key, value);
     });
 
+    if (nonProdData['event-title']) {
+      document.title = nonProdData['event-title'];
+    }
+
     decorateArea();
-    loadArea();
+    await loadArea();
   }
 }
