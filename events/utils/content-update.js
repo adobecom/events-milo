@@ -39,7 +39,14 @@ function getMetadata(name, doc = document) {
 export function setMetadata(name, value, doc = document) {
   const attr = name && name.includes(':') ? 'property' : 'name';
   const meta = doc.head.querySelector(`meta[${attr}="${name}"]`);
-  if (meta) meta.content = value;
+  if (meta) {
+    meta.content = value;
+  } else {
+    const newMeta = doc.createElement('meta');
+    newMeta.setAttribute(attr, name);
+    newMeta.content = value;
+    doc.head.appendChild(newMeta);
+  }
 }
 
 async function updateRSVPButtonState(rsvpData, rsvpBtn, miloLibs) {
