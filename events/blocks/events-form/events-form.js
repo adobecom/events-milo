@@ -1,6 +1,6 @@
 import { LIBS } from '../../scripts/scripts.js';
 import { getMetadata } from '../../utils/utils.js';
-import { getProfile } from '../../utils/event-apis.js';
+import { getProfile } from '../../utils/profile.js';
 import HtmlSanitizer from '../../deps/html-sanitizer.js';
 import { createAttendee, deleteAttendee } from '../../utils/esp-controller.js';
 import BlockMediator from '../../deps/block-mediator.min.js';
