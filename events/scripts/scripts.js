@@ -134,7 +134,6 @@ if (!eventId) {
     });
 
     decorateArea();
-    loadArea();
   }
 }
 
