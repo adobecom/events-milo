@@ -1,4 +1,4 @@
-import { fetchThrottledMemoized } from './utils';
+import { fetchThrottledMemoized } from './utils.js';
 
 export const getCaasTags = (() => {
   let cache;
