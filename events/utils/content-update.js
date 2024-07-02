@@ -50,7 +50,6 @@ function createTag(tag, attributes, html, options = {}) {
 
 async function updateRSVPButtonState(rsvpBtn, miloLibs) {
   const rsvpData = BlockMediator.get('rsvpData');
-  console.log(rsvpData)
 
   if (rsvpData.attendeeId) {
     rsvpBtn.textContent = await miloReplaceKey(miloLibs, 'registered-cta-text');
@@ -81,7 +80,8 @@ async function handleRSVPBtnBasedOnProfile(rsvpBtn, miloLibs, profile) {
       signIn();
     });
   } else if (profile) {
-    const rsvpData = await getAttendee(getMetadata('event-id'), profile.userId);
+    const rsvpData = await getAttendee(getMetadata('event-id'));
+    console.log(rsvpData);
     BlockMediator.set('rsvpData', rsvpData);
 
     if (rsvpData) {
