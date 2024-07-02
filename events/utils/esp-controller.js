@@ -95,8 +95,8 @@ export async function createAttendee(eventId, attendeeData) {
   return resp;
 }
 
-export async function updateAttendee(eventId, attendeeId, attendeeData) {
-  if (!eventId || !attendeeData) return false;
+export async function updateAttendee(eventId, attendeeData) {
+  if (!eventId) return false;
 
   const { host } = getESLConfig()[window.eccEnv];
   const raw = JSON.stringify(attendeeData);
@@ -104,19 +104,19 @@ export async function updateAttendee(eventId, attendeeId, attendeeData) {
 
   const resp = await fetchThrottledMemoized(`${host}/v1/events/${eventId}/attendees/me`, options)
     .then((res) => res.json())
-    .catch((error) => window.lana?.log(`Failed to update attendee ${attendeeId} for event ${eventId}. Error: ${error}`));
+    .catch((error) => window.lana?.log(`Failed to update attendee me for event ${eventId}. Error: ${error}`));
   return resp;
 }
 
-export async function deleteAttendee(eventId, attendeeId) {
-  if (!eventId || !attendeeId) return false;
+export async function deleteAttendee(eventId) {
+  if (!eventId) return false;
 
   const { host } = getESLConfig()[window.eccEnv];
   const options = await constructRequestOptions('DELETE');
 
   const resp = await fetchThrottledMemoized(`${host}/v1/events/${eventId}/attendees/me`, options)
     .then((res) => res.json())
-    .catch((error) => window.lana?.log(`Failed to delete attendee ${attendeeId} for event ${eventId}. Error: ${error}`));
+    .catch((error) => window.lana?.log(`Failed to delete attendee me for event ${eventId}. Error: ${error}`));
   return resp;
 }
 
@@ -132,14 +132,14 @@ export async function getAttendees(eventId) {
   return resp;
 }
 
-export async function getAttendee(eventId, attendeeId) {
-  if (!eventId || !attendeeId) return false;
+export async function getAttendee(eventId) {
+  if (!eventId) return false;
 
   const { host } = getESLConfig()[window.eccEnv];
   const options = await constructRequestOptions('GET');
 
   const resp = await fetchThrottledMemoized(`${host}/v1/events/${eventId}/attendees/me`, options)
     .then((res) => res.json())
-    .catch((error) => window.lana?.log(`Failed to get details of attendee ${attendeeId} for event ${eventId}. Error: ${error}`));
+    .catch((error) => window.lana?.log(`Failed to get details of attendee me for event ${eventId}. Error: ${error}`));
   return resp;
 }
