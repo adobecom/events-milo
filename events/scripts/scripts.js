@@ -10,17 +10,72 @@
  * governing permissions and limitations under the License.
  */
 
-import { setLibs, decorateArea } from './utils.js';
 import { captureProfile } from '../utils/event-apis.js';
-import BlockMediator from '../deps/block-mediator.min.js';
+import autoUpdateContent, { getNonProdData, setMetadata } from '../utils/content-update.js';
+import { getECCEnv } from '../utils/utils.js';
 
-window.bm8r = BlockMediator;
+export const LIBS = (() => {
+  const { hostname, search } = window.location;
+  if (!(hostname.includes('.hlx.') || hostname.includes('local'))) return '/libs';
+  const branch = new URLSearchParams(search).get('milolibs') || 'ecc';
+  if (branch === 'local') return 'http://localhost:6456/libs';
+  return branch.includes('--') ? `https://${branch}.hlx.live/libs` : `https://${branch}--milo--adobecom.hlx.live/libs`;
+})();
+
+function getMetadata(name) {
+  const attr = name && name.includes(':') ? 'property' : 'name';
+  const meta = document.head.querySelector(`meta[${attr}="${name}"]`);
+  return meta && meta.content;
+}
+
+export function decorateArea(area = document) {
+  const parsePhotosData = () => {
+    const output = {};
+
+    if (!area) return output;
+
+    try {
+      const photosData = JSON.parse(getMetadata('photos'));
+
+      photosData.forEach((photo) => {
+        output[photo.imageKind] = photo;
+      });
+    } catch (e) {
+      window.lana?.log('Failed to parse photos metadata:', e);
+    }
+
+    return output;
+  };
+
+  const eagerLoad = (parent, selector) => {
+    const img = parent.querySelector(selector);
+    img?.removeAttribute('loading');
+  };
+
+  (async function loadLCPImage() {
+    const marquee = area.querySelector('.marquee');
+    if (!marquee) {
+      eagerLoad(area, 'img');
+      return;
+    }
+
+    // First image of first row
+    eagerLoad(marquee, 'div:first-child img');
+    // Last image of last column of last row
+    eagerLoad(marquee, 'div:last-child > div:last-child img');
+  }());
+
+  const photosData = parsePhotosData(area);
+  const eventTitle = getMetadata('event-title') || document.title;
+
+  autoUpdateContent(area, LIBS, {
+    ...photosData,
+    'event-title': eventTitle,
+  });
+}
 
 // Add project-wide style path here.
 const STYLES = '';
-
-// Use 'https://milo.adobe.com/libs' if you cannot map '/libs' to milo's origin.
-const LIBS = '/libs';
 
 // Add any config options.
 const CONFIG = {
@@ -38,8 +93,26 @@ const CONFIG = {
   },
 };
 
+const { loadArea, setConfig, loadLana } = await import(`${LIBS}/utils/utils.js`);
+const miloConfig = setConfig({ ...CONFIG, miloLibs: LIBS });
+const eccEnv = getECCEnv(miloConfig);
+
 // Decorate the page with site specific needs.
 decorateArea();
+
+if ((eccEnv === 'stage' || eccEnv === 'dev') && !getMetadata('event-id')) {
+  // Load non-prod data for stage and dev environments
+  const nonProdData = await getNonProdData(eccEnv, miloConfig);
+  Object.entries(nonProdData).forEach(([key, value]) => {
+    if (key === 'event-title') {
+      setMetadata(key, nonProdData.title);
+    } else {
+      setMetadata(key, value);
+    }
+  });
+
+  decorateArea();
+}
 
 /*
  * ------------------------------------------------------------
@@ -47,10 +120,8 @@ decorateArea();
  * ------------------------------------------------------------
  */
 
-const miloLibs = setLibs(LIBS);
-
 (function loadStyles() {
-  const paths = [`${miloLibs}/styles/styles.css`];
+  const paths = [`${LIBS}/styles/styles.css`];
   if (STYLES) { paths.push(STYLES); }
   paths.forEach((path) => {
     const link = document.createElement('link');
@@ -61,9 +132,6 @@ const miloLibs = setLibs(LIBS);
 }());
 
 (async function loadPage() {
-  const { loadArea, setConfig, loadLana } = await import(`${miloLibs}/utils/utils.js`);
-  const config = setConfig({ ...CONFIG, miloLibs });
-  window.miloConfig = config;
   await loadLana({ clientId: 'events-milo' });
   await loadArea().then(() => {
     captureProfile();

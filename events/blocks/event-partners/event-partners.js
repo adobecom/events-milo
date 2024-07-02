@@ -1,6 +1,6 @@
-import { getLibs } from '../../scripts/utils.js';
+import { LIBS } from '../../scripts/scripts.js';
 
-const { createTag, getMetadata } = await import(`${getLibs()}/utils/utils.js`);
+const { createTag, getMetadata } = await import(`${LIBS}/utils/utils.js`);
 
 export default function init(el) {
   let partnersData;
@@ -25,7 +25,7 @@ export default function init(el) {
     createTag('img', { src: `${partner.imageUrl}` }, '', { parent: logoWrapper });
 
     if (partner.externalLink) {
-      const aTag = createTag('a', { href: partner.externalLink }, '', { parent: eventPartners });
+      const aTag = createTag('a', { href: partner.externalLink, target: '_blank' }, '', { parent: eventPartners });
       eventPartners.append(aTag);
       aTag.append(logoWrapper);
     } else {

@@ -26,6 +26,26 @@ export function yieldToMain() {
   });
 }
 
+export function getECCEnv(miloConfig) {
+  const { env } = miloConfig;
+
+  if (env.name === 'prod') return 'prod';
+
+  if (env.name === 'stage') {
+    const { host, search } = window.location;
+    const usp = new URLSearchParams(search);
+    const eccEnv = usp.get('eccEnv');
+
+    if (eccEnv) return eccEnv;
+
+    if (host.startsWith('stage--') || host.startsWith('www.stage')) return 'stage';
+    if (host.startsWith('dev--') || host.startsWith('www.dev')) return 'dev';
+  }
+
+  // fallback to Milo env
+  return env.name;
+}
+
 export function getMetadata(name, doc = document) {
   const attr = name && name.includes(':') ? 'property' : 'name';
   const meta = doc.head.querySelector(`meta[${attr}="${name}"]`);
