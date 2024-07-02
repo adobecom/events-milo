@@ -100,20 +100,18 @@ const eccEnv = getECCEnv(miloConfig);
 // Decorate the page with site specific needs.
 decorateArea();
 
-if (eccEnv === 'stage' || eccEnv === 'dev') {
-  if (!getMetadata('event-id')) {
-    // Load non-prod data for stage and dev environments
-    const nonProdData = await getNonProdData(eccEnv, miloConfig);
-    Object.entries(nonProdData).forEach(([key, value]) => {
-      if (key === 'event-title') {
-        setMetadata(key, nonProdData.title);
-      } else {
-        setMetadata(key, value);
-      }
-    });
+if ((eccEnv === 'stage' || eccEnv === 'dev') && !getMetadata('event-id')) {
+  // Load non-prod data for stage and dev environments
+  const nonProdData = await getNonProdData(eccEnv, miloConfig);
+  Object.entries(nonProdData).forEach(([key, value]) => {
+    if (key === 'event-title') {
+      setMetadata(key, nonProdData.title);
+    } else {
+      setMetadata(key, value);
+    }
+  });
 
-    decorateArea();
-  }
+  decorateArea();
 }
 
 /*
