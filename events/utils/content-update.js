@@ -99,12 +99,12 @@ async function handleRegisterButton(a, miloLibs) {
   const devMode = urlParams.get('devMode');
   if (devMode) return;
 
-  a.classList.add('disabled');
   const rsvpBtn = {
     el: a,
     originalText: a.textContent,
   };
 
+  a.classList.add('disabled');
   a.textContent = await miloReplaceKey(miloLibs, 'rsvp-loading-cta-text');
 
   const profile = BlockMediator.get('imsProfile');
