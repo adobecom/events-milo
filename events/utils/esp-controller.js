@@ -126,7 +126,7 @@ export async function getAttendees(eventId) {
   const { host } = getESLConfig()[window.eccEnv];
   const options = await constructRequestOptions('GET');
 
-  const resp = await fetch(`${host}/v1/events/${eventId}/attendees`, options)
+  const resp = await fetchThrottledMemoized(`${host}/v1/events/${eventId}/attendees`, options)
     .then((res) => res.json())
     .catch((error) => window.lana?.log(`Failed to fetch attendees for event ${eventId}. Error: ${error}`));
   return resp;
@@ -138,7 +138,7 @@ export async function getAttendee(eventId) {
   const { host } = getESLConfig()[window.eccEnv];
   const options = await constructRequestOptions('GET');
 
-  const resp = await fetchThrottledMemoized(`${host}/v1/events/${eventId}/attendees/me`, options)
+  const resp = await fetch(`${host}/v1/events/${eventId}/attendees/me`, options)
     .then((res) => res.json())
     .catch((error) => window.lana?.log(`Failed to get details of attendee me for event ${eventId}. Error: ${error}`));
   return resp;
