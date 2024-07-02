@@ -425,16 +425,19 @@ function decorateHero(heroEl) {
 
 async function updateDynamicContent(bp) {
   const { block, eventHero } = bp;
-  let profile;
+  const profile = BlockMediator.get('imsProfile');
 
-  try {
-    profile = await getProfile();
-  } catch (e) {
-    eventHero.querySelectorAll('p')?.forEach((p) => p.remove());
+  if (profile && !profile.noProfile) {
+    eventHero.classList.remove('loading');
+    personalizeForm(block, profile);
+  } else if (!profile) {
+    BlockMediator.subscribe('imsProfile', ({ newValue }) => {
+      if (newValue && !newValue.noProfile) {
+        eventHero.classList.remove('loading');
+        personalizeForm(block, newValue);
+      }
+    });
   }
-
-  eventHero.classList.remove('loading');
-  personalizeForm(block, profile);
 }
 
 async function buildEventform(bp, formData) {
