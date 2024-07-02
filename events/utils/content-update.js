@@ -51,7 +51,7 @@ function createTag(tag, attributes, html, options = {}) {
 async function updateRSVPButtonState(rsvpBtn, miloLibs) {
   const rsvpData = BlockMediator.get('rsvpData');
 
-  if (rsvpData.attendeeId) {
+  if (rsvpData?.attendeeId) {
     rsvpBtn.textContent = await miloReplaceKey(miloLibs, 'registered-cta-text');
   } else {
     rsvpBtn.textContent = rsvpBtn.originalText;
