@@ -25,7 +25,7 @@ export default function init(el) {
     createTag('img', { src: `${partner.imageUrl}` }, '', { parent: logoWrapper });
 
     if (partner.externalLink) {
-      const aTag = createTag('a', { href: partner.externalLink }, '', { parent: eventPartners });
+      const aTag = createTag('a', { href: partner.externalLink, target: '_blank' }, '', { parent: eventPartners });
       eventPartners.append(aTag);
       aTag.append(logoWrapper);
     } else {
