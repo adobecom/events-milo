@@ -132,13 +132,13 @@ export async function getAttendees(eventId) {
   return resp;
 }
 
-export async function getAttendee(eventId) {
+export async function getAttendee(eventId, userId) {
   if (!eventId) return false;
 
   const { host } = getESLConfig()[window.eccEnv];
   const options = await constructRequestOptions('GET');
 
-  const resp = await fetchThrottledMemoized(`${host}/v1/events/${eventId}/attendees/me`, options)
+  const resp = await fetchThrottledMemoized(`${host}/v1/events/${eventId}/attendees/${userId.split('@')[0]}`, options)
     .then((res) => res.json())
     .catch((error) => window.lana?.log(`Failed to get details of attendee me for event ${eventId}. Error: ${error}`));
   return resp;
