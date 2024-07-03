@@ -100,8 +100,8 @@ async function handleRegisterButton(a, miloLibs) {
     originalText: a.textContent,
   };
 
-  a.classList.add('disabled');
   a.textContent = await miloReplaceKey(miloLibs, 'rsvp-loading-cta-text');
+  a.classList.add('disabled');
 
   const profile = BlockMediator.get('imsProfile');
   if (profile) {
