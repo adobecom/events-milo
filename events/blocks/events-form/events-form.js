@@ -116,14 +116,14 @@ function createButton({ type, label }, successMsg) {
       if (form.checkValidity()) {
         event.preventDefault();
         button.setAttribute('disabled', true);
-        const submissionResp = await submitForm(form);
+        const resp = await submitForm(form);
         button.removeAttribute('disabled');
-        if (!submissionResp) {
+        if (!resp || resp.message || resp.errors) {
           buildErrorMsg(form);
           return;
         }
 
-        rsvpData.resp = submissionResp;
+        rsvpData.resp = resp;
         rsvpData.action = 'create';
         BlockMediator.set('rsvpData', rsvpData);
 
