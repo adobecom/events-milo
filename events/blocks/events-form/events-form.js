@@ -1,7 +1,7 @@
 import { LIBS } from '../../scripts/scripts.js';
 import { getMetadata } from '../../utils/utils.js';
 import HtmlSanitizer from '../../deps/html-sanitizer.js';
-import { createAttendee, deleteAttendee } from '../../utils/esp-controller.js';
+import { createAttendee, deleteAttendee, updateAttendee } from '../../utils/esp-controller.js';
 import BlockMediator from '../../deps/block-mediator.min.js';
 
 const { createTag } = await import(`${LIBS}/utils/utils.js`);
@@ -56,7 +56,8 @@ function constructPayload(form) {
   return payload;
 }
 
-async function submitForm(form, espData) {
+async function submitForm(form) {
+  const rsvpData = BlockMediator.get('rsvpData');
   const payload = constructPayload(form);
   payload.timestamp = new Date().toJSON();
   Object.keys(payload).forEach((key) => {
@@ -78,9 +79,14 @@ async function submitForm(form, espData) {
     return true;
   });
 
-  const response = await createAttendee(espData.eventId, payload);
+  let resp = null;
+  if (!rsvpData || !rsvpData.attendeeId) {
+    resp = await createAttendee(getMetadata('event-id'), payload);
+  } else {
+    resp = await updateAttendee(getMetadata('event-id'), payload);
+  }
 
-  return response || false;
+  return resp;
 }
 
 function clearForm(form) {
@@ -101,7 +107,8 @@ async function buildErrorMsg(form) {
   }, 3000);
 }
 
-function createButton({ type, label }, successMsg, rsvpData) {
+function createButton({ type, label }, successMsg) {
+  const rsvpData = BlockMediator.get('rsvpData');
   const button = createTag('button', { class: 'button' }, label);
   if (type === 'submit') {
     button.addEventListener('click', async (event) => {
@@ -109,7 +116,7 @@ function createButton({ type, label }, successMsg, rsvpData) {
       if (form.checkValidity()) {
         event.preventDefault();
         button.setAttribute('disabled', true);
-        const submissionResp = await submitForm(form, rsvpData);
+        const submissionResp = await submitForm(form);
         button.removeAttribute('disabled');
         if (!submissionResp) {
           buildErrorMsg(form);
