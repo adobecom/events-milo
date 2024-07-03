@@ -166,9 +166,9 @@ export const fetchThrottledMemoized = (() => {
 
     try {
       const response = await fetchPromise;
-      cache.set(key, response.json());
+      cache.set(key, response);
       setTimeout(() => cache.delete(key), ttl);
-      return response.json();
+      return response;
     } finally {
       pending.delete(key);
     }
