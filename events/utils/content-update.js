@@ -90,6 +90,17 @@ async function handleRSVPBtnBasedOnProfile(rsvpBtn, miloLibs, profile) {
   }
 }
 
+export async function validatePageAndRedirect(env) {
+  const pagePublished = getMetadata('published');
+  if (env === 'prod' && (!pagePublished || pagePublished === 'false')) {
+    window.location.replace('/404');
+  }
+
+  if (env === 'stage' && window.location.hostname.endsWith('adobe.com')) {
+    window.location.replace('/404');
+  }
+}
+
 async function handleRegisterButton(a, miloLibs) {
   const urlParams = new URLSearchParams(window.location.search);
   const devMode = urlParams.get('devMode');

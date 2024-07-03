@@ -11,7 +11,7 @@
  */
 
 import { lazyCaptureProfile } from '../utils/profile.js';
-import autoUpdateContent, { getNonProdData } from '../utils/content-update.js';
+import autoUpdateContent, { getNonProdData, validatePageAndRedirect } from '../utils/content-update.js';
 import { setMetadata } from '../utils/utils.js';
 
 export const LIBS = (() => {
@@ -88,6 +88,7 @@ export function decorateArea(area = document) {
   const photosData = parsePhotosData(area);
   const eventTitle = getMetadata('event-title') || document.title;
 
+  validatePageAndRedirect();
   autoUpdateContent(area, LIBS, {
     ...photosData,
     'event-title': eventTitle,
