@@ -100,7 +100,7 @@ function clearForm(form) {
 }
 
 async function buildErrorMsg(form) {
-  const error = createTag('sp-toast', { class: 'error' }, 'An error occurred. Please try again later.');
+  const error = createTag('p', { class: 'error' }, 'An error occurred. Please try again later.');
   form.append(error);
   setTimeout(() => {
     error.remove();

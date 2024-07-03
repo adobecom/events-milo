@@ -298,6 +298,16 @@
   display: none;
 }
 
+.events-form p.error {
+  margin: 0;
+  grid-column: 1 / 3;
+  justify-self: center;
+  padding: 8px 16px;
+  border-radius: 8px;
+  background-color: var(--color-red);
+  color: white;
+}
+
 @media screen and (min-width: 600px) {
   .events-form form {
     display: grid;
