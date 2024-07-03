@@ -83,7 +83,7 @@ async function submitForm(form) {
   if (!rsvpData || !rsvpData.attendeeId) {
     resp = await createAttendee(getMetadata('event-id'), payload);
   } else {
-    resp = await updateAttendee(getMetadata('event-id'), { ...payload, attendeeId: 'me' });
+    resp = await updateAttendee(getMetadata('event-id'), { ...payload, attendeeId: rsvpData.attendeeId });
   }
 
   return resp;
