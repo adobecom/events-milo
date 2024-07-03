@@ -108,10 +108,10 @@ async function buildErrorMsg(form) {
 }
 
 function createButton({ type, label }, successMsg) {
-  const rsvpData = BlockMediator.get('rsvpData');
   const button = createTag('button', { class: 'button' }, label);
   if (type === 'submit') {
     button.addEventListener('click', async (event) => {
+      const rsvpData = BlockMediator.get('rsvpData') || BlockMediator.set('rsvpData', {});
       const form = button.closest('form');
       if (form.checkValidity()) {
         event.preventDefault();
@@ -380,8 +380,8 @@ async function createForm(formURL, successMsg, formData, terms) {
     'checkbox-group': { fn: createCheckGroup, params: ['checkbox'], label: true, classes: ['field-group-wrapper'] },
     'radio-group': { fn: createCheckGroup, params: ['radio'], label: true, classes: ['field-group-wrapper'] },
     'text-area': { fn: createTextArea, params: [], label: true, classes: [] },
-    submit: { fn: createButton, params: [successMsg, rsvpData], label: false, classes: ['field-button-wrapper'] },
-    clear: { fn: createButton, params: [successMsg, rsvpData], label: false, classes: ['field-button-wrapper'] },
+    submit: { fn: createButton, params: [successMsg], label: false, classes: ['field-button-wrapper'] },
+    clear: { fn: createButton, params: [successMsg], label: false, classes: ['field-button-wrapper'] },
     divider: { fn: createDivider, params: [], label: false, classes: ['divider'] },
     default: { fn: createInput, params: [], label: true, classes: [] },
   };
