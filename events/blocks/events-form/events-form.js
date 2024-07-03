@@ -120,6 +120,7 @@ function createButton({ type, label }, successMsg) {
         button.removeAttribute('disabled');
         if (!submissionResp) {
           buildErrorMsg(form);
+          return;
         }
 
         rsvpData.resp = submissionResp;
