@@ -102,7 +102,7 @@ export async function updateAttendee(eventId, attendeeData) {
   const raw = JSON.stringify(attendeeData);
   const options = await constructRequestOptions('PUT', raw);
 
-  const resp = await fetchThrottledMemoized(`${host}/v1/events/${eventId}/attendees/me`, options)
+  const resp = await fetchThrottledMemoized(`${host}/v1/events/${eventId}/attendees/${attendeeData.attendeeId || 'me'}`, options)
     .then((res) => res.json())
     .catch((error) => window.lana?.log(`Failed to update attendee me for event ${eventId}. Error: ${error}`));
   return resp;
