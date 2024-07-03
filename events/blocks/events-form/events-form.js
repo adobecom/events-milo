@@ -120,6 +120,7 @@ function createButton({ type, label }, successMsg) {
         button.removeAttribute('disabled');
         if (!resp || resp.message || resp.errors) {
           buildErrorMsg(form);
+          window.lana?.log('Failed to submit form:', resp);
           return;
         }
 
