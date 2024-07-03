@@ -118,22 +118,28 @@ const { loadArea, setConfig, loadLana } = await import(`${LIBS}/utils/utils.js`)
 export const MILO_CONFIG = setConfig({ ...CONFIG, miloLibs: LIBS });
 window.eccEnv = getECCEnv(MILO_CONFIG);
 
+async function fetchAndDecorateArea() {
+  if ((window.eccEnv === 'stage' || window.eccEnv === 'dev') && !getMetadata('event-id')) {
+    // Load non-prod data for stage and dev environments
+    const nonProdData = await getNonProdData(window.eccEnv, MILO_CONFIG);
+
+    if (!nonProdData) return;
+
+    Object.entries(nonProdData).forEach(([key, value]) => {
+      if (key === 'event-title') {
+        setMetadata(key, nonProdData.title);
+      } else {
+        setMetadata(key, value);
+      }
+    });
+
+    decorateArea();
+  }
+}
+
 // Decorate the page with site specific needs.
 decorateArea();
-
-if ((window.eccEnv === 'stage' || window.eccEnv === 'dev') && !getMetadata('event-id')) {
-  // Load non-prod data for stage and dev environments
-  const nonProdData = await getNonProdData(window.eccEnv, MILO_CONFIG);
-  Object.entries(nonProdData).forEach(([key, value]) => {
-    if (key === 'event-title') {
-      setMetadata(key, nonProdData.title);
-    } else {
-      setMetadata(key, value);
-    }
-  });
-
-  decorateArea();
-}
+await fetchAndDecorateArea();
 
 /*
  * ------------------------------------------------------------
