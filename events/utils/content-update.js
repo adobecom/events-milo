@@ -81,6 +81,7 @@ async function handleRSVPBtnBasedOnProfile(rsvpBtn, miloLibs, profile) {
   } else if (profile) {
     const rsvpData = await getAttendee(getMetadata('event-id'));
     BlockMediator.set('rsvpData', rsvpData);
+    console.log('profile', profile);
     console.log('rsvpData', rsvpData);
     await updateRSVPButtonState(rsvpBtn, miloLibs);
 
