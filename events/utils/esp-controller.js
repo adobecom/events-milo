@@ -35,8 +35,8 @@ export const getCaasTags = (() => {
 function getESLConfig() {
   return {
     local: { host: 'http://localhost:8499' },
-    stage: { host: 'https://wcms-events-service-layer-deploy-ethos102-dev-va-9c3ecd.stage.cloud.adobe.io' },
-    dev: { host: 'https://wcms-events-service-layer-deploy-ethos102-stage-va-9c3ecd.stage.cloud.adobe.io' },
+    dev: { host: 'https://wcms-events-service-layer-deploy-ethos102-dev-va-9c3ecd.stage.cloud.adobe.io' },
+    stage: { host: 'https://wcms-events-service-layer-deploy-ethos102-stage-va-9c3ecd.stage.cloud.adobe.io' },
     prod: { host: 'https://wcms-events-service-layer-deploy-ethos102-stage-va-9c3ecd.stage.cloud.adobe.io' },
   };
 }
@@ -132,13 +132,13 @@ export async function getAttendees(eventId) {
   return resp;
 }
 
-export async function getAttendee(eventId, userId) {
+export async function getAttendee(eventId) {
   if (!eventId) return false;
 
   const { host } = getESLConfig()[window.eccEnv];
   const options = await constructRequestOptions('GET');
 
-  const resp = await fetchThrottledMemoized(`${host}/v1/events/${eventId}/attendees/${userId.split('@')[0]}`, options)
+  const resp = await fetchThrottledMemoized(`${host}/v1/events/${eventId}/attendees/me`, options)
     .then((res) => res.json())
     .catch((error) => window.lana?.log(`Failed to get details of attendee me for event ${eventId}. Error: ${error}`));
   return resp;

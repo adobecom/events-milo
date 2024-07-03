@@ -79,7 +79,7 @@ async function handleRSVPBtnBasedOnProfile(rsvpBtn, miloLibs, profile) {
       signIn();
     });
   } else if (profile) {
-    const rsvpData = await getAttendee(getMetadata('event-id'), profile.userId);
+    const rsvpData = await getAttendee(getMetadata('event-id'));
     BlockMediator.set('rsvpData', rsvpData);
     updateRSVPButtonState(rsvpBtn, miloLibs);
     BlockMediator.subscribe('rsvpData', () => {
