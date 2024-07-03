@@ -116,8 +116,10 @@ function createButton({ type, label }, successMsg) {
       if (form.checkValidity()) {
         event.preventDefault();
         button.setAttribute('disabled', true);
+        button.classList.add('submitting');
         const resp = await submitForm(form);
         button.removeAttribute('disabled');
+        button.classList.remove('submitting');
         if (!resp || resp.message || resp.errors) {
           buildErrorMsg(form);
           window.lana?.log('Failed to submit form:', resp);
