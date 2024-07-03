@@ -96,7 +96,7 @@ export async function validatePageAndRedirect(env) {
     window.location.replace('/404');
   }
 
-  if (env === 'stage' && window.location.hostname.endsWith('adobe.com')) {
+  if (env === 'stage' && window.location.hostname === 'www.stage.adobe.com') {
     window.location.replace('/404');
   }
 }
