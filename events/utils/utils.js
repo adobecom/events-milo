@@ -174,5 +174,5 @@ export const fetchThrottledMemoized = (() => {
     }
   };
 
-  return (url, options = {}, { ttl = 3000 } = {}) => memoize(url, options, fetch, ttl);
+  return (url, options = {}, { ttl = 10000 } = {}) => memoize(url, options, fetch, ttl);
 })();
