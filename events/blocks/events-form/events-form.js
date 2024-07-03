@@ -93,6 +93,14 @@ function clearForm(form) {
   });
 }
 
+async function buildErrorMsg(form) {
+  const error = createTag('sp-toast', { class: 'error' }, 'An error occurred. Please try again later.');
+  form.append(error);
+  setTimeout(() => {
+    error.remove();
+  }, 3000);
+}
+
 function createButton({ type, label }, successMsg, rsvpData) {
   const button = createTag('button', { class: 'button' }, label);
   if (type === 'submit') {
@@ -104,13 +112,11 @@ function createButton({ type, label }, successMsg, rsvpData) {
         const submissionResp = await submitForm(form, rsvpData);
         button.removeAttribute('disabled');
         if (!submissionResp) {
-          // FIXME: return a false positive to test rsvp UI flow
-          BlockMediator.set('rsvpData', { attendeeId: 'foobar' });
-          return;
+          buildErrorMsg(form);
         }
 
-        rsvpData.attendeeId = submissionResp.attendeeId;
         rsvpData.resp = submissionResp;
+        rsvpData.action = 'create';
         BlockMediator.set('rsvpData', rsvpData);
 
         clearForm(form);
@@ -304,6 +310,7 @@ function decorateSuccessMsg(form, successMsg, rsvpData) {
       if (i === 0) {
         const resp = await deleteAttendee(rsvpData.eventId);
         rsvpData.resp = resp;
+        rsvpData.action = 'delete';
         BlockMediator.set('rsvpData', rsvpData);
       }
 
