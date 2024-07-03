@@ -76,10 +76,9 @@ export async function getEvent(eventId) {
   const { host } = getESLConfig()[window.eccEnv];
   const options = await constructRequestOptions('GET');
 
-  const resp = await fetchThrottledMemoized(`${host}/v1/events/${eventId}`, options)
-    .then((res) => res.json())
+  const json = await fetchThrottledMemoized(`${host}/v1/events/${eventId}`, options)
     .catch((error) => window.lana?.log(`Failed to get details for event ${eventId}. Error: ${error}`));
-  return resp;
+  return json;
 }
 
 export async function createAttendee(eventId, attendeeData) {
@@ -89,10 +88,9 @@ export async function createAttendee(eventId, attendeeData) {
   const raw = JSON.stringify(attendeeData);
   const options = await constructRequestOptions('POST', raw);
 
-  const resp = await fetchThrottledMemoized(`${host}/v1/events/${eventId}/attendees`, options)
-    .then((res) => res.json())
+  const json = await fetchThrottledMemoized(`${host}/v1/events/${eventId}/attendees`, options)
     .catch((error) => window.lana?.log(`Failed to create attendee for event ${eventId}. Error: ${error}`));
-  return resp;
+  return json;
 }
 
 export async function updateAttendee(eventId, attendeeData) {
@@ -102,10 +100,9 @@ export async function updateAttendee(eventId, attendeeData) {
   const raw = JSON.stringify(attendeeData);
   const options = await constructRequestOptions('PUT', raw);
 
-  const resp = await fetchThrottledMemoized(`${host}/v1/events/${eventId}/attendees/me`, options)
-    .then((res) => res.json())
+  const json = await fetchThrottledMemoized(`${host}/v1/events/${eventId}/attendees/me`, options)
     .catch((error) => window.lana?.log(`Failed to update attendee me for event ${eventId}. Error: ${error}`));
-  return resp;
+  return json;
 }
 
 export async function deleteAttendee(eventId) {
@@ -114,10 +111,9 @@ export async function deleteAttendee(eventId) {
   const { host } = getESLConfig()[window.eccEnv];
   const options = await constructRequestOptions('DELETE');
 
-  const resp = await fetchThrottledMemoized(`${host}/v1/events/${eventId}/attendees/me`, options)
-    .then((res) => res.json())
+  const json = await fetchThrottledMemoized(`${host}/v1/events/${eventId}/attendees/me`, options)
     .catch((error) => window.lana?.log(`Failed to delete attendee me for event ${eventId}. Error: ${error}`));
-  return resp;
+  return json;
 }
 
 export async function getAttendees(eventId) {
@@ -126,10 +122,9 @@ export async function getAttendees(eventId) {
   const { host } = getESLConfig()[window.eccEnv];
   const options = await constructRequestOptions('GET');
 
-  const resp = await fetchThrottledMemoized(`${host}/v1/events/${eventId}/attendees`, options)
-    .then((res) => res.json())
+  const json = await fetchThrottledMemoized(`${host}/v1/events/${eventId}/attendees`, options)
     .catch((error) => window.lana?.log(`Failed to fetch attendees for event ${eventId}. Error: ${error}`));
-  return resp;
+  return json;
 }
 
 export async function getAttendee(eventId) {
@@ -138,8 +133,7 @@ export async function getAttendee(eventId) {
   const { host } = getESLConfig()[window.eccEnv];
   const options = await constructRequestOptions('GET');
 
-  const resp = await fetchThrottledMemoized(`${host}/v1/events/${eventId}/attendees/me`, options)
-    .then((res) => res.json())
+  const json = await fetchThrottledMemoized(`${host}/v1/events/${eventId}/attendees/me`, options)
     .catch((error) => window.lana?.log(`Failed to get details of attendee me for event ${eventId}. Error: ${error}`));
-  return resp;
+  return json;
 }
