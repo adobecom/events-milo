@@ -83,21 +83,20 @@ export function flattenObject(obj, parentKey = '', result = {}) {
 export function createOptimizedPicture(
   src,
   alt = '',
+  relative = true,
   eager = false,
   breakpoints = [{ media: '(min-width: 400px)', width: '2000' }, { width: '750' }],
 ) {
   let url;
 
-  try {
+  if (relative) {
     url = new URL(src);
-  } catch (error) {
+  } else {
     url = new URL(src, window.location.href);
   }
 
-  if (!url) return null;
-
   const picture = document.createElement('picture');
-  const { pathname } = url;
+  const { pathname, href } = url;
   const ext = pathname.substring(pathname.lastIndexOf('.') + 1);
 
   // webp
@@ -105,7 +104,7 @@ export function createOptimizedPicture(
     const source = document.createElement('source');
     if (br.media) source.setAttribute('media', br.media);
     source.setAttribute('type', 'image/webp');
-    source.setAttribute('srcset', `${pathname}?width=${br.width}&format=webply&optimize=medium`);
+    source.setAttribute('srcset', `${relative ? pathname : href}?width=${br.width}&format=webply&optimize=medium`);
     picture.appendChild(source);
   });
 
@@ -114,11 +113,11 @@ export function createOptimizedPicture(
     if (i < breakpoints.length - 1) {
       const source = document.createElement('source');
       if (br.media) source.setAttribute('media', br.media);
-      source.setAttribute('srcset', `${pathname}?width=${br.width}&format=${ext}&optimize=medium`);
+      source.setAttribute('srcset', `${relative ? pathname : href}?width=${br.width}&format=${ext}&optimize=medium`);
       picture.appendChild(source);
     } else {
       const img = document.createElement('img');
-      img.setAttribute('src', `${pathname}?width=${br.width}&format=${ext}&optimize=medium`);
+      img.setAttribute('src', `${relative ? pathname : href}?width=${br.width}&format=${ext}&optimize=medium`);
       img.setAttribute('loading', eager ? 'eager' : 'lazy');
       img.setAttribute('alt', alt);
       picture.appendChild(img);
