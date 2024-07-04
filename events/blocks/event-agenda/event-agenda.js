@@ -33,7 +33,7 @@ export default async function init(el) {
     return;
   }
 
-  if (venueImage && venueImage.imgUrl) {
+  if (venueImage) {
     const venueImageCol = createTag('div', { class: 'venue-img-col' });
     el.classList.add('blade');
     const h2 = el.querySelector('h2');
