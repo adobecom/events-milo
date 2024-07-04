@@ -80,8 +80,31 @@ export function flattenObject(obj, parentKey = '', result = {}) {
   return result;
 }
 
-export function createOptimizedPicture(src, alt = '', eager = false, breakpoints = [{ media: '(min-width: 400px)', width: '2000' }, { width: '750' }]) {
-  const url = new URL(src, window.location.href);
+export function createOptimizedPicture(src, alt = '', options = {
+  eager: false,
+  breakpoints: [{ media: '(min-width: 400px)', width: '2000' }, { width: '750' }],
+  relative: true,
+}) {
+  const { breakpoints, eager } = options;
+
+  let url;
+
+  if (options.relative) {
+    try {
+      url = new URL(src, window.location.href);
+    } catch (error) {
+      window.lana?.log('Failed to create URL from relative src:', error);
+    }
+  } else {
+    try {
+      url = new URL(src);
+    } catch (error) {
+      window.lana?.log('Failed to create URL from absolute src:', error);
+    }
+  }
+
+  if (!url) return null;
+
   const picture = document.createElement('picture');
   const { pathname } = url;
   const ext = pathname.substring(pathname.lastIndexOf('.') + 1);
