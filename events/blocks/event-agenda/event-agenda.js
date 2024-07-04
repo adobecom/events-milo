@@ -38,7 +38,7 @@ export default async function init(el) {
     el.classList.add('blade');
     const h2 = el.querySelector('h2');
     agendaItemsCol.prepend(h2);
-    venueImageCol.append(createOptimizedPicture(venueImage.imgUrl, venueImage.altText || 'Venue Image'));
+    venueImageCol.append(createOptimizedPicture(venueImage.imageUrl, venueImage.altText || 'Venue Image'));
     container.append(venueImageCol);
   }
 
