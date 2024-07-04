@@ -33,12 +33,12 @@ export default async function init(el) {
     return;
   }
 
-  if (venueImage) {
+  if (venueImage && venueImage.imgUrl) {
     const venueImageCol = createTag('div', { class: 'venue-img-col' });
     el.classList.add('blade');
     const h2 = el.querySelector('h2');
     agendaItemsCol.prepend(h2);
-    venueImageCol.append(createOptimizedPicture(venueImage));
+    venueImageCol.append(createOptimizedPicture(venueImage.imgUrl, venueImage.altText || 'Venue Image'));
     container.append(venueImageCol);
   }
 
