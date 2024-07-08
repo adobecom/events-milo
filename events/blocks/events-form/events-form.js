@@ -467,7 +467,7 @@ async function onProfile(bp, formData) {
       if (rsvpData) {
         showSuccessMsg(bp, rsvpData);
       } else {
-        personalizeForm(block, profile);
+        personalizeForm(block, { ...profile, ...rsvpData });
       }
     }).finally(() => {
       block.style.opacity = 1;
@@ -482,7 +482,7 @@ async function onProfile(bp, formData) {
           if (rsvpData) {
             showSuccessMsg(bp, rsvpData);
           } else {
-            personalizeForm(block, newValue);
+            personalizeForm(block, { ...newValue, ...rsvpData });
           }
         }).finally(() => {
           block.style.opacity = 1;
