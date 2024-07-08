@@ -80,7 +80,7 @@ async function submitForm(form) {
   });
 
   let resp = null;
-  if (!rsvpData || !rsvpData.attendee.attendeeId) {
+  if (!rsvpData || !rsvpData.attendee?.attendeeId) {
     resp = await createAttendee(getMetadata('event-id'), payload);
   } else {
     resp = await updateAttendee(getMetadata('event-id'), { ...payload, attendeeId: rsvpData.attendee.attendeeId });
@@ -466,7 +466,7 @@ async function onProfile(bp, formData) {
     eventHero.classList.remove('loading');
     decorateHero(bp.eventHero);
     buildEventform(bp, formData).then(() => {
-      if (rsvpData?.attendeeId || (rsvpData?.action === 'create' && rsvpData?.resp?.status === 200)) {
+      if (rsvpData?.attendee?.attendeeId || (rsvpData?.action === 'create' && rsvpData?.resp?.status === 200)) {
         showSuccessMsg(bp);
       } else {
         personalizeForm(block, profile);
@@ -481,7 +481,7 @@ async function onProfile(bp, formData) {
         eventHero.classList.remove('loading');
         decorateHero(bp.eventHero);
         buildEventform(bp, formData).then(() => {
-          if (rsvpData?.attendeeId || (rsvpData?.action === 'create' && rsvpData?.resp?.status === 200)) {
+          if (rsvpData?.attendee?.attendeeId || (rsvpData?.action === 'create' && rsvpData?.resp?.status === 200)) {
             showSuccessMsg(bp);
           } else {
             personalizeForm(block, newValue);

@@ -50,7 +50,7 @@ function createTag(tag, attributes, html, options = {}) {
 
 async function updateRSVPButtonState(rsvpBtn, miloLibs) {
   const rsvpData = BlockMediator.get('rsvpData');
-  if (rsvpData?.attendeeId || (rsvpData?.action === 'create' && rsvpData?.resp?.status === 200)) {
+  if (rsvpData?.attendee?.attendeeId || (rsvpData?.action === 'create' && rsvpData?.resp?.status === 200)) {
     rsvpBtn.el.textContent = await miloReplaceKey(miloLibs, 'registered-cta-text');
   } else {
     rsvpBtn.el.textContent = rsvpBtn.originalText;
