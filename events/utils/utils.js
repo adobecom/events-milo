@@ -158,4 +158,3 @@ export function getIcon(tag) {
 
   return img;
 }
-

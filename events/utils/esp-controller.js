@@ -1,5 +1,3 @@
-import { fetch } from './utils.js';
-
 export const getCaasTags = (() => {
   let cache;
   let promise;
