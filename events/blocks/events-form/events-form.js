@@ -130,6 +130,7 @@ function createButton({ type, label }, bp) {
           window.lana?.log('Failed to submit form:', respJson);
           return;
         }
+
         BlockMediator.set('rsvpData', {
           resp: respJson,
           action: 'create',
@@ -465,6 +466,7 @@ async function onProfile(bp, formData) {
     eventHero.classList.remove('loading');
     decorateHero(bp.eventHero);
     buildEventform(bp, formData).then(() => {
+      console.log('rsvpData', rsvpData);
       if (rsvpData?.attendeeId) {
         showSuccessMsg(bp);
       } else {
