@@ -469,6 +469,8 @@ async function onProfile(bp, formData) {
       } else {
         personalizeForm(block, profile);
       }
+    }).finally(() => {
+      block.style.opacity = 1;
     });
   } else if (!profile) {
     BlockMediator.subscribe('imsProfile', ({ newValue }) => {
@@ -482,6 +484,8 @@ async function onProfile(bp, formData) {
           } else {
             personalizeForm(block, newValue);
           }
+        }).finally(() => {
+          block.style.opacity = 1;
         });
       }
     });
@@ -514,8 +518,5 @@ export default async function decorate(block, formData = null) {
     successMsg: block.querySelector(':scope > div:last-of-type > div'),
   };
 
-  onProfile(bp, formData)
-    .finally(() => {
-      block.style.opacity = 1;
-    });
+  onProfile(bp, formData);
 }
