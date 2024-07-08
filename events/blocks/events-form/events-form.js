@@ -305,7 +305,7 @@ function addTerms(form, terms) {
   submit.disabled = none(Array.from(checkboxes), (c) => c.checked);
 }
 
-function decorateSuccessMsg(bp, rsvpData) {
+function decorateSuccessMsg(form, bp, rsvpData) {
   const ctas = bp.successMsg.querySelectorAll('a');
 
   ctas.forEach((cta, i) => {
@@ -327,7 +327,7 @@ function decorateSuccessMsg(bp, rsvpData) {
         BlockMediator.set('rsvpData', rsvpData);
       }
 
-      const modal = bp.form.closest('.dialog-modal');
+      const modal = form.closest('.dialog-modal');
       closeModal(modal);
     });
   });
@@ -336,7 +336,7 @@ function decorateSuccessMsg(bp, rsvpData) {
 }
 
 async function createForm(bp, formData) {
-  const { form, successMsg, terms } = bp;
+  const { form, terms } = bp;
   let rsvpFieldsData;
 
   try {
@@ -418,7 +418,7 @@ async function createForm(bp, formData) {
   });
 
   addTerms(formEl, terms);
-  decorateSuccessMsg(formEl, successMsg, rsvpData);
+  decorateSuccessMsg(formEl, bp, rsvpData);
 
   formEl.addEventListener('input', () => applyRules(formEl, rules));
   applyRules(formEl, rules);
