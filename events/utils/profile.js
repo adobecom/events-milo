@@ -1,4 +1,6 @@
 import BlockMediator from '../deps/block-mediator.min.js';
+import { getAttendee } from './esp-controller.js';
+import { getMetadata } from './utils.js';
 
 export async function getProfile() {
   const { feds, adobeProfile, fedsConfig, adobeIMS } = window;
@@ -21,17 +23,6 @@ export async function getProfile() {
   return profile;
 }
 
-export async function captureProfile() {
-  try {
-    const profile = await getProfile();
-    BlockMediator.set('imsProfile', profile);
-  } catch {
-    if (window.adobeIMS) {
-      BlockMediator.set('imsProfile', { noProfile: true });
-    }
-  }
-}
-
 export function lazyCaptureProfile() {
   let attempCounter = 0;
   const profileRetryer = setInterval(async () => {
@@ -45,8 +36,19 @@ export function lazyCaptureProfile() {
     }
 
     try {
-      const profile = await getProfile();
+      const [profile, rsvpData] = await Promise.all([
+        getProfile(),
+        getAttendee(getMetadata('event-id')),
+      ]);
+
+      if (rsvpData) {
+        BlockMediator.set('rsvpData', { attendee: rsvpData });
+      } else {
+        BlockMediator.set('rsvpData', { attendee: null });
+      }
+
       BlockMediator.set('imsProfile', profile);
+
       clearInterval(profileRetryer);
     } catch {
       if (window.adobeIMS) {
