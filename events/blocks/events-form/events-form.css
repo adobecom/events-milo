@@ -13,6 +13,7 @@
 
 .events-form.loading {
   opacity: 0;
+  pointer-events: none;
 }
 
 .events-form .event-form-hero {

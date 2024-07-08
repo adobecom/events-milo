@@ -425,10 +425,10 @@ async function createForm(bp, formData) {
   return formEl;
 }
 
-function personalizeForm(form, resp) {
-  if (!resp || !form) return;
+function personalizeForm(form, data) {
+  if (!data || !form) return;
 
-  Object.entries(resp).forEach(([key, value]) => {
+  Object.entries(data).forEach(([key, value]) => {
     const matchedInput = form.querySelector(`#${snakeToCamel(key)}`);
     if (matchedInput) {
       matchedInput.value = value;
@@ -467,10 +467,10 @@ async function onProfile(bp, formData) {
       if (rsvpData) {
         showSuccessMsg(bp);
       } else {
-        personalizeForm(block, { ...profile, ...rsvpData });
+        personalizeForm(block, { ...profile, ...rsvpData.resp });
       }
     }).finally(() => {
-      block.style.opacity = 1;
+      block.classList.remove('loading');
     });
   } else if (!profile) {
     BlockMediator.subscribe('imsProfile', ({ newValue }) => {
@@ -482,10 +482,10 @@ async function onProfile(bp, formData) {
           if (rsvpData) {
             showSuccessMsg(bp);
           } else {
-            personalizeForm(block, { ...newValue, ...rsvpData });
+            personalizeForm(block, { ...newValue, ...rsvpData.resp });
           }
         }).finally(() => {
-          block.style.opacity = 1;
+          block.classList.remove('loading');
         });
       }
     });
@@ -505,7 +505,7 @@ async function decorateToastArea() {
 }
 
 export default async function decorate(block, formData = null) {
-  block.style.opacity = 0;
+  block.classList.add('loading');
   const toastArea = await decorateToastArea();
 
   const bp = {
