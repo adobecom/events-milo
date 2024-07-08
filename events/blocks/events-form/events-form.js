@@ -131,7 +131,7 @@ function createButton({ type, label }, bp) {
           return;
         }
         BlockMediator.set('rsvpData', {
-          ...respJson,
+          resp: respJson,
           action: 'create',
         });
 
