@@ -468,8 +468,16 @@ async function onProfile(bp, formData) {
     buildEventform(bp, formData).then(() => {
       if (rsvpData?.attendee?.attendeeId || (rsvpData?.action === 'create' && rsvpData?.resp?.status === 200)) {
         showSuccessMsg(bp);
-      } else {
+      } else if (rsvpData.attendee === null) {
         personalizeForm(block, profile);
+      } else {
+        BlockMediator.subscribe('rsvpData', ({ newValue }) => {
+          if (newValue?.attendee?.attendeeId || (newValue?.action === 'create' && newValue?.resp?.status === 200)) {
+            showSuccessMsg(bp);
+          } else {
+            personalizeForm(block, profile);
+          }
+        });
       }
     }).finally(() => {
       block.classList.remove('loading');
@@ -483,8 +491,17 @@ async function onProfile(bp, formData) {
         buildEventform(bp, formData).then(() => {
           if (rsvpData?.attendee?.attendeeId || (rsvpData?.action === 'create' && rsvpData?.resp?.status === 200)) {
             showSuccessMsg(bp);
+          } else if (rsvpData.attendee === null) {
+            personalizeForm(block, profile);
           } else {
-            personalizeForm(block, newValue);
+            BlockMediator.subscribe('rsvpData', (d) => {
+              const newData = d.newValue;
+              if (newData?.attendee?.attendeeId || (newData?.action === 'create' && newData?.resp?.status === 200)) {
+                showSuccessMsg(bp);
+              } else {
+                personalizeForm(block, profile);
+              }
+            });
           }
         }).finally(() => {
           block.classList.remove('loading');
