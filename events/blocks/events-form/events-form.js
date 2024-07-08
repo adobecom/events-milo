@@ -318,6 +318,8 @@ function decorateSuccessMsg(form, successMsg, rsvpData) {
     cta.addEventListener('click', async (e) => {
       e.preventDefault();
 
+      cta.classList.add('loading');
+
       if (i === 0) {
         const resp = await deleteAttendee(rsvpData.eventId);
         rsvpData.resp = resp;
@@ -464,7 +466,6 @@ async function onProfile(bp, formData) {
     decorateHero(bp.eventHero);
     buildEventform(bp, formData).then(() => {
       if (rsvpData?.attendeeId) {
-        console.log(rsvpData);
         showSuccessMsg(bp);
       } else {
         personalizeForm(block, profile);
