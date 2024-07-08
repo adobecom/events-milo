@@ -16,6 +16,11 @@
   pointer-events: none;
 }
 
+.events-form a.loading {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
 .events-form .event-form-hero {
   display: flex;
   flex-direction: column-reverse;
