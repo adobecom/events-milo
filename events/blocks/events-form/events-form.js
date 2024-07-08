@@ -449,7 +449,10 @@ async function buildEventform(bp, formData) {
     bp,
     formData,
   );
-  if (constructedForm) bp.form.replaceWith(constructedForm);
+  if (constructedForm) {
+    bp.form.replaceWith(constructedForm);
+    bp.form = constructedForm;
+  }
 }
 
 async function onProfile(bp, formData) {
