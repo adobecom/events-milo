@@ -7,7 +7,7 @@
  *
  */
 
-:root {
+ :root {
   --stroke-color-divider: #6E6E6E;
   --color-red: #EB1000;
 }
@@ -21,6 +21,11 @@ main a.con-button.no-event {
 a.con-button.black {
   background-color: var(--color-black);
   color: var(--color-white);
+}
+
+a[href^='#rsvp-form'].disabled {
+  opacity: 0.5;
+  pointer-events: none;
 }
 
 .preserve-format {

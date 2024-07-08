@@ -1,8 +1,7 @@
 import { LIBS } from '../../scripts/scripts.js';
 import { getMetadata } from '../../utils/utils.js';
-import { getProfile } from '../../utils/profile.js';
 import HtmlSanitizer from '../../deps/html-sanitizer.js';
-import { createAttendee, deleteAttendee } from '../../utils/esp-controller.js';
+import { createAttendee, deleteAttendee, updateAttendee } from '../../utils/esp-controller.js';
 import BlockMediator from '../../deps/block-mediator.min.js';
 
 const { createTag } = await import(`${LIBS}/utils/utils.js`);
@@ -57,7 +56,8 @@ function constructPayload(form) {
   return payload;
 }
 
-async function submitForm(form, espData) {
+async function submitForm(form) {
+  const rsvpData = BlockMediator.get('rsvpData');
   const payload = constructPayload(form);
   payload.timestamp = new Date().toJSON();
   Object.keys(payload).forEach((key) => {
@@ -79,9 +79,14 @@ async function submitForm(form, espData) {
     return true;
   });
 
-  const response = await createAttendee(espData.eventId, payload);
+  let resp = null;
+  if (!rsvpData || !rsvpData.attendee?.attendeeId) {
+    resp = await createAttendee(getMetadata('event-id'), payload);
+  } else {
+    resp = await updateAttendee(getMetadata('event-id'), { ...payload, attendeeId: rsvpData.attendee.attendeeId });
+  }
 
-  return response || false;
+  return resp;
 }
 
 function clearForm(form) {
@@ -94,29 +99,44 @@ function clearForm(form) {
   });
 }
 
-function createButton({ type, label }, successMsg, rsvpData) {
+async function buildErrorMsg(form) {
+  const error = createTag('p', { class: 'error' }, 'An error occurred. Please try again later.');
+  form.append(error);
+  setTimeout(() => {
+    error.remove();
+  }, 3000);
+}
+
+function showSuccessMsg(bp) {
+  clearForm(bp.form);
+  bp.form.classList.add('hidden');
+  bp.eventHero.classList.add('hidden');
+  bp.successMsg.classList.remove('hidden');
+}
+
+function createButton({ type, label }, bp) {
   const button = createTag('button', { class: 'button' }, label);
   if (type === 'submit') {
     button.addEventListener('click', async (event) => {
-      const form = button.closest('form');
-      if (form.checkValidity()) {
+      if (bp.form.checkValidity()) {
         event.preventDefault();
         button.setAttribute('disabled', true);
-        const submissionResp = await submitForm(form, rsvpData);
+        button.classList.add('submitting');
+        const respJson = await submitForm(bp.form);
         button.removeAttribute('disabled');
-        // if (!submissionResp) return;
-        // FIXME: letting the flow through regardless for demo
+        button.classList.remove('submitting');
+        if (!respJson || respJson.message || respJson.errors) {
+          buildErrorMsg(bp.form);
+          window.lana?.log('Failed to submit form:', respJson);
+          return;
+        }
 
-        rsvpData.attendeeId = submissionResp.attendeeId;
-        rsvpData.resp = submissionResp;
-        BlockMediator.set('rsvpData', rsvpData);
+        BlockMediator.set('rsvpData', {
+          resp: respJson,
+          action: 'create',
+        });
 
-        clearForm(form);
-        const block = button.closest('.events-form');
-        const hero = block.querySelector('.event-form-hero');
-        form.classList.add('hidden');
-        hero.classList.add('hidden');
-        successMsg.classList.remove('hidden');
+        showSuccessMsg(bp);
       }
     });
   }
@@ -286,8 +306,8 @@ function addTerms(form, terms) {
   submit.disabled = none(Array.from(checkboxes), (c) => c.checked);
 }
 
-function decorateSuccessMsg(form, successMsg, rsvpData) {
-  const ctas = successMsg.querySelectorAll('a');
+function decorateSuccessMsg(form, bp, rsvpData) {
+  const ctas = bp.successMsg.querySelectorAll('a');
 
   ctas.forEach((cta, i) => {
     if (i === 0) {
@@ -299,9 +319,12 @@ function decorateSuccessMsg(form, successMsg, rsvpData) {
     cta.addEventListener('click', async (e) => {
       e.preventDefault();
 
+      cta.classList.add('loading');
+
       if (i === 0) {
-        const resp = await deleteAttendee(rsvpData.eventId, rsvpData.attendeeId);
+        const resp = await deleteAttendee(rsvpData.eventId);
         rsvpData.resp = resp;
+        rsvpData.action = 'delete';
         BlockMediator.set('rsvpData', rsvpData);
       }
 
@@ -310,10 +333,11 @@ function decorateSuccessMsg(form, successMsg, rsvpData) {
     });
   });
 
-  successMsg.classList.add('hidden');
+  bp.successMsg.classList.add('hidden');
 }
 
-async function createForm(formURL, successMsg, formData, terms) {
+async function createForm(bp, formData) {
+  const { form, terms } = bp;
   let rsvpFieldsData;
 
   try {
@@ -323,9 +347,8 @@ async function createForm(formURL, successMsg, formData, terms) {
   }
 
   const rsvpData = { eventId: getMetadata('event-id') || '', attendeeId: '' };
-  BlockMediator.set('rsvpData', rsvpData);
 
-  const { pathname } = new URL(formURL);
+  const { pathname } = new URL(form.href);
   let json = formData;
   /* c8 ignore next 4 */
   if (!formData) {
@@ -351,10 +374,10 @@ async function createForm(formURL, successMsg, formData, terms) {
       .filter((f) => ['clear', 'submit'].includes(f.field));
   }
 
-  const form = createTag('form');
+  const formEl = createTag('form');
   const rules = [];
   const [action] = pathname.split('.json');
-  form.dataset.action = action;
+  formEl.dataset.action = action;
 
   const typeToElement = {
     select: { fn: createSelect, params: [], label: true, classes: [] },
@@ -364,8 +387,8 @@ async function createForm(formURL, successMsg, formData, terms) {
     'checkbox-group': { fn: createCheckGroup, params: ['checkbox'], label: true, classes: ['field-group-wrapper'] },
     'radio-group': { fn: createCheckGroup, params: ['radio'], label: true, classes: ['field-group-wrapper'] },
     'text-area': { fn: createTextArea, params: [], label: true, classes: [] },
-    submit: { fn: createButton, params: [successMsg, rsvpData], label: false, classes: ['field-button-wrapper'] },
-    clear: { fn: createButton, params: [successMsg, rsvpData], label: false, classes: ['field-button-wrapper'] },
+    submit: { fn: createButton, params: [bp], label: false, classes: ['field-button-wrapper'] },
+    clear: { fn: createButton, params: [bp], label: false, classes: ['field-button-wrapper'] },
     divider: { fn: createDivider, params: [], label: false, classes: ['divider'] },
     default: { fn: createInput, params: [], label: true, classes: [] },
   };
@@ -392,22 +415,22 @@ async function createForm(formURL, successMsg, formData, terms) {
         console.warn(`Invalid Rule ${fd.rules}: ${e}`);
       }
     }
-    form.append(fieldWrapper);
+    formEl.append(fieldWrapper);
   });
 
-  addTerms(form, terms);
-  decorateSuccessMsg(form, successMsg, rsvpData);
+  addTerms(formEl, terms);
+  decorateSuccessMsg(formEl, bp, rsvpData);
 
-  form.addEventListener('input', () => applyRules(form, rules));
-  applyRules(form, rules);
+  formEl.addEventListener('input', () => applyRules(formEl, rules));
+  applyRules(formEl, rules);
 
-  return form;
+  return formEl;
 }
 
-function personalizeForm(form, resp) {
-  if (!resp || !form) return;
+function personalizeForm(form, data) {
+  if (!data || !form) return;
 
-  Object.entries(resp).forEach(([key, value]) => {
+  Object.entries(data).forEach(([key, value]) => {
     const matchedInput = form.querySelector(`#${snakeToCamel(key)}`);
     if (matchedInput) {
       matchedInput.value = value;
@@ -420,37 +443,76 @@ function decorateHero(heroEl) {
   heroEl.classList.add('event-form-hero');
 }
 
-async function updateDynamicContent(bp) {
-  const { block, eventHero } = bp;
-  let profile;
-
-  try {
-    profile = await getProfile();
-  } catch (e) {
-    eventHero.querySelectorAll('p')?.forEach((p) => p.remove());
-  }
-
-  eventHero.classList.remove('loading');
-  personalizeForm(block, profile);
-}
-
 async function buildEventform(bp, formData) {
   if (!bp.formContainer || !bp.form) return;
   bp.formContainer.classList.add('form-container');
   bp.successMsg.classList.add('form-success-msg');
   const constructedForm = await createForm(
-    bp.form.href,
-    bp.successMsg,
+    bp,
     formData,
-    bp.terms,
   );
-  if (constructedForm) bp.form.replaceWith(constructedForm);
+  if (constructedForm) {
+    bp.form.replaceWith(constructedForm);
+    bp.form = constructedForm;
+  }
+}
+
+async function onProfile(bp, formData) {
+  const { block, eventHero } = bp;
+  const profile = BlockMediator.get('imsProfile');
+
+  if (profile && !profile.noProfile) {
+    const rsvpData = BlockMediator.get('rsvpData');
+    eventHero.classList.remove('loading');
+    decorateHero(bp.eventHero);
+    buildEventform(bp, formData).then(() => {
+      if (rsvpData?.attendee?.attendeeId || (rsvpData?.action === 'create' && rsvpData?.resp?.status === 200)) {
+        showSuccessMsg(bp);
+      } else {
+        personalizeForm(block, profile);
+      }
+    }).finally(() => {
+      block.classList.remove('loading');
+    });
+  } else if (!profile) {
+    BlockMediator.subscribe('imsProfile', ({ newValue }) => {
+      if (newValue && !newValue.noProfile) {
+        const rsvpData = BlockMediator.get('rsvpData');
+        eventHero.classList.remove('loading');
+        decorateHero(bp.eventHero);
+        buildEventform(bp, formData).then(() => {
+          if (rsvpData?.attendee?.attendeeId || (rsvpData?.action === 'create' && rsvpData?.resp?.status === 200)) {
+            showSuccessMsg(bp);
+          } else {
+            personalizeForm(block, newValue);
+          }
+        }).finally(() => {
+          block.classList.remove('loading');
+        });
+      }
+    });
+  }
+}
+
+async function decorateToastArea() {
+  const miloLibs = LIBS;
+  await Promise.all([
+    import(`${miloLibs}/deps/lit-all.min.js`),
+    import(`${miloLibs}/features/spectrum-web-components/dist/theme.js`),
+    import(`${miloLibs}/features/spectrum-web-components/dist/toast.js`),
+  ]);
+  const toastArea = createTag('sp-theme', { color: 'light', scale: 'medium', class: 'toast-area' });
+  document.body.append(toastArea);
+  return toastArea;
 }
 
 export default async function decorate(block, formData = null) {
-  block.style.opacity = 0;
+  block.classList.add('loading');
+  const toastArea = await decorateToastArea();
+
   const bp = {
     block,
+    toastArea,
     eventHero: block.querySelector(':scope > div:nth-of-type(1)'),
     formContainer: block.querySelector(':scope > div:nth-of-type(2)'),
     form: block.querySelector(':scope > div:nth-of-type(2) a[href$=".json"]'),
@@ -458,10 +520,5 @@ export default async function decorate(block, formData = null) {
     successMsg: block.querySelector(':scope > div:last-of-type > div'),
   };
 
-  decorateHero(bp.eventHero);
-  buildEventform(bp, formData)
-    .then(() => { updateDynamicContent(bp); })
-    .finally(() => {
-      block.style.opacity = 1;
-    });
+  await onProfile(bp, formData);
 }
