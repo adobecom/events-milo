@@ -110,7 +110,7 @@ async function buildErrorMsg(form) {
 function showSuccessMsg(bp) {
   clearForm(bp.form);
   bp.form.classList.add('hidden');
-  bp.hero.classList.add('hidden');
+  bp.eventHero.classList.add('hidden');
   bp.successMsg.classList.remove('hidden');
 }
 
@@ -465,7 +465,7 @@ async function onProfile(bp, formData) {
     decorateHero(bp.eventHero);
     buildEventform(bp, formData).then(() => {
       if (rsvpData) {
-        showSuccessMsg(bp, rsvpData);
+        showSuccessMsg(bp);
       } else {
         personalizeForm(block, { ...profile, ...rsvpData });
       }
@@ -480,7 +480,7 @@ async function onProfile(bp, formData) {
         decorateHero(bp.eventHero);
         buildEventform(bp, formData).then(() => {
           if (rsvpData) {
-            showSuccessMsg(bp, rsvpData);
+            showSuccessMsg(bp);
           } else {
             personalizeForm(block, { ...newValue, ...rsvpData });
           }
