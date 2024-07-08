@@ -118,23 +118,22 @@ function createButton({ type, label }, bp) {
   const button = createTag('button', { class: 'button' }, label);
   if (type === 'submit') {
     button.addEventListener('click', async (event) => {
-      const rsvpData = BlockMediator.get('rsvpData') || BlockMediator.set('rsvpData', {});
       if (bp.form.checkValidity()) {
         event.preventDefault();
         button.setAttribute('disabled', true);
         button.classList.add('submitting');
-        const resp = await submitForm(bp.form);
+        const respJson = await submitForm(bp.form);
         button.removeAttribute('disabled');
         button.classList.remove('submitting');
-        if (!resp || resp.message || resp.errors) {
+        if (!respJson || respJson.message || respJson.errors) {
           buildErrorMsg(bp.form);
-          window.lana?.log('Failed to submit form:', resp);
+          window.lana?.log('Failed to submit form:', respJson);
           return;
         }
-
-        rsvpData.resp = resp;
-        rsvpData.action = 'create';
-        BlockMediator.set('rsvpData', rsvpData);
+        BlockMediator.set('rsvpData', {
+          ...respJson,
+          action: 'create',
+        });
 
         showSuccessMsg(bp);
       }
@@ -464,10 +463,11 @@ async function onProfile(bp, formData) {
     eventHero.classList.remove('loading');
     decorateHero(bp.eventHero);
     buildEventform(bp, formData).then(() => {
-      if (rsvpData) {
+      if (rsvpData?.attendeeId) {
+        console.log(rsvpData);
         showSuccessMsg(bp);
       } else {
-        personalizeForm(block, { ...profile, ...rsvpData.resp });
+        personalizeForm(block, profile);
       }
     }).finally(() => {
       block.classList.remove('loading');
@@ -479,10 +479,10 @@ async function onProfile(bp, formData) {
         eventHero.classList.remove('loading');
         decorateHero(bp.eventHero);
         buildEventform(bp, formData).then(() => {
-          if (rsvpData) {
+          if (rsvpData?.attendeeId) {
             showSuccessMsg(bp);
           } else {
-            personalizeForm(block, { ...newValue, ...rsvpData.resp });
+            personalizeForm(block, newValue);
           }
         }).finally(() => {
           block.classList.remove('loading');
