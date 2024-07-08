@@ -107,21 +107,27 @@ async function buildErrorMsg(form) {
   }, 3000);
 }
 
-function createButton({ type, label }, successMsg) {
+function showSuccessMsg(bp) {
+  clearForm(bp.form);
+  bp.form.classList.add('hidden');
+  bp.hero.classList.add('hidden');
+  bp.successMsg.classList.remove('hidden');
+}
+
+function createButton({ type, label }, bp) {
   const button = createTag('button', { class: 'button' }, label);
   if (type === 'submit') {
     button.addEventListener('click', async (event) => {
       const rsvpData = BlockMediator.get('rsvpData') || BlockMediator.set('rsvpData', {});
-      const form = button.closest('form');
-      if (form.checkValidity()) {
+      if (bp.form.checkValidity()) {
         event.preventDefault();
         button.setAttribute('disabled', true);
         button.classList.add('submitting');
-        const resp = await submitForm(form);
+        const resp = await submitForm(bp.form);
         button.removeAttribute('disabled');
         button.classList.remove('submitting');
         if (!resp || resp.message || resp.errors) {
-          buildErrorMsg(form);
+          buildErrorMsg(bp.form);
           window.lana?.log('Failed to submit form:', resp);
           return;
         }
@@ -130,12 +136,7 @@ function createButton({ type, label }, successMsg) {
         rsvpData.action = 'create';
         BlockMediator.set('rsvpData', rsvpData);
 
-        clearForm(form);
-        const block = button.closest('.events-form');
-        const hero = block.querySelector('.event-form-hero');
-        form.classList.add('hidden');
-        hero.classList.add('hidden');
-        successMsg.classList.remove('hidden');
+        showSuccessMsg(bp);
       }
     });
   }
@@ -333,7 +334,8 @@ function decorateSuccessMsg(form, successMsg, rsvpData) {
   successMsg.classList.add('hidden');
 }
 
-async function createForm(formURL, successMsg, formData, terms) {
+async function createForm(bp, formData) {
+  const { form, successMsg, terms } = bp;
   let rsvpFieldsData;
 
   try {
@@ -344,7 +346,7 @@ async function createForm(formURL, successMsg, formData, terms) {
 
   const rsvpData = { eventId: getMetadata('event-id') || '', attendeeId: '' };
 
-  const { pathname } = new URL(formURL);
+  const { pathname } = new URL(form.href);
   let json = formData;
   /* c8 ignore next 4 */
   if (!formData) {
@@ -370,10 +372,10 @@ async function createForm(formURL, successMsg, formData, terms) {
       .filter((f) => ['clear', 'submit'].includes(f.field));
   }
 
-  const form = createTag('form');
+  const formEl = createTag('form');
   const rules = [];
   const [action] = pathname.split('.json');
-  form.dataset.action = action;
+  formEl.dataset.action = action;
 
   const typeToElement = {
     select: { fn: createSelect, params: [], label: true, classes: [] },
@@ -383,8 +385,8 @@ async function createForm(formURL, successMsg, formData, terms) {
     'checkbox-group': { fn: createCheckGroup, params: ['checkbox'], label: true, classes: ['field-group-wrapper'] },
     'radio-group': { fn: createCheckGroup, params: ['radio'], label: true, classes: ['field-group-wrapper'] },
     'text-area': { fn: createTextArea, params: [], label: true, classes: [] },
-    submit: { fn: createButton, params: [successMsg], label: false, classes: ['field-button-wrapper'] },
-    clear: { fn: createButton, params: [successMsg], label: false, classes: ['field-button-wrapper'] },
+    submit: { fn: createButton, params: [bp], label: false, classes: ['field-button-wrapper'] },
+    clear: { fn: createButton, params: [bp], label: false, classes: ['field-button-wrapper'] },
     divider: { fn: createDivider, params: [], label: false, classes: ['divider'] },
     default: { fn: createInput, params: [], label: true, classes: [] },
   };
@@ -411,16 +413,16 @@ async function createForm(formURL, successMsg, formData, terms) {
         console.warn(`Invalid Rule ${fd.rules}: ${e}`);
       }
     }
-    form.append(fieldWrapper);
+    formEl.append(fieldWrapper);
   });
 
-  addTerms(form, terms);
-  decorateSuccessMsg(form, successMsg, rsvpData);
+  addTerms(formEl, terms);
+  decorateSuccessMsg(formEl, successMsg, rsvpData);
 
-  form.addEventListener('input', () => applyRules(form, rules));
-  applyRules(form, rules);
+  formEl.addEventListener('input', () => applyRules(formEl, rules));
+  applyRules(formEl, rules);
 
-  return form;
+  return formEl;
 }
 
 function personalizeForm(form, resp) {
@@ -439,23 +441,6 @@ function decorateHero(heroEl) {
   heroEl.classList.add('event-form-hero');
 }
 
-async function updateDynamicContent(bp) {
-  const { block, eventHero } = bp;
-  const profile = BlockMediator.get('imsProfile');
-
-  if (profile && !profile.noProfile) {
-    eventHero.classList.remove('loading');
-    personalizeForm(block, profile);
-  } else if (!profile) {
-    BlockMediator.subscribe('imsProfile', ({ newValue }) => {
-      if (newValue && !newValue.noProfile) {
-        eventHero.classList.remove('loading');
-        personalizeForm(block, newValue);
-      }
-    });
-  }
-}
-
 async function buildEventform(bp, formData) {
   if (!bp.formContainer || !bp.form) return;
   bp.formContainer.classList.add('form-container');
@@ -469,10 +454,58 @@ async function buildEventform(bp, formData) {
   if (constructedForm) bp.form.replaceWith(constructedForm);
 }
 
+async function onProfile(bp, formData) {
+  const { block, eventHero } = bp;
+  const profile = BlockMediator.get('imsProfile');
+
+  if (profile && !profile.noProfile) {
+    const rsvpData = BlockMediator.get('rsvpData');
+    eventHero.classList.remove('loading');
+    decorateHero(bp.eventHero);
+    buildEventform(bp, formData).then(() => {
+      if (rsvpData) {
+        showSuccessMsg(bp, rsvpData);
+      } else {
+        personalizeForm(block, profile);
+      }
+    });
+  } else if (!profile) {
+    BlockMediator.subscribe('imsProfile', ({ newValue }) => {
+      if (newValue && !newValue.noProfile) {
+        const rsvpData = BlockMediator.get('rsvpData');
+        eventHero.classList.remove('loading');
+        decorateHero(bp.eventHero);
+        buildEventform(bp, formData).then(() => {
+          if (rsvpData) {
+            showSuccessMsg(bp, rsvpData);
+          } else {
+            personalizeForm(block, newValue);
+          }
+        });
+      }
+    });
+  }
+}
+
+async function decorateToastArea() {
+  const miloLibs = LIBS;
+  await Promise.all([
+    import(`${miloLibs}/deps/lit-all.min.js`),
+    import(`${miloLibs}/features/spectrum-web-components/dist/theme.js`),
+    import(`${miloLibs}/features/spectrum-web-components/dist/toast.js`),
+  ]);
+  const toastArea = createTag('sp-theme', { color: 'light', scale: 'medium', class: 'toast-area' });
+  document.body.append(toastArea);
+  return toastArea;
+}
+
 export default async function decorate(block, formData = null) {
   block.style.opacity = 0;
+  const toastArea = await decorateToastArea();
+
   const bp = {
     block,
+    toastArea,
     eventHero: block.querySelector(':scope > div:nth-of-type(1)'),
     formContainer: block.querySelector(':scope > div:nth-of-type(2)'),
     form: block.querySelector(':scope > div:nth-of-type(2) a[href$=".json"]'),
@@ -480,9 +513,7 @@ export default async function decorate(block, formData = null) {
     successMsg: block.querySelector(':scope > div:last-of-type > div'),
   };
 
-  decorateHero(bp.eventHero);
-  buildEventform(bp, formData)
-    .then(() => { updateDynamicContent(bp); })
+  onProfile(bp, formData)
     .finally(() => {
       block.style.opacity = 1;
     });
