@@ -305,8 +305,8 @@ function addTerms(form, terms) {
   submit.disabled = none(Array.from(checkboxes), (c) => c.checked);
 }
 
-function decorateSuccessMsg(form, successMsg, rsvpData) {
-  const ctas = successMsg.querySelectorAll('a');
+function decorateSuccessMsg(bp, rsvpData) {
+  const ctas = bp.successMsg.querySelectorAll('a');
 
   ctas.forEach((cta, i) => {
     if (i === 0) {
@@ -327,12 +327,12 @@ function decorateSuccessMsg(form, successMsg, rsvpData) {
         BlockMediator.set('rsvpData', rsvpData);
       }
 
-      const modal = form.closest('.dialog-modal');
+      const modal = bp.form.closest('.dialog-modal');
       closeModal(modal);
     });
   });
 
-  successMsg.classList.add('hidden');
+  bp.successMsg.classList.add('hidden');
 }
 
 async function createForm(bp, formData) {
@@ -519,5 +519,5 @@ export default async function decorate(block, formData = null) {
     successMsg: block.querySelector(':scope > div:last-of-type > div'),
   };
 
-  onProfile(bp, formData);
+  await onProfile(bp, formData);
 }
