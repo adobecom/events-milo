@@ -159,33 +159,3 @@ export function getIcon(tag) {
   return img;
 }
 
-export const fetchThrottledMemoized = (() => {
-  const cache = new Map();
-  const pending = new Map();
-
-  const memoize = async (url, options, fetcher, ttl) => {
-    const key = `${url}-${JSON.stringify(options)}`;
-
-    if (cache.has(key)) {
-      return cache.get(key);
-    }
-
-    if (pending.has(key)) {
-      return pending.get(key);
-    }
-
-    const fetchPromise = fetcher(url, options);
-    pending.set(key, fetchPromise);
-
-    try {
-      const response = await fetchPromise;
-      cache.set(key, response);
-      setTimeout(() => cache.delete(key), ttl);
-      return response;
-    } finally {
-      pending.delete(key);
-    }
-  };
-
-  return (url, options = {}, { ttl = 10000 } = {}) => memoize(url, options, fetch, ttl);
-})();
