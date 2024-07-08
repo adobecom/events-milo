@@ -446,10 +446,8 @@ async function buildEventform(bp, formData) {
   bp.formContainer.classList.add('form-container');
   bp.successMsg.classList.add('form-success-msg');
   const constructedForm = await createForm(
-    bp.form.href,
-    bp.successMsg,
+    bp,
     formData,
-    bp.terms,
   );
   if (constructedForm) bp.form.replaceWith(constructedForm);
 }
