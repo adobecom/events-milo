@@ -1,4 +1,4 @@
-import { LIBS } from '../../scripts/scripts.js';
+import { LIBS, MILO_CONFIG } from '../../scripts/scripts.js';
 import buildMiloCarousel from '../../features/milo-carousel.js';
 import { getMetadata } from '../../utils/utils.js';
 
@@ -62,7 +62,7 @@ export async function getSVGsfromFile(path, selectors) {
 
 async function decorateSocialIcons(cardContainer, socialLinks) {
   const SUPPORTED_SOCIAL = ['instagram', 'facebook', 'twitter', 'youtube'];
-  const svgPath = `${window.miloConfig.codeRoot}/icons/social-icons.svg`;
+  const svgPath = `${MILO_CONFIG.codeRoot}/icons/social-icons.svg`;
   const socialList = createTag('ul', { class: 'card-social-icons' });
 
   const svgEls = await getSVGsfromFile(svgPath, SUPPORTED_SOCIAL);
