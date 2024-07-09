@@ -49,7 +49,7 @@ export default async function init(el) {
     });
   });
 
-  const desktopMQL = window.matchMedia('(min-width: 1200px)');
+  const desktopMQL = window.matchMedia('(min-width: 900px)');
 
   if (!desktopMQL.matches || rows.length >= 5) {
     buildMiloCarousel(el, Array.from(rows));
