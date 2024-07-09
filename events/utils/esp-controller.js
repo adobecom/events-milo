@@ -33,6 +33,7 @@ export const getCaasTags = (() => {
 function getESLConfig() {
   return {
     local: { host: 'http://localhost:8499' },
+    dev: { host: 'https://wcms-events-service-layer-deploy-ethos102-dev-va-9c3ecd.stage.cloud.adobe.io' },
     stage: { host: 'https://wcms-events-service-layer-deploy-ethos102-stage-va-9c3ecd.stage.cloud.adobe.io' },
     prod: { host: 'https://wcms-events-service-layer-deploy-ethos102-stage-va-9c3ecd.stage.cloud.adobe.io' },
   };
@@ -92,28 +93,28 @@ export async function createAttendee(eventId, attendeeData) {
   return resp;
 }
 
-export async function updateAttendee(eventId, attendeeId, attendeeData) {
-  if (!eventId || !attendeeData) return false;
+export async function updateAttendee(eventId, attendeeData) {
+  if (!eventId) return false;
 
   const { host } = getESLConfig()[window.eccEnv];
   const raw = JSON.stringify(attendeeData);
   const options = await constructRequestOptions('PUT', raw);
 
-  const resp = await fetch(`${host}/v1/events/${eventId}/attendees/${attendeeId}`, options)
+  const resp = await fetch(`${host}/v1/events/${eventId}/attendees/${attendeeData.attendeeId || 'me'}`, options)
     .then((res) => res.json())
-    .catch((error) => window.lana?.log(`Failed to update attendee ${attendeeId} for event ${eventId}. Error: ${error}`));
+    .catch((error) => window.lana?.log(`Failed to update attendee me for event ${eventId}. Error: ${error}`));
   return resp;
 }
 
-export async function deleteAttendee(eventId, attendeeId) {
-  if (!eventId || !attendeeId) return false;
+export async function deleteAttendee(eventId) {
+  if (!eventId) return false;
 
   const { host } = getESLConfig()[window.eccEnv];
   const options = await constructRequestOptions('DELETE');
 
-  const resp = await fetch(`${host}/v1/events/${eventId}/attendees/${attendeeId}`, options)
+  const resp = await fetch(`${host}/v1/events/${eventId}/attendees/me`, options)
     .then((res) => res.json())
-    .catch((error) => window.lana?.log(`Failed to delete attendee ${attendeeId} for event ${eventId}. Error: ${error}`));
+    .catch((error) => window.lana?.log(`Failed to delete attendee me for event ${eventId}. Error: ${error}`));
   return resp;
 }
 
@@ -129,14 +130,14 @@ export async function getAttendees(eventId) {
   return resp;
 }
 
-export async function getAttendee(eventId, attendeeId) {
-  if (!eventId || !attendeeId) return false;
+export async function getAttendee(eventId) {
+  if (!eventId) return false;
 
   const { host } = getESLConfig()[window.eccEnv];
   const options = await constructRequestOptions('GET');
 
-  const resp = await fetch(`${host}/v1/events/${eventId}/attendees/${attendeeId}`, options)
+  const resp = await fetch(`${host}/v1/events/${eventId}/attendees/me`, options)
     .then((res) => res.json())
-    .catch((error) => window.lana?.log(`Failed to get details of attendee ${attendeeId} for event ${eventId}. Error: ${error}`));
+    .catch((error) => window.lana?.log(`Failed to get details of attendee me for event ${eventId}. Error: ${error}`));
   return resp;
 }

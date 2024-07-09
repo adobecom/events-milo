@@ -1,12 +1,29 @@
 import BlockMediator from '../deps/block-mediator.min.js';
-import { getAttendee } from './esp-controller.js';
-import { handlize } from './utils.js';
+import { handlize, getMetadata } from './utils.js';
 
 export const REG = /\[\[(.*?)\]\]/g;
 
 const preserveFormatKeys = [
   'description',
 ];
+
+async function miloReplaceKey(miloLibs, key) {
+  try {
+    const [utils, placeholders] = await Promise.all([
+      import(`${miloLibs}/utils/utils.js`),
+      import(`${miloLibs}/features/placeholders.js`),
+    ]);
+
+    const { getConfig } = utils;
+    const { replaceKey } = placeholders;
+    const config = getConfig();
+
+    return await replaceKey(key, config);
+  } catch (error) {
+    window.lana?.log('Error trying to replace placeholder:', error);
+    return 'RSVP';
+  }
+}
 
 function createTag(tag, attributes, html, options = {}) {
   const el = document.createElement(tag);
@@ -30,82 +47,79 @@ function createTag(tag, attributes, html, options = {}) {
   return el;
 }
 
-function getMetadata(name, doc = document) {
-  const attr = name && name.includes(':') ? 'property' : 'name';
-  const meta = doc.head.querySelector(`meta[${attr}="${name}"]`);
-  return meta && meta.content;
-}
-
-export function setMetadata(name, value, doc = document) {
-  const attr = name && name.includes(':') ? 'property' : 'name';
-  const meta = doc.head.querySelector(`meta[${attr}="${name}"]`);
-
-  if (name === 'title') document.title = value;
-
-  if (meta) {
-    meta.content = value;
+async function updateRSVPButtonState(rsvpBtn, miloLibs) {
+  const rsvpData = BlockMediator.get('rsvpData');
+  if (rsvpData?.attendee?.attendeeId || (rsvpData?.action === 'create' && rsvpData?.resp?.status === 200)) {
+    rsvpBtn.el.textContent = await miloReplaceKey(miloLibs, 'registered-cta-text');
   } else {
-    const newMeta = doc.createElement('meta');
-    newMeta.setAttribute(attr, name);
-    newMeta.content = value;
-    doc.head.appendChild(newMeta);
-  }
-}
-
-async function updateRSVPButtonState(rsvpData, rsvpBtn, miloLibs) {
-  if (!rsvpData) return;
-
-  const { getConfig } = await import(`${miloLibs}/utils/utils.js`);
-  const { replaceKey } = await import(`${miloLibs}/features/placeholders.js`);
-  const config = getConfig();
-
-  rsvpBtn.textContent = await replaceKey('rsvp-loading-cta-text', config);
-  const eventId = rsvpData.eventId ?? getMetadata('event-id');
-  const attendeeId = rsvpData.attendeeId ?? BlockMediator.get('imsProfile')?.userId;
-  const attendeeData = await getAttendee(eventId, attendeeId);
-
-  if (attendeeData.id) {
-    rsvpBtn.textContent = await replaceKey('registered-cta-text', config);
-  } else {
-    rsvpBtn.textContent = rsvpBtn.originalText;
+    rsvpBtn.el.textContent = rsvpBtn.originalText;
   }
 
   // FIXME: no waitlisted state yet.
 }
 
-function handleRegisterButton(a, miloLibs) {
+const signIn = () => {
+  if (typeof window.adobeIMS?.signIn !== 'function') {
+    window?.lana.log({ message: 'IMS signIn method not available', tags: 'errorType=warn,module=gnav' });
+    return;
+  }
+
+  // add custom SUSI page id, sth like this:
+  // adobeIMS.signIn({dctx_id: 'v:2,s,bg:expressUpsell,85709a30-0d87-11ef-a91c-2be7a9b482cb'})
+
+  window.adobeIMS?.signIn();
+};
+
+async function handleRSVPBtnBasedOnProfile(rsvpBtn, miloLibs, profile) {
+  if (profile?.noProfile) {
+    rsvpBtn.el.textContent = await miloReplaceKey(miloLibs, 'sign-in-rsvp-cta-text');
+    rsvpBtn.el.addEventListener('click', (e) => {
+      e.preventDefault();
+      signIn();
+    });
+  } else if (profile) {
+    await updateRSVPButtonState(rsvpBtn, miloLibs);
+
+    BlockMediator.subscribe('rsvpData', () => {
+      updateRSVPButtonState(rsvpBtn, miloLibs);
+    });
+  }
+}
+
+export async function validatePageAndRedirect(env) {
+  const pageStatus = getMetadata('status');
+  if (env === 'prod' && (!pageStatus || pageStatus.toLowerCase() === 'draft')) {
+    window.location.replace('/404');
+  }
+
+  if (env === 'stage' && window.location.hostname === 'www.stage.adobe.com') {
+    window.location.replace('/404');
+  }
+}
+
+async function handleRegisterButton(a, miloLibs) {
   const urlParams = new URLSearchParams(window.location.search);
   const devMode = urlParams.get('devMode');
-
   if (devMode) return;
-
-  const signIn = () => {
-    if (typeof window.adobeIMS?.signIn !== 'function') {
-      window?.lana.log({ message: 'IMS signIn method not available', tags: 'errorType=warn,module=gnav' });
-      return;
-    }
-
-    // add custom SUSI page id, sth like this:
-    // adobeIMS.signIn({dctx_id: 'v:2,s,bg:expressUpsell,85709a30-0d87-11ef-a91c-2be7a9b482cb'})
-
-    window.adobeIMS.signIn();
-  };
-
-  a.addEventListener('click', (e) => {
-    e.preventDefault();
-    signIn();
-  });
 
   const rsvpBtn = {
     el: a,
     originalText: a.textContent,
   };
 
-  updateRSVPButtonState(BlockMediator.get('rsvpData'), rsvpBtn, miloLibs);
+  a.textContent = await miloReplaceKey(miloLibs, 'rsvp-loading-cta-text');
+  a.classList.add('disabled');
 
-  BlockMediator.subscribe('rsvpData', ({ newValue }) => {
-    updateRSVPButtonState(newValue, rsvpBtn, miloLibs);
-  });
+  const profile = BlockMediator.get('imsProfile');
+  if (profile) {
+    a.classList.remove('disabled');
+    handleRSVPBtnBasedOnProfile(rsvpBtn, miloLibs, profile);
+  } else {
+    BlockMediator.subscribe('imsProfile', ({ newValue }) => {
+      a.classList.remove('disabled');
+      handleRSVPBtnBasedOnProfile(rsvpBtn, miloLibs, newValue);
+    });
+  }
 }
 
 export function toClassName(name) {
@@ -173,16 +187,7 @@ function autoUpdateLinks(scope, miloLibs) {
       const url = new URL(a.href);
 
       if (/#rsvp-form.*/.test(a.href)) {
-        const profile = BlockMediator.get('imsProfile');
-        if (profile?.noProfile) {
-          handleRegisterButton(a, miloLibs);
-        } else if (!profile) {
-          BlockMediator.subscribe('imsProfile', ({ newValue }) => {
-            if (newValue?.noProfile) {
-              handleRegisterButton(a, miloLibs);
-            }
-          });
-        }
+        handleRegisterButton(a, miloLibs);
       }
 
       if (a.href.endsWith('#event-template')) {
