@@ -32,6 +32,22 @@ export function getMetadata(name, doc = document) {
   return meta && meta.content;
 }
 
+export function setMetadata(name, value, doc = document) {
+  const attr = name && name.includes(':') ? 'property' : 'name';
+  const meta = doc.head.querySelector(`meta[${attr}="${name}"]`);
+
+  if (name === 'title') document.title = value;
+
+  if (meta) {
+    meta.content = value;
+  } else {
+    const newMeta = doc.createElement('meta');
+    newMeta.setAttribute(attr, name);
+    newMeta.content = value;
+    doc.head.appendChild(newMeta);
+  }
+}
+
 export function handlize(str) {
   return str.toLowerCase().trim().replaceAll(' ', '-');
 }
@@ -64,10 +80,23 @@ export function flattenObject(obj, parentKey = '', result = {}) {
   return result;
 }
 
-export function createOptimizedPicture(src, alt = '', eager = false, breakpoints = [{ media: '(min-width: 400px)', width: '2000' }, { width: '750' }]) {
-  const url = new URL(src, window.location.href);
+export function createOptimizedPicture(
+  src,
+  alt = '',
+  relative = true,
+  eager = false,
+  breakpoints = [{ media: '(min-width: 400px)', width: '2000' }, { width: '750' }],
+) {
+  let url;
+
+  if (relative) {
+    url = new URL(src);
+  } else {
+    url = new URL(src, window.location.href);
+  }
+
   const picture = document.createElement('picture');
-  const { pathname } = url;
+  const { pathname, href } = url;
   const ext = pathname.substring(pathname.lastIndexOf('.') + 1);
 
   // webp
@@ -75,7 +104,7 @@ export function createOptimizedPicture(src, alt = '', eager = false, breakpoints
     const source = document.createElement('source');
     if (br.media) source.setAttribute('media', br.media);
     source.setAttribute('type', 'image/webp');
-    source.setAttribute('srcset', `${pathname}?width=${br.width}&format=webply&optimize=medium`);
+    source.setAttribute('srcset', `${relative ? pathname : href}?width=${br.width}&format=webply&optimize=medium`);
     picture.appendChild(source);
   });
 
@@ -84,11 +113,11 @@ export function createOptimizedPicture(src, alt = '', eager = false, breakpoints
     if (i < breakpoints.length - 1) {
       const source = document.createElement('source');
       if (br.media) source.setAttribute('media', br.media);
-      source.setAttribute('srcset', `${pathname}?width=${br.width}&format=${ext}&optimize=medium`);
+      source.setAttribute('srcset', `${relative ? pathname : href}?width=${br.width}&format=${ext}&optimize=medium`);
       picture.appendChild(source);
     } else {
       const img = document.createElement('img');
-      img.setAttribute('src', `${pathname}?width=${br.width}&format=${ext}&optimize=medium`);
+      img.setAttribute('src', `${relative ? pathname : href}?width=${br.width}&format=${ext}&optimize=medium`);
       img.setAttribute('loading', eager ? 'eager' : 'lazy');
       img.setAttribute('alt', alt);
       picture.appendChild(img);

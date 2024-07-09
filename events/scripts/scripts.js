@@ -11,10 +11,8 @@
  */
 
 import { lazyCaptureProfile } from '../utils/profile.js';
-import autoUpdateContent, { getNonProdData, setMetadata } from '../utils/content-update.js';
-import BlockMediator from '../deps/block-mediator.min.js';
-
-BlockMediator.set('imsProfile', null);
+import autoUpdateContent, { getNonProdData, validatePageAndRedirect } from '../utils/content-update.js';
+import { setMetadata } from '../utils/utils.js';
 
 export const LIBS = (() => {
   const { hostname, search } = window.location;
@@ -87,13 +85,16 @@ export function decorateArea(area = document) {
     eagerLoad(marquee, 'div:last-child > div:last-child img');
   }());
 
-  const photosData = parsePhotosData(area);
-  const eventTitle = getMetadata('event-title') || document.title;
-
-  autoUpdateContent(area, LIBS, {
-    ...photosData,
-    'event-title': eventTitle,
-  });
+  if (getMetadata('event-details-page') !== 'yes') return;
+  if ((window.eccEnv === 'prod' && getMetadata('status') === 'live') || (window.eccEnv !== 'prod' && getMetadata('status'))) {
+    const photosData = parsePhotosData(area);
+    const eventTitle = getMetadata('event-title') || document.title;
+    validatePageAndRedirect();
+    autoUpdateContent(area, LIBS, {
+      ...photosData,
+      'event-title': eventTitle,
+    });
+  }
 }
 
 // Add project-wide style path here.
@@ -117,24 +118,32 @@ const CONFIG = {
 
 const { loadArea, setConfig, loadLana } = await import(`${LIBS}/utils/utils.js`);
 export const MILO_CONFIG = setConfig({ ...CONFIG, miloLibs: LIBS });
+// FIXME: Code smell. This should be exportable.
 window.eccEnv = getECCEnv(MILO_CONFIG);
+
+async function fetchAndDecorateArea() {
+  if (getMetadata('event-details-page') !== 'yes') return;
+  if ((window.eccEnv === 'stage' || window.eccEnv === 'dev') && !getMetadata('event-id')) {
+    // Load non-prod data for stage and dev environments
+    const nonProdData = await getNonProdData(window.eccEnv, MILO_CONFIG);
+
+    if (!nonProdData) return;
+
+    Object.entries(nonProdData).forEach(([key, value]) => {
+      if (key === 'event-title') {
+        setMetadata(key, nonProdData.title);
+      } else {
+        setMetadata(key, value);
+      }
+    });
+
+    decorateArea();
+  }
+}
 
 // Decorate the page with site specific needs.
 decorateArea();
-
-if ((window.eccEnv === 'stage' || window.eccEnv === 'dev') && !getMetadata('event-id')) {
-  // Load non-prod data for stage and dev environments
-  const nonProdData = await getNonProdData(window.eccEnv, MILO_CONFIG);
-  Object.entries(nonProdData).forEach(([key, value]) => {
-    if (key === 'event-title') {
-      setMetadata(key, nonProdData.title);
-    } else {
-      setMetadata(key, value);
-    }
-  });
-
-  decorateArea();
-}
+await fetchAndDecorateArea();
 
 /*
  * ------------------------------------------------------------
