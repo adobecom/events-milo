@@ -1,8 +1,8 @@
-import { LIBS } from '../scripts/scripts.js';
+import { LIBS, MILO_CONFIG } from '../scripts/scripts.js';
 
-const { createTag, getConfig, MILO_EVENTS, loadStyle } = await import(`${LIBS}/utils/utils.js`);
+const { createTag, MILO_EVENTS, loadStyle } = await import(`${LIBS}/utils/utils.js`);
 
-const { miloLibs, codeRoot } = getConfig();
+const { miloLibs, codeRoot } = MILO_CONFIG;
 const base = miloLibs || codeRoot;
 
 const ARROW_NEXT_IMG = `<img class="next-icon" alt="Next icon" src="${base}/blocks/carousel/img/arrow.svg" height="10" width="16">`;
@@ -325,7 +325,7 @@ function handleChangingSlides(carouselElements) {
 
 export default function buildMiloCarousel(el, slides) {
   return new Promise((resolve) => {
-    loadStyle(`${window.miloConfig.codeRoot}/features/milo-carousel.css`, () => {
+    loadStyle(`${MILO_CONFIG.codeRoot}/features/milo-carousel.css`, () => {
       const parentArea = el.closest('.fragment') || document;
       el.classList.add('carousel-plugin');
 
