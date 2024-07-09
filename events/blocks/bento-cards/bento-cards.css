@@ -23,6 +23,10 @@
   overflow: hidden;
 }
 
+.bento-cards .carousel-slides .bento-cards-wrapper {
+  margin: 0 16px;
+}
+
 .bento-cards .bento-card {
   flex: 1 1 0;
   display: flex;
