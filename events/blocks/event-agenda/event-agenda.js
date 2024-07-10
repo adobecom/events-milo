@@ -1,5 +1,5 @@
 import { LIBS } from '../../scripts/scripts.js';
-import { createOptimizedPicture } from '../../utils/utils.js';
+import { createOptimizedPicture } from '../../scripts/utils.js';
 
 const { createTag, getMetadata } = await import(`${LIBS}/utils/utils.js`);
 

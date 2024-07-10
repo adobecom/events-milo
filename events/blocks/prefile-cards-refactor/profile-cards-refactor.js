@@ -1,6 +1,6 @@
 import { LIBS, MILO_CONFIG } from '../../scripts/scripts.js';
 import buildMiloCarousel from '../../features/milo-carousel.js';
-import { getMetadata } from '../../utils/utils.js';
+import { getMetadata } from '../../scripts/utils.js';
 
 const { createTag } = await import(`${LIBS}/utils/utils.js`);
 
@@ -112,15 +112,6 @@ function decorateContent(cardContainer, data) {
   cardContainer.append(contentContainer);
 }
 
-function decorate1up(data, cardsWrapper, position = 'left') {
-  const cardContainer = createTag('div', { class: 'card-container card-1up' });
-
-  decorateImage(cardContainer, data.speakerImage, '1', data.altText, position);
-  decorateContent(cardContainer, data);
-
-  cardsWrapper.append(cardContainer);
-}
-
 function decorateCards(el, data) {
   const cardsWrapper = el.querySelector('.cards-wrapper');
   const rows = el.querySelectorAll(':scope > div');
@@ -132,8 +123,6 @@ function decorateCards(el, data) {
     el.remove();
     return;
   }
-
-  const firstProfileCardsType = checkFirstProfileCardsBlockType();
 
   configRow.remove();
 

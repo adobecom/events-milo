@@ -1,7 +1,7 @@
 import { LIBS } from '../../scripts/scripts.js';
-import { getMetadata } from '../../utils/utils.js';
+import { getMetadata } from '../../scripts/utils.js';
 import HtmlSanitizer from '../../deps/html-sanitizer.js';
-import { createAttendee, deleteAttendee, updateAttendee } from '../../utils/esp-controller.js';
+import { createAttendee, deleteAttendee, updateAttendee } from '../../scripts/esp-controller.js';
 import BlockMediator from '../../deps/block-mediator.min.js';
 
 const { createTag } = await import(`${LIBS}/utils/utils.js`);
