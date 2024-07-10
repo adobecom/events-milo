@@ -1,4 +1,4 @@
-import BlockMediator from '../deps/block-mediator.min.js';
+import BlockMediator from './deps/block-mediator.min.js';
 import { handlize, getMetadata } from './utils.js';
 
 export const REG = /\[\[(.*?)\]\]/g;

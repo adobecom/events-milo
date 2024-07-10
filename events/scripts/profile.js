@@ -1,4 +1,4 @@
-import BlockMediator from '../deps/block-mediator.min.js';
+import BlockMediator from './deps/block-mediator.min.js';
 import { getAttendee } from './esp-controller.js';
 import { getMetadata } from './utils.js';
 
