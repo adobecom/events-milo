@@ -1,6 +1,6 @@
 import { LIBS, MILO_CONFIG } from '../scripts/scripts.js';
 
-const { createTag, MILO_EVENTS, loadStyle } = await import(`${LIBS}/utils/utils.js`);
+const { createTag, MILO_EVENTS, loadStyle } = await import(`${LIBS}/scripts/utils.js`);
 
 const { miloLibs, codeRoot } = MILO_CONFIG;
 const base = miloLibs || codeRoot;

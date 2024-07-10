@@ -1,7 +1,7 @@
 import { LIBS } from '../../scripts/scripts.js';
-import { createOptimizedPicture } from '../../utils/utils.js';
+import { createOptimizedPicture } from '../../scripts/utils.js';
 
-const { createTag, getMetadata } = await import(`${LIBS}/utils/utils.js`);
+const { createTag, getMetadata } = await import(`${LIBS}/scripts/utils.js`);
 
 export default async function init(el) {
   const container = createTag('div', { class: 'agenda-container' }, '', { parent: el });

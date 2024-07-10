@@ -1,8 +1,8 @@
 import { LIBS, MILO_CONFIG } from '../../scripts/scripts.js';
 import buildMiloCarousel from '../../features/milo-carousel.js';
-import { getMetadata } from '../../utils/utils.js';
+import { getMetadata } from '../../scripts/utils.js';
 
-const { createTag } = await import(`${LIBS}/utils/utils.js`);
+const { createTag } = await import(`${LIBS}/scripts/utils.js`);
 
 function decorateImage(cardContainer, imgSrc, variant, altText, position = 'left') {
   const imgElement = createTag('img', {

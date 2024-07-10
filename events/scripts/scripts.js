@@ -10,9 +10,9 @@
  * governing permissions and limitations under the License.
  */
 
-import { lazyCaptureProfile } from '../utils/profile.js';
-import autoUpdateContent, { getNonProdData, validatePageAndRedirect } from '../utils/content-update.js';
-import { setMetadata } from '../utils/utils.js';
+import { lazyCaptureProfile } from './profile.js';
+import autoUpdateContent, { getNonProdData, validatePageAndRedirect } from './content-update.js';
+import { setMetadata } from './utils.js';
 
 export const LIBS = (() => {
   const { hostname, search } = window.location;
@@ -116,7 +116,7 @@ const CONFIG = {
   },
 };
 
-const { loadArea, setConfig, loadLana } = await import(`${LIBS}/utils/utils.js`);
+const { loadArea, setConfig, loadLana } = await import(`${LIBS}/scripts/utils.js`);
 export const MILO_CONFIG = setConfig({ ...CONFIG, miloLibs: LIBS });
 // FIXME: Code smell. This should be exportable.
 window.eccEnv = getECCEnv(MILO_CONFIG);
