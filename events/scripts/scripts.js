@@ -116,7 +116,7 @@ const CONFIG = {
   },
 };
 
-const { loadArea, setConfig, loadLana } = await import(`${LIBS}/scripts/utils.js`);
+const { loadArea, setConfig, loadLana } = await import(`${LIBS}/utils/utils.js`);
 export const MILO_CONFIG = setConfig({ ...CONFIG, miloLibs: LIBS });
 // FIXME: Code smell. This should be exportable.
 window.eccEnv = getECCEnv(MILO_CONFIG);

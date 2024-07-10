@@ -4,7 +4,7 @@ import HtmlSanitizer from '../../deps/html-sanitizer.js';
 import { createAttendee, deleteAttendee, updateAttendee } from '../../scripts/esp-controller.js';
 import BlockMediator from '../../deps/block-mediator.min.js';
 
-const { createTag } = await import(`${LIBS}/scripts/utils.js`);
+const { createTag } = await import(`${LIBS}/utils/utils.js`);
 const { closeModal } = await import(`${LIBS}/blocks/modal/modal.js`);
 const { default: sanitizeComment } = await import(`${LIBS}/utils/sanitizeComment.js`);
 

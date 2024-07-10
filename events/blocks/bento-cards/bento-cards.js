@@ -1,7 +1,7 @@
 import buildMiloCarousel from '../../features/milo-carousel.js';
 import { LIBS } from '../../scripts/scripts.js';
 
-const { createTag } = await import(`${LIBS}/scripts/utils.js`);
+const { createTag } = await import(`${LIBS}/utils/utils.js`);
 const { decorateButtons } = await import(`${LIBS}/utils/decorate.js`);
 
 function isReversed(card) {

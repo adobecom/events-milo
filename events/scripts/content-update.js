@@ -10,7 +10,7 @@ const preserveFormatKeys = [
 async function miloReplaceKey(miloLibs, key) {
   try {
     const [utils, placeholders] = await Promise.all([
-      import(`${miloLibs}/scripts/utils.js`),
+      import(`${miloLibs}/utils/utils.js`),
       import(`${miloLibs}/features/placeholders.js`),
     ]);
 
