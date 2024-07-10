@@ -1,6 +1,6 @@
 import { LIBS } from '../../scripts/scripts.js';
 
-const { createTag, getMetadata } = await import(`${LIBS}/utils/utils.js`);
+const { createTag, getMetadata } = await import(`${LIBS}/scripts/utils.js`);
 
 export default function init(el) {
   let partnersData;
