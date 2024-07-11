@@ -3,6 +3,7 @@ import { getMetadata } from '../../scripts/utils.js';
 import HtmlSanitizer from '../../scripts/deps/html-sanitizer.js';
 import { createAttendee, deleteAttendee, updateAttendee } from '../../scripts/esp-controller.js';
 import BlockMediator from '../../scripts/deps/block-mediator.min.js';
+import { miloReplaceKey } from '../../scripts/content-update.js';
 
 const { createTag } = await import(`${LIBS}/utils/utils.js`);
 const { closeModal } = await import(`${LIBS}/blocks/modal/modal.js`);
@@ -100,7 +101,8 @@ function clearForm(form) {
 }
 
 async function buildErrorMsg(form) {
-  const error = createTag('p', { class: 'error' }, 'An error occurred. Please try again later.');
+  const errorMsg = await miloReplaceKey(LIBS, 'rsvp-error-msg');
+  const error = createTag('p', { class: 'error' }, errorMsg);
   form.append(error);
   setTimeout(() => {
     error.remove();

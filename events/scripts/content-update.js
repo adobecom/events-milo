@@ -7,7 +7,7 @@ const preserveFormatKeys = [
   'description',
 ];
 
-async function miloReplaceKey(miloLibs, key) {
+export async function miloReplaceKey(miloLibs, key) {
   try {
     const [utils, placeholders] = await Promise.all([
       import(`${miloLibs}/utils/utils.js`),
