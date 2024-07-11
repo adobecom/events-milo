@@ -103,7 +103,7 @@ const STYLES = '';
 // Add any config options.
 const CONFIG = {
   codeRoot: '/events',
-  // contentRoot: '',
+  contentRoot: '/events',
   imsClientId: 'events-milo',
   // imsScope: 'AdobeID,openid,gnav',
   // geoRouting: 'off',
