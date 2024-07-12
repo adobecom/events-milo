@@ -62,7 +62,7 @@ export async function getSVGsfromFile(path, selectors) {
 
 async function decorateSocialIcons(cardContainer, socialMedia) {
   const SUPPORTED_SOCIAL = ['instagram', 'facebook', 'twitter', 'linkedin', 'youtube', 'pinterest', 'discord', 'behance'];
-  const svgPath = `${MILO_CONFIG.codeRoot}/assets/icons/social-icons.svg`;
+  const svgPath = `${MILO_CONFIG.codeRoot}/icons/social-icons.svg`;
   const socialList = createTag('ul', { class: 'card-social-icons' });
 
   const svgEls = await getSVGsfromFile(svgPath, SUPPORTED_SOCIAL);
