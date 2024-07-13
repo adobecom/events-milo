@@ -58,7 +58,7 @@
   }
 
   .event-map .text-wrapper {
-    padding: 0;
+    padding: 40px 0;
     padding-left: calc((100% - var(--grid-container-width) - 80px) / 2);
     padding-right: 20px;
   }
