@@ -1,8 +1,7 @@
 import { LIBS } from '../../scripts/scripts.js';
+import { getMetadata } from '../../scripts/utils.js';
 
 const { createTag } = await import(`${LIBS}/utils/utils.js`);
-
-const ENCODED_API_KEY = 'QUl6YVN5RHZ5cXdhVXMtSXZNS1BTb3RkV2JVRFJETmtUbkhXMlpB';
 
 function decorateTextContainer(el) {
   const wrapper = el.querySelector('.event-map-wrapper');
@@ -14,20 +13,22 @@ function decorateTextContainer(el) {
   wrapper.append(textContentWrapper);
 }
 
-function decorateMapContainer(el) {
-  const configs = {
-    mapId: 'd3555ecb8ace8a82',
-    coordinates: '41.8871,-87.6612',
-    zoom: 12,
-  };
+function decorateMap(el) {
+  try {
+    const venueMapImageObj = JSON.parse(getMetadata('photos')).find((photo) => photo.imageKind === 'venue-map-image');
 
-  const wrapper = el.querySelector('.event-map-wrapper');
-  const mapContainer = createTag('div', { id: 'map-container', class: 'map-container' });
-  wrapper.append(mapContainer);
+    if (!venueMapImageObj) return;
 
-  const img = createTag('img', { src: `https://maps.googleapis.com/maps/api/staticmap?map_id=${configs.mapId}&center=${configs.coordinates}&zoom=${configs.zoom}&size=600x400&key=${window.atob(ENCODED_API_KEY)}&markers=color:red%7C${configs.coordinates}` });
-  mapContainer.append(img);
-  wrapper.append(mapContainer);
+    const wrapper = el.querySelector('.event-map-wrapper');
+    const mapContainer = createTag('div', { id: 'map-container', class: 'map-container' });
+    wrapper.append(mapContainer);
+
+    const img = createTag('img', { src: `${venueMapImageObj.sharepointUrl || venueMapImageObj.imageUrl}` });
+    mapContainer.append(img);
+    wrapper.append(mapContainer);
+  } catch (e) {
+    window.lana?.log('Error while decorating venue map image');
+  }
 }
 
 export default async function init(el) {
@@ -35,5 +36,5 @@ export default async function init(el) {
   el.append(wrapper);
 
   decorateTextContainer(el);
-  decorateMapContainer(el);
+  decorateMap(el);
 }
