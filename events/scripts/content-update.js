@@ -208,6 +208,10 @@ function autoUpdateLinks(scope, miloLibs) {
           const timingClass = `timing${timeSuffix}-event`;
           document.body.classList.add(timingClass);
         }
+      } else if (a.href.endsWith('#host-email')) {
+        if (getMetadata('host-email')) {
+          a.href = `mailto:${getMetadata('host-email')}`;
+        }
       } else if (getMetadata(url.hash.replace('#', ''))) {
         a.href = getMetadata(url.hash.replace('#', ''));
       }
