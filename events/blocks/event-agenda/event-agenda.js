@@ -4,6 +4,11 @@ import { createOptimizedPicture } from '../../scripts/utils.js';
 const { createTag, getMetadata } = await import(`${LIBS}/utils/utils.js`);
 
 export default async function init(el) {
+  if (getMetadata('show-agenda-post-event') !== 'true' && document.body.classList.contains('timing-post-event')) {
+    el.remove();
+    return;
+  }
+
   const container = createTag('div', { class: 'agenda-container' }, '', { parent: el });
   const agendaItemsCol = createTag('div', { class: 'agenda-items-col' }, '', { parent: container });
 

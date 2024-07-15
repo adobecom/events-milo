@@ -205,6 +205,8 @@ function autoUpdateLinks(scope, miloLibs) {
           }
 
           a.href = `${getMetadata('template-id')}${timeSuffix}`;
+          const timingClass = `timing${timeSuffix}-event`;
+          document.body.classList.add(timingClass);
         }
       } else if (getMetadata(url.hash.replace('#', ''))) {
         a.href = getMetadata(url.hash.replace('#', ''));

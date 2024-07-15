@@ -25,7 +25,7 @@
 }
 
 .event-map .map-container {
-  min-width: calc(100vw - 20px);
+  min-width: calc(100vw - 56px);
   display: flex;
   justify-content: center;
   height: 270px;
