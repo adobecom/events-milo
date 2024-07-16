@@ -28,12 +28,14 @@ a[href^='#rsvp-form'].disabled {
   pointer-events: none;
 }
 
-p.flex-center-align {
+p.flex-center-align,
+a.flex-center-align {
   display: flex;
   align-items: center;
 }
 
-p.flex-center-align img {
+p.flex-center-align img,
+a.flex-center-align img {
   margin-right: 8px;
   display: block;
 }

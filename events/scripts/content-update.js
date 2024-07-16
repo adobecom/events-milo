@@ -26,15 +26,15 @@ export async function miloReplaceKey(miloLibs, key) {
   }
 }
 
-function convertEccIcon(p) {
-  const text = p.innerHTML;
+function convertEccIcon(n) {
+  const text = n.innerHTML;
   const eccIcons = [
     'events-calendar-white',
   ];
 
   return text.replace(ICON_REG, (_match, iconName) => {
     if (eccIcons.includes(iconName)) {
-      p.classList.add('flex-center-align');
+      n.classList.add('flex-center-align');
       return `<span><img src="/events/icons/${iconName}.svg" alt="${iconName} icon"></span>`;
     }
 
@@ -288,6 +288,7 @@ function updateTextNode(child, matchCallback) {
     META_REG,
     (_match, p1) => matchCallback(_match, p1, child),
   );
+
   if (replacedText !== originalText) {
     const lines = replacedText.split('\\n');
     lines.forEach((line, index) => {
@@ -440,7 +441,7 @@ export default function autoUpdateContent(parent, miloDeps, extraData) {
           updateTextNode(n, getContent);
         }
 
-        if (n.tagName === 'P') {
+        if (n.tagName === 'P' || n.tagName === 'A') {
           n.innerHTML = convertEccIcon(n);
         }
       });
