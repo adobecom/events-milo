@@ -155,7 +155,7 @@
 .profile-cards .card-desc {
   color: var(--Text-text, #2C2C2C);
   font-family: var(--body-font-family);
-  font-size: var(--type-body-xxs-size);
+  font-size: var(--type-body-xs-size);
   font-style: normal;
   font-weight: 400;
   line-height: 21px;
