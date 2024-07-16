@@ -6,7 +6,8 @@ export default function init(el) {
   let partnersData;
 
   try {
-    partnersData = JSON.parse(getMetadata('partners'));
+    // FIXME: sponsors !== partners
+    partnersData = JSON.parse(getMetadata('sponsors'));
   } catch (error) {
     window.lana?.log('Failed to parse partners metadata:', error);
     el.remove();
@@ -22,10 +23,12 @@ export default function init(el) {
 
   partnersData.forEach((partner) => {
     const logoWrapper = createTag('div', { class: 'event-partners logo' });
-    createTag('img', { src: `${partner.imageUrl}` }, '', { parent: logoWrapper });
+    if (partner.image) {
+      createTag('img', { src: `${partner.image.sharepointUrl || partner.image.imageUrl}`, alt: partner.image.altText }, '', { parent: logoWrapper });
+    }
 
     if (partner.externalLink) {
-      const aTag = createTag('a', { href: partner.externalLink, target: '_blank' }, '', { parent: eventPartners });
+      const aTag = createTag('a', { href: partner.externalLink, target: '_blank', title: partner.name }, '', { parent: eventPartners });
       eventPartners.append(aTag);
       aTag.append(logoWrapper);
     } else {
