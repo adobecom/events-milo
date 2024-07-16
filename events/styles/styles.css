@@ -28,6 +28,11 @@ a[href^='#rsvp-form'].disabled {
   pointer-events: none;
 }
 
+p.flex-center-align {
+  display: flex;
+  align-items: center;
+}
+
 .preserve-format {
   white-space: pre-wrap;
 }

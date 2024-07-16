@@ -26,13 +26,15 @@ export async function miloReplaceKey(miloLibs, key) {
   }
 }
 
-function convertEccIcon(text) {
+function convertEccIcon(p) {
+  const text = p.textContent;
   const eccIcons = [
     'events-calendar-white',
   ];
 
   return text.replace(ICON_REG, (_match, iconName) => {
     if (eccIcons.includes(iconName)) {
+      p.classList.add('flex-center-align');
       return `<span><img src="/path/to/icons/${iconName}.svg" alt="${iconName} icon"></span>`;
     }
 
@@ -437,7 +439,7 @@ export default function autoUpdateContent(parent, miloLibs, extraData) {
         }
 
         if (n.tagName === 'P') {
-          n.innerHTML = convertEccIcon(n.innerHTML);
+          n.innerHTML = convertEccIcon(n);
         }
       });
     }
