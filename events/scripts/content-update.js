@@ -415,6 +415,12 @@ export default function autoUpdateContent(parent, miloLibs, extraData) {
     if (preserveFormatKeys.includes(p1)) {
       n.parentNode?.classList.add('preserve-format');
     }
+
+    if (p1 === 'start-date' || p1 === 'end-date') {
+      const date = new Date(content);
+      content = date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+    }
+
     return content;
   };
 
