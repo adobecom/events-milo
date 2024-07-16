@@ -400,7 +400,8 @@ export default function autoUpdateContent(parent, miloLibs, extraData) {
     return JSON.stringify(data);
   };
 
-  const getContent = (_match, p1, n) => {
+  const getContent = async (_match, p1, n) => {
+    const { getConfig } = await import(`${miloLibs}/utils/utils.js`);
     let content;
     if (p1.includes('.')) {
       const [key, subKey] = p1.split('.');
@@ -420,7 +421,8 @@ export default function autoUpdateContent(parent, miloLibs, extraData) {
 
     if (p1 === 'start-date' || p1 === 'end-date') {
       const date = new Date(content);
-      content = date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+      const dateLocale = getConfig().locale?.ietf || 'en-US';
+      content = date.toLocaleDateString(dateLocale, { month: 'long', day: 'numeric', year: 'numeric' });
     }
 
     return content;
