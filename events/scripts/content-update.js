@@ -282,7 +282,10 @@ function updateImgTag(child, matchCallback, parentElement) {
 
 function updateTextNode(child, matchCallback) {
   const originalText = child.nodeValue;
-  const replacedText = originalText.replace(META_REG, (_match, p1) => matchCallback(_match, p1, child));
+  const replacedText = originalText.replace(
+    META_REG,
+    (_match, p1) => matchCallback(_match, p1, child),
+  );
   if (replacedText !== originalText) {
     const lines = replacedText.split('\\n');
     lines.forEach((line, index) => {
