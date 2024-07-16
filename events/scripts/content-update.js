@@ -1,7 +1,8 @@
 import BlockMediator from './deps/block-mediator.min.js';
 import { handlize, getMetadata } from './utils.js';
 
-export const REG = /\[\[(.*?)\]\]/g;
+export const META_REG = /\[\[(.*?)\]\]/g;
+export const ICON_REG = /@@(.*?)@@/g;
 
 const preserveFormatKeys = [
   'description',
@@ -23,6 +24,20 @@ export async function miloReplaceKey(miloLibs, key) {
     window.lana?.log('Error trying to replace placeholder:', error);
     return 'RSVP';
   }
+}
+
+function convertEccIcon(text) {
+  const eccIcons = [
+    'events-calendar-white',
+  ];
+
+  return text.replace(ICON_REG, (_match, iconName) => {
+    if (eccIcons.includes(iconName)) {
+      return `<span><img src="/path/to/icons/${iconName}.svg" alt="${iconName} icon"></span>`;
+    }
+
+    return '';
+  });
 }
 
 function createTag(tag, attributes, html, options = {}) {
@@ -249,7 +264,7 @@ function updatePictureElement(imageUrl, parentPic, altText) {
 function updateImgTag(child, matchCallback, parentElement) {
   const parentPic = child.closest('picture');
   const originalAlt = child.alt;
-  const photoMeta = originalAlt.replace(REG, (_match, p1) => matchCallback(_match, p1, child));
+  const photoMeta = originalAlt.replace(META_REG, (_match, p1) => matchCallback(_match, p1, child));
 
   try {
     const photoData = JSON.parse(photoMeta);
@@ -257,7 +272,7 @@ function updateImgTag(child, matchCallback, parentElement) {
 
     if (imageUrl && parentPic && imageUrl !== originalAlt) {
       updatePictureElement(imageUrl, parentPic, altText);
-    } else if (originalAlt.match(REG)) {
+    } else if (originalAlt.match(META_REG)) {
       parentElement.remove();
     }
   } catch (e) {
@@ -267,7 +282,7 @@ function updateImgTag(child, matchCallback, parentElement) {
 
 function updateTextNode(child, matchCallback) {
   const originalText = child.nodeValue;
-  const replacedText = originalText.replace(REG, (_match, p1) => matchCallback(_match, p1, child));
+  const replacedText = originalText.replace(META_REG, (_match, p1) => matchCallback(_match, p1, child));
   if (replacedText !== originalText) {
     const lines = replacedText.split('\\n');
     lines.forEach((line, index) => {
@@ -410,6 +425,10 @@ export default function autoUpdateContent(parent, miloLibs, extraData) {
 
         if (n.nodeType === 3) {
           updateTextNode(n, getContent);
+        }
+
+        if (n.tagName === 'P') {
+          n.innerHTML = convertEccIcon(n.innerHTML);
         }
       });
     }
