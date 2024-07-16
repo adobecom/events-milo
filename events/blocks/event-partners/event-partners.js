@@ -24,7 +24,7 @@ export default function init(el) {
 
   partnersData.forEach((partner) => {
     const logoWrapper = createTag('div', { class: 'event-partners logo' });
-    if (partner.eventId) {
+    if (!partner.name) {
       // FIXME: temp solution for non-hydrated partners
       const { seriesId } = JSON.parse(getMetadata('series'));
       getSponsor(seriesId, partner.sponsorId).then((pd) => {
