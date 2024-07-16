@@ -34,8 +34,7 @@ function convertEccIcon(n) {
 
   return text.replace(ICON_REG, (_match, iconName) => {
     if (eccIcons.includes(iconName)) {
-      n.classList.add('flex-center-align');
-      return `<span><img src="/events/icons/${iconName}.svg" alt="${iconName} icon"></span>`;
+      return `<img src="/events/icons/${iconName}.svg" alt="${iconName} icon" class="ecc-icon">`;
     }
 
     return '';

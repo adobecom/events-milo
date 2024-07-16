@@ -28,16 +28,9 @@ a[href^='#rsvp-form'].disabled {
   pointer-events: none;
 }
 
-p.flex-center-align,
-a.flex-center-align {
-  display: flex;
-  align-items: center;
-}
-
-p.flex-center-align img,
-a.flex-center-align img {
+img.ecc-icon {
+  vertical-align: middle;
   margin-right: 8px;
-  display: block;
 }
 
 .preserve-format {
