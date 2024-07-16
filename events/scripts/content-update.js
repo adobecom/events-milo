@@ -1,5 +1,5 @@
 import BlockMediator from './deps/block-mediator.min.js';
-import { handlize, getMetadata } from './utils.js';
+import { handlize, getMetadata, getIcon } from './utils.js';
 
 export const META_REG = /\[\[(.*?)\]\]/g;
 export const ICON_REG = /@@(.*?)@@/g;
@@ -65,10 +65,13 @@ function createTag(tag, attributes, html, options = {}) {
 
 async function updateRSVPButtonState(rsvpBtn, miloLibs) {
   const rsvpData = BlockMediator.get('rsvpData');
+  const checkRed = getIcon('check-circle-red');
   if (rsvpData?.attendee?.attendeeId || (rsvpData?.action === 'create' && rsvpData?.resp?.status === 200)) {
     rsvpBtn.el.textContent = await miloReplaceKey(miloLibs, 'registered-cta-text');
+    rsvpBtn.prepend(checkRed);
   } else {
     rsvpBtn.el.textContent = rsvpBtn.originalText;
+    checkRed.remove();
   }
 
   // FIXME: no waitlisted state yet.
