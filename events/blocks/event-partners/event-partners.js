@@ -24,6 +24,7 @@ export default function init(el) {
 
   partnersData.forEach((partner) => {
     const logoWrapper = createTag('div', { class: 'event-partners logo' });
+    eventPartners.append(logoWrapper);
     if (!partner.name) {
       // FIXME: temp solution for non-hydrated partners
       const { seriesId } = JSON.parse(getMetadata('series'));
@@ -36,8 +37,6 @@ export default function init(el) {
           const aTag = createTag('a', { href: pd.link, target: '_blank', title: pd.name }, '', { parent: eventPartners });
           eventPartners.append(aTag);
           aTag.append(logoWrapper);
-        } else {
-          eventPartners.append(logoWrapper);
         }
       });
     } else {
@@ -49,8 +48,6 @@ export default function init(el) {
         const aTag = createTag('a', { href: partner.link, target: '_blank', title: partner.name }, '', { parent: eventPartners });
         eventPartners.append(aTag);
         aTag.append(logoWrapper);
-      } else {
-        eventPartners.append(logoWrapper);
       }
     }
   });
