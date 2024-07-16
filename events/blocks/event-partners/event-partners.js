@@ -26,7 +26,7 @@ export default function init(el) {
     const logoWrapper = createTag('div', { class: 'event-partners logo' });
     if (partner.eventId) {
       // FIXME: temp solution for non-hydrated partners
-      getSponsor(getMetadata, partner.sponsorId).then((pd) => {
+      getSponsor(getMetadata('series-id'), partner.sponsorId).then((pd) => {
         if (pd.image) {
           createTag('img', { src: `${pd.image.sharepointUrl || pd.image.imageUrl}`, alt: pd.image.altText }, '', { parent: logoWrapper });
         }
