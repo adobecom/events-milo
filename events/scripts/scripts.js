@@ -143,7 +143,7 @@ async function fetchAndDecorateArea() {
 // Decorate the page with site specific needs.
 decorateArea();
 
-if (window.eccEnv !== 'prod' && !getMetadata('event-id') && getMetadata('event-details-page') !== 'yes') {
+if (window.eccEnv !== 'prod' && !getMetadata('event-id') && getMetadata('event-details-page') === 'yes') {
   await fetchAndDecorateArea();
 }
 
