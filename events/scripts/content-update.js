@@ -286,7 +286,7 @@ function updateTextNode(child, matchCallback) {
   const originalText = child.nodeValue;
   const replacedText = originalText.replace(
     META_REG,
-    async (_match, p1) => await matchCallback(_match, p1, child),
+    (_match, p1) => matchCallback(_match, p1, child),
   );
   if (replacedText !== originalText) {
     const lines = replacedText.split('\\n');
@@ -366,7 +366,8 @@ export async function getNonProdData(env) {
 }
 
 // data -> dom gills
-export default function autoUpdateContent(parent, miloLibs, extraData) {
+export default function autoUpdateContent(parent, miloDeps, extraData) {
+  const { getConfig, miloLibs } = miloDeps;
   if (!parent) {
     window.lana?.log('page server block cannot find its parent element');
     return;
@@ -400,8 +401,7 @@ export default function autoUpdateContent(parent, miloLibs, extraData) {
     return JSON.stringify(data);
   };
 
-  const getContent = async (_match, p1, n) => {
-    const { getConfig } = await import(`${miloLibs}/utils/utils.js`);
+  const getContent = (_match, p1, n) => {
     let content;
     if (p1.includes('.')) {
       const [key, subKey] = p1.split('.');
@@ -421,8 +421,8 @@ export default function autoUpdateContent(parent, miloLibs, extraData) {
 
     if (p1 === 'start-date' || p1 === 'end-date') {
       const date = new Date(content);
-      const dateLocale = getConfig().locale?.ietf || 'en-US';
-      content = date.toLocaleDateString(dateLocale, { month: 'long', day: 'numeric', year: 'numeric' });
+      const localeString = getConfig().locale?.ietf || 'en-US';
+      content = date.toLocaleDateString(localeString, { month: 'long', day: 'numeric', year: 'numeric' });
     }
 
     return content;

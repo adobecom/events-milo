@@ -22,6 +22,8 @@ export const LIBS = (() => {
   return branch.includes('--') ? `https://${branch}.hlx.live/libs` : `https://${branch}--milo--adobecom.hlx.live/libs`;
 })();
 
+const { loadArea, setConfig, getConfig, loadLana } = await import(`${LIBS}/utils/utils.js`);
+
 function getMetadata(name) {
   const attr = name && name.includes(':') ? 'property' : 'name';
   const meta = document.head.querySelector(`meta[${attr}="${name}"]`);
@@ -90,7 +92,11 @@ export function decorateArea(area = document) {
     const photosData = parsePhotosData(area);
     const eventTitle = getMetadata('event-title') || document.title;
     validatePageAndRedirect();
-    autoUpdateContent(area, LIBS, {
+    const miloDeps = {
+      miloLibs: LIBS,
+      getConfig,
+    };
+    autoUpdateContent(area, miloDeps, {
       ...photosData,
       'event-title': eventTitle,
     });
@@ -116,7 +122,6 @@ const CONFIG = {
   },
 };
 
-const { loadArea, setConfig, loadLana } = await import(`${LIBS}/utils/utils.js`);
 export const MILO_CONFIG = setConfig({ ...CONFIG, miloLibs: LIBS });
 // FIXME: Code smell. This should be exportable.
 window.eccEnv = getECCEnv(MILO_CONFIG);
