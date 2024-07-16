@@ -38,5 +38,3 @@ export default function init(el) {
 
   el.append(eventPartners);
 }
-
-export { init };
