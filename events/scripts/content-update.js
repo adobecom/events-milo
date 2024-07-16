@@ -103,8 +103,8 @@ async function handleRSVPBtnBasedOnProfile(rsvpBtn, miloLibs, profile) {
 }
 
 export async function validatePageAndRedirect(env) {
-  const pageStatus = getMetadata('status');
-  if (env === 'prod' && (!pageStatus || pageStatus.toLowerCase() === 'draft')) {
+  const pagePublished = getMetadata('published') === 'true';
+  if (env === 'prod' && (!pagePublished)) {
     window.location.replace('/404');
   }
 
