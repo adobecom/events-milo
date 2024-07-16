@@ -27,7 +27,7 @@ export async function miloReplaceKey(miloLibs, key) {
 }
 
 function convertEccIcon(p) {
-  const text = p.textContent;
+  const text = p.innerHTML;
   const eccIcons = [
     'events-calendar-white',
   ];
