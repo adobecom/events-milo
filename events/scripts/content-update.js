@@ -1,7 +1,8 @@
 import BlockMediator from './deps/block-mediator.min.js';
 import { handlize, getMetadata } from './utils.js';
 
-export const REG = /\[\[(.*?)\]\]/g;
+export const META_REG = /\[\[(.*?)\]\]/g;
+export const ICON_REG = /@@(.*?)@@/g;
 
 const preserveFormatKeys = [
   'description',
@@ -23,6 +24,21 @@ export async function miloReplaceKey(miloLibs, key) {
     window.lana?.log('Error trying to replace placeholder:', error);
     return 'RSVP';
   }
+}
+
+function convertEccIcon(n) {
+  const text = n.innerHTML;
+  const eccIcons = [
+    'events-calendar-white',
+  ];
+
+  return text.replace(ICON_REG, (_match, iconName) => {
+    if (eccIcons.includes(iconName)) {
+      return `<img src="/events/icons/${iconName}.svg" alt="${iconName} icon" class="ecc-icon">`;
+    }
+
+    return '';
+  });
 }
 
 function createTag(tag, attributes, html, options = {}) {
@@ -87,8 +103,8 @@ async function handleRSVPBtnBasedOnProfile(rsvpBtn, miloLibs, profile) {
 }
 
 export async function validatePageAndRedirect(env) {
-  const pageStatus = getMetadata('status');
-  if (env === 'prod' && (!pageStatus || pageStatus.toLowerCase() === 'draft')) {
+  const pagePublished = getMetadata('published') === 'true';
+  if (env === 'prod' && (!pagePublished)) {
     window.location.replace('/404');
   }
 
@@ -205,6 +221,12 @@ function autoUpdateLinks(scope, miloLibs) {
           }
 
           a.href = `${getMetadata('template-id')}${timeSuffix}`;
+          const timingClass = `timing${timeSuffix}-event`;
+          document.body.classList.add(timingClass);
+        }
+      } else if (a.href.endsWith('#host-email')) {
+        if (getMetadata('host-email')) {
+          a.href = `mailto:${getMetadata('host-email')}`;
         }
       } else if (getMetadata(url.hash.replace('#', ''))) {
         a.href = getMetadata(url.hash.replace('#', ''));
@@ -243,7 +265,7 @@ function updatePictureElement(imageUrl, parentPic, altText) {
 function updateImgTag(child, matchCallback, parentElement) {
   const parentPic = child.closest('picture');
   const originalAlt = child.alt;
-  const photoMeta = originalAlt.replace(REG, (_match, p1) => matchCallback(_match, p1, child));
+  const photoMeta = originalAlt.replace(META_REG, (_match, p1) => matchCallback(_match, p1, child));
 
   try {
     const photoData = JSON.parse(photoMeta);
@@ -251,7 +273,7 @@ function updateImgTag(child, matchCallback, parentElement) {
 
     if (imageUrl && parentPic && imageUrl !== originalAlt) {
       updatePictureElement(imageUrl, parentPic, altText);
-    } else if (originalAlt.match(REG)) {
+    } else if (originalAlt.match(META_REG)) {
       parentElement.remove();
     }
   } catch (e) {
@@ -261,7 +283,11 @@ function updateImgTag(child, matchCallback, parentElement) {
 
 function updateTextNode(child, matchCallback) {
   const originalText = child.nodeValue;
-  const replacedText = originalText.replace(REG, (_match, p1) => matchCallback(_match, p1, child));
+  const replacedText = originalText.replace(
+    META_REG,
+    (_match, p1) => matchCallback(_match, p1, child),
+  );
+
   if (replacedText !== originalText) {
     const lines = replacedText.split('\\n');
     lines.forEach((line, index) => {
@@ -340,7 +366,8 @@ export async function getNonProdData(env) {
 }
 
 // data -> dom gills
-export default function autoUpdateContent(parent, miloLibs, extraData) {
+export default function autoUpdateContent(parent, miloDeps, extraData) {
+  const { getConfig, miloLibs } = miloDeps;
   if (!parent) {
     window.lana?.log('page server block cannot find its parent element');
     return;
@@ -391,6 +418,13 @@ export default function autoUpdateContent(parent, miloLibs, extraData) {
     if (preserveFormatKeys.includes(p1)) {
       n.parentNode?.classList.add('preserve-format');
     }
+
+    if (p1 === 'start-date' || p1 === 'end-date') {
+      const date = new Date(content);
+      const localeString = getConfig().locale?.ietf || 'en-US';
+      content = date.toLocaleDateString(localeString, { month: 'long', day: 'numeric', year: 'numeric' });
+    }
+
     return content;
   };
 
@@ -404,6 +438,10 @@ export default function autoUpdateContent(parent, miloLibs, extraData) {
 
         if (n.nodeType === 3) {
           updateTextNode(n, getContent);
+        }
+
+        if (n.tagName === 'P' || n.tagName === 'A') {
+          n.innerHTML = convertEccIcon(n);
         }
       });
     }

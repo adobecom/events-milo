@@ -149,3 +149,14 @@ export async function getAttendee(eventId) {
     .catch((error) => window.lana?.log(`Failed to get details of attendee me for event ${eventId}. Error: ${error}`));
   return resp;
 }
+
+export async function getSponsor(seriesId, sponsorId) {
+  const { host } = getAPIConfig().esp[window.eccEnv];
+  const options = await constructRequestOptions('GET');
+
+  const resp = await fetch(`${host}/v1/series/${seriesId}/sponsors/${sponsorId}`, options)
+    .then((res) => res.json())
+    .catch((error) => window.lana?.log('Failed to get sponsor. Error:', error));
+
+  return resp;
+}
