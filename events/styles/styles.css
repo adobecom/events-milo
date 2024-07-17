@@ -53,7 +53,7 @@ a.con-button.rsvp-btn {
   opacity: 1;
 }
 
-a[href^='#rsvp-form'].disabled {
+a.con-button[href^='#rsvp-form'].disabled {
   opacity: 0.5;
   pointer-events: none;
 }
