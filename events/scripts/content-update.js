@@ -38,7 +38,7 @@ function createSVGIcon(iconName) {
   svgElement.appendChild(useElement);
 
   return svgElement;
-};
+}
 
 function convertEccIcon(n) {
   const text = n.innerHTML;
