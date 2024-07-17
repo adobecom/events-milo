@@ -45,3 +45,7 @@ fieldset {
 .section:has(> .section-metadata:only-child) {
   display: none;
 }
+
+.dark .action-area a {
+  color: var(--color-white);
+}
