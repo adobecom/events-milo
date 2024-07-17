@@ -9,11 +9,10 @@
 }
 
 .event-partners.images {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  grid-template-rows: 59px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
   padding: 12px 0;
-  grid-auto-rows: 59px;
   gap: 1rem;
 }
 
@@ -43,11 +42,7 @@
   }
   
   .event-partners.images {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    grid-template-rows: 181px;
     padding: 40px 0;
-    grid-auto-rows: 181px;
     gap: 3rem;
   }
   

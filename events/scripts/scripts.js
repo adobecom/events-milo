@@ -22,6 +22,8 @@ export const LIBS = (() => {
   return branch.includes('--') ? `https://${branch}.hlx.live/libs` : `https://${branch}--milo--adobecom.hlx.live/libs`;
 })();
 
+const { loadArea, setConfig, getConfig, loadLana } = await import(`${LIBS}/utils/utils.js`);
+
 function getMetadata(name) {
   const attr = name && name.includes(':') ? 'property' : 'name';
   const meta = document.head.querySelector(`meta[${attr}="${name}"]`);
@@ -44,8 +46,8 @@ function getECCEnv(miloConfig) {
     if (host.startsWith('dev--') || host.startsWith('www.dev')) return 'dev';
   }
 
-  // fallback to Milo env name
-  return env.name;
+  // fallback to dev
+  return 'dev';
 }
 
 export function decorateArea(area = document) {
@@ -86,15 +88,18 @@ export function decorateArea(area = document) {
   }());
 
   if (getMetadata('event-details-page') !== 'yes') return;
-  if ((window.eccEnv === 'prod' && getMetadata('status') === 'live') || (window.eccEnv !== 'prod' && getMetadata('status'))) {
-    const photosData = parsePhotosData(area);
-    const eventTitle = getMetadata('event-title') || document.title;
-    validatePageAndRedirect();
-    autoUpdateContent(area, LIBS, {
-      ...photosData,
-      'event-title': eventTitle,
-    });
-  }
+
+  const photosData = parsePhotosData(area);
+  const eventTitle = getMetadata('event-title') || document.title;
+  validatePageAndRedirect();
+  const miloDeps = {
+    miloLibs: LIBS,
+    getConfig,
+  };
+  autoUpdateContent(area, miloDeps, {
+    ...photosData,
+    'event-title': eventTitle,
+  });
 }
 
 // Add project-wide style path here.
@@ -116,34 +121,31 @@ const CONFIG = {
   },
 };
 
-const { loadArea, setConfig, loadLana } = await import(`${LIBS}/utils/utils.js`);
 export const MILO_CONFIG = setConfig({ ...CONFIG, miloLibs: LIBS });
 // FIXME: Code smell. This should be exportable.
 window.eccEnv = getECCEnv(MILO_CONFIG);
 
 async function fetchAndDecorateArea() {
-  if (getMetadata('event-details-page') !== 'yes') return;
-  if ((window.eccEnv === 'stage' || window.eccEnv === 'dev') && !getMetadata('event-id')) {
-    // Load non-prod data for stage and dev environments
-    const nonProdData = await getNonProdData(window.eccEnv, MILO_CONFIG);
+  // Load non-prod data for stage and dev environments
+  const nonProdData = await getNonProdData(window.eccEnv, MILO_CONFIG);
+  if (!nonProdData) return;
+  Object.entries(nonProdData).forEach(([key, value]) => {
+    if (key === 'event-title') {
+      setMetadata(key, nonProdData.title);
+    } else {
+      setMetadata(key, value);
+    }
+  });
 
-    if (!nonProdData) return;
-
-    Object.entries(nonProdData).forEach(([key, value]) => {
-      if (key === 'event-title') {
-        setMetadata(key, nonProdData.title);
-      } else {
-        setMetadata(key, value);
-      }
-    });
-
-    decorateArea();
-  }
+  decorateArea();
 }
 
 // Decorate the page with site specific needs.
 decorateArea();
-await fetchAndDecorateArea();
+
+if (window.eccEnv !== 'prod' && !getMetadata('event-id') && getMetadata('event-details-page') === 'yes') {
+  await fetchAndDecorateArea();
+}
 
 /*
  * ------------------------------------------------------------

@@ -25,7 +25,7 @@
 }
 
 .event-map .map-container {
-  min-width: calc(100vw - 20px);
+  min-width: calc(100vw - 56px);
   display: flex;
   justify-content: center;
   height: 270px;
@@ -58,7 +58,7 @@
   }
 
   .event-map .text-wrapper {
-    padding: 0;
+    padding: 40px 0;
     padding-left: calc((100% - var(--grid-container-width) - 80px) / 2);
     padding-right: 20px;
   }
