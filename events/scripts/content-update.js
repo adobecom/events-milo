@@ -120,7 +120,8 @@ async function handleRSVPBtnBasedOnProfile(rsvpBtn, miloLibs, profile) {
   }
 }
 
-export async function validatePageAndRedirect(env) {
+export async function validatePageAndRedirect() {
+  const env = window.eccEnv;
   const pagePublished = getMetadata('published') === 'true';
   if (env === 'prod' && (!pagePublished)) {
     window.location.replace('/404');
