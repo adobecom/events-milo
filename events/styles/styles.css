@@ -18,14 +18,48 @@ main a.con-button.no-event {
   opacity: 0.5;
 }
 
+a.con-button.blue,
 a.con-button.black {
-  background-color: var(--color-black);
+  border: 2px solid var(--color-gray-800);
+  background-color: var(--color-gray-800);
   color: var(--color-white);
+  transition: background-color 0.2s, border-color 0.2s;
 }
 
-a[href^='#rsvp-form'].disabled {
+a.con-button.blue:hover,
+a.con-button.blue:focus {
+  border: 2px solid var(--color-black);
+  background-color: var(--color-black);
+}
+
+a.con-button.rsvp-btn {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  justify-content: center;
+}
+
+/* FIXME: workaround for fill button */
+.dark a.con-button.blue {
+  border: 2px solid var(--color-white);
+  background-color: var(--color-white);
+  opacity: 0.9;
+  color: var(--color-black);
+  transition: opacity 0.2s;
+}
+
+.dark a.con-button.blue:hover,
+.dark a.con-button.blue:focus {
+  opacity: 1;
+}
+
+a.con-button[href^='#rsvp-form'].disabled {
   opacity: 0.5;
   pointer-events: none;
+}
+
+svg.ecc-icon {
+  vertical-align: middle;
 }
 
 .preserve-format {
@@ -35,4 +69,12 @@ a[href^='#rsvp-form'].disabled {
 fieldset {
   border: none;
   padding: 0;
+}
+
+.section:has(> .section-metadata:only-child) {
+  display: none;
+}
+
+.dark .action-area a {
+  color: var(--color-white);
 }

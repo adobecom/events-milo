@@ -32,6 +32,11 @@ function decorateMap(el) {
 }
 
 export default async function init(el) {
+  if (getMetadata('show-venue-post-event') !== 'true' && document.body.classList.contains('timing-post-event')) {
+    el.remove();
+    return;
+  }
+
   const wrapper = createTag('div', { class: 'event-map-wrapper' });
   el.append(wrapper);
 
