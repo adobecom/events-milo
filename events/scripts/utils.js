@@ -153,7 +153,7 @@ export function generateToolTip(formComponent) {
 export function getIcon(tag) {
   const img = document.createElement('img');
   img.className = `icon icon-${tag}`;
-  img.src = `/icons/${tag}.svg`;
+  img.src = `/events/icons/${tag}.svg`;
   img.alt = tag;
 
   return img;

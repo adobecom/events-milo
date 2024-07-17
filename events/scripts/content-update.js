@@ -26,15 +26,30 @@ export async function miloReplaceKey(miloLibs, key) {
   }
 }
 
+function createSVGIcon(iconName) {
+  const svgElement = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  svgElement.setAttribute('width', '20');
+  svgElement.setAttribute('height', '20');
+  svgElement.setAttribute('class', 'ecc-icon');
+
+  const useElement = document.createElementNS('http://www.w3.org/2000/svg', 'use');
+  useElement.setAttributeNS('http://www.w3.org/1999/xlink', 'href', `/events/icons/events-icons.svg#${iconName}`);
+
+  svgElement.appendChild(useElement);
+
+  return svgElement;
+};
+
 function convertEccIcon(n) {
   const text = n.innerHTML;
   const eccIcons = [
-    'events-calendar-white',
+    'events-calendar',
   ];
 
-  return text.replace(ICON_REG, (_match, iconName) => {
+  const iconRegex = /@@(.*?)@@/g;
+  return text.replace(iconRegex, (match, iconName) => {
     if (eccIcons.includes(iconName)) {
-      return `<img src="/events/icons/${iconName}.svg" alt="${iconName} icon" class="ecc-icon">`;
+      return createSVGIcon(iconName).outerHTML;
     }
 
     return '';
@@ -127,7 +142,7 @@ async function handleRegisterButton(a, miloLibs) {
   };
 
   a.textContent = await miloReplaceKey(miloLibs, 'rsvp-loading-cta-text');
-  a.classList.add('disabled');
+  a.classList.add('disabled', 'rsvp-btn');
 
   const profile = BlockMediator.get('imsProfile');
   if (profile) {
