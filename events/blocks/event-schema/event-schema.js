@@ -31,7 +31,7 @@ function injectEventSchema() {
     organizer: {
       '@type': 'Organization',
       name: 'Adobe',
-      url: 'https://www.adobe.com/events.html',
+      url: window.location.href,
     },
   };
 
