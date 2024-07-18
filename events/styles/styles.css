@@ -75,6 +75,6 @@ fieldset {
   display: none;
 }
 
-.dark .action-area a {
+.dark a {
   color: var(--color-white);
 }

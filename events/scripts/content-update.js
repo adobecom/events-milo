@@ -223,9 +223,7 @@ function autoUpdateLinks(scope, miloLibs) {
 
       if (/#rsvp-form.*/.test(a.href)) {
         handleRegisterButton(a, miloLibs);
-      }
-
-      if (a.href.endsWith('#event-template')) {
+      } else if (a.href.endsWith('#event-template')) {
         if (getMetadata('template-id')) {
           const params = new URLSearchParams(document.location.search);
           const testTiming = params.get('timing');
