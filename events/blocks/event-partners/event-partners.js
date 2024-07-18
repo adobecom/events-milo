@@ -3,7 +3,7 @@ import { LIBS } from '../../scripts/scripts.js';
 const { createTag, getMetadata } = await import(`${LIBS}/utils/utils.js`);
 
 export default function init(el) {
-  if (getMetadata('show-event-sponsors') !== 'true') {
+  if (getMetadata('show-sponsors') !== 'true') {
     el.remove();
     return;
   }
