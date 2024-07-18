@@ -246,9 +246,13 @@ function autoUpdateLinks(scope, miloLibs) {
       } else if (a.href.endsWith('#host-email')) {
         if (getMetadata('host-email')) {
           a.href = `mailto:${getMetadata('host-email')}`;
+        } else {
+          a.remove();
         }
       } else if (getMetadata(url.hash.replace('#', ''))) {
         a.href = getMetadata(url.hash.replace('#', ''));
+      } else {
+        a.remove();
       }
     } catch (e) {
       window.lana?.log(`Error while attempting to replace link ${a.href}: ${e}`);
