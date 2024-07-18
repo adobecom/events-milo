@@ -249,6 +249,9 @@ function autoUpdateLinks(scope, miloLibs) {
         }
       } else if (getMetadata(url.hash.replace('#', ''))) {
         a.href = getMetadata(url.hash.replace('#', ''));
+      } else {
+        // remove the link if it doesn't have a valid hash
+        a.remove();
       }
     } catch (e) {
       window.lana?.log(`Error while attempting to replace link ${a.href}: ${e}`);
