@@ -246,11 +246,12 @@ function autoUpdateLinks(scope, miloLibs) {
       } else if (a.href.endsWith('#host-email')) {
         if (getMetadata('host-email')) {
           a.href = `mailto:${getMetadata('host-email')}`;
+        } else {
+          a.remove();
         }
       } else if (getMetadata(url.hash.replace('#', ''))) {
         a.href = getMetadata(url.hash.replace('#', ''));
       } else {
-        // remove the link if it doesn't have a valid hash
         a.remove();
       }
     } catch (e) {
