@@ -120,14 +120,14 @@ async function handleRSVPBtnBasedOnProfile(rsvpBtn, miloLibs, profile) {
   }
 }
 
-export async function validatePageAndRedirect() {
+export function validatePageAndRedirect() {
   const env = window.eccEnv;
-  const pagePublished = getMetadata('published') === 'true';
-  if (env === 'prod' && (!pagePublished)) {
-    window.location.replace('/404');
-  }
+  const pagePublished = getMetadata('published') === 'true' || getMetadata('status') === 'live';
 
-  if (env === 'stage' && window.location.hostname === 'www.stage.adobe.com') {
+  const isUnpublishedOnProd = env === 'prod' && !pagePublished;
+  const isUnpublishedOnStageAdobeCom = env === 'stage' && window.location.hostname === 'www.stage.adobe.com' && !pagePublished;
+
+  if (isUnpublishedOnProd || isUnpublishedOnStageAdobeCom) {
     window.location.replace('/404');
   }
 }
