@@ -322,6 +322,18 @@ function updateTextNode(child, matchCallback) {
   }
 }
 
+function updateTextContent(child, matchCallback) {
+  const originalText = child.textContent;
+  const replacedText = originalText.replace(
+    META_REG,
+    (_match, p1) => matchCallback(_match, p1, child),
+  );
+
+  if (replacedText !== originalText) {
+    child.textContent = replacedText;
+  }
+}
+
 function injectFragments(parent) {
   const productBlades = parent.querySelector('.event-product-blades');
 
@@ -449,19 +461,28 @@ export default function autoUpdateContent(parent, miloDeps, extraData) {
     return content;
   };
 
+  const isImage = (n) => n.tagName === 'IMG' && n.nodeType === 1;
+  const isTextNode = (n) => n.nodeType === 3;
+  const isStyledTextTag = (n) => n.tagName === 'STRONG' || n.tagName === 'EM';
+  const mightContainIcon = (n) => n.tagName === 'P' || n.tagName === 'A';
+
   const allElements = parent.querySelectorAll('*');
   allElements.forEach((element) => {
     if (element.childNodes.length) {
       element.childNodes.forEach((n) => {
-        if (n.tagName === 'IMG' && n.nodeType === 1) {
+        if (isImage(n)) {
           updateImgTag(n, getImgData, element);
         }
 
-        if (n.nodeType === 3) {
+        if (isTextNode(n)) {
           updateTextNode(n, getContent);
         }
 
-        if (n.tagName === 'P' || n.tagName === 'A') {
+        if (isStyledTextTag(n)) {
+          updateTextContent(n, getContent);
+        }
+
+        if (mightContainIcon(n)) {
           n.innerHTML = convertEccIcon(n);
         }
       });
