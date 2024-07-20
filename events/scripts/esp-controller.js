@@ -150,13 +150,14 @@ export async function getAttendee(eventId) {
   return resp;
 }
 
-export async function getSponsor(seriesId, sponsorId) {
-  const { host } = getAPIConfig().esp[window.eccEnv];
+export async function getAttendeeStatus(eventId) {
+  if (!eventId) return false;
+
+  const { host } = getAPIConfig().esl[window.eccEnv];
   const options = await constructRequestOptions('GET');
 
-  const resp = await fetch(`${host}/v1/series/${seriesId}/sponsors/${sponsorId}`, options)
+  const resp = await fetch(`${host}/v1/events/${eventId}/attendees/me/status`, options)
     .then((res) => res.json())
-    .catch((error) => window.lana?.log('Failed to get sponsor. Error:', error));
-
+    .catch((error) => window.lana?.log(`Failed to get details of attendee me for event ${eventId}. Error: ${error}`));
   return resp;
 }
