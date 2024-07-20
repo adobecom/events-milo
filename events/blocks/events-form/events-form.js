@@ -30,7 +30,7 @@ function snakeToCamel(str) {
 function createSelect({ field, placeholder, options, defval, required }) {
   const select = createTag('select', { id: field });
   if (placeholder) select.append(createTag('option', { selected: '', disabled: '' }, placeholder));
-  options.split(',').forEach((o) => {
+  options.split(';').forEach((o) => {
     const text = o.trim();
     const option = createTag('option', { value: text }, text);
     select.append(option);

@@ -42,6 +42,7 @@ function getECCEnv(miloConfig) {
 
     if (eccEnv) return eccEnv;
 
+    if (host.startsWith('main--')) return 'prod';
     if (host.startsWith('stage--') || host.startsWith('www.stage')) return 'stage';
     if (host.startsWith('dev--') || host.startsWith('www.dev')) return 'dev';
   }
