@@ -100,10 +100,15 @@ function clearForm(form) {
   });
 }
 
-async function buildErrorMsg(form) {
+async function buildErrorMsg(parent) {
+  const existingErrors = parent.querySelectorAll('.error');
+  if (existingErrors.length) {
+    existingErrors.forEach((err) => err.remove());
+  }
+
   const errorMsg = await miloReplaceKey(LIBS, 'rsvp-error-msg');
   const error = createTag('p', { class: 'error' }, errorMsg);
-  form.append(error);
+  parent.append(error);
   setTimeout(() => {
     error.remove();
   }, 3000);
@@ -127,7 +132,7 @@ function createButton({ type, label }, bp) {
         const respJson = await submitForm(bp.form);
         button.removeAttribute('disabled');
         button.classList.remove('submitting');
-        if (respJson === null) {
+        if (!respJson) {
           buildErrorMsg(bp.form);
           window.lana?.log('Failed to submit RSVP form');
           return;
@@ -321,6 +326,14 @@ function decorateSuccessMsg(form, bp) {
 
       if (i === 0) {
         const resp = await deleteAttendee(getMetadata('event-id'));
+        cta.classList.remove('loading');
+
+        if (!resp) {
+          buildErrorMsg(bp.successMsg);
+          window.lana?.log('Failed to cancel RSVP');
+          return;
+        }
+
         BlockMediator.set('rsvpData', resp);
       }
 

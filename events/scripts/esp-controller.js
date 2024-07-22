@@ -128,9 +128,13 @@ export async function createAttendee(eventId, attendeeData) {
   const raw = JSON.stringify(attendeeData);
   const options = await constructRequestOptions('POST', raw);
 
-  await fetch(`${host}/v1/events/${eventId}/attendees`, options)
+  const resp = await fetch(`${host}/v1/events/${eventId}/attendees`, options)
     .then((res) => res.json())
     .catch((error) => window.lana?.log(`Failed to create attendee for event ${eventId}. Error: ${error}`));
+
+  if (!resp || resp.errors || resp.message) {
+    return false;
+  }
 
   // FIXME: create attendee doesn't respond with attendee data
   const rsvpData = await getCompleteAttendeeData(eventId);
@@ -144,10 +148,13 @@ export async function updateAttendee(eventId, attendeeData) {
   const raw = JSON.stringify(attendeeData);
   const options = await constructRequestOptions('PUT', raw);
 
-  await fetch(`${host}/v1/events/${eventId}/attendees/me`, options)
+  const resp = await fetch(`${host}/v1/events/${eventId}/attendees/me`, options)
     .then((res) => res.json())
     .catch((error) => window.lana?.log(`Failed to update attendee me for event ${eventId}. Error: ${error}`));
 
+  if (!resp || resp.errors || resp.message) {
+    return false;
+  }
   // FIXME: update attendee doesn't update attendee data.
   // instead, it actually strips the previously submitted data and returns only the basic info
   const rsvpData = await getCompleteAttendeeData(eventId);
@@ -160,9 +167,13 @@ export async function deleteAttendee(eventId) {
   const { host } = getAPIConfig().esl[window.eccEnv];
   const options = await constructRequestOptions('DELETE');
 
-  await fetch(`${host}/v1/events/${eventId}/attendees/me`, options)
+  const resp = await fetch(`${host}/v1/events/${eventId}/attendees/me`, options)
     .then((res) => res.json())
     .catch((error) => window.lana?.log(`Failed to delete attendee me for event ${eventId}. Error: ${error}`));
+
+  if (!resp || resp.errors || resp.message) {
+    return false;
+  }
 
   const rsvpData = await getCompleteAttendeeData(eventId);
   return rsvpData;
