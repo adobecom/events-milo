@@ -2,6 +2,10 @@ import { LIBS } from '../../scripts/scripts.js';
 
 const { createTag, getMetadata } = await import(`${LIBS}/utils/utils.js`);
 
+function isOdd(number) {
+  return number % 2 !== 0;
+}
+
 export default function init(el) {
   if (getMetadata('show-sponsors') !== 'true') {
     el.remove();
@@ -24,10 +28,14 @@ export default function init(el) {
     return;
   }
 
-  const eventPartners = createTag('div', { class: 'event-partners images' });
+  const eventPartners = createTag('div', { class: 'event-partners-container' });
+
+  if (isOdd(partnersData.length)) {
+    el.classList.add('odd');
+  }
 
   partnersData.forEach((partner) => {
-    const logoWrapper = createTag('div', { class: 'event-partners logo' });
+    const logoWrapper = createTag('div', { class: 'logo' });
     eventPartners.append(logoWrapper);
 
     if (partner.image) {
