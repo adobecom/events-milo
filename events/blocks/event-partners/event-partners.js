@@ -32,7 +32,7 @@ export default function init(el) {
 
   if (isOdd(partnersData.length)) {
     if (partnersData.length === 1) {
-      el.classList.add('odd');
+      el.classList.add('single');
     } else {
       el.classList.add('odd');
     }
