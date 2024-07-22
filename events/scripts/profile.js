@@ -1,5 +1,5 @@
 import BlockMediator from './deps/block-mediator.min.js';
-import { getAttendee, getCompleteAttendeeData } from './esp-controller.js';
+import { getCompleteAttendeeData } from './esp-controller.js';
 import { getMetadata } from './utils.js';
 
 export async function getProfile() {

@@ -1,7 +1,7 @@
 import { LIBS } from '../../scripts/scripts.js';
 import { getMetadata } from '../../scripts/utils.js';
 import HtmlSanitizer from '../../scripts/deps/html-sanitizer.js';
-import { createAttendee, deleteAttendee, getAttendee, getAttendeeStatus, updateAttendee } from '../../scripts/esp-controller.js';
+import { createAttendee, deleteAttendee, updateAttendee } from '../../scripts/esp-controller.js';
 import BlockMediator from '../../scripts/deps/block-mediator.min.js';
 import { miloReplaceKey } from '../../scripts/content-update.js';
 
