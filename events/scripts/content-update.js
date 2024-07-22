@@ -81,9 +81,9 @@ function createTag(tag, attributes, html, options = {}) {
 async function updateRSVPButtonState(rsvpBtn, miloLibs) {
   const rsvpData = BlockMediator.get('rsvpData');
   const checkRed = getIcon('check-circle-red');
-  if (rsvpData?.attendee?.attendeeId || (rsvpData?.action === 'create' && rsvpData?.resp?.status === 200)) {
+  if (rsvpData?.registered) {
     rsvpBtn.el.textContent = await miloReplaceKey(miloLibs, 'registered-cta-text');
-    rsvpBtn.prepend(checkRed);
+    rsvpBtn.el.prepend(checkRed);
   } else {
     rsvpBtn.el.textContent = rsvpBtn.originalText;
     checkRed.remove();

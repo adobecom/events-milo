@@ -1,7 +1,7 @@
 import { LIBS } from '../../scripts/scripts.js';
 import { getMetadata } from '../../scripts/utils.js';
 import HtmlSanitizer from '../../scripts/deps/html-sanitizer.js';
-import { createAttendee, deleteAttendee, updateAttendee } from '../../scripts/esp-controller.js';
+import { createAttendee, deleteAttendee, getAttendee, getAttendeeStatus, updateAttendee } from '../../scripts/esp-controller.js';
 import BlockMediator from '../../scripts/deps/block-mediator.min.js';
 import { miloReplaceKey } from '../../scripts/content-update.js';
 
@@ -81,10 +81,10 @@ async function submitForm(form) {
   });
 
   let resp = null;
-  if (!rsvpData || !rsvpData.attendee?.attendeeId) {
+  if (!rsvpData || !rsvpData.registered) {
     resp = await createAttendee(getMetadata('event-id'), payload);
   } else {
-    resp = await updateAttendee(getMetadata('event-id'), { ...payload, attendeeId: rsvpData.attendee.attendeeId });
+    resp = await updateAttendee(getMetadata('event-id'), { ...rsvpData?.attendee, ...payload });
   }
 
   return resp;
@@ -127,17 +127,13 @@ function createButton({ type, label }, bp) {
         const respJson = await submitForm(bp.form);
         button.removeAttribute('disabled');
         button.classList.remove('submitting');
-        if (!respJson || respJson.message || respJson.errors) {
+        if (respJson === null) {
           buildErrorMsg(bp.form);
-          window.lana?.log('Failed to submit form:', respJson);
+          window.lana?.log('Failed to submit RSVP form');
           return;
         }
 
-        BlockMediator.set('rsvpData', {
-          resp: respJson,
-          action: 'create',
-        });
-
+        BlockMediator.set('rsvpData', respJson);
         showSuccessMsg(bp);
       }
     });
@@ -308,7 +304,7 @@ function addTerms(form, terms) {
   submit.disabled = none(Array.from(checkboxes), (c) => c.checked);
 }
 
-function decorateSuccessMsg(form, bp, rsvpData) {
+function decorateSuccessMsg(form, bp) {
   const ctas = bp.successMsg.querySelectorAll('a');
 
   ctas.forEach((cta, i) => {
@@ -324,10 +320,8 @@ function decorateSuccessMsg(form, bp, rsvpData) {
       cta.classList.add('loading');
 
       if (i === 0) {
-        const resp = await deleteAttendee(rsvpData.eventId);
-        rsvpData.resp = resp;
-        rsvpData.action = 'delete';
-        BlockMediator.set('rsvpData', rsvpData);
+        const resp = await deleteAttendee(getMetadata('event-id'));
+        BlockMediator.set('rsvpData', resp);
       }
 
       const modal = form.closest('.dialog-modal');
@@ -347,8 +341,6 @@ async function createForm(bp, formData) {
   } catch (error) {
     window.lana?.log('Failed to parse partners metadata:', error);
   }
-
-  const rsvpData = { eventId: getMetadata('event-id') || '', attendeeId: '' };
 
   const { pathname } = new URL(form.href);
   let json = formData;
@@ -421,7 +413,7 @@ async function createForm(bp, formData) {
   });
 
   addTerms(formEl, terms);
-  decorateSuccessMsg(formEl, bp, rsvpData);
+  decorateSuccessMsg(formEl, bp);
 
   formEl.addEventListener('input', () => applyRules(formEl, rules));
   applyRules(formEl, rules);
@@ -468,7 +460,7 @@ async function onProfile(bp, formData) {
     eventHero.classList.remove('loading');
     decorateHero(bp.eventHero);
     buildEventform(bp, formData).then(() => {
-      if (rsvpData?.attendee?.attendeeId || (rsvpData?.action === 'create' && rsvpData?.resp?.status === 200)) {
+      if (rsvpData?.registered) {
         showSuccessMsg(bp);
       } else {
         personalizeForm(block, profile);
@@ -483,7 +475,7 @@ async function onProfile(bp, formData) {
         eventHero.classList.remove('loading');
         decorateHero(bp.eventHero);
         buildEventform(bp, formData).then(() => {
-          if (rsvpData?.attendee?.attendeeId || (rsvpData?.action === 'create' && rsvpData?.resp?.status === 200)) {
+          if (rsvpData?.registered) {
             showSuccessMsg(bp);
           } else {
             personalizeForm(block, newValue);
