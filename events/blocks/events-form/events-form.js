@@ -81,7 +81,7 @@ async function submitForm(form) {
   });
 
   let resp = null;
-  if (!rsvpData || !rsvpData.registered) {
+  if (!rsvpData || !rsvpData.status.registered) {
     resp = await createAttendee(getMetadata('event-id'), payload);
   } else {
     resp = await updateAttendee(getMetadata('event-id'), { ...rsvpData?.attendee, ...payload });
@@ -460,7 +460,7 @@ async function onProfile(bp, formData) {
     eventHero.classList.remove('loading');
     decorateHero(bp.eventHero);
     buildEventform(bp, formData).then(() => {
-      if (rsvpData?.registered) {
+      if (rsvpData?.status.registered) {
         showSuccessMsg(bp);
       } else {
         personalizeForm(block, profile);
@@ -475,7 +475,7 @@ async function onProfile(bp, formData) {
         eventHero.classList.remove('loading');
         decorateHero(bp.eventHero);
         buildEventform(bp, formData).then(() => {
-          if (rsvpData?.registered) {
+          if (rsvpData?.status.registered) {
             showSuccessMsg(bp);
           } else {
             personalizeForm(block, newValue);
