@@ -31,7 +31,11 @@ export default function init(el) {
   const eventPartners = createTag('div', { class: 'event-partners-container' });
 
   if (isOdd(partnersData.length)) {
-    el.classList.add('odd');
+    if (partnersData.length === 1) {
+      el.classList.add('odd');
+    } else {
+      el.classList.add('odd');
+    }
   }
 
   partnersData.forEach((partner) => {

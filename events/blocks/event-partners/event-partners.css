@@ -23,6 +23,10 @@
   max-width: 300px;
 }
 
+.event-partners.single .event-partners-container {
+  max-width: 100px;
+}
+
 .event-partners .logo {
   width: 89px;
   height: 59px;
@@ -50,6 +54,10 @@
     max-width: 1015px;
   }
   
+  .event-partners.single .event-partners-container {
+    max-width: 338px;
+  }
+
   .event-partners .logo {
     width: 306px;
     height: 181px;
