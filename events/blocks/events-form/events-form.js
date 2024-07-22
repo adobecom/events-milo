@@ -134,7 +134,6 @@ function createButton({ type, label }, bp) {
         button.classList.remove('submitting');
         if (!respJson) {
           buildErrorMsg(bp.form);
-          window.lana?.log('Failed to submit RSVP form');
           return;
         }
 
@@ -330,7 +329,6 @@ function decorateSuccessMsg(form, bp) {
 
         if (!resp) {
           buildErrorMsg(bp.successMsg);
-          window.lana?.log('Failed to cancel RSVP');
           return;
         }
 
