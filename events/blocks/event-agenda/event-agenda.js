@@ -1,7 +1,22 @@
 import { LIBS } from '../../scripts/scripts.js';
 import { createOptimizedPicture } from '../../scripts/utils.js';
 
-const { createTag, getMetadata } = await import(`${LIBS}/utils/utils.js`);
+const { createTag, getMetadata, getConfig } = await import(`${LIBS}/utils/utils.js`);
+
+function convertToLocaleTimeFormat(time, locale) {
+  const [hours, minutes, seconds] = time.split(':').map(Number);
+  const date = new Date();
+  date.setHours(hours, minutes, seconds, 0);
+
+  const options = {
+    hour: 'numeric',
+    minute: 'numeric',
+    hour12: true,
+  };
+  const formatter = new Intl.DateTimeFormat(locale, options);
+
+  return formatter.format(date);
+}
 
 export default async function init(el) {
   if (getMetadata('show-agenda-post-event') !== 'true' && document.body.classList.contains('timing-post-event')) {
@@ -47,9 +62,11 @@ export default async function init(el) {
     container.append(venueImageCol);
   }
 
+  const localeString = getConfig().locale?.ietf || 'en-US';
+
   agendaArray.forEach((a) => {
     const agendaItemWrapper = createTag('div', { class: 'agenda-item-wrapper' }, '', { parent: agendaItemsCol });
-    createTag('span', { class: 'agenda-time' }, a.startTime, { parent: agendaItemWrapper });
+    createTag('span', { class: 'agenda-time' }, convertToLocaleTimeFormat(a.startTime, localeString), { parent: agendaItemWrapper });
     createTag('span', { class: 'agenda-desciption' }, a.description, { parent: agendaItemWrapper });
   });
 }
