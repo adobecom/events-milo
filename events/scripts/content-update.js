@@ -125,9 +125,8 @@ export function validatePageAndRedirect() {
   const pagePublished = getMetadata('published') === 'true' || getMetadata('status') === 'live';
 
   const isUnpublishedOnProd = env === 'prod' && !pagePublished;
-  const invalidStagePage = env === 'stage' && window.location.hostname === 'www.stage.adobe.com' && !getMetadata('event-id');
 
-  if (isUnpublishedOnProd || invalidStagePage) {
+  if (isUnpublishedOnProd) {
     window.location.replace('/404');
   }
 }
