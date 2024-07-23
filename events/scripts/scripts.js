@@ -42,6 +42,7 @@ function getECCEnv(miloConfig) {
 
     if (eccEnv) return eccEnv;
 
+    if (host.startsWith('main--')) return 'prod';
     if (host.startsWith('stage--') || host.startsWith('www.stage')) return 'stage';
     if (host.startsWith('dev--') || host.startsWith('www.dev')) return 'dev';
   }
@@ -91,11 +92,12 @@ export function decorateArea(area = document) {
 
   const photosData = parsePhotosData(area);
   const eventTitle = getMetadata('event-title') || document.title;
-  validatePageAndRedirect();
+
   const miloDeps = {
     miloLibs: LIBS,
     getConfig,
   };
+
   autoUpdateContent(area, miloDeps, {
     ...photosData,
     'event-title': eventTitle,
@@ -146,6 +148,8 @@ decorateArea();
 if (window.eccEnv !== 'prod' && !getMetadata('event-id') && getMetadata('event-details-page') === 'yes') {
   await fetchAndDecorateArea();
 }
+
+if (getMetadata('event-details-page') === 'yes') validatePageAndRedirect();
 
 /*
  * ------------------------------------------------------------
