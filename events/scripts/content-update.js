@@ -123,10 +123,11 @@ async function handleRSVPBtnBasedOnProfile(rsvpBtn, miloLibs, profile) {
 export function validatePageAndRedirect() {
   const env = window.eccEnv;
   const pagePublished = getMetadata('published') === 'true' || getMetadata('status') === 'live';
+  const invalidStagePage = env === 'stage' && window.location.hostname === 'www.stage.adobe.com' && !getMetadata('event-id');
 
   const isUnpublishedOnProd = env === 'prod' && !pagePublished;
 
-  if (isUnpublishedOnProd) {
+  if (isUnpublishedOnProd || invalidStagePage) {
     window.location.replace('/404');
   }
 }
@@ -385,7 +386,9 @@ export async function getNonProdData(env) {
   const resp = await fetch(`/events/default/${env}/metadata.json`);
   if (resp.ok) {
     const json = await resp.json();
-    const pageData = json.data.find((d) => d.url === window.location.pathname);
+    let { pathname } = window.location;
+    if (pathname.endsWith('.html')) pathname = pathname.slice(0, -5);
+    const pageData = json.data.find((d) => d.url === pathname);
 
     if (pageData) return pageData;
 
