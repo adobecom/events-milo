@@ -1,8 +1,15 @@
 import { getMetadata } from '../../scripts/utils.js';
 
 function injectEventSchema() {
-  const venueObject = JSON.parse(getMetadata('venue'));
-  const photos = JSON.parse(getMetadata('photos'));
+  let venueObject;
+  let photos;
+
+  try {
+    venueObject = JSON.parse(getMetadata('venue'));
+    photos = JSON.parse(getMetadata('photos'));
+  } catch (error) {
+    window.lana?.log('Failed to parse venue or photos metadata:', error);
+  }
 
   if (!venueObject || !photos) return;
 
