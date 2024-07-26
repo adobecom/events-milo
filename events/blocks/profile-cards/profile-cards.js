@@ -62,7 +62,7 @@ export async function getSVGsfromFile(path, selectors) {
   });
 }
 
-async function decorateSocialIcons(cardContainer, socialMedia) {
+async function decorateSocialIcons(cardContainer, socialLinks) {
   const SUPPORTED_SOCIAL = ['instagram', 'facebook', 'twitter', 'linkedin', 'youtube', 'pinterest', 'discord', 'behance'];
   const svgPath = `${MILO_CONFIG.codeRoot}/icons/social-icons.svg`;
   const socialList = createTag('ul', { class: 'card-social-icons' });
@@ -70,7 +70,7 @@ async function decorateSocialIcons(cardContainer, socialMedia) {
   const svgEls = await getSVGsfromFile(svgPath, SUPPORTED_SOCIAL);
   if (!svgEls || svgEls.length === 0) return;
 
-  socialMedia.forEach((account) => {
+  socialLinks.forEach((account) => {
     const { link } = account;
     const platform = SUPPORTED_SOCIAL.find((p) => link.toLowerCase().includes(p)) || 'social-media';
     const svg = svgEls.find((el) => el.name === platform);
