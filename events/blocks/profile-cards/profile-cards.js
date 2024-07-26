@@ -5,8 +5,6 @@ import { getMetadata } from '../../scripts/utils.js';
 const { createTag } = await import(`${LIBS}/utils/utils.js`);
 
 function decorateImage(cardContainer, imgSrc, variant, altText, position = 'left') {
-  if (!imgSrc) return;
-
   const imgElement = createTag('img', {
     src: imgSrc,
     alt: altText,
@@ -63,20 +61,17 @@ export async function getSVGsfromFile(path, selectors) {
 }
 
 async function decorateSocialIcons(cardContainer, socialLinks) {
-  const SUPPORTED_SOCIAL = ['instagram', 'facebook', 'twitter', 'linkedin', 'youtube', 'pinterest', 'discord', 'behance'];
+  const SUPPORTED_SOCIAL = ['instagram', 'facebook', 'twitter', 'youtube'];
   const svgPath = `${MILO_CONFIG.codeRoot}/icons/social-icons.svg`;
   const socialList = createTag('ul', { class: 'card-social-icons' });
 
   const svgEls = await getSVGsfromFile(svgPath, SUPPORTED_SOCIAL);
   if (!svgEls || svgEls.length === 0) return;
 
-  socialLinks.forEach((account) => {
-    const { link } = account;
-    const platform = SUPPORTED_SOCIAL.find((p) => link.toLowerCase().includes(p)) || 'social-media';
+  socialLinks.forEach((link) => {
+    const platform = SUPPORTED_SOCIAL.find((p) => link.toLowerCase().includes(p));
     const svg = svgEls.find((el) => el.name === platform);
-
-    if (!svg) return;
-
+    if (!platform || !svg) return;
     const icon = svg.svg;
     const li = createTag('li', { class: 'card-social-icon' });
     icon.classList.add('card-social-icon');
@@ -90,7 +85,6 @@ async function decorateSocialIcons(cardContainer, socialLinks) {
       rel: 'noopener noreferrer',
       'aria-label': platform,
     });
-
     a.textContent = '';
     a.append(icon);
     li.append(a);
@@ -118,82 +112,36 @@ function decorateContent(cardContainer, data) {
   cardContainer.append(contentContainer);
 }
 
-function checkFirstProfileCardsBlockType() {
-  const profileCards = document.querySelectorAll('div.profile-cards');
-
-  if (profileCards.length > 0) {
-    const firstProfileCard = profileCards[0];
-    const innerDiv = firstProfileCard.querySelector('div');
-    return innerDiv.textContent.trim();
-  }
-  return null;
-}
-
-function getSpeakerImage(speaker) {
-  if (!speaker.photo) return null;
-
-  return speaker.photo.sharepointUrl || speaker.photo.imageUrl;
-}
-
-function decorate1up(data, cardsWrapper, position = 'left') {
-  const cardContainer = createTag('div', { class: 'card-container card-1up' });
-
-  decorateImage(cardContainer, getSpeakerImage(data), '1', data.altText, position);
-  decorateContent(cardContainer, data);
-
-  cardsWrapper.append(cardContainer);
-}
-
-function decorateDouble(data, cardsWrapper) {
-  data.forEach((speaker) => {
-    const cardContainer = createTag('div', { class: 'card-container card-double' });
-
-    decorateImage(cardContainer, getSpeakerImage(speaker), 'double');
-    decorateContent(cardContainer, speaker);
-
-    cardsWrapper.append(cardContainer);
-  });
-}
-
-async function decorate3up(data, cardsWrapper) {
-  data.forEach((speaker) => {
-    const cardContainer = createTag('div', { class: 'card-container' });
-
-    decorateImage(cardContainer, getSpeakerImage(speaker));
-    decorateContent(cardContainer, speaker);
-
-    cardsWrapper.append(cardContainer);
-  });
-}
-
 function decorateCards(el, data) {
   const cardsWrapper = el.querySelector('.cards-wrapper');
   const rows = el.querySelectorAll(':scope > div');
   const configRow = rows[1];
-  const speakerType = configRow?.querySelectorAll(':scope > div')?.[1]?.textContent.toLowerCase().trim();
-  const filteredData = data.filter((speaker) => speaker.speakerType?.toLowerCase() === speakerType);
+  const speakertype = configRow?.querySelectorAll(':scope > div')?.[1]?.textContent.toLowerCase().trim();
+  const filteredData = data.filter((speaker) => speaker.speakerType === speakertype);
 
   if (filteredData.length === 0) {
     el.remove();
     return;
   }
 
-  const firstProfileCardsType = checkFirstProfileCardsBlockType();
-
   configRow.remove();
 
+  filteredData.forEach((speaker) => {
+    const cardContainer = createTag('div', { class: 'card-container' });
+
+    decorateImage(cardContainer, speaker.speakerImage);
+    decorateContent(cardContainer, speaker);
+
+    cardsWrapper.append(cardContainer);
+  });
+
   if (filteredData.length === 1) {
-    const position = (data.length === 2 && firstProfileCardsType.toLowerCase() !== filteredData[0].speakerType.toLowerCase()) ? 'right' : 'left';
-    decorate1up(filteredData[0], cardsWrapper, position);
-    cardsWrapper.classList.add('c1up');
+    cardsWrapper.classList.add('single');
   } else if (filteredData.length === 2) {
-    decorateDouble(filteredData, cardsWrapper);
-    cardsWrapper.classList.add('cdouble');
+    cardsWrapper.classList.add('double');
   } else if (filteredData.length === 3) {
-    decorate3up(filteredData, cardsWrapper);
-    cardsWrapper.classList.add('c3up');
-  } else {
-    decorate3up(filteredData, cardsWrapper);
+    cardsWrapper.classList.add('three-up');
+  } else if (filteredData.length > 3) {
     cardsWrapper.classList.add('carousel-plugin', 'show-3');
     el.classList.add('with-carousel');
 

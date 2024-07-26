@@ -1,4 +1,3 @@
-/* stylelint-disable custom-property-pattern */
 .profile-cards {
   margin: auto;
 }
@@ -38,13 +37,12 @@
   flex: 1 1 0;
 }
 
-.profile-cards.with-carousel .cards-wrapper .card-container {
-  min-width: calc(100% - 34px);
-}
-
 .profile-cards .cards-wrapper .card-container.card-double {
   display: flex;
+  height: 593px;
   width: auto;
+  min-width: 378.67px;
+  max-width: 584px;
   flex-direction: column;
   flex: 1 0 0;
 }
@@ -97,17 +95,31 @@
   background-color: #f9f9f9;
 }
 
-.profile-cards .card-container.card-1up {
-  display: flex;
-  align-items: flex-start;
+.profile-cards .card-container.card-double .card-image-container, .card-image-container {
+  border-radius: 10px 10px 0 0;
+  flex: none;
+  width: auto;
+  height: 306px;
 }
 
-.profile-cards .card-container .card-image-container {
+.profile-cards .card-container .card-image-container,
+.profile-cards .card-image-container {
   flex: none;
+  width: auto;
   height: 213px;
+}
+
+.profile-cards .card-1up .card-image-container,
+.profile-cards .card-1up-right .card-image-container {
   width: 100%;
-  border-radius: 10px 10px 0 0;
-  overflow: hidden;
+}
+
+.profile-cards .card-1up-right .card-image-container img {
+  border-radius: 0 10px 10px 0;
+}
+
+.profile-cards .card-1up-left .card-image-container img {
+  border-radius: 10px 0 0 10px;
 }
 
 .profile-cards .card-image-container {
@@ -117,6 +129,7 @@
 .profile-cards .card-image-container img {
   width: 100%;
   height: 100%;
+  border-radius: 10px 10px 0 0;
   object-fit: cover;
 }
 
@@ -155,7 +168,7 @@
 .profile-cards .card-desc {
   color: var(--Text-text, #2C2C2C);
   font-family: var(--body-font-family);
-  font-size: var(--type-body-xs-size);
+  font-size: var(--type-body-xxs-size);
   font-style: normal;
   font-weight: 400;
   line-height: 21px;
@@ -175,14 +188,15 @@
   list-style: none;
 }
 
-.profile-cards .card-social-icon a {
-  color: var(--color-black);
-}
-
 .profile-cards .social-icon {
   display: block;
   width: 20px;
   height: 20px;
+}
+
+.profile-cards .card-container.card-1up {
+  display: flex;
+  align-items: flex-start;
 }
 
 @media screen and (min-width: 900px) {
@@ -220,31 +234,23 @@
     margin-left: 15px;
   }
 
-  .profile-cards .card-1up .card-image-container {
-    width: 50%;
-    height: 396px;
-  }
-
+  .profile-cards .card-1up .card-image-container,
   .profile-cards .card-1up-right .card-image-container {
-    border-radius: 0 10px 10px 0;
-  }
-  
-  .profile-cards .card-1up-left .card-image-container {
+    width: 576px;
+    height: 396px;
     border-radius: 10px 0 0 10px;
   }
   
-  .profile-cards .card-container.card-double .card-image-container {
-    flex: none;
-    width: auto;
-    height: 306px;
-  }
-
   .profile-cards  .carousel-plugin .carousel-previous {
     left: 2px;
   }
 
   .profile-cards  .carousel-plugin .carousel-next {
     right: 2px;
+  }
+
+  .profile-cards .cards-wrapper .card-container {
+    height: 610px;
   }
 
   .profile-cards.with-carousel .cards-wrapper .card-container {
