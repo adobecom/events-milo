@@ -14,7 +14,7 @@ function removeURLParameter(url, parameter) {
 }
 
 function getEventStatus() {
-  const publishedMeta = getMetadata('status')?.toLowerCase() === 'live';
+  const publishedMeta = getMetadata('published')?.toLowerCase() !== 'true' || getMetadata('status')?.toLowerCase() === 'live';
   const dot = publishedMeta ? getIcon('dot-purple') : getIcon('dot-green');
   const text = publishedMeta ? 'Published' : 'Draft';
 

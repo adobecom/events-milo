@@ -14,21 +14,39 @@ export function decorateTextContainer(el) {
 }
 
 export function decorateMap(el) {
+  let venueMapImageObj;
   try {
-    const venueMapImageObj = JSON.parse(getMetadata('photos')).find((photo) => photo.imageKind === 'venue-map-image');
+    venueMapImageObj = JSON.parse(getMetadata('photos')).find((photo) => photo.imageKind === 'venue-map-image');
+  } catch (e) {
+    window.lana?.log('Error while parsing venue map image metadata:', e);
+  }
 
-    if (!venueMapImageObj) return;
+  if (!venueMapImageObj) return;
 
-    const wrapper = el.querySelector('.event-map-wrapper');
-    const mapContainer = createTag('div', { id: 'map-container', class: 'map-container' });
-    wrapper.append(mapContainer);
+  const wrapper = el.querySelector('.event-map-wrapper');
+  const mapContainer = createTag('div', { id: 'map-container', class: 'map-container' });
+  wrapper.append(mapContainer);
 
-    const img = createTag('img', { src: `${venueMapImageObj.sharepointUrl || venueMapImageObj.imageUrl}` });
+  let spUrlObj;
+
+  try {
+    spUrlObj = new URL(venueMapImageObj.sharepointUrl);
+  } catch (e) {
+    window.lana?.log('Error while parsing SharePoint URL:', e);
+  }
+
+  if (spUrlObj) {
+    const spUrl = spUrlObj.pathname;
+    const img = createTag('img', { src: `${spUrl}` });
     mapContainer.append(img);
     wrapper.append(mapContainer);
-  } catch (e) {
-    window.lana?.log('Error while decorating venue map image');
+
+    return;
   }
+
+  const img = createTag('img', { src: `${venueMapImageObj.sharepointUrl || venueMapImageObj.imageUrl}` });
+  mapContainer.append(img);
+  wrapper.append(mapContainer);
 }
 
 export default async function init(el) {

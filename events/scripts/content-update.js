@@ -81,9 +81,9 @@ function createTag(tag, attributes, html, options = {}) {
 async function updateRSVPButtonState(rsvpBtn, miloLibs) {
   const rsvpData = BlockMediator.get('rsvpData');
   const checkRed = getIcon('check-circle-red');
-  if (rsvpData?.attendee?.attendeeId || (rsvpData?.action === 'create' && rsvpData?.resp?.status === 200)) {
+  if (rsvpData?.status.registered) {
     rsvpBtn.el.textContent = await miloReplaceKey(miloLibs, 'registered-cta-text');
-    rsvpBtn.prepend(checkRed);
+    rsvpBtn.el.prepend(checkRed);
   } else {
     rsvpBtn.el.textContent = rsvpBtn.originalText;
     checkRed.remove();
@@ -120,14 +120,14 @@ async function handleRSVPBtnBasedOnProfile(rsvpBtn, miloLibs, profile) {
   }
 }
 
-export async function validatePageAndRedirect() {
+export function validatePageAndRedirect() {
   const env = window.eccEnv;
-  const pagePublished = getMetadata('published') === 'true';
-  if (env === 'prod' && (!pagePublished)) {
-    window.location.replace('/404');
-  }
+  const pagePublished = getMetadata('published') === 'true' || getMetadata('status') === 'live';
+  const invalidStagePage = env === 'stage' && window.location.hostname === 'www.stage.adobe.com' && !getMetadata('event-id');
 
-  if (env === 'stage' && window.location.hostname === 'www.stage.adobe.com') {
+  const isUnpublishedOnProd = env === 'prod' && !pagePublished;
+
+  if (isUnpublishedOnProd || invalidStagePage) {
     window.location.replace('/404');
   }
 }
@@ -223,9 +223,7 @@ function autoUpdateLinks(scope, miloLibs) {
 
       if (/#rsvp-form.*/.test(a.href)) {
         handleRegisterButton(a, miloLibs);
-      }
-
-      if (a.href.endsWith('#event-template')) {
+      } else if (a.href.endsWith('#event-template')) {
         if (getMetadata('template-id')) {
           const params = new URLSearchParams(document.location.search);
           const testTiming = params.get('timing');
@@ -324,6 +322,18 @@ function updateTextNode(child, matchCallback) {
   }
 }
 
+function updateTextContent(child, matchCallback) {
+  const originalText = child.textContent;
+  const replacedText = originalText.replace(
+    META_REG,
+    (_match, p1) => matchCallback(_match, p1, child),
+  );
+
+  if (replacedText !== originalText) {
+    child.textContent = replacedText;
+  }
+}
+
 function injectFragments(parent) {
   const productBlades = parent.querySelector('.event-product-blades');
 
@@ -376,7 +386,9 @@ export async function getNonProdData(env) {
   const resp = await fetch(`/events/default/${env}/metadata.json`);
   if (resp.ok) {
     const json = await resp.json();
-    const pageData = json.data.find((d) => d.url === window.location.pathname);
+    let { pathname } = window.location;
+    if (pathname.endsWith('.html')) pathname = pathname.slice(0, -5);
+    const pageData = json.data.find((d) => d.url === pathname);
 
     if (pageData) return pageData;
 
@@ -451,19 +463,28 @@ export default function autoUpdateContent(parent, miloDeps, extraData) {
     return content;
   };
 
+  const isImage = (n) => n.tagName === 'IMG' && n.nodeType === 1;
+  const isTextNode = (n) => n.nodeType === 3;
+  const isStyledTextTag = (n) => n.tagName === 'STRONG' || n.tagName === 'EM';
+  const mightContainIcon = (n) => n.tagName === 'P' || n.tagName === 'A';
+
   const allElements = parent.querySelectorAll('*');
   allElements.forEach((element) => {
     if (element.childNodes.length) {
       element.childNodes.forEach((n) => {
-        if (n.tagName === 'IMG' && n.nodeType === 1) {
+        if (isImage(n)) {
           updateImgTag(n, getImgData, element);
         }
 
-        if (n.nodeType === 3) {
+        if (isTextNode(n)) {
           updateTextNode(n, getContent);
         }
 
-        if (n.tagName === 'P' || n.tagName === 'A') {
+        if (isStyledTextTag(n)) {
+          updateTextContent(n, getContent);
+        }
+
+        if (mightContainIcon(n)) {
           n.innerHTML = convertEccIcon(n);
         }
       });

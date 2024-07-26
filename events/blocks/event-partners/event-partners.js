@@ -1,9 +1,17 @@
-import { getSponsor } from '../../scripts/esp-controller.js';
 import { LIBS } from '../../scripts/scripts.js';
 
 const { createTag, getMetadata } = await import(`${LIBS}/utils/utils.js`);
 
+function isOdd(number) {
+  return number % 2 !== 0;
+}
+
 export default function init(el) {
+  if (getMetadata('show-sponsors') !== 'true') {
+    el.remove();
+    return;
+  }
+
   let partnersData;
 
   try {
@@ -20,35 +28,28 @@ export default function init(el) {
     return;
   }
 
-  const eventPartners = createTag('div', { class: 'event-partners images' });
+  const eventPartners = createTag('div', { class: 'event-partners-container' });
+
+  if (isOdd(partnersData.length)) {
+    if (partnersData.length === 1) {
+      el.classList.add('single');
+    } else {
+      el.classList.add('odd');
+    }
+  }
 
   partnersData.forEach((partner) => {
-    const logoWrapper = createTag('div', { class: 'event-partners logo' });
+    const logoWrapper = createTag('div', { class: 'logo' });
     eventPartners.append(logoWrapper);
-    if (!partner.name) {
-      // FIXME: temp solution for non-hydrated partners
-      const { seriesId } = JSON.parse(getMetadata('series'));
-      getSponsor(seriesId, partner.sponsorId).then((pd) => {
-        if (pd.image) {
-          createTag('img', { src: `${pd.image.sharepointUrl || pd.image.imageUrl}`, alt: pd.image.altText }, '', { parent: logoWrapper });
-        }
 
-        if (pd.link) {
-          const aTag = createTag('a', { href: pd.link, target: '_blank', title: pd.name }, '', { parent: eventPartners });
-          eventPartners.append(aTag);
-          aTag.append(logoWrapper);
-        }
-      });
-    } else {
-      if (partner.image) {
-        createTag('img', { src: `${partner.image.sharepointUrl || partner.image.imageUrl}`, alt: partner.image.altText }, '', { parent: logoWrapper });
-      }
+    if (partner.image) {
+      createTag('img', { src: `${partner.image.sharepointUrl || partner.image.imageUrl}`, alt: partner.image.altText }, '', { parent: logoWrapper });
+    }
 
-      if (partner.link) {
-        const aTag = createTag('a', { href: partner.link, target: '_blank', title: partner.name }, '', { parent: eventPartners });
-        eventPartners.append(aTag);
-        aTag.append(logoWrapper);
-      }
+    if (partner.link) {
+      const aTag = createTag('a', { href: partner.link, target: '_blank', title: partner.name }, '', { parent: eventPartners });
+      eventPartners.append(aTag);
+      aTag.append(logoWrapper);
     }
   });
 
