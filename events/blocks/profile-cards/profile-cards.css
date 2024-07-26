@@ -212,8 +212,11 @@
     flex-direction: row;
   }
 
-  .profile-cards .cards-wrapper.single .card-text-container {
+  .profile-cards .cards-wrapper.single .card-container {
     display: flex;
+  }
+
+  .profile-cards .cards-wrapper.single .card-text-container {
     margin-top: 26.5px;
     margin-left: 15px;
   }
