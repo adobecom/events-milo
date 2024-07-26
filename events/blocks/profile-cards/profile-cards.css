@@ -15,8 +15,6 @@
 }
 
 .profile-cards .cards-wrapper.single .card-container {
-  display: flex;
-  flex-direction: column;
   height: 100%;
 }
 
@@ -214,16 +212,8 @@
     flex-direction: row;
   }
 
-  .profile-cards .cards-wrapper.c1up .card-container.card-1up,
-  .profile-cards .cards-wrapper.c1up .card-container.card-1up-left {
-    flex-direction: row;
-  }
-
-  .profile-cards .cards-wrapper.c1up .card-container.card-1up-right {
-    flex-direction: row-reverse;
-  }
-
-  .profile-cards .cards-wrapper.c1up .card-text-container {
+  .profile-cards .cards-wrapper.single .card-text-container {
+    display: flex;
     margin-top: 26.5px;
     margin-left: 15px;
   }
