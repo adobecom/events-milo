@@ -3,7 +3,7 @@ import { getMetadata } from '../../scripts/utils.js';
 
 const { createTag } = await import(`${LIBS}/utils/utils.js`);
 
-function decorateTextContainer(el) {
+export function decorateTextContainer(el) {
   const wrapper = el.querySelector('.event-map-wrapper');
   const textContentWrapper = el.querySelector(':scope > div:first-of-type > div');
 
@@ -13,7 +13,7 @@ function decorateTextContainer(el) {
   wrapper.append(textContentWrapper);
 }
 
-function decorateMap(el) {
+export function decorateMap(el) {
   try {
     const venueMapImageObj = JSON.parse(getMetadata('photos')).find((photo) => photo.imageKind === 'venue-map-image');
 
