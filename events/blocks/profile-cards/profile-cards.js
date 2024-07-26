@@ -106,8 +106,8 @@ function decorateCards(el, data) {
   const cardsWrapper = el.querySelector('.cards-wrapper');
   const rows = el.querySelectorAll(':scope > div');
   const configRow = rows[1];
-  const speakertype = configRow?.querySelectorAll(':scope > div')?.[1]?.textContent.toLowerCase().trim();
-  const filteredData = data.filter((speaker) => speaker.speakerType === speakertype);
+  const speakerType = configRow?.querySelectorAll(':scope > div')?.[1]?.textContent.toLowerCase().trim();
+  const filteredData = data.filter((speaker) => speaker.speakerType === speakerType);
 
   if (filteredData.length === 0) {
     el.remove();
