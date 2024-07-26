@@ -162,8 +162,8 @@ function decorateCards(el, data) {
   const cardsWrapper = el.querySelector('.cards-wrapper');
   const rows = el.querySelectorAll(':scope > div');
   const configRow = rows[1];
-  const speakertype = configRow?.querySelectorAll(':scope > div')?.[1]?.textContent.toLowerCase().trim();
-  const filteredData = data.filter((speaker) => speaker.type?.toLowerCase() === speakertype);
+  const speakerType = configRow?.querySelectorAll(':scope > div')?.[1]?.textContent.toLowerCase().trim();
+  const filteredData = data.filter((speaker) => speaker.speakerType?.toLowerCase() === speakerType);
 
   if (filteredData.length === 0) {
     el.remove();
@@ -175,7 +175,7 @@ function decorateCards(el, data) {
   configRow.remove();
 
   if (filteredData.length === 1) {
-    const position = (data.length === 2 && firstProfileCardsType.toLowerCase() !== filteredData[0].type.toLowerCase()) ? 'right' : 'left';
+    const position = (data.length === 2 && firstProfileCardsType.toLowerCase() !== filteredData[0].speakerType.toLowerCase()) ? 'right' : 'left';
     decorate1up(filteredData[0], cardsWrapper, position);
     cardsWrapper.classList.add('c1up');
   } else if (filteredData.length === 2) {
