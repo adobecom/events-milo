@@ -116,26 +116,6 @@ function decorateContent(cardContainer, data) {
   cardContainer.append(contentContainer);
 }
 
-function decorate1up(data, cardsWrapper, position = 'left') {
-  const cardContainer = createTag('div', { class: 'card-container card-1up' });
-
-  decorateImage(cardContainer, data.photo?.imageUrl, '1', data.altText, position);
-  decorateContent(cardContainer, data);
-
-  cardsWrapper.append(cardContainer);
-}
-
-async function decorate3up(data, cardsWrapper) {
-  data.forEach((speaker) => {
-    const cardContainer = createTag('div', { class: 'card-container' });
-
-    decorateImage(cardContainer, speaker.photo?.imageUrl);
-    decorateContent(cardContainer, speaker);
-
-    cardsWrapper.append(cardContainer);
-  });
-}
-
 function checkFirstProfileCardsBlockType() {
   const profileCards = document.querySelectorAll('div.profile-cards');
 
@@ -147,11 +127,37 @@ function checkFirstProfileCardsBlockType() {
   return null;
 }
 
+function getSpeakerImage(speaker) {
+  if (!speaker.photo) return null;
+
+  return speaker.photo.sharepointUrl || speaker.photo.imageUrl;
+}
+
+function decorate1up(data, cardsWrapper, position = 'left') {
+  const cardContainer = createTag('div', { class: 'card-container card-1up' });
+
+  decorateImage(cardContainer, getSpeakerImage(data), '1', data.altText, position);
+  decorateContent(cardContainer, data);
+
+  cardsWrapper.append(cardContainer);
+}
+
 function decorateDouble(data, cardsWrapper) {
   data.forEach((speaker) => {
     const cardContainer = createTag('div', { class: 'card-container card-double' });
 
-    decorateImage(cardContainer, speaker.photo?.imageUrl, 'double');
+    decorateImage(cardContainer, getSpeakerImage(speaker), 'double');
+    decorateContent(cardContainer, speaker);
+
+    cardsWrapper.append(cardContainer);
+  });
+}
+
+async function decorate3up(data, cardsWrapper) {
+  data.forEach((speaker) => {
+    const cardContainer = createTag('div', { class: 'card-container' });
+
+    decorateImage(cardContainer, getSpeakerImage(speaker));
     decorateContent(cardContainer, speaker);
 
     cardsWrapper.append(cardContainer);
