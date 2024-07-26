@@ -5,6 +5,8 @@ import { getMetadata } from '../../scripts/utils.js';
 const { createTag } = await import(`${LIBS}/utils/utils.js`);
 
 function decorateImage(cardContainer, imgSrc, variant, altText, position = 'left') {
+  if (!imgSrc) return;
+
   const imgElement = createTag('img', {
     src: imgSrc,
     alt: altText,
