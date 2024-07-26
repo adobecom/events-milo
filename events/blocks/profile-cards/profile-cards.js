@@ -4,27 +4,17 @@ import { getMetadata } from '../../scripts/utils.js';
 
 const { createTag } = await import(`${LIBS}/utils/utils.js`);
 
-function decorateImage(cardContainer, imgSrc, variant, altText, position = 'left') {
+function decorateImage(card, photo) {
+  const { sharepointUrl, imageUrl, altText } = photo;
   const imgElement = createTag('img', {
-    src: imgSrc,
+    src: sharepointUrl || imageUrl,
     alt: altText,
     class: 'card-image',
   });
 
   const imgContainer = createTag('div', { class: 'card-image-container' });
   imgContainer.append(imgElement);
-
-  if (variant === '1') {
-    if (position === 'left') {
-      cardContainer.classList.add('card-1up-left');
-      cardContainer.insertBefore(imgContainer, cardContainer.firstChild);
-    } else if (position === 'right') {
-      cardContainer.classList.add('card-1up-right');
-      cardContainer.appendChild(imgContainer);
-    }
-  } else {
-    cardContainer.append(imgContainer);
-  }
+  card.append(imgContainer);
 }
 
 export async function getSVGsfromFile(path, selectors) {
@@ -129,7 +119,7 @@ function decorateCards(el, data) {
   filteredData.forEach((speaker) => {
     const cardContainer = createTag('div', { class: 'card-container' });
 
-    decorateImage(cardContainer, speaker.speakerImage);
+    decorateImage(cardContainer, speaker.photo);
     decorateContent(cardContainer, speaker);
 
     cardsWrapper.append(cardContainer);
