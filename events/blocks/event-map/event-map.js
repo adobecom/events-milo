@@ -29,10 +29,12 @@ function decorateMap(el) {
 
   let spUrlObj;
 
-  try {
-    spUrlObj = new URL(venueMapImageObj.sharepointUrl);
-  } catch (e) {
-    window.lana?.log('Error while parsing SharePoint URL:', e);
+  if (venueMapImageObj.sharepointUrl?.startsWith('https')) {
+    try {
+      spUrlObj = new URL(venueMapImageObj.sharepointUrl);
+    } catch (e) {
+      window.lana?.log('Error while parsing SharePoint URL:', e);
+    }
   }
 
   if (spUrlObj) {
