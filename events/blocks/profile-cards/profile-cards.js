@@ -51,14 +51,15 @@ export async function getSVGsfromFile(path, selectors) {
 }
 
 async function decorateSocialIcons(cardContainer, socialLinks) {
-  const SUPPORTED_SOCIAL = ['instagram', 'facebook', 'twitter', 'youtube'];
+  const SUPPORTED_SOCIAL = ['instagram', 'facebook', 'twitter', 'linkedin', 'youtube', 'pinterest', 'discord', 'behance'];
   const svgPath = `${MILO_CONFIG.codeRoot}/icons/social-icons.svg`;
   const socialList = createTag('ul', { class: 'card-social-icons' });
 
   const svgEls = await getSVGsfromFile(svgPath, SUPPORTED_SOCIAL);
   if (!svgEls || svgEls.length === 0) return;
 
-  socialLinks.forEach((link) => {
+  socialLinks.forEach((social) => {
+    const { link } = social;
     const platform = SUPPORTED_SOCIAL.find((p) => link.toLowerCase().includes(p));
     const svg = svgEls.find((el) => el.name === platform);
     if (!platform || !svg) return;
@@ -126,13 +127,13 @@ function decorateCards(el, data) {
   });
 
   if (filteredData.length === 1) {
-    cardsWrapper.classList.add('single');
+    el.classList.add('single');
   } else if (filteredData.length === 2) {
-    cardsWrapper.classList.add('double');
+    el.classList.add('double');
   } else if (filteredData.length === 3) {
-    cardsWrapper.classList.add('three-up');
+    el.classList.add('three-up');
   } else if (filteredData.length > 3) {
-    cardsWrapper.classList.add('carousel-plugin', 'show-3');
+    el.classList.add('carousel-plugin', 'show-3');
     el.classList.add('with-carousel');
 
     buildMiloCarousel(cardsWrapper, Array.from(cardsWrapper.querySelectorAll('.card-container')));
