@@ -97,7 +97,7 @@ function decorateContent(cardContainer, data) {
   textContainer.append(title, name, description);
   contentContainer.append(textContainer);
 
-  decorateSocialIcons(contentContainer, data.socialLinks || []);
+  decorateSocialIcons(contentContainer, data.socialLinks || data.socialMedia || []);
 
   cardContainer.append(contentContainer);
 }
