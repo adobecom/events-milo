@@ -93,7 +93,7 @@
 }
 
 .profile-cards .card-desc {
-  color: var(--Text-text, #2C2C2C);
+  color: #2C2C2C;
   font-family: var(--body-font-family);
   font-size: var(--type-body-xs-size);
   font-style: normal;
