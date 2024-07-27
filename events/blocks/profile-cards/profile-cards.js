@@ -131,7 +131,7 @@ function decorateCards(el, data) {
   if (filteredData.length === 1) {
     el.classList.add('single');
   } else if (filteredData.length > 3) {
-    cardsWrapper.classList.add('carousel-plugin show-3');
+    cardsWrapper.classList.add('carousel-plugin', 'show-3');
     el.classList.add('with-carousel');
 
     buildMiloCarousel(cardsWrapper, Array.from(cardsWrapper.querySelectorAll('.card-container')));
