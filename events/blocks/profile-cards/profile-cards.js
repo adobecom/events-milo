@@ -5,6 +5,8 @@ import { getMetadata } from '../../scripts/utils.js';
 const { createTag } = await import(`${LIBS}/utils/utils.js`);
 
 function decorateImage(card, photo) {
+  if (!photo) return;
+
   const { sharepointUrl, imageUrl, altText } = photo;
   const imgElement = createTag('img', {
     src: sharepointUrl || imageUrl,
@@ -128,12 +130,8 @@ function decorateCards(el, data) {
 
   if (filteredData.length === 1) {
     el.classList.add('single');
-  } else if (filteredData.length === 2) {
-    el.classList.add('double');
-  } else if (filteredData.length === 3) {
-    el.classList.add('three-up');
   } else if (filteredData.length > 3) {
-    el.classList.add('carousel-plugin', 'show-3');
+    cardsWrapper.classList.add('carousel-plugin show-3');
     el.classList.add('with-carousel');
 
     buildMiloCarousel(cardsWrapper, Array.from(cardsWrapper.querySelectorAll('.card-container')));
