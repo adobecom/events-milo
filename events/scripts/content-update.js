@@ -261,7 +261,7 @@ function autoUpdateLinks(scope, miloLibs) {
 function updatePictureElement(imageUrl, parentPic, altText) {
   let imgUrlObj;
   let imgUrl = imageUrl;
-  if (imageUrl.startsWith('https://www.adobe.com')) {
+  if (imageUrl.startsWith('https://www.adobe.com/')) {
     try {
       imgUrlObj = new URL(imageUrl);
     } catch (e) {
