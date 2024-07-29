@@ -290,9 +290,11 @@ function updateImgTag(child, matchCallback, parentElement) {
 
   try {
     const photoData = JSON.parse(photoMeta);
-    const { imageUrl, altText } = photoData;
+    const { sharepointUrl, imageUrl, altText } = photoData;
 
-    if (imageUrl && parentPic && imageUrl !== originalAlt) {
+    const imgUrl = sharepointUrl || imageUrl;
+
+    if (imgUrl && parentPic && imgUrl !== originalAlt) {
       updatePictureElement(imageUrl, parentPic, altText);
     } else if (originalAlt.match(META_REG)) {
       parentElement.remove();
