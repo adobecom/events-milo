@@ -53,7 +53,7 @@ export async function getSVGsfromFile(path, selectors) {
 }
 
 async function decorateSocialIcons(cardContainer, socialLinks) {
-  const SUPPORTED_SOCIAL = ['instagram', 'facebook', 'twitter', 'linkedin', 'youtube', 'pinterest', 'discord', 'behance'];
+  const SUPPORTED_SOCIAL = ['instagram', 'facebook', 'twitter', 'linkedin', 'youtube', 'pinterest', 'discord', 'behance', 'web'];
   const svgPath = `${MILO_CONFIG.codeRoot}/icons/social-icons.svg`;
   const socialList = createTag('ul', { class: 'card-social-icons' });
 
@@ -62,9 +62,10 @@ async function decorateSocialIcons(cardContainer, socialLinks) {
 
   socialLinks.forEach((social) => {
     const { link } = social;
-    const platform = SUPPORTED_SOCIAL.find((p) => link.toLowerCase().includes(p));
+    const platform = SUPPORTED_SOCIAL.find((p) => link.toLowerCase().includes(p)) || 'web';
     const svg = svgEls.find((el) => el.name === platform);
-    if (!platform || !svg) return;
+    if (!svg) return;
+
     const icon = svg.svg;
     const li = createTag('li', { class: 'card-social-icon' });
     icon.classList.add('card-social-icon');
