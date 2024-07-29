@@ -48,6 +48,7 @@ function convertEccIcon(n) {
 
   return text.replace(ICON_REG, (match, iconName) => {
     if (eccIcons.includes(iconName)) {
+      if (iconName === 'events-calendar') n.parentElement.classList.add('display-events-date-time');
       return createSVGIcon(iconName).outerHTML;
     }
 
