@@ -58,8 +58,20 @@ a.con-button[href^='#rsvp-form'].disabled {
   pointer-events: none;
 }
 
+p.display-event-date-time {
+  display: flex;
+  align-items: center;
+  font-size: var(--type-body-xl-size);
+}
+
 svg.ecc-icon {
-  vertical-align: middle;
+  width: 22px;
+  height: 22px;
+  vertical-align: text-top;
+}
+
+svg.ecc-icon:not(:last-child) {
+  margin-right: 12px;
 }
 
 .preserve-format {

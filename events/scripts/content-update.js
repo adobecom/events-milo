@@ -46,9 +46,9 @@ function convertEccIcon(n) {
     'events-calendar',
   ];
 
-  const iconRegex = /@@(.*?)@@/g;
-  return text.replace(iconRegex, (match, iconName) => {
+  return text.replace(ICON_REG, (match, iconName) => {
     if (eccIcons.includes(iconName)) {
+      if (iconName === 'events-calendar') n.classList.add('display-event-date-time');
       return createSVGIcon(iconName).outerHTML;
     }
 
