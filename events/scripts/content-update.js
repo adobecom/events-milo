@@ -49,6 +49,8 @@ function convertEccIcon(n) {
   const iconRegex = /@@(.*?)@@/g;
   return text.replace(iconRegex, (match, iconName) => {
     if (eccIcons.includes(iconName)) {
+      if (n.nextSibling) n.classList.add('mr-4');
+
       return createSVGIcon(iconName).outerHTML;
     }
 

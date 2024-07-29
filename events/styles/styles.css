@@ -59,7 +59,11 @@ a.con-button[href^='#rsvp-form'].disabled {
 }
 
 svg.ecc-icon {
-  vertical-align: middle;
+  vertical-align: text-top;
+}
+
+svg.ecc-icon.mr-4 {
+  margin-right: 4px;
 }
 
 .preserve-format {
