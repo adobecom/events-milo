@@ -58,6 +58,10 @@ a.con-button[href^='#rsvp-form'].disabled {
   pointer-events: none;
 }
 
+p.event-display-date-time {
+  font-size: var(--type-body-xl-size);
+}
+
 svg.ecc-icon {
   vertical-align: text-top;
 }
