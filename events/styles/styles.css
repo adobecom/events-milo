@@ -71,7 +71,7 @@ svg.ecc-icon {
 }
 
 svg.ecc-icon:not(:last-child) {
-  margin-right: 4px;
+  margin-right: 12px;
 }
 
 .preserve-format {
