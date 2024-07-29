@@ -259,9 +259,21 @@ function autoUpdateLinks(scope, miloLibs) {
 }
 
 function updatePictureElement(imageUrl, parentPic, altText) {
+  let imgUrlObj;
+  let imgUrl = imageUrl;
+  if (imageUrl.startsWith('https://www.adobe.com')) {
+    try {
+      imgUrlObj = new URL(imageUrl);
+    } catch (e) {
+      window.lana?.log('Error while parsing absolute sharepoint URL:', e);
+    }
+  }
+
+  if (imgUrlObj) imgUrl = imgUrlObj.pathname;
+
   parentPic.querySelectorAll('source').forEach((el) => {
     try {
-      el.srcset = el.srcset.replace(/.*\?/, `${imageUrl}?`);
+      el.srcset = el.srcset.replace(/.*\?/, `${imgUrl}?`);
     } catch (e) {
       window.lana?.log(`failed to convert optimized picture source from ${el} with dynamic data: ${e}`);
     }
@@ -273,7 +285,7 @@ function updatePictureElement(imageUrl, parentPic, altText) {
     };
 
     try {
-      el.src = el.src.replace(/.*\?/, `${imageUrl}?`);
+      el.src = el.src.replace(/.*\?/, `${imgUrl}?`);
       el.alt = altText;
     } catch (e) {
       window.lana?.log(`failed to convert optimized img from ${el} with dynamic data: ${e}`);
@@ -295,7 +307,7 @@ function updateImgTag(child, matchCallback, parentElement) {
     const imgUrl = sharepointUrl || imageUrl;
 
     if (imgUrl && parentPic && imgUrl !== originalAlt) {
-      updatePictureElement(imageUrl, parentPic, altText);
+      updatePictureElement(imgUrl, parentPic, altText);
     } else if (originalAlt.match(META_REG)) {
       parentElement.remove();
     }
