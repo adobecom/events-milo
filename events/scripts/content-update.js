@@ -26,6 +26,15 @@ export async function miloReplaceKey(miloLibs, key) {
   }
 }
 
+function updateAnalyticTag(el, newVal) {
+  if (!el.getAttribute('daa-ll')) return;
+
+  const currentText = el.textContent;
+  const daaLL = el.getAttribute('daa-ll');
+  const newDaaLL = daaLL.replace(currentText, newVal);
+  el.setAttribute('daa-ll', newDaaLL);
+}
+
 function createSVGIcon(iconName) {
   const svgElement = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
   svgElement.setAttribute('width', '20');
@@ -46,9 +55,9 @@ function convertEccIcon(n) {
     'events-calendar',
   ];
 
-  const iconRegex = /@@(.*?)@@/g;
-  return text.replace(iconRegex, (match, iconName) => {
+  return text.replace(ICON_REG, (match, iconName) => {
     if (eccIcons.includes(iconName)) {
+      if (iconName === 'events-calendar') n.classList.add('display-event-date-time');
       return createSVGIcon(iconName).outerHTML;
     }
 
@@ -82,9 +91,12 @@ async function updateRSVPButtonState(rsvpBtn, miloLibs) {
   const rsvpData = BlockMediator.get('rsvpData');
   const checkRed = getIcon('check-circle-red');
   if (rsvpData?.status.registered) {
-    rsvpBtn.el.textContent = await miloReplaceKey(miloLibs, 'registered-cta-text');
+    const registeredText = await miloReplaceKey(miloLibs, 'registered-cta-text');
+    updateAnalyticTag(rsvpBtn.el, registeredText);
+    rsvpBtn.el.textContent = registeredText;
     rsvpBtn.el.prepend(checkRed);
   } else {
+    updateAnalyticTag(rsvpBtn.el, rsvpBtn.originalText);
     rsvpBtn.el.textContent = rsvpBtn.originalText;
     checkRed.remove();
   }
@@ -106,7 +118,9 @@ const signIn = () => {
 
 async function handleRSVPBtnBasedOnProfile(rsvpBtn, miloLibs, profile) {
   if (profile?.noProfile) {
-    rsvpBtn.el.textContent = await miloReplaceKey(miloLibs, 'sign-in-rsvp-cta-text');
+    const signInText = await miloReplaceKey(miloLibs, 'sign-in-rsvp-cta-text');
+    updateAnalyticTag(rsvpBtn.el, signInText);
+    rsvpBtn.el.textContent = signInText;
     rsvpBtn.el.addEventListener('click', (e) => {
       e.preventDefault();
       signIn();
@@ -142,7 +156,9 @@ async function handleRegisterButton(a, miloLibs) {
     originalText: a.textContent,
   };
 
-  a.textContent = await miloReplaceKey(miloLibs, 'rsvp-loading-cta-text');
+  const loadingText = await miloReplaceKey(miloLibs, 'rsvp-loading-cta-text');
+  updateAnalyticTag(rsvpBtn.el, loadingText);
+  a.textContent = loadingText;
   a.classList.add('disabled', 'rsvp-btn');
 
   const profile = BlockMediator.get('imsProfile');
