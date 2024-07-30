@@ -120,6 +120,11 @@
 }
 
 @media screen and (min-width: 900px) {
+  .profile-cards h2 {
+    text-align: center;
+    font-size: var(--type-heading-xl-size);
+  }
+  
   .profile-cards,
   .profile-cards .carousel-wrapper {
     max-width: 1232px;
