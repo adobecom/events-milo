@@ -94,8 +94,6 @@ fieldset {
 
 @media (min-width: 900px) {
   p.display-event-date-time {
-    display: flex;
-    align-items: center;
     font-size: var(--type-body-xl-size);
   }
 }
