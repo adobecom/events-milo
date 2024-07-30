@@ -1,5 +1,5 @@
 import BlockMediator from './deps/block-mediator.min.js';
-import { handlize, getMetadata, getIcon } from './utils.js';
+import { handlize, getMetadata, setMetadata, getIcon } from './utils.js';
 
 export const META_REG = /\[\[(.*?)\]\]/g;
 export const ICON_REG = /@@(.*?)@@/g;
@@ -471,6 +471,36 @@ function decorateProfileCardsZPattern(parent) {
   });
 }
 
+function updateExtraMetaTags(parent) {
+  if (parent !== document) return;
+
+  const title = getMetadata('title');
+  const description = getMetadata('description');
+  let photos;
+
+  try {
+    photos = JSON.parse(getMetadata('photos'));
+  } catch (e) {
+    window.lana?.log('Failed to parse photos metadata for extra metadata tags generation:', e);
+  }
+
+  if (title) {
+    setMetadata('og:title', getMetadata('title'));
+    setMetadata('twitter:title', getMetadata('title'));
+  }
+
+  if (description) {
+    setMetadata('og:description', getMetadata('description'));
+    setMetadata('twitter:description', getMetadata('description'));
+  }
+
+  if (photos) {
+    const heroImage = photos.find((p) => p.imageKind === 'event-hero-image');
+    setMetadata('og:image', heroImage.sharepointUrl || heroImage.imageUrl);
+    setMetadata('twitter:image', heroImage.sharepointUrl || heroImage.imageUrl);
+  }
+}
+
 // data -> dom gills
 export default function autoUpdateContent(parent, miloDeps, extraData) {
   const { getConfig, miloLibs } = miloDeps;
@@ -566,4 +596,5 @@ export default function autoUpdateContent(parent, miloDeps, extraData) {
   autoUpdateLinks(parent, miloLibs);
   injectFragments(parent);
   decorateProfileCardsZPattern(parent);
+  updateMetaTags(parent);
 }

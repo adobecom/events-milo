@@ -27,13 +27,13 @@ export function yieldToMain() {
 }
 
 export function getMetadata(name, doc = document) {
-  const attr = name && name.includes(':') ? 'property' : 'name';
+  const attr = name && name.includes('og:') ? 'property' : 'name';
   const meta = doc.head.querySelector(`meta[${attr}="${name}"]`);
   return meta && meta.content;
 }
 
 export function setMetadata(name, value, doc = document) {
-  const attr = name && name.includes(':') ? 'property' : 'name';
+  const attr = name && name.includes('og:') ? 'property' : 'name';
   const meta = doc.head.querySelector(`meta[${attr}="${name}"]`);
 
   if (name === 'title') document.title = value;
