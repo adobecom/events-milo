@@ -496,8 +496,19 @@ function updateExtraMetaTags(parent) {
 
   if (photos) {
     const heroImage = photos.find((p) => p.imageKind === 'event-hero-image');
-    setMetadata('og:image', heroImage.sharepointUrl || heroImage.imageUrl);
-    setMetadata('twitter:image', heroImage.sharepointUrl || heroImage.imageUrl);
+    const { imageUrl } = heroImage;
+    let { sharepointUrl } = heroImage;
+
+    if (sharepointUrl?.startsWith('https')) {
+      try {
+        sharepointUrl = new URL(sharepointUrl).pathname;
+      } catch (e) {
+        window.lana?.log('Error while parsing SharePoint URL for extra metadata tags generation:', e);
+      }
+    }
+
+    setMetadata('og:image', sharepointUrl || imageUrl);
+    setMetadata('twitter:image', sharepointUrl || imageUrl);
   }
 }
 
