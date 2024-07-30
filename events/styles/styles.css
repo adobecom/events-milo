@@ -61,12 +61,13 @@ a.con-button[href^='#rsvp-form'].disabled {
 p.display-event-date-time {
   display: flex;
   align-items: center;
-  font-size: var(--type-body-xl-size);
+  font-size: var(--type-body-l-size);
 }
 
 svg.ecc-icon {
-  width: 22px;
-  height: 22px;
+  width: 28px;
+  min-width: 28px;
+  height: 28px;
   vertical-align: text-top;
 }
 
@@ -89,4 +90,12 @@ fieldset {
 
 .dark a:any-link {
   color: var(--color-white);
+}
+
+@media (min-width: 900px) {
+  p.display-event-date-time {
+    display: flex;
+    align-items: center;
+    font-size: var(--type-body-xl-size);
+  }
 }
