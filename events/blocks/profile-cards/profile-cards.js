@@ -4,29 +4,19 @@ import { getMetadata } from '../../scripts/utils.js';
 
 const { createTag } = await import(`${LIBS}/utils/utils.js`);
 
-function decorateImage(cardContainer, imgSrc, variant, altText, position = 'left') {
-  if (!imgSrc) return;
+function decorateImage(card, photo) {
+  if (!photo) return;
 
+  const { sharepointUrl, imageUrl, altText } = photo;
   const imgElement = createTag('img', {
-    src: imgSrc,
+    src: sharepointUrl || imageUrl,
     alt: altText,
     class: 'card-image',
   });
 
   const imgContainer = createTag('div', { class: 'card-image-container' });
   imgContainer.append(imgElement);
-
-  if (variant === '1') {
-    if (position === 'left') {
-      cardContainer.classList.add('card-1up-left');
-      cardContainer.insertBefore(imgContainer, cardContainer.firstChild);
-    } else if (position === 'right') {
-      cardContainer.classList.add('card-1up-right');
-      cardContainer.appendChild(imgContainer);
-    }
-  } else {
-    cardContainer.append(imgContainer);
-  }
+  card.append(imgContainer);
 }
 
 export async function getSVGsfromFile(path, selectors) {
@@ -63,18 +53,17 @@ export async function getSVGsfromFile(path, selectors) {
 }
 
 async function decorateSocialIcons(cardContainer, socialLinks) {
-  const SUPPORTED_SOCIAL = ['instagram', 'facebook', 'twitter', 'linkedin', 'youtube', 'pinterest', 'discord', 'behance'];
+  const SUPPORTED_SOCIAL = ['instagram', 'facebook', 'twitter', 'linkedin', 'youtube', 'pinterest', 'discord', 'behance', 'web'];
   const svgPath = `${MILO_CONFIG.codeRoot}/icons/social-icons.svg`;
   const socialList = createTag('ul', { class: 'card-social-icons' });
 
   const svgEls = await getSVGsfromFile(svgPath, SUPPORTED_SOCIAL);
   if (!svgEls || svgEls.length === 0) return;
 
-  socialLinks.forEach((account) => {
-    const { link } = account;
-    const platform = SUPPORTED_SOCIAL.find((p) => link.toLowerCase().includes(p)) || 'social-media';
+  socialLinks.forEach((social) => {
+    const { link } = social;
+    const platform = SUPPORTED_SOCIAL.find((p) => link.toLowerCase().includes(p)) || 'web';
     const svg = svgEls.find((el) => el.name === platform);
-
     if (!svg) return;
 
     const icon = svg.svg;
@@ -90,7 +79,6 @@ async function decorateSocialIcons(cardContainer, socialLinks) {
       rel: 'noopener noreferrer',
       'aria-label': platform,
     });
-
     a.textContent = '';
     a.append(icon);
     li.append(a);
@@ -113,57 +101,9 @@ function decorateContent(cardContainer, data) {
   textContainer.append(title, name, description);
   contentContainer.append(textContainer);
 
-  decorateSocialIcons(contentContainer, data.socialLinks || []);
+  decorateSocialIcons(contentContainer, data.socialLinks || data.socialMedia || []);
 
   cardContainer.append(contentContainer);
-}
-
-function checkFirstProfileCardsBlockType() {
-  const profileCards = document.querySelectorAll('div.profile-cards');
-
-  if (profileCards.length > 0) {
-    const firstProfileCard = profileCards[0];
-    const innerDiv = firstProfileCard.querySelector('div');
-    return innerDiv.textContent.trim();
-  }
-  return null;
-}
-
-function getSpeakerImage(speaker) {
-  if (!speaker.photo) return null;
-
-  return speaker.photo.sharepointUrl || speaker.photo.imageUrl;
-}
-
-function decorate1up(data, cardsWrapper, position = 'left') {
-  const cardContainer = createTag('div', { class: 'card-container card-1up' });
-
-  decorateImage(cardContainer, getSpeakerImage(data), '1', data.altText, position);
-  decorateContent(cardContainer, data);
-
-  cardsWrapper.append(cardContainer);
-}
-
-function decorateDouble(data, cardsWrapper) {
-  data.forEach((speaker) => {
-    const cardContainer = createTag('div', { class: 'card-container card-double' });
-
-    decorateImage(cardContainer, getSpeakerImage(speaker), 'double');
-    decorateContent(cardContainer, speaker);
-
-    cardsWrapper.append(cardContainer);
-  });
-}
-
-async function decorate3up(data, cardsWrapper) {
-  data.forEach((speaker) => {
-    const cardContainer = createTag('div', { class: 'card-container' });
-
-    decorateImage(cardContainer, getSpeakerImage(speaker));
-    decorateContent(cardContainer, speaker);
-
-    cardsWrapper.append(cardContainer);
-  });
 }
 
 function decorateCards(el, data) {
@@ -171,29 +111,27 @@ function decorateCards(el, data) {
   const rows = el.querySelectorAll(':scope > div');
   const configRow = rows[1];
   const speakerType = configRow?.querySelectorAll(':scope > div')?.[1]?.textContent.toLowerCase().trim();
-  const filteredData = data.filter((speaker) => speaker.speakerType?.toLowerCase() === speakerType);
+  const filteredData = data.filter((speaker) => speaker.speakerType.toLowerCase() === speakerType);
 
   if (filteredData.length === 0) {
     el.remove();
     return;
   }
 
-  const firstProfileCardsType = checkFirstProfileCardsBlockType();
-
   configRow.remove();
 
+  filteredData.forEach((speaker) => {
+    const cardContainer = createTag('div', { class: 'card-container' });
+
+    decorateImage(cardContainer, speaker.photo);
+    decorateContent(cardContainer, speaker);
+
+    cardsWrapper.append(cardContainer);
+  });
+
   if (filteredData.length === 1) {
-    const position = (data.length === 2 && firstProfileCardsType.toLowerCase() !== filteredData[0].speakerType.toLowerCase()) ? 'right' : 'left';
-    decorate1up(filteredData[0], cardsWrapper, position);
-    cardsWrapper.classList.add('c1up');
-  } else if (filteredData.length === 2) {
-    decorateDouble(filteredData, cardsWrapper);
-    cardsWrapper.classList.add('cdouble');
-  } else if (filteredData.length === 3) {
-    decorate3up(filteredData, cardsWrapper);
-    cardsWrapper.classList.add('c3up');
-  } else {
-    decorate3up(filteredData, cardsWrapper);
+    el.classList.add('single');
+  } else if (filteredData.length > 3) {
     cardsWrapper.classList.add('carousel-plugin', 'show-3');
     el.classList.add('with-carousel');
 

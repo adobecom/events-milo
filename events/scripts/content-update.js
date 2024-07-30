@@ -275,9 +275,21 @@ function autoUpdateLinks(scope, miloLibs) {
 }
 
 function updatePictureElement(imageUrl, parentPic, altText) {
+  let imgUrlObj;
+  let imgUrl = imageUrl;
+  if (imageUrl.startsWith('https://www.adobe.com/')) {
+    try {
+      imgUrlObj = new URL(imageUrl);
+    } catch (e) {
+      window.lana?.log('Error while parsing absolute sharepoint URL:', e);
+    }
+  }
+
+  if (imgUrlObj) imgUrl = imgUrlObj.pathname;
+
   parentPic.querySelectorAll('source').forEach((el) => {
     try {
-      el.srcset = el.srcset.replace(/.*\?/, `${imageUrl}?`);
+      el.srcset = el.srcset.replace(/.*\?/, `${imgUrl}?`);
     } catch (e) {
       window.lana?.log(`failed to convert optimized picture source from ${el} with dynamic data: ${e}`);
     }
@@ -289,7 +301,7 @@ function updatePictureElement(imageUrl, parentPic, altText) {
     };
 
     try {
-      el.src = el.src.replace(/.*\?/, `${imageUrl}?`);
+      el.src = el.src.replace(/.*\?/, `${imgUrl}?`);
       el.alt = altText;
     } catch (e) {
       window.lana?.log(`failed to convert optimized img from ${el} with dynamic data: ${e}`);
@@ -306,10 +318,12 @@ function updateImgTag(child, matchCallback, parentElement) {
 
   try {
     const photoData = JSON.parse(photoMeta);
-    const { imageUrl, altText } = photoData;
+    const { sharepointUrl, imageUrl, altText } = photoData;
 
-    if (imageUrl && parentPic && imageUrl !== originalAlt) {
-      updatePictureElement(imageUrl, parentPic, altText);
+    const imgUrl = sharepointUrl || imageUrl;
+
+    if (imgUrl && parentPic && imgUrl !== originalAlt) {
+      updatePictureElement(imgUrl, parentPic, altText);
     } else if (originalAlt.match(META_REG)) {
       parentElement.remove();
     }
@@ -416,6 +430,47 @@ export async function getNonProdData(env) {
   return null;
 }
 
+function decorateProfileCardsZPattern(parent) {
+  if (!getMetadata('speakers')) return;
+
+  let speakerData;
+  try {
+    speakerData = JSON.parse(getMetadata('speakers'));
+  } catch (e) {
+    window.lana?.log('Failed to parse speakers metadata:', e);
+    return;
+  }
+
+  if (!speakerData?.length) return;
+
+  const profileBlocks = [];
+  let flippedIndex = -1;
+
+  const allBlocks = parent.querySelectorAll('body > div > div:not(.section-metadata)');
+  allBlocks.forEach((block, index) => {
+    if (!block.classList.contains('profile-cards')) return;
+
+    const blockType = block.querySelector(':scope > div:nth-child(1) > div:nth-child(1)').textContent.trim().toLowerCase();
+    const relatedProfiles = speakerData.filter(
+      (speaker) => speaker.speakerType.toLowerCase() === blockType
+      || speaker.type.toLowerCase() === blockType,
+    );
+
+    if (relatedProfiles.length === 1) {
+      profileBlocks.push({ block, blockIndex: index });
+    }
+  });
+
+  profileBlocks.forEach(({ block, blockIndex }, index) => {
+    if (index <= 0) return;
+
+    if (blockIndex - profileBlocks[index - 1].blockIndex === 1 && flippedIndex !== index - 1) {
+      flippedIndex = index;
+      block.classList.add('reverse');
+    }
+  });
+}
+
 // data -> dom gills
 export default function autoUpdateContent(parent, miloDeps, extraData) {
   const { getConfig, miloLibs } = miloDeps;
@@ -510,4 +565,5 @@ export default function autoUpdateContent(parent, miloDeps, extraData) {
   // handle link replacement. To keep when switching to metadata based rendering
   autoUpdateLinks(parent, miloLibs);
   injectFragments(parent);
+  decorateProfileCardsZPattern(parent);
 }
