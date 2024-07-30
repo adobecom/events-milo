@@ -77,4 +77,8 @@
     min-width: 50%;
     height: 560px;
   }
+
+  .event-map strong {
+    font-size: var(--type-heading-xl-size);
+  }
 }
