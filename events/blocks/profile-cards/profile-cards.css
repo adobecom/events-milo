@@ -129,6 +129,7 @@
   .profile-cards .cards-wrapper {
     gap: 0;
     flex-direction: row;
+    padding: 56px 0;
   }
 
   .profile-cards .cards-wrapper .card-image-container {
