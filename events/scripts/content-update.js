@@ -596,5 +596,5 @@ export default function autoUpdateContent(parent, miloDeps, extraData) {
   autoUpdateLinks(parent, miloLibs);
   injectFragments(parent);
   decorateProfileCardsZPattern(parent);
-  updateMetaTags(parent);
+  updateExtraMetaTags(parent);
 }
