@@ -5,6 +5,15 @@
   padding: 20px;
 }
 
+.event-map h2 {
+  font-size: var(--type-body-l-size);
+  margin: 8px 0;
+}
+
+.event-map strong {
+  font-size: var(--type-heading-l-size);
+}
+
 .event-map > .event-map-wrapper {
   background-color: var(--color-red);
   display: flex;
@@ -17,11 +26,6 @@
 
 .event-map > .event-map-wrapper > div {
   flex: 1 1 0;
-}
-
-.event-map h4 {
-  font-size: var(--type-body-l-size);
-  margin: 8px 0;
 }
 
 .event-map .map-container {
