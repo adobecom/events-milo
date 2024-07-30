@@ -38,7 +38,7 @@ export function setMetadata(name, value, doc = document) {
 
   if (name === 'title') document.title = value;
 
-  if (meta) {
+  if (meta && meta.content !== value) {
     meta.content = value;
   } else {
     const newMeta = doc.createElement('meta');

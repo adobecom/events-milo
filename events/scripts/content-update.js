@@ -485,13 +485,13 @@ function updateExtraMetaTags(parent) {
   }
 
   if (title) {
-    setMetadata('og:title', getMetadata('title'));
-    setMetadata('twitter:title', getMetadata('title'));
+    setMetadata('og:title', title);
+    setMetadata('twitter:title', title);
   }
 
   if (description) {
-    setMetadata('og:description', getMetadata('description'));
-    setMetadata('twitter:description', getMetadata('description'));
+    setMetadata('og:description', description);
+    setMetadata('twitter:description', description);
   }
 
   if (photos) {
