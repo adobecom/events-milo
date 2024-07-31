@@ -2,7 +2,16 @@
   max-width: 1750px;
   margin: auto;
   box-sizing: content-box;
-  padding: 20px;
+  padding: 16px 20px;
+}
+
+.event-map h2 {
+  font-size: var(--type-body-l-size);
+  margin: 8px 0;
+}
+
+.event-map strong {
+  font-size: var(--type-heading-l-size);
 }
 
 .event-map > .event-map-wrapper {
@@ -17,11 +26,6 @@
 
 .event-map > .event-map-wrapper > div {
   flex: 1 1 0;
-}
-
-.event-map h4 {
-  font-size: var(--type-body-l-size);
-  margin: 8px 0;
 }
 
 .event-map .map-container {
@@ -46,6 +50,10 @@
 }
 
 @media (min-width: 900px) {
+  .event-map {
+    padding: 24px 20px;
+  }
+
   .event-map > .event-map-wrapper {
     flex-direction: row;
     justify-content: center;
@@ -67,10 +75,14 @@
 @media (min-width: 1440px) {
   .event-map .text-wrapper {
     padding-left: calc((100% - var(--grid-container-width)) / 2)
-  }
+  } 
 
   .event-map .map-container {
     min-width: 50%;
     height: 560px;
+  }
+
+  .event-map strong {
+    font-size: var(--type-heading-xl-size);
   }
 }

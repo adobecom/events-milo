@@ -83,6 +83,7 @@
 
 .profile-cards .card-name {
   margin-top: -6px;
+  font-size: var(--type-heading-l-size);
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -119,6 +120,11 @@
 }
 
 @media screen and (min-width: 900px) {
+  .profile-cards h2 {
+    text-align: center;
+    font-size: var(--type-heading-xl-size);
+  }
+  
   .profile-cards,
   .profile-cards .carousel-wrapper {
     max-width: 1232px;
@@ -128,6 +134,7 @@
   .profile-cards .cards-wrapper {
     gap: 0;
     flex-direction: row;
+    padding: 56px 0;
   }
 
   .profile-cards .cards-wrapper .card-image-container {
@@ -160,6 +167,10 @@
   .profile-cards.single .cards-wrapper .card-text-container {
     margin-top: 26.5px;
     margin-left: 15px;
+  }
+
+  .profile-cards.single .card-name {
+    font-size: var(--type-heading-xl-size);
   }
 
   .profile-cards.single .cards-wrapper .card-social-icons {

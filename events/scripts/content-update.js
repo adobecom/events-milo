@@ -1,5 +1,5 @@
 import BlockMediator from './deps/block-mediator.min.js';
-import { handlize, getMetadata, getIcon } from './utils.js';
+import { handlize, getMetadata, setMetadata, getIcon } from './utils.js';
 
 export const META_REG = /\[\[(.*?)\]\]/g;
 export const ICON_REG = /@@(.*?)@@/g;
@@ -451,10 +451,11 @@ function decorateProfileCardsZPattern(parent) {
     if (!block.classList.contains('profile-cards')) return;
 
     const blockType = block.querySelector(':scope > div:nth-child(1) > div:nth-child(1)').textContent.trim().toLowerCase();
-    const relatedProfiles = speakerData.filter(
-      (speaker) => speaker.speakerType.toLowerCase() === blockType
-      || speaker.type.toLowerCase() === blockType,
-    );
+    const relatedProfiles = speakerData.filter((speaker) => {
+      const speakerType = speaker.speakerType || speaker.type;
+      if (!speakerType) return false;
+      return speakerType.toLowerCase() === blockType;
+    });
 
     if (relatedProfiles.length === 1) {
       profileBlocks.push({ block, blockIndex: index });
@@ -469,6 +470,47 @@ function decorateProfileCardsZPattern(parent) {
       block.classList.add('reverse');
     }
   });
+}
+
+function updateExtraMetaTags(parent) {
+  if (parent !== document) return;
+
+  const title = getMetadata('title');
+  const description = getMetadata('description');
+  let photos;
+
+  try {
+    photos = JSON.parse(getMetadata('photos'));
+  } catch (e) {
+    window.lana?.log('Failed to parse photos metadata for extra metadata tags generation:', e);
+  }
+
+  if (title) {
+    setMetadata('og:title', title);
+    setMetadata('twitter:title', title);
+  }
+
+  if (description) {
+    setMetadata('og:description', description);
+    setMetadata('twitter:description', description);
+  }
+
+  if (photos) {
+    const heroImage = photos.find((p) => p.imageKind === 'event-hero-image');
+    const { imageUrl } = heroImage;
+    let { sharepointUrl } = heroImage;
+
+    if (sharepointUrl?.startsWith('https')) {
+      try {
+        sharepointUrl = new URL(sharepointUrl).pathname;
+      } catch (e) {
+        window.lana?.log('Error while parsing SharePoint URL for extra metadata tags generation:', e);
+      }
+    }
+
+    setMetadata('og:image', sharepointUrl || imageUrl);
+    setMetadata('twitter:image', sharepointUrl || imageUrl);
+  }
 }
 
 // data -> dom gills
@@ -566,4 +608,5 @@ export default function autoUpdateContent(parent, miloDeps, extraData) {
   autoUpdateLinks(parent, miloLibs);
   injectFragments(parent);
   decorateProfileCardsZPattern(parent);
+  if (window.eccEnv !== 'prod') updateExtraMetaTags(parent);
 }
