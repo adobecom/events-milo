@@ -59,13 +59,13 @@
   gap: 24px;
 }
 
-.events-form h2 {
+.events-form .event-form-hero h2 {
   margin: 0;
   padding: var(--spacing-s) 0;
-  font-size: var(--type-heading-l-lh);
+  font-size: var(--type-heading-l-size);
 }
 
-.events-form h3 {
+.events-form .event-form-hero h3 {
   padding-top: var(--spacing-s);
   font-size: var(--type-heading-m-size);
 }
@@ -299,10 +299,22 @@
   padding: 80px 40px;
 }
 
+.events-form .form-success-msg h2,
 .events-form .form-success-msg h3,
 .events-form .form-success-msg p {
-  padding-top: 0;
   max-width: 630px;
+}
+
+.events-form .form-success-msg h2,
+.events-form .form-success-msg h3 {
+  margin: 0;
+}
+
+.events-form .form-success-msg .post-rsvp-button-wrapper {
+  display: flex;
+  justify-content: center;
+  margin-top: 40px;
+  gap: 1rem;
 }
 
 .events-form *.hidden {
@@ -387,5 +399,9 @@
 
   .events-form .terms-and-conditions-wrapper .checkbox-wrapper label {
     width: auto;
+  }
+
+  .events-form .form-success-msg .post-rsvp-button-wrapper {
+    gap: 2rem;
   }
 }

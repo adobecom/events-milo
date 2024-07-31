@@ -1,5 +1,5 @@
 import BlockMediator from './deps/block-mediator.min.js';
-import { handlize, getMetadata, getIcon } from './utils.js';
+import { handlize, getMetadata, setMetadata, getIcon } from './utils.js';
 
 export const META_REG = /\[\[(.*?)\]\]/g;
 export const ICON_REG = /@@(.*?)@@/g;
@@ -26,6 +26,15 @@ export async function miloReplaceKey(miloLibs, key) {
   }
 }
 
+function updateAnalyticTag(el, newVal) {
+  if (!el.getAttribute('daa-ll')) return;
+
+  const currentText = el.textContent;
+  const daaLL = el.getAttribute('daa-ll');
+  const newDaaLL = daaLL.replace(currentText, newVal);
+  el.setAttribute('daa-ll', newDaaLL);
+}
+
 function createSVGIcon(iconName) {
   const svgElement = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
   svgElement.setAttribute('width', '20');
@@ -46,9 +55,9 @@ function convertEccIcon(n) {
     'events-calendar',
   ];
 
-  const iconRegex = /@@(.*?)@@/g;
-  return text.replace(iconRegex, (match, iconName) => {
+  return text.replace(ICON_REG, (match, iconName) => {
     if (eccIcons.includes(iconName)) {
+      if (iconName === 'events-calendar') n.classList.add('display-event-date-time');
       return createSVGIcon(iconName).outerHTML;
     }
 
@@ -82,9 +91,12 @@ async function updateRSVPButtonState(rsvpBtn, miloLibs) {
   const rsvpData = BlockMediator.get('rsvpData');
   const checkRed = getIcon('check-circle-red');
   if (rsvpData?.status.registered) {
-    rsvpBtn.el.textContent = await miloReplaceKey(miloLibs, 'registered-cta-text');
+    const registeredText = await miloReplaceKey(miloLibs, 'registered-cta-text');
+    updateAnalyticTag(rsvpBtn.el, registeredText);
+    rsvpBtn.el.textContent = registeredText;
     rsvpBtn.el.prepend(checkRed);
   } else {
+    updateAnalyticTag(rsvpBtn.el, rsvpBtn.originalText);
     rsvpBtn.el.textContent = rsvpBtn.originalText;
     checkRed.remove();
   }
@@ -106,7 +118,9 @@ const signIn = () => {
 
 async function handleRSVPBtnBasedOnProfile(rsvpBtn, miloLibs, profile) {
   if (profile?.noProfile) {
-    rsvpBtn.el.textContent = await miloReplaceKey(miloLibs, 'sign-in-rsvp-cta-text');
+    const signInText = await miloReplaceKey(miloLibs, 'sign-in-rsvp-cta-text');
+    updateAnalyticTag(rsvpBtn.el, signInText);
+    rsvpBtn.el.textContent = signInText;
     rsvpBtn.el.addEventListener('click', (e) => {
       e.preventDefault();
       signIn();
@@ -142,7 +156,9 @@ async function handleRegisterButton(a, miloLibs) {
     originalText: a.textContent,
   };
 
-  a.textContent = await miloReplaceKey(miloLibs, 'rsvp-loading-cta-text');
+  const loadingText = await miloReplaceKey(miloLibs, 'rsvp-loading-cta-text');
+  updateAnalyticTag(rsvpBtn.el, loadingText);
+  a.textContent = loadingText;
   a.classList.add('disabled', 'rsvp-btn');
 
   const profile = BlockMediator.get('imsProfile');
@@ -259,9 +275,21 @@ function autoUpdateLinks(scope, miloLibs) {
 }
 
 function updatePictureElement(imageUrl, parentPic, altText) {
+  let imgUrlObj;
+  let imgUrl = imageUrl;
+  if (imageUrl.startsWith('https://www.adobe.com/')) {
+    try {
+      imgUrlObj = new URL(imageUrl);
+    } catch (e) {
+      window.lana?.log('Error while parsing absolute sharepoint URL:', e);
+    }
+  }
+
+  if (imgUrlObj) imgUrl = imgUrlObj.pathname;
+
   parentPic.querySelectorAll('source').forEach((el) => {
     try {
-      el.srcset = el.srcset.replace(/.*\?/, `${imageUrl}?`);
+      el.srcset = el.srcset.replace(/.*\?/, `${imgUrl}?`);
     } catch (e) {
       window.lana?.log(`failed to convert optimized picture source from ${el} with dynamic data: ${e}`);
     }
@@ -273,7 +301,7 @@ function updatePictureElement(imageUrl, parentPic, altText) {
     };
 
     try {
-      el.src = el.src.replace(/.*\?/, `${imageUrl}?`);
+      el.src = el.src.replace(/.*\?/, `${imgUrl}?`);
       el.alt = altText;
     } catch (e) {
       window.lana?.log(`failed to convert optimized img from ${el} with dynamic data: ${e}`);
@@ -290,10 +318,12 @@ function updateImgTag(child, matchCallback, parentElement) {
 
   try {
     const photoData = JSON.parse(photoMeta);
-    const { imageUrl, altText } = photoData;
+    const { sharepointUrl, imageUrl, altText } = photoData;
 
-    if (imageUrl && parentPic && imageUrl !== originalAlt) {
-      updatePictureElement(imageUrl, parentPic, altText);
+    const imgUrl = sharepointUrl || imageUrl;
+
+    if (imgUrl && parentPic && imgUrl !== originalAlt) {
+      updatePictureElement(imgUrl, parentPic, altText);
     } else if (originalAlt.match(META_REG)) {
       parentElement.remove();
     }
@@ -400,6 +430,89 @@ export async function getNonProdData(env) {
   return null;
 }
 
+function decorateProfileCardsZPattern(parent) {
+  if (!getMetadata('speakers')) return;
+
+  let speakerData;
+  try {
+    speakerData = JSON.parse(getMetadata('speakers'));
+  } catch (e) {
+    window.lana?.log('Failed to parse speakers metadata:', e);
+    return;
+  }
+
+  if (!speakerData?.length) return;
+
+  const profileBlocks = [];
+  let flippedIndex = -1;
+
+  const allBlocks = parent.querySelectorAll('body > div > div:not(.section-metadata)');
+  allBlocks.forEach((block, index) => {
+    if (!block.classList.contains('profile-cards')) return;
+
+    const blockType = block.querySelector(':scope > div:nth-child(1) > div:nth-child(1)').textContent.trim().toLowerCase();
+    const relatedProfiles = speakerData.filter((speaker) => {
+      const speakerType = speaker.speakerType || speaker.type;
+      if (!speakerType) return false;
+      return speakerType.toLowerCase() === blockType;
+    });
+
+    if (relatedProfiles.length === 1) {
+      profileBlocks.push({ block, blockIndex: index });
+    }
+  });
+
+  profileBlocks.forEach(({ block, blockIndex }, index) => {
+    if (index <= 0) return;
+
+    if (blockIndex - profileBlocks[index - 1].blockIndex === 1 && flippedIndex !== index - 1) {
+      flippedIndex = index;
+      block.classList.add('reverse');
+    }
+  });
+}
+
+function updateExtraMetaTags(parent) {
+  if (parent !== document) return;
+
+  const title = getMetadata('title');
+  const description = getMetadata('description');
+  let photos;
+
+  try {
+    photos = JSON.parse(getMetadata('photos'));
+  } catch (e) {
+    window.lana?.log('Failed to parse photos metadata for extra metadata tags generation:', e);
+  }
+
+  if (title) {
+    setMetadata('og:title', title);
+    setMetadata('twitter:title', title);
+  }
+
+  if (description) {
+    setMetadata('og:description', description);
+    setMetadata('twitter:description', description);
+  }
+
+  if (photos) {
+    const heroImage = photos.find((p) => p.imageKind === 'event-hero-image');
+    const { imageUrl } = heroImage;
+    let { sharepointUrl } = heroImage;
+
+    if (sharepointUrl?.startsWith('https')) {
+      try {
+        sharepointUrl = new URL(sharepointUrl).pathname;
+      } catch (e) {
+        window.lana?.log('Error while parsing SharePoint URL for extra metadata tags generation:', e);
+      }
+    }
+
+    setMetadata('og:image', sharepointUrl || imageUrl);
+    setMetadata('twitter:image', sharepointUrl || imageUrl);
+  }
+}
+
 // data -> dom gills
 export default function autoUpdateContent(parent, miloDeps, extraData) {
   const { getConfig, miloLibs } = miloDeps;
@@ -494,4 +607,6 @@ export default function autoUpdateContent(parent, miloDeps, extraData) {
   // handle link replacement. To keep when switching to metadata based rendering
   autoUpdateLinks(parent, miloLibs);
   injectFragments(parent);
+  decorateProfileCardsZPattern(parent);
+  if (window.eccEnv !== 'prod') updateExtraMetaTags(parent);
 }

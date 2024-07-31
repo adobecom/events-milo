@@ -313,9 +313,10 @@ function decorateSuccessMsg(form, bp) {
 
   ctas.forEach((cta, i) => {
     if (i === 0) {
-      cta.classList.add('con-button', 'outline');
+      cta.parentElement.classList.add('post-rsvp-button-wrapper');
+      cta.classList.add('con-button', 'outline', 'button-l');
     } else if (i === 1) {
-      cta.classList.add('con-button', 'black');
+      cta.classList.add('con-button', 'black', 'button-l');
     }
 
     cta.addEventListener('click', async (e) => {
