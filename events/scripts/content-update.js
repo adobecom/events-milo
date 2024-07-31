@@ -496,20 +496,22 @@ function updateExtraMetaTags(parent) {
   }
 
   if (photos) {
-    const heroImage = photos.find((p) => p.imageKind === 'event-hero-image');
-    const { imageUrl } = heroImage;
-    let { sharepointUrl } = heroImage;
+    const cardImage = photos.find((p) => p.imageKind === 'event-card-image');
+    if (cardImage) {
+      const { imageUrl } = cardImage;
+      let { sharepointUrl } = cardImage;
 
-    if (sharepointUrl?.startsWith('https')) {
-      try {
-        sharepointUrl = new URL(sharepointUrl).pathname;
-      } catch (e) {
-        window.lana?.log('Error while parsing SharePoint URL for extra metadata tags generation:', e);
+      if (sharepointUrl?.startsWith('https')) {
+        try {
+          sharepointUrl = new URL(sharepointUrl).pathname;
+        } catch (e) {
+          window.lana?.log('Error while parsing SharePoint URL for extra metadata tags generation:', e);
+        }
       }
-    }
 
-    setMetadata('og:image', sharepointUrl || imageUrl);
-    setMetadata('twitter:image', sharepointUrl || imageUrl);
+      setMetadata('og:image', sharepointUrl || imageUrl);
+      setMetadata('twitter:image', sharepointUrl || imageUrl);
+    }
   }
 }
 
