@@ -496,10 +496,10 @@ function updateExtraMetaTags(parent) {
   }
 
   if (photos) {
-    const cardImage = photos.find((p) => p.imageKind === 'event-card-image');
-    if (cardImage) {
-      const { imageUrl } = cardImage;
-      let { sharepointUrl } = cardImage;
+    const cardImg = photos.find((p) => p.imageKind === 'event-card-image');
+    if (cardImg) {
+      const { imageUrl } = cardImg;
+      let { sharepointUrl } = cardImg;
 
       if (sharepointUrl?.startsWith('https')) {
         try {
