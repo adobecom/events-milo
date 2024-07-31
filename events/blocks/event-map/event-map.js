@@ -39,7 +39,7 @@ function decorateMap(el) {
 
   if (spUrlObj) {
     const spUrl = spUrlObj.pathname;
-    const img = createTag('img', { src: `${spUrl}` });
+    const img = createTag('img', { src: `${spUrl}`, alt: venueMapImageObj.altText || 'Venue Map Image' });
     mapContainer.append(img);
     wrapper.append(mapContainer);
 
