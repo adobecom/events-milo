@@ -451,10 +451,11 @@ function decorateProfileCardsZPattern(parent) {
     if (!block.classList.contains('profile-cards')) return;
 
     const blockType = block.querySelector(':scope > div:nth-child(1) > div:nth-child(1)').textContent.trim().toLowerCase();
-    const relatedProfiles = speakerData.filter(
-      (speaker) => speaker.speakerType.toLowerCase() === blockType
-      || speaker.type.toLowerCase() === blockType,
-    );
+    const relatedProfiles = speakerData.filter((speaker) => {
+      const speakerType = speaker.speakerType || speaker.type;
+      if (!speakerType) return false;
+      return speakerType.toLowerCase() === blockType;
+    });
 
     if (relatedProfiles.length === 1) {
       profileBlocks.push({ block, blockIndex: index });
