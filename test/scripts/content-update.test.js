@@ -4,7 +4,7 @@ import { setMetadata } from '../../events/scripts/utils.js';
 import { LIBS } from '../../events/scripts/scripts.js';
 import BlockMediator from '../../events/scripts/deps/block-mediator.min.js';
 
-const { default: autoUpdateContent, handleRSVPBtnBasedOnProfile } = await import('../../events/scripts/content-update.js');
+const { default: autoUpdateContent } = await import('../../events/scripts/content-update.js');
 const { getConfig } = await import(`${LIBS}/utils/utils.js`);
 const body = await readFile({ path: './mocks/full-event.html' });
 const defaultDoc = await readFile({ path: './mocks/event-default-doc.html' });
