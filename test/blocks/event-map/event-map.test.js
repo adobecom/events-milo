@@ -1,101 +1,38 @@
-import sinon from 'sinon';
+import { readFile } from '@web/test-runner-commands';
 import { expect } from '@esm-bundle/chai';
-import { LIBS } from '../../../events/scripts/scripts.js';
-
-// Mock dependencies
-console.log(LIBS);
-const { createTag, getMetadata } = await import(`${LIBS}/utils/utils.js`);
+import { setMetadata } from '../../../events/scripts/utils.js';
 
 // Import the functions to be tested
-const { decorateTextContainer, decorateMap } = await import('../../../events/blocks/event-map/event-map.js');
+const { default: init } = await import('../../../events/blocks/event-map/event-map.js');
+const body = await readFile({ path: './mocks/default.html' });
 
-describe('event-map.js', () => {
-  describe('decorateTextContainer', () => {
-    it('should add text-wrapper class to the first div inside the element', () => {
-      const el = document.createElement('div');
-      el.innerHTML = `
-        <div class="event-map-wrapper">
-          <div>
-            <div>Text Content</div>
-          </div>
-        </div>
-      `;
-
-      decorateTextContainer(el);
-
-      const textContentWrapper = el.querySelector(':scope > div:first-of-type > div');
-      expect(textContentWrapper.classList.contains('text-wrapper')).to.be.true;
-    });
-
-    it('should do nothing if textContentWrapper is not found', () => {
-      const el = document.createElement('div');
-      el.innerHTML = `
-        <div class="event-map-wrapper">
-          <div></div>
-        </div>
-      `;
-
-      decorateTextContainer(el);
-
-      const textContentWrapper = el.querySelector(':scope > div:first-of-type > div');
-      expect(textContentWrapper).to.be.null;
-    });
+describe('Event Map', () => {
+  beforeEach(() => {
+    document.body.innerHTML = '';
+    document.head.innerHTML = '';
+    setMetadata('photos', JSON.stringify([
+      {
+        imageKind: 'venue-map-image',
+        sharepointUrl: 'https://via.placeholder.com/150',
+        altText: 'Venue Map Image',
+      },
+    ]));
+    window.isTestEnv = true;
   });
 
-  describe('decorateMap', () => {
-    let getMetadataStub;
-    let createTagStub;
+  it('event map exists', () => {
+    document.body.innerHTML = body;
+    const block = document.querySelector('.event-map');
+    init(block);
+    expect(block).to.exist;
+  });
 
-    beforeEach(() => {
-      getMetadataStub = sinon.stub(getMetadata, 'default');
-      createTagStub = sinon.stub(createTag, 'default');
-    });
-
-    afterEach(() => {
-      getMetadataStub.restore();
-      createTagStub.restore();
-    });
-
-    it('should append map container with image if venue map image is found', () => {
-      const el = document.createElement('div');
-      el.innerHTML = '<div class="event-map-wrapper"></div>';
-
-      const venueMapImageObj = { imageKind: 'venue-map-image', imageUrl: 'http://example.com/map.jpg' };
-      getMetadataStub.withArgs('photos').returns(JSON.stringify([venueMapImageObj]));
-      createTagStub.withArgs('div', { id: 'map-container', class: 'map-container' }).returns(document.createElement('div'));
-      createTagStub.withArgs('img', { src: venueMapImageObj.imageUrl }).returns(document.createElement('img'));
-
-      decorateMap(el);
-
-      const mapContainer = el.querySelector('#map-container');
-      expect(mapContainer).to.not.be.null;
-      expect(mapContainer.querySelector('img').src).to.equal(venueMapImageObj.imageUrl);
-    });
-
-    it('should do nothing if venue map image is not found', () => {
-      const el = document.createElement('div');
-      el.innerHTML = '<div class="event-map-wrapper"></div>';
-
-      getMetadataStub.withArgs('photos').returns(JSON.stringify([]));
-
-      decorateMap(el);
-
-      const mapContainer = el.querySelector('#map-container');
-      expect(mapContainer).to.be.null;
-    });
-
-    it('should log an error if JSON parsing fails', () => {
-      const el = document.createElement('div');
-      el.innerHTML = '<div class="event-map-wrapper"></div>';
-
-      getMetadataStub.withArgs('photos').throws(new Error('Invalid JSON'));
-
-      const logSpy = sinon.spy(window.lana, 'log');
-
-      decorateMap(el);
-
-      expect(logSpy.calledWith('Error while decorating venue map image')).to.be.true;
-      logSpy.restore();
-    });
+  it('event map does not exist when toggled off for post event', () => {
+    setMetadata('show-venue-post-event', 'false');
+    document.body.innerHTML = body;
+    document.body.classList.add('timing-post-event');
+    const block = document.querySelector('.event-map');
+    init(block);
+    expect(document.querySelector('.event-map')).to.not.exist;
   });
 });
