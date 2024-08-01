@@ -29,22 +29,24 @@ export function decorateMap(el) {
 
   let spUrlObj;
 
-  try {
-    spUrlObj = new URL(venueMapImageObj.sharepointUrl);
-  } catch (e) {
-    window.lana?.log('Error while parsing SharePoint URL:', e);
+  if (venueMapImageObj.sharepointUrl?.startsWith('https')) {
+    try {
+      spUrlObj = new URL(venueMapImageObj.sharepointUrl);
+    } catch (e) {
+      window.lana?.log('Error while parsing SharePoint URL:', e);
+    }
   }
 
   if (spUrlObj) {
     const spUrl = spUrlObj.pathname;
-    const img = createTag('img', { src: `${spUrl}` });
+    const img = createTag('img', { src: `${spUrl}`, alt: venueMapImageObj.altText || 'Venue Map Image' });
     mapContainer.append(img);
     wrapper.append(mapContainer);
 
     return;
   }
 
-  const img = createTag('img', { src: `${venueMapImageObj.sharepointUrl || venueMapImageObj.imageUrl}` });
+  const img = createTag('img', { src: `${venueMapImageObj.sharepointUrl || venueMapImageObj.imageUrl}`, alt: venueMapImageObj.altText || 'Venue Map Image' });
   mapContainer.append(img);
   wrapper.append(mapContainer);
 }
