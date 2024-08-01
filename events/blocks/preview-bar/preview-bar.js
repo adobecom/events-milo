@@ -1,5 +1,5 @@
 import { LIBS } from '../../scripts/scripts.js';
-import { getIcon } from '../../utils/utils.js';
+import { getIcon } from '../../scripts/utils.js';
 
 const { createTag, getMetadata } = await import(`${LIBS}/utils/utils.js`);
 
@@ -14,7 +14,7 @@ function removeURLParameter(url, parameter) {
 }
 
 function getEventStatus() {
-  const publishedMeta = getMetadata('status')?.toLowerCase() === 'live';
+  const publishedMeta = getMetadata('published')?.toLowerCase() !== 'true' || getMetadata('status')?.toLowerCase() === 'live';
   const dot = publishedMeta ? getIcon('dot-purple') : getIcon('dot-green');
   const text = publishedMeta ? 'Published' : 'Draft';
 

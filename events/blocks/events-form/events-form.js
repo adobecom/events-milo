@@ -1,8 +1,9 @@
 import { LIBS } from '../../scripts/scripts.js';
-import { getMetadata } from '../../utils/utils.js';
-import HtmlSanitizer from '../../deps/html-sanitizer.js';
-import { createAttendee, deleteAttendee, updateAttendee } from '../../utils/esp-controller.js';
-import BlockMediator from '../../deps/block-mediator.min.js';
+import { getMetadata } from '../../scripts/utils.js';
+import HtmlSanitizer from '../../scripts/deps/html-sanitizer.js';
+import { createAttendee, deleteAttendee, updateAttendee } from '../../scripts/esp-controller.js';
+import BlockMediator from '../../scripts/deps/block-mediator.min.js';
+import { miloReplaceKey } from '../../scripts/content-update.js';
 
 const { createTag } = await import(`${LIBS}/utils/utils.js`);
 const { closeModal } = await import(`${LIBS}/blocks/modal/modal.js`);
@@ -29,7 +30,7 @@ function snakeToCamel(str) {
 function createSelect({ field, placeholder, options, defval, required }) {
   const select = createTag('select', { id: field });
   if (placeholder) select.append(createTag('option', { selected: '', disabled: '' }, placeholder));
-  options.split(',').forEach((o) => {
+  options.split(';').forEach((o) => {
     const text = o.trim();
     const option = createTag('option', { value: text }, text);
     select.append(option);
@@ -80,10 +81,10 @@ async function submitForm(form) {
   });
 
   let resp = null;
-  if (!rsvpData || !rsvpData.attendee?.attendeeId) {
+  if (!rsvpData || !rsvpData.status.registered) {
     resp = await createAttendee(getMetadata('event-id'), payload);
   } else {
-    resp = await updateAttendee(getMetadata('event-id'), { ...payload, attendeeId: rsvpData.attendee.attendeeId });
+    resp = await updateAttendee(getMetadata('event-id'), { ...rsvpData?.attendee, ...payload });
   }
 
   return resp;
@@ -99,9 +100,15 @@ function clearForm(form) {
   });
 }
 
-async function buildErrorMsg(form) {
-  const error = createTag('p', { class: 'error' }, 'An error occurred. Please try again later.');
-  form.append(error);
+async function buildErrorMsg(parent) {
+  const existingErrors = parent.querySelectorAll('.error');
+  if (existingErrors.length) {
+    existingErrors.forEach((err) => err.remove());
+  }
+
+  const errorMsg = await miloReplaceKey(LIBS, 'rsvp-error-msg');
+  const error = createTag('p', { class: 'error' }, errorMsg);
+  parent.append(error);
   setTimeout(() => {
     error.remove();
   }, 3000);
@@ -125,17 +132,12 @@ function createButton({ type, label }, bp) {
         const respJson = await submitForm(bp.form);
         button.removeAttribute('disabled');
         button.classList.remove('submitting');
-        if (!respJson || respJson.message || respJson.errors) {
+        if (!respJson) {
           buildErrorMsg(bp.form);
-          window.lana?.log('Failed to submit form:', respJson);
           return;
         }
 
-        BlockMediator.set('rsvpData', {
-          resp: respJson,
-          action: 'create',
-        });
-
+        BlockMediator.set('rsvpData', respJson);
         showSuccessMsg(bp);
       }
     });
@@ -306,14 +308,15 @@ function addTerms(form, terms) {
   submit.disabled = none(Array.from(checkboxes), (c) => c.checked);
 }
 
-function decorateSuccessMsg(form, bp, rsvpData) {
+function decorateSuccessMsg(form, bp) {
   const ctas = bp.successMsg.querySelectorAll('a');
 
   ctas.forEach((cta, i) => {
     if (i === 0) {
-      cta.classList.add('con-button', 'outline');
+      cta.parentElement.classList.add('post-rsvp-button-wrapper');
+      cta.classList.add('con-button', 'outline', 'button-l');
     } else if (i === 1) {
-      cta.classList.add('con-button', 'black');
+      cta.classList.add('con-button', 'black', 'button-l');
     }
 
     cta.addEventListener('click', async (e) => {
@@ -322,10 +325,15 @@ function decorateSuccessMsg(form, bp, rsvpData) {
       cta.classList.add('loading');
 
       if (i === 0) {
-        const resp = await deleteAttendee(rsvpData.eventId);
-        rsvpData.resp = resp;
-        rsvpData.action = 'delete';
-        BlockMediator.set('rsvpData', rsvpData);
+        const resp = await deleteAttendee(getMetadata('event-id'));
+        cta.classList.remove('loading');
+
+        if (!resp) {
+          buildErrorMsg(bp.successMsg);
+          return;
+        }
+
+        BlockMediator.set('rsvpData', resp);
       }
 
       const modal = form.closest('.dialog-modal');
@@ -345,8 +353,6 @@ async function createForm(bp, formData) {
   } catch (error) {
     window.lana?.log('Failed to parse partners metadata:', error);
   }
-
-  const rsvpData = { eventId: getMetadata('event-id') || '', attendeeId: '' };
 
   const { pathname } = new URL(form.href);
   let json = formData;
@@ -419,7 +425,7 @@ async function createForm(bp, formData) {
   });
 
   addTerms(formEl, terms);
-  decorateSuccessMsg(formEl, bp, rsvpData);
+  decorateSuccessMsg(formEl, bp);
 
   formEl.addEventListener('input', () => applyRules(formEl, rules));
   applyRules(formEl, rules);
@@ -466,7 +472,7 @@ async function onProfile(bp, formData) {
     eventHero.classList.remove('loading');
     decorateHero(bp.eventHero);
     buildEventform(bp, formData).then(() => {
-      if (rsvpData?.attendee?.attendeeId || (rsvpData?.action === 'create' && rsvpData?.resp?.status === 200)) {
+      if (rsvpData?.status.registered) {
         showSuccessMsg(bp);
       } else {
         personalizeForm(block, profile);
@@ -481,7 +487,7 @@ async function onProfile(bp, formData) {
         eventHero.classList.remove('loading');
         decorateHero(bp.eventHero);
         buildEventform(bp, formData).then(() => {
-          if (rsvpData?.attendee?.attendeeId || (rsvpData?.action === 'create' && rsvpData?.resp?.status === 200)) {
+          if (rsvpData?.status.registered) {
             showSuccessMsg(bp);
           } else {
             personalizeForm(block, newValue);

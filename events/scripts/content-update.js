@@ -1,13 +1,14 @@
-import BlockMediator from '../deps/block-mediator.min.js';
-import { handlize, getMetadata } from './utils.js';
+import BlockMediator from './deps/block-mediator.min.js';
+import { handlize, getMetadata, setMetadata, getIcon } from './utils.js';
 
-export const REG = /\[\[(.*?)\]\]/g;
+export const META_REG = /\[\[(.*?)\]\]/g;
+export const ICON_REG = /@@(.*?)@@/g;
 
 const preserveFormatKeys = [
   'description',
 ];
 
-async function miloReplaceKey(miloLibs, key) {
+export async function miloReplaceKey(miloLibs, key) {
   try {
     const [utils, placeholders] = await Promise.all([
       import(`${miloLibs}/utils/utils.js`),
@@ -23,6 +24,45 @@ async function miloReplaceKey(miloLibs, key) {
     window.lana?.log('Error trying to replace placeholder:', error);
     return 'RSVP';
   }
+}
+
+function updateAnalyticTag(el, newVal) {
+  if (!el.getAttribute('daa-ll')) return;
+
+  const currentText = el.textContent;
+  const daaLL = el.getAttribute('daa-ll');
+  const newDaaLL = daaLL.replace(currentText, newVal);
+  el.setAttribute('daa-ll', newDaaLL);
+}
+
+function createSVGIcon(iconName) {
+  const svgElement = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  svgElement.setAttribute('width', '20');
+  svgElement.setAttribute('height', '20');
+  svgElement.setAttribute('class', 'ecc-icon');
+
+  const useElement = document.createElementNS('http://www.w3.org/2000/svg', 'use');
+  useElement.setAttributeNS('http://www.w3.org/1999/xlink', 'href', `/events/icons/events-icons.svg#${iconName}`);
+
+  svgElement.appendChild(useElement);
+
+  return svgElement;
+}
+
+function convertEccIcon(n) {
+  const text = n.innerHTML;
+  const eccIcons = [
+    'events-calendar',
+  ];
+
+  return text.replace(ICON_REG, (match, iconName) => {
+    if (eccIcons.includes(iconName)) {
+      if (iconName === 'events-calendar') n.classList.add('display-event-date-time');
+      return createSVGIcon(iconName).outerHTML;
+    }
+
+    return '';
+  });
 }
 
 function createTag(tag, attributes, html, options = {}) {
@@ -49,10 +89,16 @@ function createTag(tag, attributes, html, options = {}) {
 
 async function updateRSVPButtonState(rsvpBtn, miloLibs) {
   const rsvpData = BlockMediator.get('rsvpData');
-  if (rsvpData?.attendee?.attendeeId || (rsvpData?.action === 'create' && rsvpData?.resp?.status === 200)) {
-    rsvpBtn.el.textContent = await miloReplaceKey(miloLibs, 'registered-cta-text');
+  const checkRed = getIcon('check-circle-red');
+  if (rsvpData?.status.registered) {
+    const registeredText = await miloReplaceKey(miloLibs, 'registered-cta-text');
+    updateAnalyticTag(rsvpBtn.el, registeredText);
+    rsvpBtn.el.textContent = registeredText;
+    rsvpBtn.el.prepend(checkRed);
   } else {
+    updateAnalyticTag(rsvpBtn.el, rsvpBtn.originalText);
     rsvpBtn.el.textContent = rsvpBtn.originalText;
+    checkRed.remove();
   }
 
   // FIXME: no waitlisted state yet.
@@ -72,7 +118,9 @@ const signIn = () => {
 
 async function handleRSVPBtnBasedOnProfile(rsvpBtn, miloLibs, profile) {
   if (profile?.noProfile) {
-    rsvpBtn.el.textContent = await miloReplaceKey(miloLibs, 'sign-in-rsvp-cta-text');
+    const signInText = await miloReplaceKey(miloLibs, 'sign-in-rsvp-cta-text');
+    updateAnalyticTag(rsvpBtn.el, signInText);
+    rsvpBtn.el.textContent = signInText;
     rsvpBtn.el.addEventListener('click', (e) => {
       e.preventDefault();
       signIn();
@@ -86,13 +134,14 @@ async function handleRSVPBtnBasedOnProfile(rsvpBtn, miloLibs, profile) {
   }
 }
 
-export async function validatePageAndRedirect(env) {
-  const pageStatus = getMetadata('status');
-  if (env === 'prod' && (!pageStatus || pageStatus.toLowerCase() === 'draft')) {
-    window.location.replace('/404');
-  }
+export function validatePageAndRedirect() {
+  const env = window.eccEnv;
+  const pagePublished = getMetadata('published') === 'true' || getMetadata('status') === 'live';
+  const invalidStagePage = env === 'stage' && window.location.hostname === 'www.stage.adobe.com' && !getMetadata('event-id');
 
-  if (env === 'stage' && window.location.hostname === 'www.stage.adobe.com') {
+  const isUnpublishedOnProd = env === 'prod' && !pagePublished;
+
+  if (isUnpublishedOnProd || invalidStagePage) {
     window.location.replace('/404');
   }
 }
@@ -107,8 +156,10 @@ async function handleRegisterButton(a, miloLibs) {
     originalText: a.textContent,
   };
 
-  a.textContent = await miloReplaceKey(miloLibs, 'rsvp-loading-cta-text');
-  a.classList.add('disabled');
+  const loadingText = await miloReplaceKey(miloLibs, 'rsvp-loading-cta-text');
+  updateAnalyticTag(rsvpBtn.el, loadingText);
+  a.textContent = loadingText;
+  a.classList.add('disabled', 'rsvp-btn');
 
   const profile = BlockMediator.get('imsProfile');
   if (profile) {
@@ -188,9 +239,7 @@ function autoUpdateLinks(scope, miloLibs) {
 
       if (/#rsvp-form.*/.test(a.href)) {
         handleRegisterButton(a, miloLibs);
-      }
-
-      if (a.href.endsWith('#event-template')) {
+      } else if (a.href.endsWith('#event-template')) {
         if (getMetadata('template-id')) {
           const params = new URLSearchParams(document.location.search);
           const testTiming = params.get('timing');
@@ -205,9 +254,19 @@ function autoUpdateLinks(scope, miloLibs) {
           }
 
           a.href = `${getMetadata('template-id')}${timeSuffix}`;
+          const timingClass = `timing${timeSuffix}-event`;
+          document.body.classList.add(timingClass);
+        }
+      } else if (a.href.endsWith('#host-email')) {
+        if (getMetadata('host-email')) {
+          a.href = `mailto:${getMetadata('host-email')}`;
+        } else {
+          a.remove();
         }
       } else if (getMetadata(url.hash.replace('#', ''))) {
         a.href = getMetadata(url.hash.replace('#', ''));
+      } else {
+        a.remove();
       }
     } catch (e) {
       window.lana?.log(`Error while attempting to replace link ${a.href}: ${e}`);
@@ -216,9 +275,21 @@ function autoUpdateLinks(scope, miloLibs) {
 }
 
 function updatePictureElement(imageUrl, parentPic, altText) {
+  let imgUrlObj;
+  let imgUrl = imageUrl;
+  if (imageUrl.startsWith('https://www.adobe.com/')) {
+    try {
+      imgUrlObj = new URL(imageUrl);
+    } catch (e) {
+      window.lana?.log('Error while parsing absolute sharepoint URL:', e);
+    }
+  }
+
+  if (imgUrlObj) imgUrl = imgUrlObj.pathname;
+
   parentPic.querySelectorAll('source').forEach((el) => {
     try {
-      el.srcset = el.srcset.replace(/.*\?/, `${imageUrl}?`);
+      el.srcset = el.srcset.replace(/.*\?/, `${imgUrl}?`);
     } catch (e) {
       window.lana?.log(`failed to convert optimized picture source from ${el} with dynamic data: ${e}`);
     }
@@ -230,7 +301,7 @@ function updatePictureElement(imageUrl, parentPic, altText) {
     };
 
     try {
-      el.src = el.src.replace(/.*\?/, `${imageUrl}?`);
+      el.src = el.src.replace(/.*\?/, `${imgUrl}?`);
       el.alt = altText;
     } catch (e) {
       window.lana?.log(`failed to convert optimized img from ${el} with dynamic data: ${e}`);
@@ -243,15 +314,17 @@ function updatePictureElement(imageUrl, parentPic, altText) {
 function updateImgTag(child, matchCallback, parentElement) {
   const parentPic = child.closest('picture');
   const originalAlt = child.alt;
-  const photoMeta = originalAlt.replace(REG, (_match, p1) => matchCallback(_match, p1, child));
+  const photoMeta = originalAlt.replace(META_REG, (_match, p1) => matchCallback(_match, p1, child));
 
   try {
     const photoData = JSON.parse(photoMeta);
-    const { imageUrl, altText } = photoData;
+    const { sharepointUrl, imageUrl, altText } = photoData;
 
-    if (imageUrl && parentPic && imageUrl !== originalAlt) {
-      updatePictureElement(imageUrl, parentPic, altText);
-    } else if (originalAlt.match(REG)) {
+    const imgUrl = sharepointUrl || imageUrl;
+
+    if (imgUrl && parentPic && imgUrl !== originalAlt) {
+      updatePictureElement(imgUrl, parentPic, altText);
+    } else if (originalAlt.match(META_REG)) {
       parentElement.remove();
     }
   } catch (e) {
@@ -261,7 +334,11 @@ function updateImgTag(child, matchCallback, parentElement) {
 
 function updateTextNode(child, matchCallback) {
   const originalText = child.nodeValue;
-  const replacedText = originalText.replace(REG, (_match, p1) => matchCallback(_match, p1, child));
+  const replacedText = originalText.replace(
+    META_REG,
+    (_match, p1) => matchCallback(_match, p1, child),
+  );
+
   if (replacedText !== originalText) {
     const lines = replacedText.split('\\n');
     lines.forEach((line, index) => {
@@ -272,6 +349,18 @@ function updateTextNode(child, matchCallback) {
       }
     });
     child.remove();
+  }
+}
+
+function updateTextContent(child, matchCallback) {
+  const originalText = child.textContent;
+  const replacedText = originalText.replace(
+    META_REG,
+    (_match, p1) => matchCallback(_match, p1, child),
+  );
+
+  if (replacedText !== originalText) {
+    child.textContent = replacedText;
   }
 }
 
@@ -299,8 +388,8 @@ function injectFragments(parent) {
         if (bladesToShow.length >= 4) {
           createTag(
             'a',
-            { href: '/fragments/product-blades/explore-creative-cloud' },
-            '/fragments/product-blades/explore-creative-cloud',
+            { href: '/events/fragments/product-blades/explore-creative-cloud' },
+            '/events/fragments/product-blades/explore-creative-cloud',
             { parent: bladesDiv },
           );
         } else {
@@ -314,7 +403,7 @@ function injectFragments(parent) {
           });
 
           bladesToShow.forEach((p) => {
-            const fragmentLink = `/fragments/product-blades/${p}`;
+            const fragmentLink = `/events/fragments/product-blades/${p}`;
             createTag('a', { href: fragmentLink }, fragmentLink, { parent: bladesDiv });
           });
         }
@@ -327,7 +416,9 @@ export async function getNonProdData(env) {
   const resp = await fetch(`/events/default/${env}/metadata.json`);
   if (resp.ok) {
     const json = await resp.json();
-    const pageData = json.data.find((d) => d.url === window.location.pathname);
+    let { pathname } = window.location;
+    if (pathname.endsWith('.html')) pathname = pathname.slice(0, -5);
+    const pageData = json.data.find((d) => d.url === pathname);
 
     if (pageData) return pageData;
 
@@ -339,8 +430,94 @@ export async function getNonProdData(env) {
   return null;
 }
 
+function decorateProfileCardsZPattern(parent) {
+  if (!getMetadata('speakers')) return;
+
+  let speakerData;
+  try {
+    speakerData = JSON.parse(getMetadata('speakers'));
+  } catch (e) {
+    window.lana?.log('Failed to parse speakers metadata:', e);
+    return;
+  }
+
+  if (!speakerData?.length) return;
+
+  const profileBlocks = [];
+  let flippedIndex = -1;
+
+  const allBlocks = parent.querySelectorAll('body > div > div:not(.section-metadata)');
+  allBlocks.forEach((block, index) => {
+    if (!block.classList.contains('profile-cards')) return;
+
+    const blockType = block.querySelector(':scope > div:nth-child(1) > div:nth-child(1)').textContent.trim().toLowerCase();
+    const relatedProfiles = speakerData.filter((speaker) => {
+      const speakerType = speaker.speakerType || speaker.type;
+      if (!speakerType) return false;
+      return speakerType.toLowerCase() === blockType;
+    });
+
+    if (relatedProfiles.length === 1) {
+      profileBlocks.push({ block, blockIndex: index });
+    }
+  });
+
+  profileBlocks.forEach(({ block, blockIndex }, index) => {
+    if (index <= 0) return;
+
+    if (blockIndex - profileBlocks[index - 1].blockIndex === 1 && flippedIndex !== index - 1) {
+      flippedIndex = index;
+      block.classList.add('reverse');
+    }
+  });
+}
+
+function updateExtraMetaTags(parent) {
+  if (parent !== document) return;
+
+  const title = getMetadata('title');
+  const description = getMetadata('description');
+  let photos;
+
+  try {
+    photos = JSON.parse(getMetadata('photos'));
+  } catch (e) {
+    window.lana?.log('Failed to parse photos metadata for extra metadata tags generation:', e);
+  }
+
+  if (title) {
+    setMetadata('og:title', title);
+    setMetadata('twitter:title', title);
+  }
+
+  if (description) {
+    setMetadata('og:description', description);
+    setMetadata('twitter:description', description);
+  }
+
+  if (photos) {
+    const cardImg = photos.find((p) => p.imageKind === 'event-card-image');
+    if (cardImg) {
+      const { imageUrl } = cardImg;
+      let { sharepointUrl } = cardImg;
+
+      if (sharepointUrl?.startsWith('https')) {
+        try {
+          sharepointUrl = new URL(sharepointUrl).pathname;
+        } catch (e) {
+          window.lana?.log('Error while parsing SharePoint URL for extra metadata tags generation:', e);
+        }
+      }
+
+      setMetadata('og:image', sharepointUrl || imageUrl);
+      setMetadata('twitter:image', sharepointUrl || imageUrl);
+    }
+  }
+}
+
 // data -> dom gills
-export default function autoUpdateContent(parent, miloLibs, extraData) {
+export default function autoUpdateContent(parent, miloDeps, extraData) {
+  const { getConfig, miloLibs } = miloDeps;
   if (!parent) {
     window.lana?.log('page server block cannot find its parent element');
     return;
@@ -391,19 +568,39 @@ export default function autoUpdateContent(parent, miloLibs, extraData) {
     if (preserveFormatKeys.includes(p1)) {
       n.parentNode?.classList.add('preserve-format');
     }
+
+    if (p1 === 'start-date' || p1 === 'end-date') {
+      const date = new Date(content);
+      const localeString = getConfig().locale?.ietf || 'en-US';
+      content = date.toLocaleDateString(localeString, { month: 'long', day: 'numeric', year: 'numeric' });
+    }
+
     return content;
   };
+
+  const isImage = (n) => n.tagName === 'IMG' && n.nodeType === 1;
+  const isTextNode = (n) => n.nodeType === 3;
+  const isStyledTextTag = (n) => n.tagName === 'STRONG' || n.tagName === 'EM';
+  const mightContainIcon = (n) => n.tagName === 'P' || n.tagName === 'A';
 
   const allElements = parent.querySelectorAll('*');
   allElements.forEach((element) => {
     if (element.childNodes.length) {
       element.childNodes.forEach((n) => {
-        if (n.tagName === 'IMG' && n.nodeType === 1) {
+        if (isImage(n)) {
           updateImgTag(n, getImgData, element);
         }
 
-        if (n.nodeType === 3) {
+        if (isTextNode(n)) {
           updateTextNode(n, getContent);
+        }
+
+        if (isStyledTextTag(n)) {
+          updateTextContent(n, getContent);
+        }
+
+        if (mightContainIcon(n)) {
+          n.innerHTML = convertEccIcon(n);
         }
       });
     }
@@ -412,4 +609,6 @@ export default function autoUpdateContent(parent, miloLibs, extraData) {
   // handle link replacement. To keep when switching to metadata based rendering
   autoUpdateLinks(parent, miloLibs);
   injectFragments(parent);
+  decorateProfileCardsZPattern(parent);
+  if (window.eccEnv !== 'prod') updateExtraMetaTags(parent);
 }
