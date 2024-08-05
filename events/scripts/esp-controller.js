@@ -94,10 +94,13 @@ export async function getAttendee(eventId) {
   const { host } = getAPIConfig().esl[window.eccEnv];
   const options = await constructRequestOptions('GET');
 
-  const resp = await fetch(`${host}/v1/events/${eventId}/attendees/me`, options)
-    .then((res) => res.json())
-    .catch((error) => window.lana?.log(`Failed to get details of attendee me for event ${eventId}. Error: ${error}`));
-  return resp;
+  const resp = await fetch(`${host}/v1/events/${eventId}/attendees/me`, options);
+
+  if (resp.status === 404) {
+    return null;
+  }
+
+  return resp.json();
 }
 
 export async function getAttendeeStatus(eventId) {
@@ -108,7 +111,7 @@ export async function getAttendeeStatus(eventId) {
 
   const resp = await fetch(`${host}/v1/events/${eventId}/attendees/me/status`, options)
     .then((res) => res.json())
-    .catch((error) => window.lana?.log(`Failed to get details of attendee me for event ${eventId}. Error: ${error}`));
+    .catch((error) => window.lana?.log(`Failed to get status of attendee me for event ${eventId}. Error: ${error}`));
   return resp;
 }
 
