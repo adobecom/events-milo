@@ -9,7 +9,7 @@ import {
   flattenObject,
   createOptimizedPicture,
   getIcon,
-} from '../../events/scripts/utils.js';
+} from '../../../events/scripts/utils.js';
 
 describe('Utility Functions', () => {
   describe('createTag', () => {

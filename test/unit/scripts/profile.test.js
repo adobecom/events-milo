@@ -1,6 +1,6 @@
 import { expect } from '@esm-bundle/chai';
-import { getProfile, lazyCaptureProfile } from '../../events/scripts/profile.js';
-import BlockMediator from '../../events/scripts/deps/block-mediator.min.js';
+import { getProfile, lazyCaptureProfile } from '../../../events/scripts/profile.js';
+import BlockMediator from '../../../events/scripts/deps/block-mediator.min.js';
 
 describe('Profile Functions', () => {
   beforeEach(() => {
