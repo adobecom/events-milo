@@ -30,7 +30,7 @@ export const getCaasTags = (() => {
   };
 })();
 
-function getAPIConfig() {
+export function getAPIConfig() {
   return {
     esl: {
       local: { host: 'http://localhost:8499' },
@@ -47,7 +47,7 @@ function getAPIConfig() {
   };
 }
 
-function waitForAdobeIMS() {
+export function waitForAdobeIMS() {
   return new Promise((resolve) => {
     const checkIMS = () => {
       if (window.adobeIMS && window.adobeIMS.getAccessToken) {
@@ -60,7 +60,7 @@ function waitForAdobeIMS() {
   });
 }
 
-async function constructRequestOptions(method, body = null) {
+export async function constructRequestOptions(method, body = null) {
   await waitForAdobeIMS();
 
   const headers = new Headers();
