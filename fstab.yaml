@@ -4,10 +4,7 @@
 # 2. Google Drive is no longer allowed for production Adobe projects.
 
 mountpoints:
-  /: https://adobe.sharepoint.com/:f:/r/sites/adobecom/Shared%20Documents/events-milo
+  /: https://adobe.sharepoint.com/sites/acomevents/Shared%20Documents/events-milo
 
 folders:
-# all 't3' folders are for testing only
-  /t3/event: /t3/event/default
-  /event/t3: /event/t3/default
   /events: /events/default
