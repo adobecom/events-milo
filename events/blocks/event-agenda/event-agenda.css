@@ -2,7 +2,7 @@
   max-width: 1750px;
   margin: auto;
   box-sizing: content-box;
-  padding: 20px;
+  padding: 32px 20px 0;
 }
 
 .event-agenda h2 {
@@ -10,14 +10,14 @@
 }
 
 .event-agenda .agenda-container {
-  margin: 40px auto 0;
+  margin: 0 auto;
 }
 
 .event-agenda.blade .agenda-container {
   background-color: var(--color-gray-100);
   display: flex;
   flex-direction: column-reverse;
-  border-radius: 10px;
+  border-radius: 18px;
   overflow: hidden;
 }
 
@@ -57,6 +57,10 @@
 }
 
 @media (min-width: 900px) {
+  .event-agenda {
+    padding: 40px 20px 32px;
+  }
+
   .event-agenda.blade h2 {
     text-align: left;
   }
