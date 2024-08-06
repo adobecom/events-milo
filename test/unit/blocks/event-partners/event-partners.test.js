@@ -1,6 +1,6 @@
 import { expect } from '@esm-bundle/chai';
 import { readFile } from '@web/test-runner-commands';
-import init, { isOdd } from '../../../../events/blocks/event-partners/event-partners.js'; // Update with the correct path
+import init, { isOdd } from '../../../../events/blocks/event-partners/event-partners.js';
 import { setMetadata } from '../../../../events/scripts/utils.js';
 
 const body = await readFile({ path: './mocks/default.html' });

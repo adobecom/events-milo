@@ -1,6 +1,6 @@
 import { expect } from '@esm-bundle/chai';
 import { readFile } from '@web/test-runner-commands';
-import init, { convertToLocaleTimeFormat } from '../../../../events/blocks/event-agenda/event-agenda.js'; // Update with the correct path
+import init, { convertToLocaleTimeFormat } from '../../../../events/blocks/event-agenda/event-agenda.js';
 import { setMetadata } from '../../../../events/scripts/utils.js';
 
 const body = await readFile({ path: './mocks/default.html' });

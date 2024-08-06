@@ -2,7 +2,6 @@ import { readFile } from '@web/test-runner-commands';
 import { expect } from '@esm-bundle/chai';
 import { setMetadata } from '../../../../events/scripts/utils.js';
 
-// Import the functions to be tested
 const { default: init } = await import('../../../../events/blocks/event-map/event-map.js');
 const body = await readFile({ path: './mocks/default.html' });
 const faulty = await readFile({ path: './mocks/faulty.html' });

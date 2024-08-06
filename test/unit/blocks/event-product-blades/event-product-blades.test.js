@@ -1,15 +1,13 @@
 import { expect } from '@esm-bundle/chai';
-import init from '../../../../events/blocks/event-product-blades/event-product-blades.js'; // Update with the correct path
+import init from '../../../../events/blocks/event-product-blades/event-product-blades.js';
 
 describe('Media Blocks Module', () => {
   let el;
 
   beforeEach(() => {
-    // Setup the DOM element for testing
     el = document.createElement('div');
     document.body.appendChild(el);
 
-    // Adding media blocks to the container
     for (let i = 0; i < 5; i += 1) {
       const mediaBlock = document.createElement('div');
       mediaBlock.classList.add('media');
@@ -21,7 +19,6 @@ describe('Media Blocks Module', () => {
   });
 
   afterEach(() => {
-    // Clean up the DOM element after each test
     document.body.removeChild(el);
   });
 
