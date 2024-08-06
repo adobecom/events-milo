@@ -1,5 +1,4 @@
 import { expect } from '@esm-bundle/chai';
-import sinon from 'sinon';
 import init, { injectEventSchema } from '../../../../events/blocks/event-schema/event-schema.js'; // Update with the correct path
 import { createTag, setMetadata } from '../../../../events/scripts/utils.js';
 
