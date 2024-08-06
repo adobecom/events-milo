@@ -17,7 +17,6 @@ describe('Agenda Module', () => {
 
   describe('init', () => {
     beforeEach(() => {
-      document.body.innerHTML = '';
       document.body.innerHTML = body;
       document.head.innerHTML = '';
     });
