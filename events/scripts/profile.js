@@ -1,5 +1,5 @@
 import BlockMediator from './deps/block-mediator.min.js';
-import { getCompleteAttendeeData } from './esp-controller.js';
+import { getEventAttendee } from './esp-controller.js';
 import { getMetadata } from './utils.js';
 
 export async function getProfile() {
@@ -38,10 +38,10 @@ export function lazyCaptureProfile() {
     try {
       const [profile, rsvpData] = await Promise.all([
         getProfile(),
-        getCompleteAttendeeData(getMetadata('event-id')),
+        getEventAttendee(getMetadata('event-id')),
       ]);
 
-      if (rsvpData) {
+      if (!rsvpData.error) {
         BlockMediator.set('rsvpData', rsvpData);
       } else {
         BlockMediator.set('rsvpData', null);

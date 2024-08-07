@@ -57,17 +57,6 @@ describe('Adobe Event Service API', () => {
     });
   });
 
-  describe('getAttendeeStatus', () => {
-    it('should fetch attendee status', async () => {
-      window.eccEnv = 'local';
-      const fetchStub = sinon.stub(window, 'fetch').resolves({ json: () => ({ status: 'active' }), ok: true });
-      const status = await api.getAttendeeStatus('123');
-      expect(status).to.be.an('object');
-      expect(status).to.have.property('status', 'active');
-      fetchStub.restore();
-    });
-  });
-
   describe('createAttendee', () => {
     it('should create an attendee and receive complete attendee data', async () => {
       window.eccEnv = 'local';
@@ -136,17 +125,6 @@ describe('Adobe Event Service API', () => {
       expect(rsvpData).to.be.an('object');
       expect(rsvpData).to.have.property('attendee');
       expect(rsvpData).to.have.property('status');
-      fetchStub.restore();
-    });
-  });
-
-  describe('getAttendees', () => {
-    it('should fetch all attendees for an event', async () => {
-      window.eccEnv = 'local';
-      const fetchStub = sinon.stub(window, 'fetch').resolves({ json: () => ([{ attendeeId: '456' }]), ok: true });
-      const attendees = await api.getAttendees('123');
-      expect(attendees).to.be.an('array');
-      expect(attendees[0]).to.have.property('attendeeId', '456');
       fetchStub.restore();
     });
   });
