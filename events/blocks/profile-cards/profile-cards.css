@@ -169,10 +169,6 @@
     margin-left: 15px;
   }
 
-  .profile-cards .card-name {
-    font-size: var(--type-heading-xl-size);
-  }
-
   .profile-cards.single .cards-wrapper .card-social-icons {
     margin-left: 15px;
   }
