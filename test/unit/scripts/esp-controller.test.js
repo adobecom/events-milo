@@ -69,7 +69,7 @@ describe('Adobe Event Service API', () => {
   });
 
   describe('createAttendee', () => {
-    it('should create an attendee and fetch complete attendee data', async () => {
+    it('should create an attendee and receive complete attendee data', async () => {
       window.eccEnv = 'local';
       const fetchStub = sinon.stub(window, 'fetch')
         .onFirstCall().resolves({ json: () => ({}), ok: true })
@@ -78,7 +78,25 @@ describe('Adobe Event Service API', () => {
         .onThirdCall()
         .resolves({ json: () => ({ status: 'statusData' }), ok: true });
 
-      const rsvpData = await api.createAttendee('123', { name: 'John Doe' });
+      const rsvpData = await api.createAttendee({ name: 'John Doe' });
+      expect(rsvpData).to.be.an('object');
+      expect(rsvpData).to.have.property('attendee');
+      expect(rsvpData).to.have.property('status');
+      fetchStub.restore();
+    });
+  });
+
+  describe('addAttendeeToEvent', () => {
+    it('should add an attendee to an event and receive complete attendee data', async () => {
+      window.eccEnv = 'local';
+      const fetchStub = sinon.stub(window, 'fetch')
+        .onFirstCall().resolves({ json: () => ({}), ok: true })
+        .onSecondCall()
+        .resolves({ json: () => ({ attendee: 'attendeeData' }), ok: true })
+        .onThirdCall()
+        .resolves({ json: () => ({ status: 'statusData' }), ok: true });
+
+      const rsvpData = await api.addAttendeeToEvent('123', { name: 'John Doe' });
       expect(rsvpData).to.be.an('object');
       expect(rsvpData).to.have.property('attendee');
       expect(rsvpData).to.have.property('status');
