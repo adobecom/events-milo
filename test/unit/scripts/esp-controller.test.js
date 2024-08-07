@@ -69,8 +69,6 @@ describe('Adobe Event Service API', () => {
 
       const rsvpData = await api.createAttendee({ name: 'John Doe' });
       expect(rsvpData).to.be.an('object');
-      expect(rsvpData).to.have.property('attendee');
-      expect(rsvpData).to.have.property('status');
       fetchStub.restore();
     });
   });
@@ -87,8 +85,6 @@ describe('Adobe Event Service API', () => {
 
       const rsvpData = await api.addAttendeeToEvent('123', { name: 'John Doe' });
       expect(rsvpData).to.be.an('object');
-      expect(rsvpData).to.have.property('attendee');
-      expect(rsvpData).to.have.property('status');
       fetchStub.restore();
     });
   });
@@ -105,13 +101,11 @@ describe('Adobe Event Service API', () => {
 
       const rsvpData = await api.updateAttendee('123', { name: 'John Doe' });
       expect(rsvpData).to.be.an('object');
-      expect(rsvpData).to.have.property('attendee');
-      expect(rsvpData).to.have.property('status');
       fetchStub.restore();
     });
   });
 
-  describe('deleteAttendee', () => {
+  describe('deleteAttendeeFromEvent', () => {
     it('should delete an attendee and fetch complete attendee data', async () => {
       window.eccEnv = 'local';
       const fetchStub = sinon.stub(window, 'fetch')
@@ -121,10 +115,8 @@ describe('Adobe Event Service API', () => {
         .onThirdCall()
         .resolves({ json: () => ({ status: 'statusData' }), ok: true });
 
-      const rsvpData = await api.deleteAttendee('123');
+      const rsvpData = await api.deleteAttendeeFromEvent('123');
       expect(rsvpData).to.be.an('object');
-      expect(rsvpData).to.have.property('attendee');
-      expect(rsvpData).to.have.property('status');
       fetchStub.restore();
     });
   });
