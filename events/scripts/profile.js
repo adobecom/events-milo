@@ -36,18 +36,17 @@ export function lazyCaptureProfile() {
     }
 
     try {
-      const [profile, rsvpData] = await Promise.all([
-        getProfile(),
-        getEventAttendee(getMetadata('event-id')),
-      ]);
-
-      if (!rsvpData.error) {
-        BlockMediator.set('rsvpData', rsvpData);
-      } else {
-        BlockMediator.set('rsvpData', null);
-      }
-
+      const profile = await getProfile();
       BlockMediator.set('imsProfile', profile);
+
+      if (!profile.noProfile) {
+        const rsvpData = await getEventAttendee(getMetadata('event-id'));
+        if (!rsvpData.error) {
+          BlockMediator.set('rsvpData', rsvpData);
+        } else {
+          BlockMediator.set('rsvpData', null);
+        }
+      }
 
       clearInterval(profileRetryer);
     } catch {
