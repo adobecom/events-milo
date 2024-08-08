@@ -175,7 +175,7 @@ export async function addAttendeeToEvent(eventId, attendeeData) {
   const options = await constructRequestOptions('POST', raw);
 
   try {
-    const response = await fetch(`${host}/v1/events/${eventId}/attendees/me`, options);
+    const response = await fetch(`${host}/v1/events/${eventId}/attendees`, options);
     const data = await response.json();
 
     if (!response.ok) {
