@@ -551,5 +551,5 @@ export default function autoUpdateContent(parent, miloDeps, extraData) {
   autoUpdateLinks(parent, miloLibs);
   injectFragments(parent);
   decorateProfileCardsZPattern(parent);
-  if (window.eccEnv !== 'prod') updateExtraMetaTags(parent);
+  if (window.eccEnv.endsWith('prod')) updateExtraMetaTags(parent);
 }
