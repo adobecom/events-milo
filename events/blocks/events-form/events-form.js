@@ -8,6 +8,7 @@ import { miloReplaceKey } from '../../scripts/content-update.js';
 const { createTag } = await import(`${LIBS}/utils/utils.js`);
 const { closeModal } = await import(`${LIBS}/blocks/modal/modal.js`);
 const { default: sanitizeComment } = await import(`${LIBS}/utils/sanitizeComment.js`);
+const { decorateDefaultLinkAnalytics } = await import(`${LIBS}/martech/attributes.js`);
 
 const RULE_OPERATORS = {
   equal: '=',
@@ -491,6 +492,7 @@ async function onProfile(bp, formData) {
         personalizeForm(block, profile);
       }
     }).finally(() => {
+      decorateDefaultLinkAnalytics(block);
       block.classList.remove('loading');
     });
   } else if (!profile) {
@@ -506,6 +508,7 @@ async function onProfile(bp, formData) {
             personalizeForm(block, newValue);
           }
         }).finally(() => {
+          decorateDefaultLinkAnalytics(block);
           block.classList.remove('loading');
         });
       }
