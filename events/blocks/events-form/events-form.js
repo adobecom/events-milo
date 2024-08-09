@@ -451,7 +451,7 @@ function personalizeForm(form, data) {
 
   Object.entries(data).forEach(([key, value]) => {
     const matchedInput = form.querySelector(`#${snakeToCamel(key)}`);
-    if (matchedInput) {
+    if (matchedInput && value && !matchedInput.value) {
       matchedInput.value = value;
       matchedInput.disabled = true;
     }
