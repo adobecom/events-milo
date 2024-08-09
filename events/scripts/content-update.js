@@ -1,7 +1,7 @@
 import BlockMediator from './deps/block-mediator.min.js';
 import { waitForAdobeIMS } from './esp-controller.js';
 import { getProfile } from './profile.js';
-import { handlize, getMetadata, setMetadata, getIcon } from './utils.js';
+import { handlize, getMetadata, setMetadata, getIcon, readBlockConfig } from './utils.js';
 
 export const META_REG = /\[\[(.*?)\]\]/g;
 export const ICON_REG = /@@(.*?)@@/g;
@@ -405,11 +405,11 @@ function decorateProfileCardsZPattern(parent) {
   allBlocks.forEach((block, index) => {
     if (!block.classList.contains('profile-cards')) return;
 
-    const blockType = block.querySelector(':scope > div:nth-child(1) > div:nth-child(1)').textContent.trim().toLowerCase();
+    const blockConfig = readBlockConfig(block);
     const relatedProfiles = speakerData.filter((speaker) => {
       const speakerType = speaker.speakerType || speaker.type;
       if (!speakerType) return false;
-      return speakerType.toLowerCase() === blockType;
+      return speakerType.toLowerCase() === blockConfig.type;
     });
 
     if (relatedProfiles.length === 1) {
