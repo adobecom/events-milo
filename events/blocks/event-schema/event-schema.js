@@ -1,6 +1,6 @@
 import { getMetadata } from '../../scripts/utils.js';
 
-function injectEventSchema() {
+export function injectEventSchema() {
   let venueObject;
   let photos;
 
@@ -34,7 +34,7 @@ function injectEventSchema() {
       },
     },
     image: imageHeroImage?.sharepointUrl || imageHeroImage?.imageUrl,
-    description: getMetadata('description'),
+    description: getMetadata('description') || '',
     organizer: {
       '@type': 'Organization',
       name: 'Adobe',

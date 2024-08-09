@@ -4,7 +4,7 @@ import { LIBS } from '../../scripts/scripts.js';
 const { createTag } = await import(`${LIBS}/utils/utils.js`);
 const { decorateButtons } = await import(`${LIBS}/utils/decorate.js`);
 
-function isReversed(card) {
+export function isReversed(card) {
   const twoImgsStart = !!card.children[0]?.querySelector('img') && !!card.children[1]?.querySelector('img');
   return twoImgsStart;
 }

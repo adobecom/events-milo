@@ -299,15 +299,19 @@
   padding: 80px 40px;
 }
 
+.events-form .form-success-msg h1,
 .events-form .form-success-msg h2,
 .events-form .form-success-msg h3,
+.events-form .form-success-msg h4,
+.events-form .form-success-msg h5,
 .events-form .form-success-msg p {
   max-width: 630px;
+  margin-top: 0;
 }
 
-.events-form .form-success-msg h2,
-.events-form .form-success-msg h3 {
-  margin: 0;
+.events-form .form-success-msg p.eyebrow {
+  font-size: var(--type-heading-s-size);
+  line-height: var(--type-heading-s-lh);
 }
 
 .events-form .form-success-msg .post-rsvp-button-wrapper {
@@ -402,6 +406,6 @@
   }
 
   .events-form .form-success-msg .post-rsvp-button-wrapper {
-    gap: 2rem;
+    gap: 1rem;
   }
 }

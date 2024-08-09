@@ -30,24 +30,24 @@ export const getCaasTags = (() => {
   };
 })();
 
-function getAPIConfig() {
+export function getAPIConfig() {
   return {
     esl: {
       local: { host: 'http://localhost:8499' },
       dev: { host: 'https://wcms-events-service-layer-deploy-ethos102-stage-va-9c3ecd.stage.cloud.adobe.io' },
       stage: { host: 'https://events-service-layer-stage.adobe.io' },
-      prod: { host: 'https://wcms-events-service-layer-deploy-ethos102-stage-va-9c3ecd.stage.cloud.adobe.io' },
+      prod: { host: 'https://events-service-layer.adobe.io' },
     },
     esp: {
       local: { host: 'http://localhost:8500' },
       dev: { host: 'https://wcms-events-service-platform-deploy-ethos102-stage-caff5f.stage.cloud.adobe.io' },
       stage: { host: 'https://events-service-platform-stage.adobe.io' },
-      prod: { host: 'https://wcms-events-service-platform-deploy-ethos102-stage-caff5f.stage.cloud.adobe.io' },
+      prod: { host: 'https://events-service-platform.adobe.io' },
     },
   };
 }
 
-function waitForAdobeIMS() {
+export function waitForAdobeIMS() {
   return new Promise((resolve) => {
     const checkIMS = () => {
       if (window.adobeIMS && window.adobeIMS.getAccessToken) {
@@ -60,7 +60,7 @@ function waitForAdobeIMS() {
   });
 }
 
-async function constructRequestOptions(method, body = null) {
+export async function constructRequestOptions(method, body = null) {
   await waitForAdobeIMS();
 
   const headers = new Headers();

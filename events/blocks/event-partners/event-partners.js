@@ -2,7 +2,7 @@ import { LIBS } from '../../scripts/scripts.js';
 
 const { createTag, getMetadata } = await import(`${LIBS}/utils/utils.js`);
 
-function isOdd(number) {
+export function isOdd(number) {
   return number % 2 !== 0;
 }
 

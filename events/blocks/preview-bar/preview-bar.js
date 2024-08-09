@@ -3,10 +3,10 @@ import { getIcon } from '../../scripts/utils.js';
 
 const { createTag, getMetadata } = await import(`${LIBS}/utils/utils.js`);
 
-function removeURLParameter(url, parameter) {
+function removeURLParameters(url, parameters) {
   const params = new URLSearchParams(url.search);
 
-  params.delete(parameter);
+  if (Array.isArray(parameters)) parameters.forEach((p) => params.delete(p));
 
   url.search = params.toString();
 
@@ -40,7 +40,7 @@ function getCloseBtn(el) {
 
   btn.addEventListener('click', () => {
     el.remove();
-    removeURLParameter(window.location, 'previewMode');
+    removeURLParameters(window.location, ['previewMode', 'cacheBuster']);
   });
 
   return btn;

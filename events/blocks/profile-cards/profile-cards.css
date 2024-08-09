@@ -20,7 +20,7 @@
   margin: 0 16px;
   border: 1px solid var(--color-gray-200);
   flex: 1 1 0;
-  border-radius: 10px;
+  border-radius: 18px;
   background-color: #f9f9f9;
 }
 
@@ -62,7 +62,7 @@
   width: 100%;
   height: 213px;
   position: relative;
-  border-radius: 8px 8px 0 0;
+  border-radius: 18px 18px 0 0;
   overflow: hidden;
 }
 
@@ -157,20 +157,16 @@
   .profile-cards.single .cards-wrapper .card-image-container {
     width: 50%;
     height: 396px;
-    border-radius: 8px 0 0 8px;
+    border-radius: 18px 0 0 18px;
   }
 
   .profile-cards.single.reverse .cards-wrapper .card-image-container {
-    border-radius: 0 8px 8px 0;
+    border-radius: 0 18px 18px 0;
   }
 
   .profile-cards.single .cards-wrapper .card-text-container {
     margin-top: 26.5px;
     margin-left: 15px;
-  }
-
-  .profile-cards .card-name {
-    font-size: var(--type-heading-xl-size);
   }
 
   .profile-cards.single .cards-wrapper .card-social-icons {
