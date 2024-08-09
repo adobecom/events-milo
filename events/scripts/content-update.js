@@ -1,4 +1,6 @@
 import BlockMediator from './deps/block-mediator.min.js';
+import { waitForAdobeIMS } from './esp-controller.js';
+import { getProfile } from './profile.js';
 import { handlize, getMetadata, setMetadata, getIcon } from './utils.js';
 
 export const META_REG = /\[\[(.*?)\]\]/g;
@@ -134,15 +136,27 @@ async function handleRSVPBtnBasedOnProfile(rsvpBtn, miloLibs, profile) {
   }
 }
 
-export function validatePageAndRedirect() {
+export async function validatePageAndRedirect() {
   const env = window.eccEnv;
   const pagePublished = getMetadata('published') === 'true' || getMetadata('status') === 'live';
   const invalidStagePage = env === 'stage' && window.location.hostname === 'www.stage.adobe.com' && !getMetadata('event-id');
+  const isPreviewMode = new URLSearchParams(window.location.search).get('previewMode');
 
-  const isUnpublishedOnProd = env === 'prod' && !pagePublished;
+  const organicHitUnpublishedOnProd = env === 'prod' && !pagePublished && !isPreviewMode;
+  const purposefulHitOnProdPreview = env === 'prod' && isPreviewMode;
 
-  if (isUnpublishedOnProd || invalidStagePage) {
+  if (organicHitUnpublishedOnProd || invalidStagePage) {
     window.location.replace('/404');
+  }
+
+  if (purposefulHitOnProdPreview) {
+    await waitForAdobeIMS();
+    const profile = await getProfile();
+    if (profile?.noProfile) {
+      signIn();
+    } else if (!profile.email.endsWith('@adobe.com')) {
+      window.location.replace('/404');
+    }
   }
 }
 

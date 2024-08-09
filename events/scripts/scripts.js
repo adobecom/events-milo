@@ -149,7 +149,7 @@ if (window.eccEnv !== 'prod' && !getMetadata('event-id') && getMetadata('event-d
   await fetchAndDecorateArea();
 }
 
-if (getMetadata('event-details-page') === 'yes') validatePageAndRedirect();
+if (getMetadata('event-details-page') === 'yes') await validatePageAndRedirect();
 
 /*
  * ------------------------------------------------------------
