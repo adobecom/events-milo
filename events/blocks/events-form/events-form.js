@@ -310,6 +310,19 @@ function addTerms(form, terms) {
 
 function decorateSuccessMsg(form, bp) {
   const ctas = bp.successMsg.querySelectorAll('a');
+  const hgroup = createTag('hgroup');
+  const eyeBrowText = bp.successMsg.querySelector('p:first-child');
+  const headings = form.querySelectorAll('h1, h2, h3, h4, h5, h6, p:');
+  headings.forEach((h) => {
+    hgroup.append(h);
+  });
+
+  if (eyeBrowText) {
+    eyeBrowText.classList.add('eyebrow');
+    hgroup.prepend(eyeBrowText);
+  }
+
+  bp.successMsg.prepend(hgroup);
 
   ctas.forEach((cta, i) => {
     if (i === 0) {
