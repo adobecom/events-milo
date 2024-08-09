@@ -1,5 +1,7 @@
 import BlockMediator from './deps/block-mediator.min.js';
-import { handlize, getMetadata, setMetadata, getIcon } from './utils.js';
+import { waitForAdobeIMS } from './esp-controller.js';
+import { getProfile } from './profile.js';
+import { handlize, getMetadata, setMetadata, getIcon, readBlockConfig } from './utils.js';
 
 export const META_REG = /\[\[(.*?)\]\]/g;
 export const ICON_REG = /@@(.*?)@@/g;
@@ -134,15 +136,27 @@ async function handleRSVPBtnBasedOnProfile(rsvpBtn, miloLibs, profile) {
   }
 }
 
-export function validatePageAndRedirect() {
+export async function validatePageAndRedirect() {
   const env = window.eccEnv;
   const pagePublished = getMetadata('published') === 'true' || getMetadata('status') === 'live';
   const invalidStagePage = env === 'stage' && window.location.hostname === 'www.stage.adobe.com' && !getMetadata('event-id');
+  const isPreviewMode = new URLSearchParams(window.location.search).get('previewMode');
 
-  const isUnpublishedOnProd = env === 'prod' && !pagePublished;
+  const organicHitUnpublishedOnProd = env === 'prod' && !pagePublished && !isPreviewMode;
+  const purposefulHitOnProdPreview = env === 'prod' && isPreviewMode;
 
-  if (isUnpublishedOnProd || invalidStagePage) {
+  if (organicHitUnpublishedOnProd || invalidStagePage) {
     window.location.replace('/404');
+  }
+
+  if (purposefulHitOnProdPreview) {
+    await waitForAdobeIMS();
+    const profile = await getProfile();
+    if (profile?.noProfile) {
+      signIn();
+    } else if (!profile.email.endsWith('@adobe.com')) {
+      window.location.replace('/404');
+    }
   }
 }
 
@@ -171,65 +185,6 @@ async function handleRegisterButton(a, miloLibs) {
       handleRSVPBtnBasedOnProfile(rsvpBtn, miloLibs, newValue);
     });
   }
-}
-
-export function toClassName(name) {
-  return name && typeof name === 'string'
-    ? name.trim().toLowerCase().replace(/[^0-9a-z]/gi, '-')
-    : '';
-}
-
-export function readBlockConfig(block) {
-  const config = {};
-  block.querySelectorAll(':scope > div').forEach((row) => {
-    if (row.children) {
-      const cols = [...row.children];
-      if (cols[1]) {
-        const valueEl = cols[1];
-        const name = toClassName(cols[0].textContent.trim());
-        let value;
-        if (valueEl.querySelector('a')) {
-          const as = [...valueEl.querySelectorAll('a')];
-          if (as.length === 1) {
-            value = as[0].href;
-          } else {
-            value = as.map((a) => a.href);
-          }
-        } else if (valueEl.querySelector('p')) {
-          const ps = [...valueEl.querySelectorAll('p')];
-          if (ps.length === 1) {
-            value = ps[0].textContent.trim();
-          } else {
-            value = ps.map((p) => p.textContent.trim());
-          }
-        } else value = row.children[1].textContent.trim();
-        config[name] = value;
-      }
-    }
-  });
-  return config;
-}
-
-export function removeIrrelevantSections(area) {
-  area.querySelectorAll(':scope > div').forEach((section) => {
-    const sectionMetaBlock = section.querySelector('div.section-metadata');
-    if (sectionMetaBlock) {
-      const sectionMeta = readBlockConfig(sectionMetaBlock);
-      let sectionRemove;
-
-      if (sectionMeta.timing !== undefined) {
-        let timingSearchParam = null;
-        if (!['www.adobe.com'].includes(window.location.hostname)) {
-          const urlParams = new URLSearchParams(window.location.search);
-          timingSearchParam = urlParams.get(`${sectionMeta.timing.toLowerCase()}`)
-            || urlParams.get(`${sectionMeta.timing}`);
-        }
-        sectionRemove = timingSearchParam !== null ? timingSearchParam !== 'true' : getMetadata(sectionMeta.timing.toLowerCase()) !== 'true';
-      }
-
-      if (sectionRemove) section.remove();
-    }
-  });
 }
 
 function autoUpdateLinks(scope, miloLibs) {
@@ -450,11 +405,11 @@ function decorateProfileCardsZPattern(parent) {
   allBlocks.forEach((block, index) => {
     if (!block.classList.contains('profile-cards')) return;
 
-    const blockType = block.querySelector(':scope > div:nth-child(1) > div:nth-child(1)').textContent.trim().toLowerCase();
+    const blockConfig = readBlockConfig(block);
     const relatedProfiles = speakerData.filter((speaker) => {
       const speakerType = speaker.speakerType || speaker.type;
       if (!speakerType) return false;
-      return speakerType.toLowerCase() === blockType;
+      return speakerType.toLowerCase() === blockConfig.type;
     });
 
     if (relatedProfiles.length === 1) {
