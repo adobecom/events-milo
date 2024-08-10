@@ -5,12 +5,10 @@ const { createTag, MILO_EVENTS, loadStyle } = await import(`${LIBS}/utils/utils.
 const { miloLibs, codeRoot } = MILO_CONFIG;
 const base = miloLibs || codeRoot;
 
-const ARROW_NEXT_IMG = `<img class="next-icon" alt="Next icon" src="${base}/blocks/carousel/img/arrow.svg" height="10" width="16">`;
-const ARROW_PREVIOUS_IMG = `<img class="previous-icon" alt="Previous icon" src="${base}/blocks/carousel/img/arrow.svg" height="10" width="16">`;
-const LIGHTBOX_ICON = `<img class="expand-icon" alt="Expand carousel to full screen" src="${base}/blocks/carousel/img/expand.svg" height="14" width="20">`;
-const CLOSE_ICON = `<img class="expand-icon" alt="Expand carousel to full screen" src="${base}/blocks/carousel/img/close.svg" height="20" width="20">`;
+export const ARROW_NEXT_IMG = `<img class="next-icon" alt="Next icon" src="${base}/blocks/carousel/img/arrow.svg" height="10" width="16">`;
+export const ARROW_PREVIOUS_IMG = `<img class="previous-icon" alt="Previous icon" src="${base}/blocks/carousel/img/arrow.svg" height="10" width="16">`;
 
-const KEY_CODES = {
+export const KEY_CODES = {
   SPACE: 'Space',
   END: 'End',
   HOME: 'Home',
@@ -18,7 +16,7 @@ const KEY_CODES = {
   ARROW_RIGHT: 'ArrowRight',
 };
 
-function decorateNextPreviousBtns() {
+export function decorateNextPreviousBtns() {
   const previousBtn = createTag(
     'button',
     {
@@ -41,27 +39,7 @@ function decorateNextPreviousBtns() {
   return [previousBtn, nextBtn];
 }
 
-function decorateLightboxButtons() {
-  const expandBtn = createTag(
-    'button',
-    {
-      class: 'lightbox-button carousel-expand',
-      'aria-label': 'Open in full screen',
-    },
-    LIGHTBOX_ICON,
-  );
-  const closeBtn = createTag(
-    'button',
-    {
-      class: 'lightbox-button carousel-close',
-      'aria-label': 'Close full screen carousel',
-    },
-    CLOSE_ICON,
-  );
-  return [expandBtn, closeBtn];
-}
-
-function decorateSlideIndicators(slides) {
+export function decorateSlideIndicators(slides) {
   const indicatorDots = [];
 
   for (let i = 0; i < slides.length; i += 1) {
@@ -84,47 +62,21 @@ function decorateSlideIndicators(slides) {
   return indicatorDots;
 }
 
-function handleNext(nextElement, elements) {
+export function handleNext(nextElement, elements) {
   if (nextElement.nextElementSibling) {
     return nextElement.nextElementSibling;
   }
   return elements[0];
 }
 
-function handlePrevious(previousElment, elements) {
+export function handlePrevious(previousElment, elements) {
   if (previousElment.previousElementSibling) {
     return previousElment.previousElementSibling;
   }
   return elements[elements.length - 1];
 }
 
-function handleLightboxButtons(lightboxBtns, el, slideWrapper) {
-  const curtain = createTag('div', { class: 'carousel-curtain' });
-
-  [...lightboxBtns].forEach((button) => {
-    button.addEventListener('click', (event) => {
-      event.preventDefault();
-      if (button.classList.contains('carousel-expand')) {
-        el.classList.add('lightbox-active');
-        slideWrapper.append(curtain);
-      }
-
-      if (button.classList.contains('carousel-close')) {
-        el.classList.remove('lightbox-active');
-        curtain.remove();
-      }
-    }, true);
-  });
-
-  // Handle click outside of Carousel
-  curtain.addEventListener('click', (event) => {
-    event.preventDefault();
-    el.classList.remove('lightbox-active');
-    curtain.remove();
-  }, true);
-}
-
-function jumpToDirection(activeSlideIndex, jumpToIndex, slideContainer) {
+export function jumpToDirection(activeSlideIndex, jumpToIndex, slideContainer) {
   if (activeSlideIndex < jumpToIndex) {
     slideContainer.classList.remove('is-reversing');
   } else {
@@ -132,7 +84,7 @@ function jumpToDirection(activeSlideIndex, jumpToIndex, slideContainer) {
   }
 }
 
-function moveSlides(event, carouselElements, jumpToIndex) {
+export function moveSlides(event, carouselElements, jumpToIndex) {
   const {
     slideContainer,
     slides,
@@ -265,7 +217,7 @@ export function getSwipeDirection(swipe, swipeDistance) {
 /**
   * Mobile swipe/touch direction detection
   */
-function mobileSwipeDetect(carouselElements) {
+export function mobileSwipeDetect(carouselElements) {
   const { el } = carouselElements;
   const swipe = { xMin: 50 };
   /* c8 ignore start */
@@ -347,13 +299,7 @@ export default function buildMiloCarousel(el, slides) {
         direction: undefined,
       };
 
-      if (el.classList.contains('lightbox')) {
-        const lightboxBtns = decorateLightboxButtons();
-        slideWrapper.append(slideContainer, ...lightboxBtns);
-        handleLightboxButtons(lightboxBtns, el, slideWrapper);
-      } else {
-        slideWrapper.append(slideContainer);
-      }
+      slideWrapper.append(slideContainer);
 
       el.textContent = '';
       el.append(slideWrapper);
