@@ -61,12 +61,10 @@
 
 .events-form .event-form-hero h2 {
   margin: 0;
-  padding: var(--spacing-s) 0;
   font-size: var(--type-heading-l-size);
 }
 
 .events-form .event-form-hero h3 {
-  padding-top: var(--spacing-s);
   font-size: var(--type-heading-m-size);
 }
 
