@@ -8,6 +8,7 @@ import { miloReplaceKey } from '../../scripts/content-update.js';
 const { createTag } = await import(`${LIBS}/utils/utils.js`);
 const { closeModal } = await import(`${LIBS}/blocks/modal/modal.js`);
 const { default: sanitizeComment } = await import(`${LIBS}/utils/sanitizeComment.js`);
+const { decorateDefaultLinkAnalytics } = await import(`${LIBS}/martech/attributes.js`);
 
 const RULE_OPERATORS = {
   equal: '=',
@@ -302,6 +303,19 @@ function addTerms(form, terms) {
 
 function decorateSuccessMsg(form, bp) {
   const ctas = bp.successMsg.querySelectorAll('a');
+  const hgroup = createTag('hgroup');
+  const eyeBrowText = bp.successMsg.querySelector('p:first-child');
+  const headings = bp.successMsg.querySelectorAll('h1, h2, h3, h4, h5, h6');
+  headings.forEach((h) => {
+    hgroup.append(h);
+  });
+
+  if (eyeBrowText) {
+    eyeBrowText.classList.add('eyebrow');
+    hgroup.prepend(eyeBrowText);
+  }
+
+  bp.successMsg.prepend(hgroup);
 
   ctas.forEach((cta, i) => {
     if (i === 0) {
@@ -431,7 +445,7 @@ function personalizeForm(form, data) {
 
   Object.entries(data).forEach(([key, value]) => {
     const matchedInput = form.querySelector(`#${snakeToCamel(key)}`);
-    if (matchedInput) {
+    if (matchedInput && value && !matchedInput.value) {
       matchedInput.value = value;
       matchedInput.disabled = true;
     }
@@ -471,6 +485,7 @@ async function onProfile(bp, formData) {
         personalizeForm(block, profile);
       }
     }).finally(() => {
+      decorateDefaultLinkAnalytics(block);
       block.classList.remove('loading');
     });
   } else if (!profile) {
@@ -486,6 +501,7 @@ async function onProfile(bp, formData) {
             personalizeForm(block, newValue);
           }
         }).finally(() => {
+          decorateDefaultLinkAnalytics(block);
           block.classList.remove('loading');
         });
       }
