@@ -58,7 +58,8 @@ function constructPayload(form) {
   return payload;
 }
 
-async function submitForm(form) {
+async function submitForm(bp) {
+  const { form, sanitizeList } = bp;
   const rsvpData = BlockMediator.get('rsvpData');
   const payload = constructPayload(form);
   payload.timestamp = new Date().toJSON();
@@ -77,7 +78,7 @@ async function submitForm(form) {
       field.addEventListener('input', cb);
       return false;
     }
-    payload[key] = sanitizeComment(payload[key]);
+    if (sanitizeList.includes(key)) payload[key] = sanitizeComment(payload[key]);
     return true;
   });
 
@@ -130,7 +131,7 @@ function createButton({ type, label }, bp) {
         event.preventDefault();
         button.setAttribute('disabled', true);
         button.classList.add('submitting');
-        const respJson = await submitForm(bp.form);
+        const respJson = await submitForm(bp);
         button.removeAttribute('disabled');
         button.classList.remove('submitting');
         if (!respJson) {
@@ -372,7 +373,7 @@ async function createForm(bp, formData) {
   let json = formData;
   /* c8 ignore next 4 */
   if (!formData) {
-    const resp = await fetch(pathname, { headers: { authorization: 'token milo-events-ecc' } });
+    const resp = await fetch(pathname);
     json = await resp.json();
   }
 
@@ -413,8 +414,13 @@ async function createForm(bp, formData) {
     default: { fn: createInput, params: [], label: true, classes: [] },
   };
 
+  const sanitizeList = [];
+
   json.data.forEach((fd) => {
     fd.type = fd.type || 'text';
+    if (fd.type === 'text' || fd.type === 'email' || fd.type === 'phone') {
+      sanitizeList.push(fd.field);
+    }
     const style = fd.extra ? ` events-form-${fd.extra}` : '';
     const fieldWrapper = createTag(
       'div',
@@ -444,7 +450,10 @@ async function createForm(bp, formData) {
   formEl.addEventListener('input', () => applyRules(formEl, rules));
   applyRules(formEl, rules);
 
-  return formEl;
+  return {
+    formEl,
+    sanitizeList,
+  };
 }
 
 function personalizeForm(form, data) {
@@ -467,13 +476,15 @@ async function buildEventform(bp, formData) {
   if (!bp.formContainer || !bp.form) return;
   bp.formContainer.classList.add('form-container');
   bp.successMsg.classList.add('form-success-msg');
-  const constructedForm = await createForm(
+  const { formEl, sanitizeList } = await createForm(
     bp,
     formData,
   );
-  if (constructedForm) {
-    bp.form.replaceWith(constructedForm);
-    bp.form = constructedForm;
+
+  if (formEl) {
+    bp.form.replaceWith(formEl);
+    bp.form = formEl;
+    bp.sanitizeList = sanitizeList;
   }
 }
 
