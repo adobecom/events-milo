@@ -190,8 +190,8 @@ export async function addAttendeeToEvent(eventId, attendeeId) {
   }
 }
 
-export async function updateAttendee(eventId, attendeeData) {
-  if (!eventId) return false;
+export async function updateAttendee(attendeeData) {
+  if (!attendeeData) return false;
 
   const { host } = getAPIConfig().esl[window.eccEnv];
   const raw = JSON.stringify(attendeeData);
@@ -202,13 +202,13 @@ export async function updateAttendee(eventId, attendeeData) {
     const data = await response.json();
 
     if (!response.ok) {
-      window.lana?.log(`Failed to update attendee for event ${eventId}. Status:`, response.status, 'Error:', data);
+      window.lana?.log('Failed to update attendee. Status:', response.status, 'Error:', data);
       return { ok: response.ok, status: response.status, error: data };
     }
 
     return data;
   } catch (error) {
-    window.lana?.log(`Failed to update attendee for event ${eventId}. Error:`, error);
+    window.lana?.log('Failed to update attendee. Error:', error);
     return { ok: false, status: 'Network Error', error: error.message };
   }
 }
@@ -244,9 +244,9 @@ export async function getAndCreateAndAddAttendee(eventId, attendeeData) {
   let attendee;
 
   if (!attendeeResp.ok && attendeeResp.status === 404) {
-    attendee = await createAttendee(eventId, attendeeData);
+    attendee = await createAttendee(attendeeData);
   } else if (attendeeResp.attendeeId) {
-    attendee = await updateAttendee(eventId, { ...attendeeResp, ...attendeeData });
+    attendee = await updateAttendee({ ...attendeeResp, ...attendeeData });
   }
 
   return addAttendeeToEvent(eventId, attendee.attendeeId);
