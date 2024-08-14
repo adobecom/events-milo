@@ -60,7 +60,6 @@ function constructPayload(form) {
 
 async function submitForm(bp) {
   const { form, sanitizeList } = bp;
-  const rsvpData = BlockMediator.get('rsvpData');
   const payload = constructPayload(form);
   Object.keys(payload).forEach((key) => {
     if (!key) return false;
