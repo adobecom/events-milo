@@ -167,15 +167,15 @@ export async function createAttendee(attendeeData) {
   }
 }
 
-export async function addAttendeeToEvent(eventId, attendeeData) {
-  if (!eventId || !attendeeData) return false;
+export async function addAttendeeToEvent(eventId, attendeeId) {
+  if (!eventId || !attendeeId) return false;
 
   const { host } = getAPIConfig().esl[window.eccEnv];
-  const raw = JSON.stringify(attendeeData);
+  const raw = JSON.stringify({ attendeeId });
   const options = await constructRequestOptions('POST', raw);
 
   try {
-    const response = await fetch(`${host}/v1/events/${eventId}/attendees`, options);
+    const response = await fetch(`${host}/v1/events/${eventId}/attendees/me`, options);
     const data = await response.json();
 
     if (!response.ok) {
@@ -231,7 +231,7 @@ export async function deleteAttendeeFromEvent(eventId) {
       };
     }
 
-    return response.text();
+    return response.json();
   } catch (error) {
     window.lana?.log(`Failed to delete attendee for event ${eventId}. Error:`, error);
     return { ok: false, status: 'Network Error', error: error.message };
@@ -245,9 +245,9 @@ export async function getAndCreateAndAddAttendee(eventId, attendeeData) {
 
   if (!attendeeResp.ok && attendeeResp.status === 404) {
     attendee = await createAttendee(eventId, attendeeData);
-  } else if (attendeeResp.ok) {
+  } else if (attendeeResp.attendeeId) {
     attendee = await updateAttendee(eventId, { ...attendeeResp, ...attendeeData });
   }
 
-  return addAttendeeToEvent(eventId, attendee);
+  return addAttendeeToEvent(eventId, attendee.attendeeId);
 }

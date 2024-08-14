@@ -60,7 +60,6 @@ function constructPayload(form) {
 
 async function submitForm(form) {
   const payload = constructPayload(form);
-  payload.timestamp = new Date().toJSON();
   Object.keys(payload).forEach((key) => {
     if (!key) return false;
     const field = form.querySelector(`[data-field-id=${key}]`);
@@ -80,7 +79,7 @@ async function submitForm(form) {
     return true;
   });
 
-  return getAndCreateAndAddAttendee(getMetadata('eventId'), payload);
+  return getAndCreateAndAddAttendee(getMetadata('event-id'), payload);
 }
 
 function clearForm(form) {
@@ -333,14 +332,12 @@ function decorateSuccessMsg(form, bp) {
       if (i === 0) {
         const resp = await deleteAttendeeFromEvent(getMetadata('event-id'));
         cta.classList.remove('loading');
-
-        if (!resp.ok) {
+        if (resp?.espProvider?.status !== 204) {
           buildErrorMsg(bp.successMsg);
           return;
         }
 
-        // if resp.ok is true, the attendee was successfully deleted
-        BlockMediator.set('rsvpData', null);
+        if (resp?.espProvider.attendeeDeleted) BlockMediator.set('rsvpData', null);
       }
 
       const modal = form.closest('.dialog-modal');
