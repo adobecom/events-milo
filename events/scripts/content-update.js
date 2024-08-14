@@ -150,13 +150,14 @@ export async function validatePageAndRedirect() {
   }
 
   if (purposefulHitOnProdPreview) {
-    await waitForAdobeIMS();
-    const profile = await getProfile();
-    if (profile?.noProfile) {
-      signIn();
-    } else if (!profile.email.endsWith('@adobe.com')) {
-      window.location.replace('/404');
-    }
+    waitForAdobeIMS().then(async () => {
+      const profile = await getProfile();
+      if (profile?.noProfile) {
+        signIn();
+      } else if (!profile.email.endsWith('@adobe.com')) {
+        window.location.replace('/404');
+      }
+    });
   }
 }
 
