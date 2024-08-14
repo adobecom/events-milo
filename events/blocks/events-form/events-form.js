@@ -1,7 +1,7 @@
 import { LIBS } from '../../scripts/scripts.js';
 import { getMetadata } from '../../scripts/utils.js';
 import HtmlSanitizer from '../../scripts/deps/html-sanitizer.js';
-import { createAttendee, deleteAttendee, updateAttendee } from '../../scripts/esp-controller.js';
+import { deleteAttendeeFromEvent, getAndCreateAndAddAttendee } from '../../scripts/esp-controller.js';
 import BlockMediator from '../../scripts/deps/block-mediator.min.js';
 import { miloReplaceKey } from '../../scripts/content-update.js';
 
@@ -62,7 +62,6 @@ async function submitForm(bp) {
   const { form, sanitizeList } = bp;
   const rsvpData = BlockMediator.get('rsvpData');
   const payload = constructPayload(form);
-  payload.timestamp = new Date().toJSON();
   Object.keys(payload).forEach((key) => {
     if (!key) return false;
     const field = form.querySelector(`[data-field-id=${key}]`);
@@ -82,14 +81,7 @@ async function submitForm(bp) {
     return true;
   });
 
-  let resp = null;
-  if (!rsvpData || !rsvpData.status.registered) {
-    resp = await createAttendee(getMetadata('event-id'), payload);
-  } else {
-    resp = await updateAttendee(getMetadata('event-id'), { ...rsvpData?.attendee, ...payload });
-  }
-
-  return resp;
+  return getAndCreateAndAddAttendee(getMetadata('event-id'), payload);
 }
 
 function clearForm(form) {
@@ -134,7 +126,7 @@ function createButton({ type, label }, bp) {
         const respJson = await submitForm(bp);
         button.removeAttribute('disabled');
         button.classList.remove('submitting');
-        if (!respJson) {
+        if (respJson.error) {
           buildErrorMsg(bp.form);
           return;
         }
@@ -340,15 +332,14 @@ function decorateSuccessMsg(form, bp) {
       cta.classList.add('loading');
 
       if (i === 0) {
-        const resp = await deleteAttendee(getMetadata('event-id'));
+        const resp = await deleteAttendeeFromEvent(getMetadata('event-id'));
         cta.classList.remove('loading');
-
-        if (!resp) {
+        if (resp?.espProvider?.status !== 204) {
           buildErrorMsg(bp.successMsg);
           return;
         }
 
-        BlockMediator.set('rsvpData', resp);
+        if (resp?.espProvider.attendeeDeleted) BlockMediator.set('rsvpData', null);
       }
 
       const modal = form.closest('.dialog-modal');
@@ -497,7 +488,7 @@ async function onProfile(bp, formData) {
     eventHero.classList.remove('loading');
     decorateHero(bp.eventHero);
     buildEventform(bp, formData).then(() => {
-      if (rsvpData?.status.registered) {
+      if (rsvpData) {
         showSuccessMsg(bp);
       } else {
         personalizeForm(block, profile);
@@ -513,7 +504,7 @@ async function onProfile(bp, formData) {
         eventHero.classList.remove('loading');
         decorateHero(bp.eventHero);
         buildEventform(bp, formData).then(() => {
-          if (rsvpData?.status.registered) {
+          if (rsvpData) {
             showSuccessMsg(bp);
           } else {
             personalizeForm(block, newValue);

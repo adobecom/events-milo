@@ -92,7 +92,7 @@ function createTag(tag, attributes, html, options = {}) {
 async function updateRSVPButtonState(rsvpBtn, miloLibs) {
   const rsvpData = BlockMediator.get('rsvpData');
   const checkRed = getIcon('check-circle-red');
-  if (rsvpData?.status.registered) {
+  if (rsvpData) {
     const registeredText = await miloReplaceKey(miloLibs, 'registered-cta-text');
     updateAnalyticTag(rsvpBtn.el, registeredText);
     rsvpBtn.el.textContent = registeredText;
