@@ -92,7 +92,7 @@ function createTag(tag, attributes, html, options = {}) {
 async function updateRSVPButtonState(rsvpBtn, miloLibs) {
   const rsvpData = BlockMediator.get('rsvpData');
   const checkRed = getIcon('check-circle-red');
-  if (rsvpData?.status.registered) {
+  if (rsvpData) {
     const registeredText = await miloReplaceKey(miloLibs, 'registered-cta-text');
     updateAnalyticTag(rsvpBtn.el, registeredText);
     rsvpBtn.el.textContent = registeredText;
@@ -150,13 +150,14 @@ export async function validatePageAndRedirect() {
   }
 
   if (purposefulHitOnProdPreview) {
-    await waitForAdobeIMS();
-    const profile = await getProfile();
-    if (profile?.noProfile) {
-      signIn();
-    } else if (!profile.email.endsWith('@adobe.com')) {
-      window.location.replace('/404');
-    }
+    waitForAdobeIMS().then(async () => {
+      const profile = await getProfile();
+      if (profile?.noProfile) {
+        signIn();
+      } else if (!profile.email.endsWith('@adobe.com')) {
+        window.location.replace('/404');
+      }
+    });
   }
 }
 
