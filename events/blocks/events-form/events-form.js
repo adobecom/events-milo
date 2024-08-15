@@ -30,7 +30,7 @@ function snakeToCamel(str) {
 
 function createSelect({ field, placeholder, options, defval, required }) {
   const select = createTag('select', { id: field });
-  if (placeholder) select.append(createTag('option', { selected: '', disabled: '' }, placeholder));
+  if (placeholder) select.append(createTag('option', { selected: '', disabled: '', value: '' }, placeholder));
   options.split(';').forEach((o) => {
     const text = o.trim();
     const option = createTag('option', { value: text }, text);
@@ -61,9 +61,9 @@ function constructPayload(form) {
 async function submitForm(bp) {
   const { form, sanitizeList } = bp;
   const payload = constructPayload(form);
-  Object.keys(payload).forEach((key) => {
-    if (!key) return false;
+  const isValid = Object.keys(payload).reduce((valid, key) => {
     const field = form.querySelector(`[data-field-id=${key}]`);
+
     if (!payload[key] && field.querySelector('.group-container.required')) {
       const el = form.querySelector(`input[name="${key}"]`);
       el.setCustomValidity('A selection is required');
@@ -76,9 +76,15 @@ async function submitForm(bp) {
       field.addEventListener('input', cb);
       return false;
     }
-    if (sanitizeList.includes(key)) payload[key] = sanitizeComment(payload[key]);
-    return true;
-  });
+
+    if (sanitizeList.includes(key)) {
+      payload[key] = sanitizeComment(payload[key]);
+    }
+
+    return valid;
+  }, true);
+
+  if (!isValid) return false;
 
   return getAndCreateAndAddAttendee(getMetadata('event-id'), payload);
 }
@@ -125,6 +131,8 @@ function createButton({ type, label }, bp) {
         const respJson = await submitForm(bp);
         button.removeAttribute('disabled');
         button.classList.remove('submitting');
+        if (!respJson) return;
+
         if (respJson.error) {
           buildErrorMsg(bp.form);
           return;
@@ -168,7 +176,7 @@ function createlabel({ field, label, required }) {
 
 function createCheckItem(item, type, id, def) {
   const itemKebab = item.toLowerCase().replaceAll(' ', '-');
-  const defList = def.split(',').map((defItem) => defItem.trim());
+  const defList = def.split(';').map((defItem) => defItem.trim());
   const pseudoEl = createTag('span', { class: `check-item-button ${type}-button` });
   const label = createTag('label', { class: `check-item-label ${type}-label`, for: `${id}-${itemKebab}` }, item);
   const input = createTag(
@@ -180,7 +188,7 @@ function createCheckItem(item, type, id, def) {
 }
 
 function createCheckGroup({ options, field, defval, required }, type) {
-  const optionsMap = options.split(',').map((item) => createCheckItem(item.trim(), type, field, defval));
+  const optionsMap = options.split(';').map((item) => createCheckItem(item.trim(), type, field, defval));
   return createTag(
     'div',
     { class: `group-container ${type}-group-container${required === 'x' ? ' required' : ''}` },
@@ -231,10 +239,10 @@ function applyRules(form, rules) {
         force = (payload[key] !== value);
         break;
       case RULE_OPERATORS.includes:
-        force = (payload[key].split(',').map((s) => s.trim()).includes(value));
+        force = (payload[key].split(';').map((s) => s.trim()).includes(value));
         break;
       case RULE_OPERATORS.excludes:
-        force = (!payload[key].split(',').map((s) => s.trim()).includes(value));
+        force = (!payload[key].split(';').map((s) => s.trim()).includes(value));
         break;
       case RULE_OPERATORS.lessThan:
         force = processRule(tf, operator, payload[key], value, (a, b) => a < b);
