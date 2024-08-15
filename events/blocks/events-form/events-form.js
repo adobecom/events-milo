@@ -1,7 +1,7 @@
 import { LIBS } from '../../scripts/scripts.js';
 import { getMetadata } from '../../scripts/utils.js';
 import HtmlSanitizer from '../../scripts/deps/html-sanitizer.js';
-import { createAttendee, deleteAttendee, updateAttendee } from '../../scripts/esp-controller.js';
+import { deleteAttendeeFromEvent, getAndCreateAndAddAttendee } from '../../scripts/esp-controller.js';
 import BlockMediator from '../../scripts/deps/block-mediator.min.js';
 import { miloReplaceKey } from '../../scripts/content-update.js';
 
@@ -58,10 +58,9 @@ function constructPayload(form) {
   return payload;
 }
 
-async function submitForm(form) {
-  const rsvpData = BlockMediator.get('rsvpData');
+async function submitForm(bp) {
+  const { form, sanitizeList } = bp;
   const payload = constructPayload(form);
-  payload.timestamp = new Date().toJSON();
   Object.keys(payload).forEach((key) => {
     if (!key) return false;
     const field = form.querySelector(`[data-field-id=${key}]`);
@@ -77,18 +76,11 @@ async function submitForm(form) {
       field.addEventListener('input', cb);
       return false;
     }
-    payload[key] = sanitizeComment(payload[key]);
+    if (sanitizeList.includes(key)) payload[key] = sanitizeComment(payload[key]);
     return true;
   });
 
-  let resp = null;
-  if (!rsvpData || !rsvpData.status.registered) {
-    resp = await createAttendee(getMetadata('event-id'), payload);
-  } else {
-    resp = await updateAttendee(getMetadata('event-id'), { ...rsvpData?.attendee, ...payload });
-  }
-
-  return resp;
+  return getAndCreateAndAddAttendee(getMetadata('event-id'), payload);
 }
 
 function clearForm(form) {
@@ -130,10 +122,10 @@ function createButton({ type, label }, bp) {
         event.preventDefault();
         button.setAttribute('disabled', true);
         button.classList.add('submitting');
-        const respJson = await submitForm(bp.form);
+        const respJson = await submitForm(bp);
         button.removeAttribute('disabled');
         button.classList.remove('submitting');
-        if (!respJson) {
+        if (respJson.error) {
           buildErrorMsg(bp.form);
           return;
         }
@@ -339,15 +331,14 @@ function decorateSuccessMsg(form, bp) {
       cta.classList.add('loading');
 
       if (i === 0) {
-        const resp = await deleteAttendee(getMetadata('event-id'));
+        const resp = await deleteAttendeeFromEvent(getMetadata('event-id'));
         cta.classList.remove('loading');
-
-        if (!resp) {
+        if (resp?.espProvider?.status !== 204) {
           buildErrorMsg(bp.successMsg);
           return;
         }
 
-        BlockMediator.set('rsvpData', resp);
+        if (resp?.espProvider.attendeeDeleted) BlockMediator.set('rsvpData', null);
       }
 
       const modal = form.closest('.dialog-modal');
@@ -372,7 +363,7 @@ async function createForm(bp, formData) {
   let json = formData;
   /* c8 ignore next 4 */
   if (!formData) {
-    const resp = await fetch(pathname, { headers: { authorization: 'token milo-events-ecc' } });
+    const resp = await fetch(pathname);
     json = await resp.json();
   }
 
@@ -413,8 +404,13 @@ async function createForm(bp, formData) {
     default: { fn: createInput, params: [], label: true, classes: [] },
   };
 
+  const sanitizeList = [];
+
   json.data.forEach((fd) => {
     fd.type = fd.type || 'text';
+    if (fd.type === 'text' || fd.type === 'email' || fd.type === 'phone') {
+      sanitizeList.push(fd.field);
+    }
     const style = fd.extra ? ` events-form-${fd.extra}` : '';
     const fieldWrapper = createTag(
       'div',
@@ -444,7 +440,10 @@ async function createForm(bp, formData) {
   formEl.addEventListener('input', () => applyRules(formEl, rules));
   applyRules(formEl, rules);
 
-  return formEl;
+  return {
+    formEl,
+    sanitizeList,
+  };
 }
 
 function personalizeForm(form, data) {
@@ -467,13 +466,15 @@ async function buildEventform(bp, formData) {
   if (!bp.formContainer || !bp.form) return;
   bp.formContainer.classList.add('form-container');
   bp.successMsg.classList.add('form-success-msg');
-  const constructedForm = await createForm(
+  const { formEl, sanitizeList } = await createForm(
     bp,
     formData,
   );
-  if (constructedForm) {
-    bp.form.replaceWith(constructedForm);
-    bp.form = constructedForm;
+
+  if (formEl) {
+    bp.form.replaceWith(formEl);
+    bp.form = formEl;
+    bp.sanitizeList = sanitizeList;
   }
 }
 
@@ -486,7 +487,7 @@ async function onProfile(bp, formData) {
     eventHero.classList.remove('loading');
     decorateHero(bp.eventHero);
     buildEventform(bp, formData).then(() => {
-      if (rsvpData?.status.registered) {
+      if (rsvpData) {
         showSuccessMsg(bp);
       } else {
         personalizeForm(block, profile);
@@ -502,7 +503,7 @@ async function onProfile(bp, formData) {
         eventHero.classList.remove('loading');
         decorateHero(bp.eventHero);
         buildEventform(bp, formData).then(() => {
-          if (rsvpData?.status.registered) {
+          if (rsvpData) {
             showSuccessMsg(bp);
           } else {
             personalizeForm(block, newValue);

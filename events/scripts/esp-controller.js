@@ -79,117 +79,175 @@ export async function constructRequestOptions(method, body = null) {
 }
 
 export async function getEvent(eventId) {
-  const { host } = getAPIConfig().esl[window.eccEnv];
+  const { host } = getAPIConfig().esp[window.eccEnv];
   const options = await constructRequestOptions('GET');
 
-  const resp = await fetch(`${host}/v1/events/${eventId}`, options)
-    .then((res) => res.json())
-    .catch((error) => window.lana?.log(`Failed to get details for event ${eventId}. Error: ${error}`));
-  return resp;
-}
+  try {
+    const response = await fetch(`${host}/v1/events/${eventId}`, options);
+    const data = await response.json();
 
-export async function getAttendee(eventId) {
-  if (!eventId) return false;
+    if (!response.ok) {
+      window.lana?.log(`Failed to get details for event ${eventId}. Status:`, response.status, 'Error:', data);
+      return { ok: response.ok, status: response.status, error: data };
+    }
 
-  const { host } = getAPIConfig().esl[window.eccEnv];
-  const options = await constructRequestOptions('GET');
-
-  const resp = await fetch(`${host}/v1/events/${eventId}/attendees/me`, options);
-
-  if (resp.status === 404) {
-    return null;
+    return data;
+  } catch (error) {
+    window.lana?.log(`Failed to get details for event ${eventId}. Error:`, error);
+    return { ok: false, status: 'Network Error', error: error.message };
   }
-
-  return resp.json();
 }
 
-export async function getAttendeeStatus(eventId) {
-  if (!eventId) return false;
+export async function getEventAttendee(eventId) {
+  const { host } = getAPIConfig().esp[window.eccEnv];
+  const options = await constructRequestOptions('GET');
 
+  try {
+    const response = await fetch(`${host}/v1/events/${eventId}/attendees/me`, options);
+
+    if (!response.ok) {
+      window.lana?.log(`Failed to get attendee for event ${eventId}. Error:`, response.status);
+      return {
+        ok: response.ok,
+        status: response.status,
+        error: response.text() || response.status,
+      };
+    }
+
+    return await response.json();
+  } catch (error) {
+    window.lana?.log(`Failed to get attendee for event ${eventId}. Error:`, error);
+    return { ok: false, status: 'Network Error', error: error.message };
+  }
+}
+
+export async function getAttendee() {
   const { host } = getAPIConfig().esl[window.eccEnv];
   const options = await constructRequestOptions('GET');
 
-  const resp = await fetch(`${host}/v1/events/${eventId}/attendees/me/status`, options)
-    .then((res) => res.json())
-    .catch((error) => window.lana?.log(`Failed to get status of attendee me for event ${eventId}. Error: ${error}`));
-  return resp;
+  try {
+    const response = await fetch(`${host}/v1/attendees/me`, options);
+
+    if (!response.ok) {
+      window.lana?.log('Failed to get attendee details. Status:', response.status);
+      return {
+        ok: response.ok,
+        status: response.status,
+        error: response.text() || response.status,
+      };
+    }
+
+    return response.json();
+  } catch (error) {
+    window.lana?.log('Failed to get attendee. Error:', error);
+    return { ok: false, status: 'Network Error', error: error.message };
+  }
 }
 
-export async function getCompleteAttendeeData(eventId) {
-  const [attendee, status] = await Promise.all([
-    getAttendee(eventId),
-    getAttendeeStatus(eventId),
-  ]);
-
-  return { attendee, status };
-}
-
-export async function createAttendee(eventId, attendeeData) {
-  if (!eventId || !attendeeData) return false;
+export async function createAttendee(attendeeData) {
+  if (!attendeeData) return false;
 
   const { host } = getAPIConfig().esl[window.eccEnv];
   const raw = JSON.stringify(attendeeData);
   const options = await constructRequestOptions('POST', raw);
 
-  const resp = await fetch(`${host}/v1/events/${eventId}/attendees`, options)
-    .then((res) => res.json())
-    .catch((error) => window.lana?.log(`Failed to create attendee for event ${eventId}. Error: ${error}`));
+  try {
+    const response = await fetch(`${host}/v1/attendees`, options);
+    const data = await response.json();
 
-  if (!resp || resp.errors || resp.message) {
-    return false;
+    if (!response.ok) {
+      window.lana?.log('Failed to create attendee. Status:', response.status, 'Error:', data);
+      return { ok: response.ok, status: response.status, error: data };
+    }
+
+    return data;
+  } catch (error) {
+    window.lana?.log('Failed to create attendee. Error:', error);
+    return { ok: false, status: 'Network Error', error: error.message };
   }
-
-  // FIXME: create attendee doesn't respond with attendee data
-  const rsvpData = await getCompleteAttendeeData(eventId);
-  return rsvpData;
 }
 
-export async function updateAttendee(eventId, attendeeData) {
-  if (!eventId) return false;
+export async function addAttendeeToEvent(eventId, attendeeId) {
+  if (!eventId || !attendeeId) return false;
+
+  const { host } = getAPIConfig().esl[window.eccEnv];
+  const raw = JSON.stringify({ attendeeId });
+  const options = await constructRequestOptions('POST', raw);
+
+  try {
+    const response = await fetch(`${host}/v1/events/${eventId}/attendees/me`, options);
+    const data = await response.json();
+
+    if (!response.ok) {
+      window.lana?.log(`Failed to add attendee for event ${eventId}. Status:`, response.status, 'Error:', data);
+      return { ok: response.ok, status: response.status, error: data };
+    }
+
+    return data;
+  } catch (error) {
+    window.lana?.log(`Failed to add attendee for event ${eventId}. Error:`, error);
+    return { ok: false, status: 'Network Error', error: error.message };
+  }
+}
+
+export async function updateAttendee(attendeeData) {
+  if (!attendeeData) return false;
 
   const { host } = getAPIConfig().esl[window.eccEnv];
   const raw = JSON.stringify(attendeeData);
   const options = await constructRequestOptions('PUT', raw);
 
-  const resp = await fetch(`${host}/v1/events/${eventId}/attendees/me`, options)
-    .then((res) => res.json())
-    .catch((error) => window.lana?.log(`Failed to update attendee me for event ${eventId}. Error: ${error}`));
+  try {
+    const response = await fetch(`${host}/v1/attendees/me`, options);
+    const data = await response.json();
 
-  if (!resp || resp.errors || resp.message) {
-    return false;
+    if (!response.ok) {
+      window.lana?.log('Failed to update attendee. Status:', response.status, 'Error:', data);
+      return { ok: response.ok, status: response.status, error: data };
+    }
+
+    return data;
+  } catch (error) {
+    window.lana?.log('Failed to update attendee. Error:', error);
+    return { ok: false, status: 'Network Error', error: error.message };
   }
-  // FIXME: update attendee doesn't update attendee data.
-  // instead, it actually strips the previously submitted data and returns only the basic info
-  const rsvpData = await getCompleteAttendeeData(eventId);
-  return rsvpData;
 }
 
-export async function deleteAttendee(eventId) {
+export async function deleteAttendeeFromEvent(eventId) {
   if (!eventId) return false;
 
   const { host } = getAPIConfig().esl[window.eccEnv];
   const options = await constructRequestOptions('DELETE');
 
-  const resp = await fetch(`${host}/v1/events/${eventId}/attendees/me`, options)
-    .then((res) => res.json())
-    .catch((error) => window.lana?.log(`Failed to delete attendee me for event ${eventId}. Error: ${error}`));
+  try {
+    const response = await fetch(`${host}/v1/events/${eventId}/attendees/me`, options);
 
-  if (!resp || resp.errors || resp.message) {
-    return false;
+    if (!response.ok) {
+      window.lana?.log(`Failed to delete attendee for event ${eventId}. Status:`, response.status, 'Error:', response.status);
+      return {
+        ok: response.ok,
+        status: response.status,
+        error: response.text() || response.status,
+      };
+    }
+
+    return response.json();
+  } catch (error) {
+    window.lana?.log(`Failed to delete attendee for event ${eventId}. Error:`, error);
+    return { ok: false, status: 'Network Error', error: error.message };
   }
-
-  const rsvpData = await getCompleteAttendeeData(eventId);
-  return rsvpData;
 }
 
-export async function getAttendees(eventId) {
-  if (!eventId) return false;
+// compound helper functions
+export async function getAndCreateAndAddAttendee(eventId, attendeeData) {
+  const attendeeResp = await getAttendee(eventId);
+  let attendee;
 
-  const { host } = getAPIConfig().esl[window.eccEnv];
-  const options = await constructRequestOptions('GET');
+  if (!attendeeResp.ok && attendeeResp.status === 404) {
+    attendee = await createAttendee(attendeeData);
+  } else if (attendeeResp.attendeeId) {
+    attendee = await updateAttendee({ ...attendeeResp, ...attendeeData });
+  }
 
-  const resp = await fetch(`${host}/v1/events/${eventId}/attendees`, options)
-    .then((res) => res.json())
-    .catch((error) => window.lana?.log(`Failed to fetch attendees for event ${eventId}. Error: ${error}`));
-  return resp;
+  return addAttendeeToEvent(eventId, attendee.attendeeId);
 }
