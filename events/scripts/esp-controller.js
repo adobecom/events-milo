@@ -167,11 +167,12 @@ export async function createAttendee(attendeeData) {
   }
 }
 
-export async function addAttendeeToEvent(eventId, attendeeId) {
-  if (!eventId || !attendeeId) return false;
+export async function addAttendeeToEvent(eventId, attendee) {
+  if (!eventId || !attendee) return false;
 
+  const { firstName, lastName, email } = attendee;
   const { host } = getAPIConfig().esl[window.eccEnv];
-  const raw = JSON.stringify({ attendeeId });
+  const raw = JSON.stringify({ firstName, lastName, email });
   const options = await constructRequestOptions('POST', raw);
 
   try {
@@ -249,5 +250,5 @@ export async function getAndCreateAndAddAttendee(eventId, attendeeData) {
     attendee = await updateAttendee({ ...attendeeResp, ...attendeeData });
   }
 
-  return addAttendeeToEvent(eventId, attendee.attendeeId);
+  return addAttendeeToEvent(eventId, attendee);
 }
