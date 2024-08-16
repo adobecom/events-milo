@@ -69,6 +69,7 @@
 }
 
 .events-form :is(input, textarea, select) {
+  font-family: var(--body-font-family);
   border: solid 1px var(--color-gray-500);
   padding: var(--spacing-xxs) var(--spacing-xs);
   width: 100%;
@@ -76,6 +77,15 @@
   border-radius: var(--input-border-radius);
   font-size: var(--type-body-xs-size);
   line-height: var(--type-body-xs-lh);
+}
+
+.events-form :is(input, textarea, select):disabled {
+  font-size: var(--type-body-l-size);
+  font-weight: 700;
+  border: none;
+  color: var(--color-black);
+  background: none;
+  padding-left: 0;
 }
 
 .events-form textarea {
