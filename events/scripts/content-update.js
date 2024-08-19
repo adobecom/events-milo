@@ -171,6 +171,13 @@ async function handleRegisterButton(a, miloLibs) {
     originalText: a.textContent,
   };
 
+  const eventFull = +getMetadata('attendeeLimit') <= +getMetadata('attendeeCount');
+  if (eventFull) {
+    rsvpBtn.el.classList.add('disabled');
+    rsvpBtn.el.href = '';
+    rsvpBtn.textContent = await miloReplaceKey(miloLibs, 'event-full-cta-text');
+  }
+
   const loadingText = await miloReplaceKey(miloLibs, 'rsvp-loading-cta-text');
   updateAnalyticTag(rsvpBtn.el, loadingText);
   a.textContent = loadingText;
