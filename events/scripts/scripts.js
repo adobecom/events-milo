@@ -10,10 +10,9 @@
  * governing permissions and limitations under the License.
  */
 
-import { getProfile, lazyCaptureProfile } from './profile.js';
-import autoUpdateContent, { getNonProdData, signIn, validatePageAndRedirect } from './content-update.js';
+import { lazyCaptureProfile } from './profile.js';
+import autoUpdateContent, { getNonProdData, validatePageAndRedirect } from './content-update.js';
 import { setMetadata } from './utils.js';
-import { waitForAdobeIMS } from './esp-controller.js';
 
 export const LIBS = (() => {
   const { hostname, search } = window.location;
@@ -140,18 +139,7 @@ function renderWithNonProdMetadata() {
 
   const isPreviewMode = new URLSearchParams(window.location.search).get('previewMode');
 
-  if (isLiveProd && isPreviewMode) {
-    waitForAdobeIMS().then(async () => {
-      const profile = await getProfile();
-      if (profile?.noProfile) {
-        signIn();
-      } else if (profile) {
-        return profile.email.endsWith('@adobe.com');
-      }
-
-      return false;
-    });
-  }
+  if (isLiveProd && isPreviewMode) return true;
 
   return false;
 }
