@@ -1,5 +1,5 @@
 import BlockMediator from './deps/block-mediator.min.js';
-import { waitForAdobeIMS } from './esp-controller.js';
+import { getEvent, waitForAdobeIMS } from './esp-controller.js';
 import { getProfile } from './profile.js';
 import { handlize, getMetadata, setMetadata, getIcon, readBlockConfig } from './utils.js';
 
@@ -171,26 +171,34 @@ async function handleRegisterButton(a, miloLibs) {
     originalText: a.textContent,
   };
 
-  const eventFull = +getMetadata('attendeeLimit') <= +getMetadata('attendeeCount');
-  if (eventFull) {
-    rsvpBtn.el.classList.add('disabled');
-    rsvpBtn.el.href = '';
-    rsvpBtn.textContent = await miloReplaceKey(miloLibs, 'event-full-cta-text');
-    return;
-  }
+  a.classList.add('rsvp-btn', 'disabled');
 
   const loadingText = await miloReplaceKey(miloLibs, 'rsvp-loading-cta-text');
   updateAnalyticTag(rsvpBtn.el, loadingText);
   a.textContent = loadingText;
-  a.classList.add('disabled', 'rsvp-btn');
+  a.setAttribute('tabindex', '-1');
+
+  const eventInfo = await getEvent(getMetadata('event-id'));
+
+  if (eventInfo && !eventInfo.error) {
+    const eventFull = +eventInfo.attendeeLimit <= +eventInfo.attendeeCount;
+    if (eventFull) {
+      a.setAttribute('tabindex', '-1');
+      a.href = '';
+      a.textContent = await miloReplaceKey(miloLibs, 'event-full-cta-text');
+      return;
+    }
+  }
 
   const profile = BlockMediator.get('imsProfile');
   if (profile) {
     a.classList.remove('disabled');
+    a.setAttribute('tabindex', '-1');
     handleRSVPBtnBasedOnProfile(rsvpBtn, miloLibs, profile);
   } else {
     BlockMediator.subscribe('imsProfile', ({ newValue }) => {
       a.classList.remove('disabled');
+      a.setAttribute('tabindex', '-1');
       handleRSVPBtnBasedOnProfile(rsvpBtn, miloLibs, newValue);
     });
   }
