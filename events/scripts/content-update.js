@@ -1,6 +1,4 @@
 import BlockMediator from './deps/block-mediator.min.js';
-import { waitForAdobeIMS } from './esp-controller.js';
-import { getProfile } from './profile.js';
 import { handlize, getMetadata, setMetadata, getIcon, readBlockConfig } from './utils.js';
 
 export const META_REG = /\[\[(.*?)\]\]/g;
@@ -150,12 +148,14 @@ export async function validatePageAndRedirect() {
   }
 
   if (purposefulHitOnProdPreview) {
-    waitForAdobeIMS().then(async () => {
-      const profile = await getProfile();
-      if (profile?.noProfile) {
+    document.body.style.display = 'none';
+    BlockMediator.subscribe('imsProfile', ({ newValue }) => {
+      if (newValue?.noProfile) {
         signIn();
-      } else if (!profile.email.endsWith('@adobe.com')) {
+      } else if (!newValue.email.endsWith('@adobe.com')) {
         window.location.replace('/404');
+      } else {
+        document.body.removeAttribute('style');
       }
     });
   }
