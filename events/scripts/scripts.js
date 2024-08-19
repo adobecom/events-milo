@@ -10,9 +10,10 @@
  * governing permissions and limitations under the License.
  */
 
-import { lazyCaptureProfile } from './profile.js';
-import autoUpdateContent, { getNonProdData, validatePageAndRedirect } from './content-update.js';
+import { getProfile, lazyCaptureProfile } from './profile.js';
+import autoUpdateContent, { getNonProdData, signIn, validatePageAndRedirect } from './content-update.js';
 import { setMetadata } from './utils.js';
+import { waitForAdobeIMS } from './esp-controller.js';
 
 export const LIBS = (() => {
   const { hostname, search } = window.location;
@@ -127,9 +128,37 @@ export const MILO_CONFIG = setConfig({ ...CONFIG, miloLibs: LIBS });
 // FIXME: Code smell. This should be exportable.
 window.eccEnv = getECCEnv(MILO_CONFIG);
 
+function renderWithNonProdMetadata() {
+  const isEventDetailsPage = getMetadata('event-details-page') === 'yes';
+
+  if (!isEventDetailsPage) return false;
+
+  const isLiveProd = window.eccEnv === 'prod' && window.location.hostname === 'www.adobe.com';
+  const isMissingEventId = !getMetadata('event-id');
+
+  if (!isLiveProd && isMissingEventId) return true;
+
+  const isPreviewMode = new URLSearchParams(window.location.search).get('previewMode');
+
+  if (isLiveProd && isPreviewMode) {
+    waitForAdobeIMS().then(async () => {
+      const profile = await getProfile();
+      if (profile?.noProfile) {
+        signIn();
+      } else if (profile) {
+        return profile.email.endsWith('@adobe.com');
+      }
+
+      return false;
+    });
+  }
+
+  return false;
+}
+
 async function fetchAndDecorateArea() {
   // Load non-prod data for stage and dev environments
-  const nonProdData = await getNonProdData(window.eccEnv, MILO_CONFIG);
+  const nonProdData = await getNonProdData(window.eccEnv);
   if (!nonProdData) return;
   Object.entries(nonProdData).forEach(([key, value]) => {
     if (key === 'event-title') {
@@ -143,12 +172,13 @@ async function fetchAndDecorateArea() {
 }
 
 // Decorate the page with site specific needs.
+
 decorateArea();
 
-if (window.eccEnv !== 'prod' && !getMetadata('event-id') && getMetadata('event-details-page') === 'yes') {
-  await fetchAndDecorateArea();
-}
+// fetch metadata json and decorate again if non-prod or prod + preview mode
+if (renderWithNonProdMetadata()) await fetchAndDecorateArea();
 
+// Validate the page and redirect if is event-details-page
 if (getMetadata('event-details-page') === 'yes') await validatePageAndRedirect();
 
 /*

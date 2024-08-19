@@ -106,17 +106,17 @@ async function updateRSVPButtonState(rsvpBtn, miloLibs) {
   // FIXME: no waitlisted state yet.
 }
 
-const signIn = () => {
+export function signIn() {
   if (typeof window.adobeIMS?.signIn !== 'function') {
     window?.lana.log({ message: 'IMS signIn method not available', tags: 'errorType=warn,module=gnav' });
     return;
   }
 
-  // add custom SUSI page id, sth like this:
+  // TODO: add custom SUSI page id, sth like this:
   // adobeIMS.signIn({dctx_id: 'v:2,s,bg:expressUpsell,85709a30-0d87-11ef-a91c-2be7a9b482cb'})
 
   window.adobeIMS?.signIn();
-};
+}
 
 async function handleRSVPBtnBasedOnProfile(rsvpBtn, miloLibs, profile) {
   if (profile?.noProfile) {
@@ -369,7 +369,8 @@ function injectFragments(parent) {
 }
 
 export async function getNonProdData(env) {
-  const resp = await fetch(`/events/default/${env}/metadata.json`);
+  const isPreviewMode = new URLSearchParams(window.location.search).get('previewMode') || window.location.hostname.endsWith('.hlx.page');
+  const resp = await fetch(`/events/default/${env}/metadata${isPreviewMode ? '-preview' : ''}.json`);
   if (resp.ok) {
     const json = await resp.json();
     let { pathname } = window.location;
