@@ -176,6 +176,7 @@ async function handleRegisterButton(a, miloLibs) {
     rsvpBtn.el.classList.add('disabled');
     rsvpBtn.el.href = '';
     rsvpBtn.textContent = await miloReplaceKey(miloLibs, 'event-full-cta-text');
+    return;
   }
 
   const loadingText = await miloReplaceKey(miloLibs, 'rsvp-loading-cta-text');
