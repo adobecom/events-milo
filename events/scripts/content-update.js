@@ -92,17 +92,24 @@ async function updateRSVPButtonState(rsvpBtn, miloLibs) {
   const rsvpData = BlockMediator.get('rsvpData');
   const checkRed = getIcon('check-circle-red');
   if (rsvpData) {
-    const registeredText = await miloReplaceKey(miloLibs, 'registered-cta-text');
-    updateAnalyticTag(rsvpBtn.el, registeredText);
-    rsvpBtn.el.textContent = registeredText;
-    rsvpBtn.el.prepend(checkRed);
+    if (rsvpData.error) {
+      if (rsvpData.status === 400) {
+        const eventFull = await miloReplaceKey(miloLibs, 'event-full-cta-text');
+        updateAnalyticTag(rsvpBtn.el, eventFull);
+        rsvpBtn.el.textContent = eventFull;
+        checkRed.remove();
+      }
+    } else {
+      const registeredText = await miloReplaceKey(miloLibs, 'registered-cta-text');
+      updateAnalyticTag(rsvpBtn.el, registeredText);
+      rsvpBtn.el.textContent = registeredText;
+      rsvpBtn.el.prepend(checkRed);
+    }
   } else {
     updateAnalyticTag(rsvpBtn.el, rsvpBtn.originalText);
     rsvpBtn.el.textContent = rsvpBtn.originalText;
     checkRed.remove();
   }
-
-  // FIXME: no waitlisted state yet.
 }
 
 export function signIn() {
