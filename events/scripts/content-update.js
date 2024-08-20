@@ -184,14 +184,14 @@ async function handleRegisterButton(a, miloLibs) {
   const loadingText = await miloReplaceKey(miloLibs, 'rsvp-loading-cta-text');
   updateAnalyticTag(rsvpBtn.el, loadingText);
   a.textContent = loadingText;
-  a.setAttribute('tabindex', '-1');
+  a.setAttribute('tabindex', -1);
 
   const eventInfo = await getEvent(getMetadata('event-id'));
 
   if (eventInfo && !eventInfo.error) {
     const eventFull = +eventInfo.attendeeLimit <= +eventInfo.attendeeCount;
     if (eventFull) {
-      a.setAttribute('tabindex', '-1');
+      a.setAttribute('tabindex', -1);
       a.href = '';
       a.textContent = await miloReplaceKey(miloLibs, 'event-full-cta-text');
       return;
@@ -201,12 +201,12 @@ async function handleRegisterButton(a, miloLibs) {
   const profile = BlockMediator.get('imsProfile');
   if (profile) {
     a.classList.remove('disabled');
-    a.setAttribute('tabindex', '-1');
+    a.setAttribute('tabindex', 0);
     handleRSVPBtnBasedOnProfile(rsvpBtn, miloLibs, profile);
   } else {
     BlockMediator.subscribe('imsProfile', ({ newValue }) => {
       a.classList.remove('disabled');
-      a.setAttribute('tabindex', '-1');
+      a.setAttribute('tabindex', 0);
       handleRSVPBtnBasedOnProfile(rsvpBtn, miloLibs, newValue);
     });
   }
