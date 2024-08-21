@@ -97,37 +97,31 @@ async function updateRSVPButtonState(rsvpBtn, miloLibs, eventInfo) {
     updateAnalyticTag(rsvpBtn.el, rsvpBtn.originalText);
     rsvpBtn.el.textContent = rsvpBtn.originalText;
     checkRed.remove();
-  }
-
-  if (rsvpData && !rsvpData.error) {
+  } else if (!rsvpData.error) {
     const registeredText = await miloReplaceKey(miloLibs, 'registered-cta-text');
     updateAnalyticTag(rsvpBtn.el, registeredText);
     rsvpBtn.el.textContent = registeredText;
     rsvpBtn.el.prepend(checkRed);
-  }
-
-  if (rsvpData.status === 400) {
+  } else if (rsvpData.status === 400) {
     const eventFullText = await miloReplaceKey(miloLibs, 'event-full-cta-text');
     rsvpBtn.el.setAttribute('tabindex', -1);
     rsvpBtn.el.href = '';
     updateAnalyticTag(rsvpBtn.el, eventFullText);
     rsvpBtn.el.textContent = eventFullText;
     checkRed.remove();
-  }
-
-  if (rsvpData.status === 404 && eventFull) {
-    const eventFullText = await miloReplaceKey(miloLibs, 'event-full-cta-text');
-    rsvpBtn.el.setAttribute('tabindex', -1);
-    rsvpBtn.el.href = '';
-    updateAnalyticTag(rsvpBtn.el, eventFullText);
-    rsvpBtn.el.textContent = eventFullText;
-    checkRed.remove();
-  }
-
-  if (rsvpData.status === 404 && !eventFull) {
-    updateAnalyticTag(rsvpBtn.el, rsvpBtn.originalText);
-    rsvpBtn.el.textContent = rsvpBtn.originalText;
-    checkRed.remove();
+  } else if (rsvpData.status === 404) {
+    if (eventFull) {
+      const eventFullText = await miloReplaceKey(miloLibs, 'event-full-cta-text');
+      rsvpBtn.el.setAttribute('tabindex', -1);
+      rsvpBtn.el.href = '';
+      updateAnalyticTag(rsvpBtn.el, eventFullText);
+      rsvpBtn.el.textContent = eventFullText;
+      checkRed.remove();
+    } else {
+      updateAnalyticTag(rsvpBtn.el, rsvpBtn.originalText);
+      rsvpBtn.el.textContent = rsvpBtn.originalText;
+      checkRed.remove();
+    }
   }
 }
 
