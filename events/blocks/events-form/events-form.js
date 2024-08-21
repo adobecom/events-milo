@@ -136,8 +136,16 @@ function createButton({ type, label }, bp) {
         if (!respJson) return;
 
         BlockMediator.set('rsvpData', respJson);
-        if (respJson.error) {
-          buildErrorMsg(bp.form, respJson.status);
+        if (!respJson.ok || respJson.error) {
+          let { status } = respJson;
+
+          // FIXME: temporary fix for ESL 500 on ESP 400
+          if (!status || status === 500) {
+            if (respJson.error?.message === 'Request to ESP failed: Event is full') {
+              status = 400;
+            }
+          }
+          buildErrorMsg(bp.form, status);
           return;
         }
 
