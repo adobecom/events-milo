@@ -99,13 +99,15 @@ function clearForm(form) {
   });
 }
 
-async function buildErrorMsg(parent) {
+async function buildErrorMsg(parent, status) {
+  const errorKeyMap = { 400: 'event-full-error-msg' };
+
   const existingErrors = parent.querySelectorAll('.error');
   if (existingErrors.length) {
     existingErrors.forEach((err) => err.remove());
   }
 
-  const errorMsg = await miloReplaceKey(LIBS, 'rsvp-error-msg');
+  const errorMsg = await miloReplaceKey(LIBS, errorKeyMap[status] || 'rsvp-error-msg');
   const error = createTag('p', { class: 'error' }, errorMsg);
   parent.append(error);
   setTimeout(() => {
@@ -133,12 +135,12 @@ function createButton({ type, label }, bp) {
         button.classList.remove('submitting');
         if (!respJson) return;
 
+        BlockMediator.set('rsvpData', respJson);
         if (respJson.error) {
-          buildErrorMsg(bp.form);
+          buildErrorMsg(bp.form, respJson.status);
           return;
         }
 
-        BlockMediator.set('rsvpData', respJson);
         showSuccessMsg(bp);
       }
     });
