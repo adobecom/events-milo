@@ -146,13 +146,11 @@ function createButton({ type, label }, bp) {
             }
           }
           buildErrorMsg(bp.form, status);
-          return;
         }
-
-        showSuccessMsg(bp);
       }
     });
   }
+
   if (type === 'clear') {
     button.classList.add('outline');
     button.addEventListener('click', (e) => {
@@ -356,7 +354,7 @@ function decorateSuccessMsg(form, bp) {
           return;
         }
 
-        if (resp?.espProvider.attendeeDeleted) BlockMediator.set('rsvpData', null);
+        if (resp?.espProvider?.attendeeDeleted) BlockMediator.set('rsvpData', null);
       }
 
       const modal = form.closest('.dialog-modal');
@@ -496,20 +494,32 @@ async function buildEventform(bp, formData) {
   }
 }
 
+function initFormBasedOnRSVPData(bp) {
+  const { block } = bp;
+  const profile = BlockMediator.get('imsProfile');
+  const rsvpData = BlockMediator.get('rsvpData');
+  if (rsvpData?.espProvider?.registered || rsvpData?.externalAttendeeId) {
+    showSuccessMsg(bp);
+  } else {
+    personalizeForm(block, profile);
+  }
+
+  BlockMediator.subscribe('rsvpData', ({ newValue }) => {
+    if (newValue?.espProvider?.registered || newValue?.externalAttendeeId) {
+      showSuccessMsg(bp);
+    }
+  });
+}
+
 async function onProfile(bp, formData) {
   const { block, eventHero } = bp;
   const profile = BlockMediator.get('imsProfile');
 
   if (profile && !profile.noProfile) {
-    const rsvpData = BlockMediator.get('rsvpData');
     eventHero.classList.remove('loading');
     decorateHero(bp.eventHero);
     buildEventform(bp, formData).then(() => {
-      if (rsvpData) {
-        showSuccessMsg(bp);
-      } else {
-        personalizeForm(block, profile);
-      }
+      initFormBasedOnRSVPData(bp);
     }).finally(() => {
       decorateDefaultLinkAnalytics(block);
       block.classList.remove('loading');
@@ -517,15 +527,10 @@ async function onProfile(bp, formData) {
   } else if (!profile) {
     BlockMediator.subscribe('imsProfile', ({ newValue }) => {
       if (newValue && !newValue.noProfile) {
-        const rsvpData = BlockMediator.get('rsvpData');
         eventHero.classList.remove('loading');
         decorateHero(bp.eventHero);
         buildEventform(bp, formData).then(() => {
-          if (rsvpData) {
-            showSuccessMsg(bp);
-          } else {
-            personalizeForm(block, newValue);
-          }
+          initFormBasedOnRSVPData(bp);
         }).finally(() => {
           decorateDefaultLinkAnalytics(block);
           block.classList.remove('loading');

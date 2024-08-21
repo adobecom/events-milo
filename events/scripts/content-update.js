@@ -109,7 +109,7 @@ async function updateRSVPButtonState(rsvpBtn, miloLibs, eventInfo) {
       rsvpBtn.el.textContent = rsvpBtn.originalText;
       checkRed.remove();
     }
-  } else if (rsvpData.espProvider?.registered) {
+  } else if (rsvpData.espProvider?.registered || rsvpData.externalAttendeeId) {
     const registeredText = await miloReplaceKey(miloLibs, 'registered-cta-text');
     rsvpBtn.el.classList.remove('disabled');
     rsvpBtn.el.setAttribute('tabindex', 0);
