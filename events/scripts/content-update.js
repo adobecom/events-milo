@@ -122,6 +122,7 @@ async function updateRSVPButtonState(rsvpBtn, miloLibs, eventInfo) {
       const eventFullText = await miloReplaceKey(miloLibs, 'event-full-cta-text');
       rsvpBtn.el.setAttribute('tabindex', -1);
       rsvpBtn.el.href = '';
+      rsvpBtn.el.classList.add('disabled');
       updateAnalyticTag(rsvpBtn.el, eventFullText);
       rsvpBtn.el.textContent = eventFullText;
       checkRed.remove();
