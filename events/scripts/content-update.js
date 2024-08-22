@@ -94,40 +94,39 @@ async function updateRSVPButtonState(rsvpBtn, miloLibs, eventInfo) {
   const eventFull = +eventInfo.attendeeLimit <= +eventInfo.attendeeCount;
 
   if (!rsvpData) {
-    updateAnalyticTag(rsvpBtn.el, rsvpBtn.originalText);
-    rsvpBtn.el.textContent = rsvpBtn.originalText;
-    checkRed.remove();
-  }
-
-  if (rsvpData && !rsvpData.error) {
+    if (eventFull) {
+      const eventFullText = await miloReplaceKey(miloLibs, 'event-full-cta-text');
+      rsvpBtn.el.setAttribute('tabindex', -1);
+      rsvpBtn.el.href = '';
+      rsvpBtn.el.classList.add('disabled');
+      updateAnalyticTag(rsvpBtn.el, eventFullText);
+      rsvpBtn.el.textContent = eventFullText;
+      checkRed.remove();
+    } else {
+      rsvpBtn.el.classList.remove('disabled');
+      rsvpBtn.el.setAttribute('tabindex', 0);
+      updateAnalyticTag(rsvpBtn.el, rsvpBtn.originalText);
+      rsvpBtn.el.textContent = rsvpBtn.originalText;
+      checkRed.remove();
+    }
+  } else if (rsvpData.espProvider?.registered || rsvpData.externalAttendeeId) {
     const registeredText = await miloReplaceKey(miloLibs, 'registered-cta-text');
+    rsvpBtn.el.classList.remove('disabled');
+    rsvpBtn.el.setAttribute('tabindex', 0);
     updateAnalyticTag(rsvpBtn.el, registeredText);
     rsvpBtn.el.textContent = registeredText;
     rsvpBtn.el.prepend(checkRed);
-  }
-
-  if (rsvpData.status === 400) {
-    const eventFullText = await miloReplaceKey(miloLibs, 'event-full-cta-text');
-    rsvpBtn.el.setAttribute('tabindex', -1);
-    rsvpBtn.el.href = '';
-    updateAnalyticTag(rsvpBtn.el, eventFullText);
-    rsvpBtn.el.textContent = eventFullText;
-    checkRed.remove();
-  }
-
-  if (rsvpData.status === 404 && eventFull) {
-    const eventFullText = await miloReplaceKey(miloLibs, 'event-full-cta-text');
-    rsvpBtn.el.setAttribute('tabindex', -1);
-    rsvpBtn.el.href = '';
-    updateAnalyticTag(rsvpBtn.el, eventFullText);
-    rsvpBtn.el.textContent = eventFullText;
-    checkRed.remove();
-  }
-
-  if (rsvpData.status === 404 && !eventFull) {
-    updateAnalyticTag(rsvpBtn.el, rsvpBtn.originalText);
-    rsvpBtn.el.textContent = rsvpBtn.originalText;
-    checkRed.remove();
+  } else if (!rsvpData.ok) {
+    // FIXME: temporary solution for ESL returning 500 on ESP 400 response
+    if (rsvpData.error?.message === 'Request to ESP failed: Event is full') {
+      const eventFullText = await miloReplaceKey(miloLibs, 'event-full-cta-text');
+      rsvpBtn.el.setAttribute('tabindex', -1);
+      rsvpBtn.el.href = '';
+      rsvpBtn.el.classList.add('disabled');
+      updateAnalyticTag(rsvpBtn.el, eventFullText);
+      rsvpBtn.el.textContent = eventFullText;
+      checkRed.remove();
+    }
   }
 }
 
@@ -160,6 +159,8 @@ async function handleRSVPBtnBasedOnProfile(rsvpBtn, miloLibs, profile) {
       const signInText = await miloReplaceKey(miloLibs, 'sign-in-rsvp-cta-text');
       updateAnalyticTag(rsvpBtn.el, signInText);
       rsvpBtn.el.textContent = signInText;
+      rsvpBtn.el.classList.remove('disabled');
+      rsvpBtn.el.setAttribute('tabindex', 0);
       rsvpBtn.el.addEventListener('click', (e) => {
         e.preventDefault();
         signIn();
@@ -220,13 +221,9 @@ async function handleRegisterButton(a, miloLibs) {
 
   const profile = BlockMediator.get('imsProfile');
   if (profile) {
-    a.classList.remove('disabled');
-    a.setAttribute('tabindex', 0);
     handleRSVPBtnBasedOnProfile(rsvpBtn, miloLibs, profile);
   } else {
     BlockMediator.subscribe('imsProfile', ({ newValue }) => {
-      a.classList.remove('disabled');
-      a.setAttribute('tabindex', 0);
       handleRSVPBtnBasedOnProfile(rsvpBtn, miloLibs, newValue);
     });
   }
