@@ -30,7 +30,7 @@ function snakeToCamel(str) {
 
 function createSelect({ field, placeholder, options, defval, required }) {
   const select = createTag('select', { id: field });
-  if (placeholder) select.append(createTag('option', { selected: '', disabled: '' }, placeholder));
+  if (placeholder) select.append(createTag('option', { selected: '', disabled: '', value: '' }, placeholder));
   options.split(';').forEach((o) => {
     const text = o.trim();
     const option = createTag('option', { value: text }, text);
@@ -61,9 +61,9 @@ function constructPayload(form) {
 async function submitForm(bp) {
   const { form, sanitizeList } = bp;
   const payload = constructPayload(form);
-  Object.keys(payload).forEach((key) => {
-    if (!key) return false;
+  const isValid = Object.keys(payload).reduce((valid, key) => {
     const field = form.querySelector(`[data-field-id=${key}]`);
+
     if (!payload[key] && field.querySelector('.group-container.required')) {
       const el = form.querySelector(`input[name="${key}"]`);
       el.setCustomValidity('A selection is required');
@@ -76,9 +76,15 @@ async function submitForm(bp) {
       field.addEventListener('input', cb);
       return false;
     }
-    if (sanitizeList.includes(key)) payload[key] = sanitizeComment(payload[key]);
-    return true;
-  });
+
+    if (sanitizeList.includes(key)) {
+      payload[key] = sanitizeComment(payload[key]);
+    }
+
+    return valid;
+  }, true);
+
+  if (!isValid) return false;
 
   return getAndCreateAndAddAttendee(getMetadata('event-id'), payload);
 }
@@ -93,13 +99,15 @@ function clearForm(form) {
   });
 }
 
-async function buildErrorMsg(parent) {
+async function buildErrorMsg(parent, status) {
+  const errorKeyMap = { 400: 'event-full-error-msg' };
+
   const existingErrors = parent.querySelectorAll('.error');
   if (existingErrors.length) {
     existingErrors.forEach((err) => err.remove());
   }
 
-  const errorMsg = await miloReplaceKey(LIBS, 'rsvp-error-msg');
+  const errorMsg = await miloReplaceKey(LIBS, errorKeyMap[status] || 'rsvp-error-msg');
   const error = createTag('p', { class: 'error' }, errorMsg);
   parent.append(error);
   setTimeout(() => {
@@ -125,16 +133,24 @@ function createButton({ type, label }, bp) {
         const respJson = await submitForm(bp);
         button.removeAttribute('disabled');
         button.classList.remove('submitting');
-        if (respJson.error) {
-          buildErrorMsg(bp.form);
-          return;
-        }
+        if (!respJson) return;
 
         BlockMediator.set('rsvpData', respJson);
-        showSuccessMsg(bp);
+        if (!respJson.ok || respJson.error) {
+          let { status } = respJson;
+
+          // FIXME: temporary fix for ESL 500 on ESP 400
+          if (!status || status === 500) {
+            if (respJson.error?.message === 'Request to ESP failed: Event is full') {
+              status = 400;
+            }
+          }
+          buildErrorMsg(bp.form, status);
+        }
       }
     });
   }
+
   if (type === 'clear') {
     button.classList.add('outline');
     button.addEventListener('click', (e) => {
@@ -168,7 +184,7 @@ function createlabel({ field, label, required }) {
 
 function createCheckItem(item, type, id, def) {
   const itemKebab = item.toLowerCase().replaceAll(' ', '-');
-  const defList = def.split(',').map((defItem) => defItem.trim());
+  const defList = def.split(';').map((defItem) => defItem.trim());
   const pseudoEl = createTag('span', { class: `check-item-button ${type}-button` });
   const label = createTag('label', { class: `check-item-label ${type}-label`, for: `${id}-${itemKebab}` }, item);
   const input = createTag(
@@ -180,7 +196,7 @@ function createCheckItem(item, type, id, def) {
 }
 
 function createCheckGroup({ options, field, defval, required }, type) {
-  const optionsMap = options.split(',').map((item) => createCheckItem(item.trim(), type, field, defval));
+  const optionsMap = options.split(';').map((item) => createCheckItem(item.trim(), type, field, defval));
   return createTag(
     'div',
     { class: `group-container ${type}-group-container${required === 'x' ? ' required' : ''}` },
@@ -231,10 +247,10 @@ function applyRules(form, rules) {
         force = (payload[key] !== value);
         break;
       case RULE_OPERATORS.includes:
-        force = (payload[key].split(',').map((s) => s.trim()).includes(value));
+        force = (payload[key].split(';').map((s) => s.trim()).includes(value));
         break;
       case RULE_OPERATORS.excludes:
-        force = (!payload[key].split(',').map((s) => s.trim()).includes(value));
+        force = (!payload[key].split(';').map((s) => s.trim()).includes(value));
         break;
       case RULE_OPERATORS.lessThan:
         force = processRule(tf, operator, payload[key], value, (a, b) => a < b);
@@ -338,7 +354,7 @@ function decorateSuccessMsg(form, bp) {
           return;
         }
 
-        if (resp?.espProvider.attendeeDeleted) BlockMediator.set('rsvpData', null);
+        if (resp?.espProvider?.attendeeDeleted) BlockMediator.set('rsvpData', null);
       }
 
       const modal = form.closest('.dialog-modal');
@@ -478,20 +494,32 @@ async function buildEventform(bp, formData) {
   }
 }
 
+function initFormBasedOnRSVPData(bp) {
+  const { block } = bp;
+  const profile = BlockMediator.get('imsProfile');
+  const rsvpData = BlockMediator.get('rsvpData');
+  if (rsvpData?.espProvider?.registered || rsvpData?.externalAttendeeId) {
+    showSuccessMsg(bp);
+  } else {
+    personalizeForm(block, profile);
+  }
+
+  BlockMediator.subscribe('rsvpData', ({ newValue }) => {
+    if (newValue?.espProvider?.registered || newValue?.externalAttendeeId) {
+      showSuccessMsg(bp);
+    }
+  });
+}
+
 async function onProfile(bp, formData) {
   const { block, eventHero } = bp;
   const profile = BlockMediator.get('imsProfile');
 
   if (profile && !profile.noProfile) {
-    const rsvpData = BlockMediator.get('rsvpData');
     eventHero.classList.remove('loading');
     decorateHero(bp.eventHero);
     buildEventform(bp, formData).then(() => {
-      if (rsvpData) {
-        showSuccessMsg(bp);
-      } else {
-        personalizeForm(block, profile);
-      }
+      initFormBasedOnRSVPData(bp);
     }).finally(() => {
       decorateDefaultLinkAnalytics(block);
       block.classList.remove('loading');
@@ -499,15 +527,10 @@ async function onProfile(bp, formData) {
   } else if (!profile) {
     BlockMediator.subscribe('imsProfile', ({ newValue }) => {
       if (newValue && !newValue.noProfile) {
-        const rsvpData = BlockMediator.get('rsvpData');
         eventHero.classList.remove('loading');
         decorateHero(bp.eventHero);
         buildEventform(bp, formData).then(() => {
-          if (rsvpData) {
-            showSuccessMsg(bp);
-          } else {
-            personalizeForm(block, newValue);
-          }
+          initFormBasedOnRSVPData(bp);
         }).finally(() => {
           decorateDefaultLinkAnalytics(block);
           block.classList.remove('loading');

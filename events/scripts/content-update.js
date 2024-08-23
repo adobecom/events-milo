@@ -1,6 +1,5 @@
 import BlockMediator from './deps/block-mediator.min.js';
-import { waitForAdobeIMS } from './esp-controller.js';
-import { getProfile } from './profile.js';
+import { getEvent } from './esp-controller.js';
 import { handlize, getMetadata, setMetadata, getIcon, readBlockConfig } from './utils.js';
 
 export const META_REG = /\[\[(.*?)\]\]/g;
@@ -89,49 +88,89 @@ function createTag(tag, attributes, html, options = {}) {
   return el;
 }
 
-async function updateRSVPButtonState(rsvpBtn, miloLibs) {
+async function updateRSVPButtonState(rsvpBtn, miloLibs, eventInfo) {
   const rsvpData = BlockMediator.get('rsvpData');
   const checkRed = getIcon('check-circle-red');
-  if (rsvpData) {
+  const eventFull = +eventInfo.attendeeLimit <= +eventInfo.attendeeCount;
+
+  if (!rsvpData) {
+    if (eventFull) {
+      const eventFullText = await miloReplaceKey(miloLibs, 'event-full-cta-text');
+      rsvpBtn.el.setAttribute('tabindex', -1);
+      rsvpBtn.el.href = '';
+      rsvpBtn.el.classList.add('disabled');
+      updateAnalyticTag(rsvpBtn.el, eventFullText);
+      rsvpBtn.el.textContent = eventFullText;
+      checkRed.remove();
+    } else {
+      rsvpBtn.el.classList.remove('disabled');
+      rsvpBtn.el.setAttribute('tabindex', 0);
+      updateAnalyticTag(rsvpBtn.el, rsvpBtn.originalText);
+      rsvpBtn.el.textContent = rsvpBtn.originalText;
+      checkRed.remove();
+    }
+  } else if (rsvpData.espProvider?.registered || rsvpData.externalAttendeeId) {
     const registeredText = await miloReplaceKey(miloLibs, 'registered-cta-text');
+    rsvpBtn.el.classList.remove('disabled');
+    rsvpBtn.el.setAttribute('tabindex', 0);
     updateAnalyticTag(rsvpBtn.el, registeredText);
     rsvpBtn.el.textContent = registeredText;
     rsvpBtn.el.prepend(checkRed);
-  } else {
-    updateAnalyticTag(rsvpBtn.el, rsvpBtn.originalText);
-    rsvpBtn.el.textContent = rsvpBtn.originalText;
-    checkRed.remove();
+  } else if (!rsvpData.ok) {
+    // FIXME: temporary solution for ESL returning 500 on ESP 400 response
+    if (rsvpData.error?.message === 'Request to ESP failed: Event is full') {
+      const eventFullText = await miloReplaceKey(miloLibs, 'event-full-cta-text');
+      rsvpBtn.el.setAttribute('tabindex', -1);
+      rsvpBtn.el.href = '';
+      rsvpBtn.el.classList.add('disabled');
+      updateAnalyticTag(rsvpBtn.el, eventFullText);
+      rsvpBtn.el.textContent = eventFullText;
+      checkRed.remove();
+    }
   }
-
-  // FIXME: no waitlisted state yet.
 }
 
-const signIn = () => {
+export function signIn() {
   if (typeof window.adobeIMS?.signIn !== 'function') {
     window?.lana.log({ message: 'IMS signIn method not available', tags: 'errorType=warn,module=gnav' });
     return;
   }
 
-  // add custom SUSI page id, sth like this:
+  // TODO: add custom SUSI page id, sth like this:
   // adobeIMS.signIn({dctx_id: 'v:2,s,bg:expressUpsell,85709a30-0d87-11ef-a91c-2be7a9b482cb'})
 
   window.adobeIMS?.signIn();
-};
+}
 
 async function handleRSVPBtnBasedOnProfile(rsvpBtn, miloLibs, profile) {
+  const eventInfo = await getEvent(getMetadata('event-id'));
+
+  if (!eventInfo || eventInfo.error) {
+    return;
+  }
+
   if (profile?.noProfile) {
-    const signInText = await miloReplaceKey(miloLibs, 'sign-in-rsvp-cta-text');
-    updateAnalyticTag(rsvpBtn.el, signInText);
-    rsvpBtn.el.textContent = signInText;
-    rsvpBtn.el.addEventListener('click', (e) => {
-      e.preventDefault();
-      signIn();
-    });
+    const eventFull = +eventInfo.attendeeLimit <= +eventInfo.attendeeCount;
+    if (eventFull) {
+      rsvpBtn.el.setAttribute('tabindex', -1);
+      rsvpBtn.el.href = '';
+      rsvpBtn.el.textContent = await miloReplaceKey(miloLibs, 'event-full-cta-text');
+    } else {
+      const signInText = await miloReplaceKey(miloLibs, 'sign-in-rsvp-cta-text');
+      updateAnalyticTag(rsvpBtn.el, signInText);
+      rsvpBtn.el.textContent = signInText;
+      rsvpBtn.el.classList.remove('disabled');
+      rsvpBtn.el.setAttribute('tabindex', 0);
+      rsvpBtn.el.addEventListener('click', (e) => {
+        e.preventDefault();
+        signIn();
+      });
+    }
   } else if (profile) {
-    await updateRSVPButtonState(rsvpBtn, miloLibs);
+    await updateRSVPButtonState(rsvpBtn, miloLibs, eventInfo);
 
     BlockMediator.subscribe('rsvpData', () => {
-      updateRSVPButtonState(rsvpBtn, miloLibs);
+      updateRSVPButtonState(rsvpBtn, miloLibs, eventInfo);
     });
   }
 }
@@ -150,12 +189,14 @@ export async function validatePageAndRedirect() {
   }
 
   if (purposefulHitOnProdPreview) {
-    waitForAdobeIMS().then(async () => {
-      const profile = await getProfile();
-      if (profile?.noProfile) {
+    document.body.style.display = 'none';
+    BlockMediator.subscribe('imsProfile', ({ newValue }) => {
+      if (newValue?.noProfile) {
         signIn();
-      } else if (!profile.email.endsWith('@adobe.com')) {
+      } else if (!newValue.email.endsWith('@adobe.com')) {
         window.location.replace('/404');
+      } else {
+        document.body.removeAttribute('style');
       }
     });
   }
@@ -171,18 +212,18 @@ async function handleRegisterButton(a, miloLibs) {
     originalText: a.textContent,
   };
 
+  a.classList.add('rsvp-btn', 'disabled');
+
   const loadingText = await miloReplaceKey(miloLibs, 'rsvp-loading-cta-text');
   updateAnalyticTag(rsvpBtn.el, loadingText);
   a.textContent = loadingText;
-  a.classList.add('disabled', 'rsvp-btn');
+  a.setAttribute('tabindex', -1);
 
   const profile = BlockMediator.get('imsProfile');
   if (profile) {
-    a.classList.remove('disabled');
     handleRSVPBtnBasedOnProfile(rsvpBtn, miloLibs, profile);
   } else {
     BlockMediator.subscribe('imsProfile', ({ newValue }) => {
-      a.classList.remove('disabled');
       handleRSVPBtnBasedOnProfile(rsvpBtn, miloLibs, newValue);
     });
   }
@@ -221,7 +262,7 @@ function autoUpdateLinks(scope, miloLibs) {
         }
       } else if (getMetadata(url.hash.replace('#', ''))) {
         a.href = getMetadata(url.hash.replace('#', ''));
-      } else {
+      } else if (url.pathname.startsWith('/events') && url.hash) {
         a.remove();
       }
     } catch (e) {
@@ -369,7 +410,8 @@ function injectFragments(parent) {
 }
 
 export async function getNonProdData(env) {
-  const resp = await fetch(`/events/default/${env}/metadata.json`);
+  const isPreviewMode = new URLSearchParams(window.location.search).get('previewMode') || window.location.hostname.endsWith('.hlx.page');
+  const resp = await fetch(`/events/default/${env === 'prod' ? '' : `${env}/`}metadata${isPreviewMode ? '-preview' : ''}.json`);
   if (resp.ok) {
     const json = await resp.json();
     let { pathname } = window.location;
