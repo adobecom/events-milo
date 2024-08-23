@@ -11,7 +11,7 @@
  */
 
 import { lazyCaptureProfile } from './profile.js';
-import autoUpdateContent, { getNonProdData, validatePageAndRedirect, runDAAInjection } from './content-update.js';
+import autoUpdateContent, { getNonProdData, validatePageAndRedirect } from './content-update.js';
 import { setMetadata } from './utils.js';
 
 export const LIBS = (() => {
