@@ -513,6 +513,54 @@ function updateExtraMetaTags(parent) {
   }
 }
 
+export function runDAAInjection(parent) {
+  if (!parent) return;
+
+  const daaInjectionTables = parent.querySelectorAll('.daa-injection');
+  daaInjectionTables.forEach((table) => {
+    const targetBlock = table.nextElementSibling;
+
+    if (!targetBlock) return;
+
+    const daaConfig = {
+      'daa-lh': '',
+      links: [],
+    };
+
+    const rows = table.querySelectorAll(':scope > div');
+    rows.forEach((row, index) => {
+      if (index === 0) {
+        const lh = row.textContent.trim();
+
+        if (lh) daaConfig['daa-lh'] = lh;
+      } else {
+        const cols = row.querySelectorAll(':scope > div');
+
+        if (cols.length === 2) {
+          const [key, value] = cols;
+          if (key.querySelector('a')) {
+            daaConfig.links.push({
+              value: value.textContent,
+              href: key.querySelector('a').href,
+            });
+          }
+        }
+      }
+    });
+
+    console.log('daaConfig', daaConfig);
+    if (daaConfig['daa-lh']) targetBlock.setAttribute('daa-lh', daaConfig['daa-lh']);
+
+    daaConfig.links.forEach((link) => {
+      const targetLinks = targetBlock.querySelectorAll(`a`);
+      console.log(targetBlock.cloneNode(true), targetLinks)
+      targetLinks.forEach((targetLink) => {
+        targetLink.setAttribute('daa-ll', link.value);
+      });
+    });
+  });
+}
+
 // data -> dom gills
 export default function autoUpdateContent(parent, miloDeps, extraData) {
   const { getConfig, miloLibs } = miloDeps;

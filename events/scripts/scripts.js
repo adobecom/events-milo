@@ -11,7 +11,7 @@
  */
 
 import { lazyCaptureProfile } from './profile.js';
-import autoUpdateContent, { getNonProdData, validatePageAndRedirect } from './content-update.js';
+import autoUpdateContent, { getNonProdData, validatePageAndRedirect, runDAAInjection } from './content-update.js';
 import { setMetadata } from './utils.js';
 
 export const LIBS = (() => {
@@ -88,6 +88,7 @@ export function decorateArea(area = document) {
     eagerLoad(marquee, 'div:last-child > div:last-child img');
   }());
 
+  // runDAAInjection(area);
   if (getMetadata('event-details-page') !== 'yes') return;
 
   const photosData = parsePhotosData(area);
