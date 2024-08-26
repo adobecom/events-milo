@@ -53,7 +53,8 @@ function constructPayload(form) {
       }
       return;
     }
-    payload[fe.id] = fe.value;
+
+    if (fe.value) payload[fe.id] = fe.value;
   });
   return payload;
 }
