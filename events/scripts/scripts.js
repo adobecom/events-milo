@@ -88,7 +88,6 @@ export function decorateArea(area = document) {
     eagerLoad(marquee, 'div:last-child > div:last-child img');
   }());
 
-  // runDAAInjection(area);
   if (getMetadata('event-details-page') !== 'yes') return;
 
   const photosData = parsePhotosData(area);
