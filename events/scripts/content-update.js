@@ -136,7 +136,7 @@ export function signIn() {
     return;
   }
 
-  window.adobeIMS?.signIn({ dctx_id: 'v:2,s,bg:milo,db4f1a70-63f0-11ef-8097-a9e5f634eb93' });
+  window.adobeIMS?.signIn({ dctx_id: 'v:2,s,bg:milo,51364e80-648b-11ef-9bf6-ad6724e2c153' });
 }
 
 async function handleRSVPBtnBasedOnProfile(rsvpBtn, miloLibs, profile) {
