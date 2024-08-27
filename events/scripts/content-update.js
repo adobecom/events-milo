@@ -136,10 +136,7 @@ export function signIn() {
     return;
   }
 
-  // TODO: add custom SUSI page id, sth like this:
-  // adobeIMS.signIn({dctx_id: 'v:2,s,bg:expressUpsell,85709a30-0d87-11ef-a91c-2be7a9b482cb'})
-
-  window.adobeIMS?.signIn();
+  window.adobeIMS?.signIn({ dctx_id: 'v:2,s,bg:milo,db4f1a70-63f0-11ef-8097-a9e5f634eb93' });
 }
 
 async function handleRSVPBtnBasedOnProfile(rsvpBtn, miloLibs, profile) {
