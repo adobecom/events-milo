@@ -1,0 +1,10 @@
+version: 1
+sitemaps:
+  website:
+    origin: https://www.adobe.com
+    languages:
+      default:
+        source: /events/query-index.json
+        destination: /events/sitemap.xml
+        hreflang: en
+        alternate: /{path}
