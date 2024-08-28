@@ -149,13 +149,14 @@ async function handleRSVPBtnBasedOnProfile(rsvpBtn, miloLibs, profile) {
   if (profile?.noProfile) {
     const eventFull = +eventInfo.attendeeLimit <= +eventInfo.attendeeCount;
     if (eventFull) {
+      const eventFullText = await miloReplaceKey(miloLibs, 'event-full-cta-text');
+      updateAnalyticTag(rsvpBtn.el, eventFullText);
       rsvpBtn.el.setAttribute('tabindex', -1);
       rsvpBtn.el.href = '';
-      rsvpBtn.el.textContent = await miloReplaceKey(miloLibs, 'event-full-cta-text');
+      rsvpBtn.el.textContent = eventFullText;
     } else {
-      const signInText = await miloReplaceKey(miloLibs, 'sign-in-rsvp-cta-text');
-      updateAnalyticTag(rsvpBtn.el, signInText);
-      rsvpBtn.el.textContent = signInText;
+      updateAnalyticTag(rsvpBtn.el, rsvpBtn.originalText);
+      rsvpBtn.el.textContent = rsvpBtn.originalText;
       rsvpBtn.el.classList.remove('disabled');
       rsvpBtn.el.setAttribute('tabindex', 0);
       rsvpBtn.el.addEventListener('click', (e) => {
