@@ -1,7 +1,10 @@
 export default async function init(el) {
   const targetBlock = el.nextElementSibling;
 
-  if (!targetBlock) return;
+  if (!targetBlock) {
+    el.remove();
+    return;
+  }
 
   const daaConfig = {
     'daa-lh': '',
