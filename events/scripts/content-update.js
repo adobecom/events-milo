@@ -30,9 +30,8 @@ export async function miloReplaceKey(miloLibs, key) {
 function updateAnalyticTag(el, newVal) {
   if (!el.getAttribute('daa-ll')) return;
 
-  const currentText = el.textContent;
-  const daaLL = el.getAttribute('daa-ll');
-  const newDaaLL = daaLL.replace(currentText, newVal);
+  const eventTitle = getMetadata('event-title');
+  const newDaaLL = `${newVal}${eventTitle ? `|${eventTitle}` : ''}`;
   el.setAttribute('daa-ll', newDaaLL);
 }
 
