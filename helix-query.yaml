@@ -5,6 +5,7 @@ indices:
     include:
       - '/events/create-now/**'
       - '/events/creative-jam/**'
+      - '/drafts/**'
     target: /events/create-now/query-index.xlsx
     properties:
       title:
