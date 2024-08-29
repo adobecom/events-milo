@@ -128,7 +128,7 @@ function eventFormSendAnalytics(bp, view) {
   if (!modal) return;
   const title = getMetadata('event-title');
   const name = title ? ` | ${title}` : '';
-  const modalId = modal?.id ? ` | ${modal?.id}` : '';
+  const modalId = modal.id ? ` | ${modal.id}` : '';
   const event = new Event(`${view}${name}${modalId}`);
   sendAnalytics(event);
 }
