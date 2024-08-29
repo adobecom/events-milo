@@ -295,7 +295,7 @@ function updatePictureElement(imageUrl, parentPic, altText) {
 
     try {
       el.src = el.src.replace(/.*\?/, `${imgUrl}?`);
-      el.alt = altText;
+      el.alt = altText || '';
     } catch (e) {
       window.lana?.log(`failed to convert optimized img from ${el} with dynamic data: ${e}`);
     }
