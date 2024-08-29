@@ -227,7 +227,7 @@ async function handleRegisterButton(a, miloLibs) {
 }
 
 function autoUpdateLinks(scope, miloLibs) {
-  scope.querySelectorAll('a[href*="#"]').forEach((a) => {
+  scope.querySelectorAll('a[href*="#"]').forEach(async (a) => {
     try {
       const url = new URL(a.href);
 
@@ -253,7 +253,8 @@ function autoUpdateLinks(scope, miloLibs) {
         }
       } else if (a.href.endsWith('#host-email')) {
         if (getMetadata('host-email')) {
-          a.href = `mailto:${getMetadata('host-email')}`;
+          const emailSubject = `${await miloReplaceKey(miloLibs, 'mailto-subject-prefix')} ${getMetadata('event-title')}`;
+          a.href = `mailto:${getMetadata('host-email')}?subject=${encodeURIComponent(emailSubject)}`;
         } else {
           a.remove();
         }
