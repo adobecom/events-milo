@@ -6,7 +6,7 @@ import BlockMediator from '../../scripts/deps/block-mediator.min.js';
 import { miloReplaceKey } from '../../scripts/content-update.js';
 
 const { createTag } = await import(`${LIBS}/utils/utils.js`);
-const { closeModal } = await import(`${LIBS}/blocks/modal/modal.js`);
+const { closeModal, sendAnalytics } = await import(`${LIBS}/blocks/modal/modal.js`);
 const { default: sanitizeComment } = await import(`${LIBS}/utils/sanitizeComment.js`);
 const { decorateDefaultLinkAnalytics } = await import(`${LIBS}/martech/attributes.js`);
 
@@ -136,6 +136,7 @@ function createButton({ type, label }, bp) {
         button.classList.remove('submitting');
         if (!respJson) return;
 
+        if (respJson.ok) eventFormSendAnalytics(bp,'Form Submit');
         BlockMediator.set('rsvpData', respJson);
         if (!respJson.ok || respJson.error) {
           let { status } = respJson;
@@ -495,6 +496,15 @@ async function buildEventform(bp, formData) {
   }
 }
 
+function eventFormSendAnalytics(bp,view) {
+  if (bp.modal) {
+    const title = bp?.title?.textContent?.trim();
+    const name = title ? ` | ${title}` : '';
+    const modalId = bp?.modal?.id ? ` | ${bp?.modal?.id}` : '';
+    const event = new Event(`${view}${name}${modalId}`);
+    sendAnalytics(event);
+  }
+}
 function initFormBasedOnRSVPData(bp) {
   const { block } = bp;
   const profile = BlockMediator.get('imsProfile');
@@ -510,6 +520,7 @@ function initFormBasedOnRSVPData(bp) {
       showSuccessMsg(bp);
     }
   });
+ eventFormSendAnalytics(bp,'Form View');
 }
 
 async function onProfile(bp, formData) {
@@ -565,6 +576,8 @@ export default async function decorate(block, formData = null) {
     form: block.querySelector(':scope > div:nth-of-type(2) a[href$=".json"]'),
     terms: block.querySelector(':scope > div:nth-of-type(3)'),
     successMsg: block.querySelector(':scope > div:last-of-type > div'),
+    title: block.querySelector(':scope #event-title'),
+    modal: block.closest('.dialog-modal'),
   };
 
   await onProfile(bp, formData);
