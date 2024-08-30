@@ -40,9 +40,9 @@ export function lazyCaptureProfile() {
       BlockMediator.set('imsProfile', profile);
 
       if (!profile.noProfile) {
-        const rsvpData = await getEventAttendee(getMetadata('event-id'));
-        if (!rsvpData.error) {
-          BlockMediator.set('rsvpData', rsvpData);
+        const resp = await getEventAttendee(getMetadata('event-id'));
+        if (!resp.error) {
+          BlockMediator.set('rsvpData', resp.data);
         } else {
           BlockMediator.set('rsvpData', null);
         }

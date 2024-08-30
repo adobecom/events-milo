@@ -160,9 +160,12 @@ function createButton({ type, label }, bp) {
         button.removeAttribute('disabled');
         button.classList.remove('submitting');
         if (!respJson) return;
-        if (respJson.ok !== false && !respJson.error) eventFormSendAnalytics(bp, 'Form Submit');
-        BlockMediator.set('rsvpData', respJson);
-        if (respJson.error) {
+
+        BlockMediator.set('rsvpData', respJson.data);
+
+        if (respJson.ok) {
+          eventFormSendAnalytics(bp, 'Form Submit');
+        } else {
           let { status } = respJson;
 
           // FIXME: temporary fix for ESL 500 on ESP 400
@@ -386,13 +389,17 @@ function decorateSuccessScreen(screen) {
 
           if (cta.classList.contains('cancel-button')) {
             const resp = await deleteAttendeeFromEvent(getMetadata('event-id'));
+            if (!resp.ok) return;
+    
+            const { data } = resp;
+    
             cta.classList.remove('loading');
-            if (resp?.espProvider?.status !== 204) {
-              buildErrorMsg(screen);
+            if (data?.espProvider?.status !== 204) {
+              buildErrorMsg(bp.successMsg);
               return;
             }
-
-            if (resp?.espProvider?.attendeeDeleted) BlockMediator.set('rsvpData', null);
+    
+            if (data?.espProvider?.attendeeDeleted) BlockMediator.set('rsvpData', null);
 
             firstScreen.classList.add('hidden');
             secondScreen.classList.remove('hidden');
