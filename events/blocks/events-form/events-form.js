@@ -146,9 +146,8 @@ function createButton({ type, label }, bp) {
         button.classList.remove('submitting');
         if (!respJson) return;
 
-        if (respJson.ok) eventFormSendAnalytics(bp, 'Form Submit');
         BlockMediator.set('rsvpData', respJson);
-        if (!respJson.ok || respJson.error) {
+        if (respJson.error) {
           let { status } = respJson;
 
           // FIXME: temporary fix for ESL 500 on ESP 400
@@ -159,6 +158,7 @@ function createButton({ type, label }, bp) {
           }
           buildErrorMsg(bp.form, status);
         }
+        if (respJson.ok !== false && !respJson.error) eventFormSendAnalytics(bp, 'Form Submit');
       }
     });
   }
