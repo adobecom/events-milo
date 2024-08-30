@@ -91,7 +91,7 @@ export async function getEvent(eventId) {
       return { ok: response.ok, status: response.status, error: data };
     }
 
-    return data;
+    return { ok: true, data };
   } catch (error) {
     window.lana?.log(`Failed to get details for event ${eventId}. Error:`, error);
     return { ok: false, status: 'Network Error', error: error.message };
@@ -114,7 +114,7 @@ export async function getEventAttendee(eventId) {
       };
     }
 
-    return await response.json();
+    return { ok: true, data: await response.json() };
   } catch (error) {
     window.lana?.log(`Failed to get attendee for event ${eventId}. Error:`, error);
     return { ok: false, status: 'Network Error', error: error.message };
@@ -137,7 +137,7 @@ export async function getAttendee() {
       };
     }
 
-    return response.json();
+    return { ok: true, data: await response.json() };
   } catch (error) {
     window.lana?.log('Failed to get attendee. Error:', error);
     return { ok: false, status: 'Network Error', error: error.message };
@@ -160,7 +160,7 @@ export async function createAttendee(attendeeData) {
       return { ok: response.ok, status: response.status, error: data };
     }
 
-    return data;
+    return { ok: true, data };
   } catch (error) {
     window.lana?.log('Failed to create attendee. Error:', error);
     return { ok: false, status: 'Network Error', error: error.message };
@@ -184,7 +184,7 @@ export async function addAttendeeToEvent(eventId, attendee) {
       return { ok: response.ok, status: response.status, error: data };
     }
 
-    return data;
+    return { ok: true, data };
   } catch (error) {
     window.lana?.log(`Failed to add attendee for event ${eventId}. Error:`, error);
     return { ok: false, status: 'Network Error', error: error.message };
@@ -207,7 +207,7 @@ export async function updateAttendee(attendeeData) {
       return { ok: response.ok, status: response.status, error: data };
     }
 
-    return data;
+    return { ok: true, data };
   } catch (error) {
     window.lana?.log('Failed to update attendee. Error:', error);
     return { ok: false, status: 'Network Error', error: error.message };
@@ -232,7 +232,7 @@ export async function deleteAttendeeFromEvent(eventId) {
       };
     }
 
-    return response.json();
+    return { ok: true, data: await response.json() };
   } catch (error) {
     window.lana?.log(`Failed to delete attendee for event ${eventId}. Error:`, error);
     return { ok: false, status: 'Network Error', error: error.message };
@@ -246,9 +246,13 @@ export async function getAndCreateAndAddAttendee(eventId, attendeeData) {
 
   if (!attendeeResp.ok && attendeeResp.status === 404) {
     attendee = await createAttendee(attendeeData);
-  } else if (attendeeResp.attendeeId) {
-    attendee = await updateAttendee({ ...attendeeResp, ...attendeeData });
+  } else if (attendeeResp.data?.attendeeId) {
+    attendee = await updateAttendee({ ...attendeeResp.data, ...attendeeData });
   }
 
-  return addAttendeeToEvent(eventId, attendee);
+  if (!attendee?.ok) return { ok: false, error: 'Failed to create or update attendee' };
+
+  const newAttendeeData = attendee.data;
+
+  return addAttendeeToEvent(eventId, newAttendeeData);
 }

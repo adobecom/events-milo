@@ -136,7 +136,7 @@ function createButton({ type, label }, bp) {
         button.classList.remove('submitting');
         if (!respJson) return;
 
-        BlockMediator.set('rsvpData', respJson);
+        BlockMediator.set('rsvpData', respJson.data);
         if (!respJson.ok || respJson.error) {
           let { status } = respJson;
 
@@ -349,13 +349,17 @@ function decorateSuccessMsg(form, bp) {
 
       if (i === 0) {
         const resp = await deleteAttendeeFromEvent(getMetadata('event-id'));
+        if (!resp.ok) return;
+
+        const { data } = resp;
+
         cta.classList.remove('loading');
-        if (resp?.espProvider?.status !== 204) {
+        if (data?.espProvider?.status !== 204) {
           buildErrorMsg(bp.successMsg);
           return;
         }
 
-        if (resp?.espProvider?.attendeeDeleted) BlockMediator.set('rsvpData', null);
+        if (data?.espProvider?.attendeeDeleted) BlockMediator.set('rsvpData', null);
       }
 
       const modal = form.closest('.dialog-modal');

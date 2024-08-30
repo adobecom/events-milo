@@ -137,11 +137,13 @@ export function signIn() {
 }
 
 async function handleRSVPBtnBasedOnProfile(rsvpBtn, miloLibs, profile) {
-  const eventInfo = await getEvent(getMetadata('event-id'));
+  const resp = await getEvent(getMetadata('event-id'));
 
-  if (!eventInfo || eventInfo.error) {
+  if (!resp.ok || resp.error) {
     return;
   }
+
+  const eventInfo = resp.data;
 
   if (profile?.noProfile) {
     const eventFull = +eventInfo.attendeeLimit <= +eventInfo.attendeeCount;
