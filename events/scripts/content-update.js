@@ -28,11 +28,8 @@ export async function miloReplaceKey(miloLibs, key) {
 }
 
 function updateAnalyticTag(el, newVal) {
-  if (!el.getAttribute('daa-ll')) return;
-
-  const currentText = el.textContent;
-  const daaLL = el.getAttribute('daa-ll');
-  const newDaaLL = daaLL.replace(currentText, newVal);
+  const eventTitle = getMetadata('event-title');
+  const newDaaLL = `${newVal}${eventTitle ? `|${eventTitle}` : ''}`;
   el.setAttribute('daa-ll', newDaaLL);
 }
 
@@ -136,10 +133,7 @@ export function signIn() {
     return;
   }
 
-  // TODO: add custom SUSI page id, sth like this:
-  // adobeIMS.signIn({dctx_id: 'v:2,s,bg:expressUpsell,85709a30-0d87-11ef-a91c-2be7a9b482cb'})
-
-  window.adobeIMS?.signIn();
+  window.adobeIMS?.signIn({ dctx_id: 'v:2,s,bg:milo,51364e80-648b-11ef-9bf6-ad6724e2c153' });
 }
 
 async function handleRSVPBtnBasedOnProfile(rsvpBtn, miloLibs, profile) {
@@ -152,13 +146,14 @@ async function handleRSVPBtnBasedOnProfile(rsvpBtn, miloLibs, profile) {
   if (profile?.noProfile) {
     const eventFull = +eventInfo.attendeeLimit <= +eventInfo.attendeeCount;
     if (eventFull) {
+      const eventFullText = await miloReplaceKey(miloLibs, 'event-full-cta-text');
+      updateAnalyticTag(rsvpBtn.el, eventFullText);
       rsvpBtn.el.setAttribute('tabindex', -1);
       rsvpBtn.el.href = '';
-      rsvpBtn.el.textContent = await miloReplaceKey(miloLibs, 'event-full-cta-text');
+      rsvpBtn.el.textContent = eventFullText;
     } else {
-      const signInText = await miloReplaceKey(miloLibs, 'sign-in-rsvp-cta-text');
-      updateAnalyticTag(rsvpBtn.el, signInText);
-      rsvpBtn.el.textContent = signInText;
+      updateAnalyticTag(rsvpBtn.el, rsvpBtn.originalText);
+      rsvpBtn.el.textContent = rsvpBtn.originalText;
       rsvpBtn.el.classList.remove('disabled');
       rsvpBtn.el.setAttribute('tabindex', 0);
       rsvpBtn.el.addEventListener('click', (e) => {
@@ -230,7 +225,7 @@ async function handleRegisterButton(a, miloLibs) {
 }
 
 function autoUpdateLinks(scope, miloLibs) {
-  scope.querySelectorAll('a[href*="#"]').forEach((a) => {
+  scope.querySelectorAll('a[href*="#"]').forEach(async (a) => {
     try {
       const url = new URL(a.href);
 
@@ -256,7 +251,8 @@ function autoUpdateLinks(scope, miloLibs) {
         }
       } else if (a.href.endsWith('#host-email')) {
         if (getMetadata('host-email')) {
-          a.href = `mailto:${getMetadata('host-email')}`;
+          const emailSubject = `${await miloReplaceKey(miloLibs, 'mailto-subject-prefix')} ${getMetadata('event-title')}`;
+          a.href = `mailto:${getMetadata('host-email')}?subject=${encodeURIComponent(emailSubject)}`;
         } else {
           a.remove();
         }
@@ -299,7 +295,7 @@ function updatePictureElement(imageUrl, parentPic, altText) {
 
     try {
       el.src = el.src.replace(/.*\?/, `${imgUrl}?`);
-      el.alt = altText;
+      el.alt = altText || '';
     } catch (e) {
       window.lana?.log(`failed to convert optimized img from ${el} with dynamic data: ${e}`);
     }

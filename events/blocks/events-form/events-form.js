@@ -6,7 +6,7 @@ import BlockMediator from '../../scripts/deps/block-mediator.min.js';
 import { miloReplaceKey } from '../../scripts/content-update.js';
 
 const { createTag } = await import(`${LIBS}/utils/utils.js`);
-const { closeModal } = await import(`${LIBS}/blocks/modal/modal.js`);
+const { closeModal, sendAnalytics } = await import(`${LIBS}/blocks/modal/modal.js`);
 const { default: sanitizeComment } = await import(`${LIBS}/utils/sanitizeComment.js`);
 const { decorateDefaultLinkAnalytics } = await import(`${LIBS}/martech/attributes.js`);
 
@@ -123,6 +123,16 @@ function showSuccessMsg(bp) {
   bp.successMsg.classList.remove('hidden');
 }
 
+function eventFormSendAnalytics(bp, view) {
+  const modal = bp.block.closest('.dialog-modal');
+  if (!modal) return;
+  const title = getMetadata('event-title');
+  const name = title ? ` | ${title}` : '';
+  const modalId = modal.id ? ` | ${modal.id}` : '';
+  const event = new Event(`${view}${name}${modalId}`);
+  sendAnalytics(event);
+}
+
 function createButton({ type, label }, bp) {
   const button = createTag('button', { class: 'button' }, label);
   if (type === 'submit') {
@@ -137,7 +147,7 @@ function createButton({ type, label }, bp) {
         if (!respJson) return;
 
         BlockMediator.set('rsvpData', respJson);
-        if (!respJson.ok || respJson.error) {
+        if (respJson.error) {
           let { status } = respJson;
 
           // FIXME: temporary fix for ESL 500 on ESP 400
@@ -148,6 +158,7 @@ function createButton({ type, label }, bp) {
           }
           buildErrorMsg(bp.form, status);
         }
+        if (respJson.ok !== false && !respJson.error) eventFormSendAnalytics(bp, 'Form Submit');
       }
     });
   }
@@ -510,6 +521,7 @@ function initFormBasedOnRSVPData(bp) {
       showSuccessMsg(bp);
     }
   });
+  eventFormSendAnalytics(bp, 'Form View');
 }
 
 async function onProfile(bp, formData) {

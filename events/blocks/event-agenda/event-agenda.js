@@ -76,7 +76,7 @@ export default async function init(el) {
     const h2 = el.querySelector('h2');
     agendaItemsCol.prepend(h2);
 
-    venueImageCol.append(createOptimizedPicture(imgUrl, venueImage.altText || 'Venue Image', false));
+    venueImageCol.append(createOptimizedPicture(imgUrl, venueImage.altText || '', false));
     container.append(venueImageCol);
   }
 
