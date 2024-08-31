@@ -145,7 +145,7 @@ function createButton({ type, label }, bp) {
         button.removeAttribute('disabled');
         button.classList.remove('submitting');
         if (!respJson) return;
-
+        if (respJson.ok !== false && !respJson.error) eventFormSendAnalytics(bp, 'Form Submit');
         BlockMediator.set('rsvpData', respJson);
         if (respJson.error) {
           let { status } = respJson;
@@ -158,7 +158,6 @@ function createButton({ type, label }, bp) {
           }
           buildErrorMsg(bp.form, status);
         }
-        if (respJson.ok !== false && !respJson.error) eventFormSendAnalytics(bp, 'Form Submit');
       }
     });
   }
@@ -344,7 +343,6 @@ function decorateSuccessMsg(form, bp) {
   }
 
   bp.successMsg.prepend(hgroup);
-
   ctas.forEach((cta, i) => {
     if (i === 0) {
       cta.parentElement.classList.add('post-rsvp-button-wrapper');
@@ -512,6 +510,7 @@ function initFormBasedOnRSVPData(bp) {
   const rsvpData = BlockMediator.get('rsvpData');
   if (rsvpData?.espProvider?.registered || rsvpData?.externalAttendeeId) {
     showSuccessMsg(bp);
+    eventFormSendAnalytics(bp, 'Confirmation Modal View');
   } else {
     personalizeForm(block, profile);
   }
@@ -519,9 +518,12 @@ function initFormBasedOnRSVPData(bp) {
   BlockMediator.subscribe('rsvpData', ({ newValue }) => {
     if (newValue?.espProvider?.registered || newValue?.externalAttendeeId) {
       showSuccessMsg(bp);
+      eventFormSendAnalytics(bp, 'Confirmation Modal View');
     }
   });
-  eventFormSendAnalytics(bp, 'Form View');
+  if (bp.block.querySelector('.form-success-msg.hidden')) {
+    eventFormSendAnalytics(bp, 'Form View');
+  }
 }
 
 async function onProfile(bp, formData) {
