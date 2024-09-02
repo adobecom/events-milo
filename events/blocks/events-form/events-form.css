@@ -43,6 +43,11 @@
   display: block;
 }
 
+.events-form sp-textfield,
+.events-form sp-picker {
+  width: 100%;
+}
+
 .events-form form {
   width: 100%;
   display: flex;

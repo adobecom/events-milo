@@ -29,11 +29,10 @@ function snakeToCamel(str) {
 }
 
 function createSelect({ field, placeholder, options, defval, required }) {
-  const select = createTag('select', { id: field });
-  if (placeholder) select.append(createTag('option', { selected: '', disabled: '', value: '' }, placeholder));
+  const select = createTag('sp-picker', { id: field, label: placeholder || '' });
   options.split(';').forEach((o) => {
     const text = o.trim();
-    const option = createTag('option', { value: text }, text);
+    const option = createTag('sp-menu-item', { value: text }, text);
     select.append(option);
     if (defval === text) select.value = text;
   });
@@ -42,10 +41,13 @@ function createSelect({ field, placeholder, options, defval, required }) {
 }
 
 function constructPayload(form) {
-  const exceptions = (el) => el.tagName !== 'BUTTON' && el.id !== 'terms-and-conditions';
+  const exceptions = (el) => el.tagName !== 'BUTTON'
+      && el.id !== 'terms-and-conditions'
+      && el.tagName !== 'SP-BUTTON';
   const payload = {};
-  [...form.elements].filter(exceptions).forEach((fe) => {
-    if (fe.type.match(/(?:checkbox|radio)/)) {
+  const formElements = [[...form.elements], ...[...form.querySelectorAll('sp-textfield, sp-picker')]];
+  formElements.filter(exceptions).forEach((fe) => {
+    if (fe?.type?.match(/(?:checkbox|radio)/)) {
       if (fe.checked) {
         payload[fe.name] = payload[fe.name] ? `${fe.value}, ${payload[fe.name]}` : fe.value;
       } else {
@@ -87,6 +89,7 @@ async function submitForm(bp) {
 
   if (!isValid) return false;
 
+  console.log(payload);
   return getAndCreateAndAddAttendee(getMetadata('event-id'), payload);
 }
 
@@ -134,9 +137,10 @@ function eventFormSendAnalytics(bp, view) {
 }
 
 function createButton({ type, label }, bp) {
-  const button = createTag('button', { class: 'button' }, label);
+  const button = createTag('sp-button', { class: 'button', variant: 'primary' }, label);
   if (type === 'submit') {
     button.addEventListener('click', async (event) => {
+      console.log(bp.form);
       if (bp.form.checkValidity()) {
         event.preventDefault();
         button.setAttribute('disabled', true);
@@ -163,7 +167,8 @@ function createButton({ type, label }, bp) {
   }
 
   if (type === 'clear') {
-    button.classList.add('outline');
+    button.setAttribute('treatment', 'outline');
+    button.setAttribute('variant', 'primary');
     button.addEventListener('click', (e) => {
       e.preventDefault();
       const form = button.closest('form');
@@ -178,7 +183,7 @@ function createHeading({ label }, el) {
 }
 
 function createInput({ type, field, placeholder, required, defval }) {
-  const input = createTag('input', { type, id: field, placeholder, value: defval });
+  const input = createTag('sp-textfield', { type, id: field, placeholder, value: defval });
   if (required === 'x') input.setAttribute('required', 'required');
   return input;
 }
@@ -295,7 +300,7 @@ function lowercaseKeys(obj) {
 function addTerms(form, terms) {
   const none = (arr, callback) => !arr.some(callback);
   const submitWrapper = form.querySelector('.events-form-submit-wrapper');
-  const submit = submitWrapper.querySelector('button');
+  const submit = submitWrapper.querySelector('sp-button');
   const termsWrapper = createTag('div', { class: 'field-wrapper events-form-full-width terms-and-conditions-wrapper' });
   const termsTexts = terms.querySelectorAll('p');
   const lis = terms.querySelectorAll('li');
@@ -479,13 +484,15 @@ function personalizeForm(form, data) {
     const matchedInput = form.querySelector(`#${snakeToCamel(key)}`);
     if (matchedInput && value && !matchedInput.value) {
       matchedInput.value = value;
-      matchedInput.disabled = true;
+      matchedInput.readonly = true;
     }
   });
 }
 
-function decorateHero(heroEl) {
-  heroEl.classList.add('event-form-hero');
+function decorateHero(bp) {
+  const { eventHero, spTheme } = bp;
+  spTheme.append(eventHero);
+  eventHero.classList.add('event-form-hero');
 }
 
 async function buildEventform(bp, formData) {
@@ -501,6 +508,8 @@ async function buildEventform(bp, formData) {
     bp.form.replaceWith(formEl);
     bp.form = formEl;
     bp.sanitizeList = sanitizeList;
+
+    bp.spTheme.append(bp.form);
   }
 }
 
@@ -528,11 +537,34 @@ function initFormBasedOnRSVPData(bp) {
 
 async function onProfile(bp, formData) {
   const { block, eventHero } = bp;
+  // TODO: test profile. remove afterwards
+  BlockMediator.set('imsProfile', {
+    account_type: 'type3',
+    utcOffset: 'null',
+    preferred_languages: null,
+    displayName: 'Qiyun Dai',
+    last_name: 'Dai',
+    userId: 'B90719A765B288680A494219@c62f24cc5b5b7e0e0a494004',
+    authId: 'B90719A765B288680A494219@c62f24cc5b5b7e0e0a494004',
+    tags: [
+      'agegroup_unknown',
+      'edu',
+      'edu_k12',
+    ],
+    emailVerified: 'true',
+    phoneNumber: null,
+    countryCode: 'US',
+    name: 'Qiyun Dai',
+    mrktPerm: '',
+    mrktPermEmail: null,
+    first_name: 'Qiyun',
+    // email: 'cod87753@adobe.com',
+  });
   const profile = BlockMediator.get('imsProfile');
 
   if (profile && !profile.noProfile) {
     eventHero.classList.remove('loading');
-    decorateHero(bp.eventHero);
+    decorateHero(bp);
     buildEventform(bp, formData).then(() => {
       initFormBasedOnRSVPData(bp);
     }).finally(() => {
@@ -543,7 +575,7 @@ async function onProfile(bp, formData) {
     BlockMediator.subscribe('imsProfile', ({ newValue }) => {
       if (newValue && !newValue.noProfile) {
         eventHero.classList.remove('loading');
-        decorateHero(bp.eventHero);
+        decorateHero(bp);
         buildEventform(bp, formData).then(() => {
           initFormBasedOnRSVPData(bp);
         }).finally(() => {
@@ -561,6 +593,10 @@ async function decorateToastArea() {
     import(`${miloLibs}/deps/lit-all.min.js`),
     import(`${miloLibs}/features/spectrum-web-components/dist/theme.js`),
     import(`${miloLibs}/features/spectrum-web-components/dist/toast.js`),
+    import(`${miloLibs}/features/spectrum-web-components/dist/textfield.js`),
+    import(`${miloLibs}/features/spectrum-web-components/dist/button.js`),
+    import(`${miloLibs}/features/spectrum-web-components/dist/picker.js`),
+    import(`${miloLibs}/features/spectrum-web-components/dist/field-label.js`),
   ]);
   const toastArea = createTag('sp-theme', { color: 'light', scale: 'medium', class: 'toast-area' });
   document.body.append(toastArea);
@@ -570,8 +606,12 @@ async function decorateToastArea() {
 export default async function decorate(block, formData = null) {
   block.classList.add('loading');
   const toastArea = await decorateToastArea();
+  const spTheme = createTag('sp-theme', { color: 'light', scale: 'large' });
+
+  block.prepend(spTheme);
 
   const bp = {
+    spTheme,
     block,
     toastArea,
     eventHero: block.querySelector(':scope > div:nth-of-type(1)'),
