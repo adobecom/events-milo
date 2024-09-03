@@ -36,7 +36,14 @@ function createSelect({ field, placeholder, options, defval, required }) {
     select.append(option);
     if (defval === text) select.value = text;
   });
-  if (required === 'x') select.setAttribute('required', 'required');
+  if (required === 'x') {
+    select.addEventListener('change', (e) => {
+      const el = e.target;
+      el.invalid = !el.value;
+    });
+
+    select.invalid = !select.value;
+  }
   return select;
 }
 
@@ -136,12 +143,36 @@ function eventFormSendAnalytics(bp, view) {
   sendAnalytics(event);
 }
 
+function checkFormValidity(form) {
+  const formElements = form.querySelectorAll('sp-textfield, sp-picker');
+  if (!formElements) return true;
+
+  return [...formElements].every((fe) => fe.valid || !fe.invalid);
+}
+
+function initFormErrorDisplayState(form) {
+  const formElements = form.querySelectorAll('sp-textfield, sp-picker');
+  if (!formElements) return;
+
+  form.classList.add('show-errors');
+  [...formElements].forEach((fe) => {
+    fe.addEventListener('input', () => {
+      form.classList.remove('show-errors');
+    });
+  });
+
+  form.addEventListener('submit', () => {
+    if (!form.checkValidity() || !checkFormValidity(form)) {
+      form.classList.add('show-errors');
+    }
+  });
+}
+
 function createButton({ type, label }, bp) {
   const button = createTag('sp-button', { class: 'button', variant: 'primary' }, label);
   if (type === 'submit') {
     button.addEventListener('click', async (event) => {
-      console.log(bp.form);
-      if (bp.form.checkValidity()) {
+      if (bp.form.checkValidity() && checkFormValidity(bp.form)) {
         event.preventDefault();
         button.setAttribute('disabled', true);
         button.classList.add('submitting');
@@ -470,6 +501,8 @@ async function createForm(bp, formData) {
 
   formEl.addEventListener('input', () => applyRules(formEl, rules));
   applyRules(formEl, rules);
+
+  initFormErrorDisplayState(formEl);
 
   return {
     formEl,

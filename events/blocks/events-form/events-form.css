@@ -1,5 +1,10 @@
 .events-form {
   --input-border-radius: 4px;
+  --mod-textfield-border-color-invalid-default: #000;
+  --mod-textfield-border-color-invalid-focus: #000;
+  --mod-textfield-border-color-invalid-focus-hover: #000;
+  --mod-textfield-border-color-invalid-hover: #000;
+  --mod-textfield-border-color-invalid-keyboard-focus: #000;
   
   border-radius: var(--card-border-radius-l);
   filter: var(--image-filter-drop-shadow-small);
@@ -346,6 +351,10 @@
   border-radius: 8px;
   background-color: var(--color-red);
   color: white;
+}
+
+.events-form form.show-error {
+  --mod-textfield-icon-size-invalid: 16px;
 }
 
 @media screen and (min-width: 600px) {
