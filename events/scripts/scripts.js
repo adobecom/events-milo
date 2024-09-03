@@ -13,6 +13,7 @@
 import { lazyCaptureProfile } from './profile.js';
 import autoUpdateContent, { getNonProdData, validatePageAndRedirect } from './content-update.js';
 import { setMetadata } from './utils.js';
+import { SUSI_CONTEXTS } from './constances.js';
 
 export const LIBS = (() => {
   const { hostname, search } = window.location;
@@ -112,6 +113,8 @@ const CONFIG = {
   codeRoot: '/events',
   contentRoot: '/events',
   imsClientId: 'events-milo',
+  susiContexts: SUSI_CONTEXTS,
+  miloLibs: LIBS,
   // imsScope: 'AdobeID,openid,gnav',
   // geoRouting: 'off',
   // fallbackRouting: 'off',
@@ -123,7 +126,7 @@ const CONFIG = {
   },
 };
 
-export const MILO_CONFIG = setConfig({ ...CONFIG, miloLibs: LIBS });
+export const MILO_CONFIG = setConfig({ ...CONFIG });
 // FIXME: Code smell. This should be exportable.
 window.eccEnv = getECCEnv(MILO_CONFIG);
 

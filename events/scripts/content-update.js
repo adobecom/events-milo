@@ -1,9 +1,7 @@
+import { ICON_REG, META_REG, SUSI_CONTEXTS } from './constances.js';
 import BlockMediator from './deps/block-mediator.min.js';
 import { getEvent } from './esp-controller.js';
 import { handlize, getMetadata, setMetadata, getIcon, readBlockConfig } from './utils.js';
-
-export const META_REG = /\[\[(.*?)\]\]/g;
-export const ICON_REG = /@@(.*?)@@/g;
 
 const preserveFormatKeys = [
   'description',
@@ -133,7 +131,7 @@ export function signIn() {
     return;
   }
 
-  window.adobeIMS?.signIn({ dctx_id: 'v:2,s,bg:milo,51364e80-648b-11ef-9bf6-ad6724e2c153' });
+  window.adobeIMS?.signIn({ dctx_id: SUSI_CONTEXTS[window.eccEnv] });
 }
 
 async function handleRSVPBtnBasedOnProfile(rsvpBtn, miloLibs, profile) {
