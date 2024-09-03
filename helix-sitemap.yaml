@@ -8,3 +8,12 @@ sitemaps:
         destination: /events/create-now/sitemap.xml
         hreflang: en
         alternate: /{path}
+  
+  seo-templates:
+    origin: https://www.adobe.com
+    languages:
+      default:
+        source: /events/events/default/metadata.json?sheet=sitemap
+        destination: /events/create-now/sitemap.xml
+        hreflang: en
+        alternate: /{path}
