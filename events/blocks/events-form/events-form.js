@@ -6,7 +6,7 @@ import BlockMediator from '../../scripts/deps/block-mediator.min.js';
 import { miloReplaceKey } from '../../scripts/content-update.js';
 
 const { createTag } = await import(`${LIBS}/utils/utils.js`);
-const { closeModal } = await import(`${LIBS}/blocks/modal/modal.js`);
+const { closeModal, sendAnalytics } = await import(`${LIBS}/blocks/modal/modal.js`);
 const { default: sanitizeComment } = await import(`${LIBS}/utils/sanitizeComment.js`);
 const { decorateDefaultLinkAnalytics } = await import(`${LIBS}/martech/attributes.js`);
 
@@ -123,6 +123,16 @@ function showSuccessMsg(bp) {
   bp.successMsg.classList.remove('hidden');
 }
 
+function eventFormSendAnalytics(bp, view) {
+  const modal = bp.block.closest('.dialog-modal');
+  if (!modal) return;
+  const title = getMetadata('event-title');
+  const name = title ? ` | ${title}` : '';
+  const modalId = modal.id ? ` | ${modal.id}` : '';
+  const event = new Event(`${view}${name}${modalId}`);
+  sendAnalytics(event);
+}
+
 function createButton({ type, label }, bp) {
   const button = createTag('button', { class: 'button' }, label);
   if (type === 'submit') {
@@ -135,9 +145,9 @@ function createButton({ type, label }, bp) {
         button.removeAttribute('disabled');
         button.classList.remove('submitting');
         if (!respJson) return;
-
+        if (respJson.ok !== false && !respJson.error) eventFormSendAnalytics(bp, 'Form Submit');
         BlockMediator.set('rsvpData', respJson);
-        if (!respJson.ok || respJson.error) {
+        if (respJson.error) {
           let { status } = respJson;
 
           // FIXME: temporary fix for ESL 500 on ESP 400
@@ -333,7 +343,6 @@ function decorateSuccessMsg(form, bp) {
   }
 
   bp.successMsg.prepend(hgroup);
-
   ctas.forEach((cta, i) => {
     if (i === 0) {
       cta.parentElement.classList.add('post-rsvp-button-wrapper');
@@ -501,6 +510,7 @@ function initFormBasedOnRSVPData(bp) {
   const rsvpData = BlockMediator.get('rsvpData');
   if (rsvpData?.espProvider?.registered || rsvpData?.externalAttendeeId) {
     showSuccessMsg(bp);
+    eventFormSendAnalytics(bp, 'Confirmation Modal View');
   } else {
     personalizeForm(block, profile);
   }
@@ -508,8 +518,12 @@ function initFormBasedOnRSVPData(bp) {
   BlockMediator.subscribe('rsvpData', ({ newValue }) => {
     if (newValue?.espProvider?.registered || newValue?.externalAttendeeId) {
       showSuccessMsg(bp);
+      eventFormSendAnalytics(bp, 'Confirmation Modal View');
     }
   });
+  if (bp.block.querySelector('.form-success-msg.hidden')) {
+    eventFormSendAnalytics(bp, 'Form View');
+  }
 }
 
 async function onProfile(bp, formData) {

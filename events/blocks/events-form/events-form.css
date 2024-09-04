@@ -300,6 +300,12 @@
 
 .events-form .field-wrapper.events-form-submit-wrapper button {
   background-color: var(--color-black);
+  font-family: var(--body-font-family);
+}
+
+.events-form .field-wrapper.events-form-submit-wrapper button:disabled {
+  background-color: var(--color-gray-200);
+  color: var(--color-gray-400);
 }
 
 .events-form .form-success-msg {

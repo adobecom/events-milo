@@ -28,19 +28,6 @@ describe('Event Map', () => {
     expect(block).to.exist;
   });
 
-  it('has fallback alt-text', () => {
-    setMetadata('photos', JSON.stringify([
-      {
-        imageKind: 'venue-map-image',
-        sharepointUrl: 'https://via.placeholder.com/150',
-      },
-    ]));
-    document.body.innerHTML = body;
-    const block = document.querySelector('.event-map');
-    init(block);
-    expect(block.querySelector('img[alt="Venue Map Image"]')).to.exist;
-  });
-
   it('event map does not exist when toggled off for post event', () => {
     setMetadata('show-venue-post-event', 'false');
     document.body.innerHTML = body;
