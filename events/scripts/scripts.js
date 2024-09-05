@@ -13,6 +13,7 @@
 import { lazyCaptureProfile } from './profile.js';
 import autoUpdateContent, { getNonProdData, validatePageAndRedirect } from './content-update.js';
 import { setMetadata } from './utils.js';
+import { SUSI_CONTEXTS } from './constances.js';
 
 export const LIBS = (() => {
   const { hostname, search } = window.location;
@@ -91,17 +92,13 @@ export function decorateArea(area = document) {
   if (getMetadata('event-details-page') !== 'yes') return;
 
   const photosData = parsePhotosData(area);
-  const eventTitle = getMetadata('event-title') || document.title;
 
   const miloDeps = {
     miloLibs: LIBS,
     getConfig,
   };
 
-  autoUpdateContent(area, miloDeps, {
-    ...photosData,
-    'event-title': eventTitle,
-  });
+  autoUpdateContent(area, miloDeps, photosData);
 }
 
 // Add project-wide style path here.
@@ -112,6 +109,8 @@ const CONFIG = {
   codeRoot: '/events',
   contentRoot: '/events',
   imsClientId: 'events-milo',
+  susiContexts: SUSI_CONTEXTS,
+  miloLibs: LIBS,
   // imsScope: 'AdobeID,openid,gnav',
   // geoRouting: 'off',
   // fallbackRouting: 'off',
@@ -123,7 +122,7 @@ const CONFIG = {
   },
 };
 
-export const MILO_CONFIG = setConfig({ ...CONFIG, miloLibs: LIBS });
+export const MILO_CONFIG = setConfig({ ...CONFIG });
 // FIXME: Code smell. This should be exportable.
 window.eccEnv = getECCEnv(MILO_CONFIG);
 
@@ -149,11 +148,7 @@ async function fetchAndDecorateArea() {
   const nonProdData = await getNonProdData(window.eccEnv);
   if (!nonProdData) return;
   Object.entries(nonProdData).forEach(([key, value]) => {
-    if (key === 'event-title') {
-      setMetadata(key, nonProdData.title);
-    } else {
-      setMetadata(key, value);
-    }
+    setMetadata(key, value);
   });
 
   decorateArea();
