@@ -13,7 +13,6 @@
 import { lazyCaptureProfile } from './profile.js';
 import autoUpdateContent, { getNonProdData, validatePageAndRedirect } from './content-update.js';
 import { setMetadata } from './utils.js';
-import { SUSI_CONTEXTS } from './constances.js';
 
 export const LIBS = (() => {
   const { hostname, search } = window.location;
@@ -109,7 +108,14 @@ const CONFIG = {
   codeRoot: '/events',
   contentRoot: '/events',
   imsClientId: 'events-milo',
-  susiContexts: SUSI_CONTEXTS,
+  susiOptions: {
+    dctx_id: {
+      local: 'v:2,s,bg:milo,51364e80-648b-11ef-9bf6-ad6724e2c153',
+      dev: 'v:2,s,bg:milo,51364e80-648b-11ef-9bf6-ad6724e2c153',
+      stage: 'v:2,s,bg:milo,51364e80-648b-11ef-9bf6-ad6724e2c153',
+      prod: 'v:2,s,bg:milo,b719a8b0-6ba6-11ef-933e-7f38920b05fd',
+    },
+  },
   miloLibs: LIBS,
   // imsScope: 'AdobeID,openid,gnav',
   // geoRouting: 'off',
@@ -162,7 +168,7 @@ decorateArea();
 if (renderWithNonProdMetadata()) await fetchAndDecorateArea();
 
 // Validate the page and redirect if is event-details-page
-if (getMetadata('event-details-page') === 'yes') await validatePageAndRedirect();
+if (getMetadata('event-details-page') === 'yes') await validatePageAndRedirect(LIBS);
 
 /*
  * ------------------------------------------------------------

@@ -1,4 +1,4 @@
-import { ICON_REG, META_REG, SUSI_CONTEXTS } from './constances.js';
+import { ICON_REG, META_REG } from './constances.js';
 import BlockMediator from './deps/block-mediator.min.js';
 import { getEvent } from './esp-controller.js';
 import { handlize, getMetadata, setMetadata, getIcon, readBlockConfig } from './utils.js';
@@ -125,16 +125,17 @@ async function updateRSVPButtonState(rsvpBtn, miloLibs, eventInfo) {
   }
 }
 
-export function signIn() {
+export function signIn(options) {
   if (typeof window.adobeIMS?.signIn !== 'function') {
     window?.lana.log({ message: 'IMS signIn method not available', tags: 'errorType=warn,module=gnav' });
     return;
   }
 
-  window.adobeIMS?.signIn({ dctx_id: SUSI_CONTEXTS[window.eccEnv] });
+  window.adobeIMS?.signIn(options);
 }
 
 async function handleRSVPBtnBasedOnProfile(rsvpBtn, miloLibs, profile) {
+  const { getSusiOptions } = await import(`${miloLibs}/utils/utils.js`);
   const eventInfo = await getEvent(getMetadata('event-id'));
 
   if (!eventInfo || eventInfo.error) {
@@ -156,7 +157,7 @@ async function handleRSVPBtnBasedOnProfile(rsvpBtn, miloLibs, profile) {
       rsvpBtn.el.setAttribute('tabindex', 0);
       rsvpBtn.el.addEventListener('click', (e) => {
         e.preventDefault();
-        signIn();
+        signIn(getSusiOptions());
       });
     }
   } else if (profile) {
@@ -168,7 +169,8 @@ async function handleRSVPBtnBasedOnProfile(rsvpBtn, miloLibs, profile) {
   }
 }
 
-export async function validatePageAndRedirect() {
+export async function validatePageAndRedirect(miloLibs) {
+  const { getSusiOptions } = await import(`${miloLibs}/utils/utils.js`);
   const env = window.eccEnv;
   const pagePublished = getMetadata('published') === 'true' || getMetadata('status') === 'live';
   const invalidStagePage = env === 'stage' && window.location.hostname === 'www.stage.adobe.com' && !getMetadata('event-id');
@@ -185,7 +187,7 @@ export async function validatePageAndRedirect() {
     document.body.style.display = 'none';
     BlockMediator.subscribe('imsProfile', ({ newValue }) => {
       if (newValue?.noProfile) {
-        signIn();
+        signIn(getSusiOptions());
       } else if (!newValue.email.endsWith('@adobe.com')) {
         window.location.replace('/404');
       } else {
