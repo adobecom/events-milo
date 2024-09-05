@@ -3,9 +3,8 @@ version: 1
 indices:
   website: &website
     include:
-      - '/events/create-now/**'
-      - '/events/creative-jam/**'
-    target: /events/create-now/query-index.xlsx
+      - '/events/**'
+    target: /events/query-index.xlsx
     properties:
       title:
         select: head > meta[property="og:title"]
