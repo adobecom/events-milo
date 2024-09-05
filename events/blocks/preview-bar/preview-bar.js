@@ -3,16 +3,6 @@ import { getIcon } from '../../scripts/utils.js';
 
 const { createTag, getMetadata } = await import(`${LIBS}/utils/utils.js`);
 
-function removeURLParameters(url, parameters) {
-  const params = new URLSearchParams(url.search);
-
-  if (Array.isArray(parameters)) parameters.forEach((p) => params.delete(p));
-
-  url.search = params.toString();
-
-  return url.toString();
-}
-
 function getEventStatus() {
   const publishedMeta = getMetadata('published')?.toLowerCase() === 'true' || getMetadata('status')?.toLowerCase() === 'live';
   const dot = publishedMeta ? getIcon('dot-purple') : getIcon('dot-green');
@@ -40,7 +30,6 @@ function getCloseBtn(el) {
 
   btn.addEventListener('click', () => {
     el.remove();
-    removeURLParameters(window.location, ['previewMode', 'cacheBuster']);
   });
 
   return btn;
