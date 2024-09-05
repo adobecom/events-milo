@@ -91,17 +91,13 @@ export function decorateArea(area = document) {
   if (getMetadata('event-details-page') !== 'yes') return;
 
   const photosData = parsePhotosData(area);
-  const eventTitle = getMetadata('event-title') || document.title;
 
   const miloDeps = {
     miloLibs: LIBS,
     getConfig,
   };
 
-  autoUpdateContent(area, miloDeps, {
-    ...photosData,
-    'event-title': eventTitle,
-  });
+  autoUpdateContent(area, miloDeps, photosData);
 }
 
 // Add project-wide style path here.
@@ -149,11 +145,7 @@ async function fetchAndDecorateArea() {
   const nonProdData = await getNonProdData(window.eccEnv);
   if (!nonProdData) return;
   Object.entries(nonProdData).forEach(([key, value]) => {
-    if (key === 'event-title') {
-      setMetadata(key, nonProdData.title);
-    } else {
-      setMetadata(key, value);
-    }
+    setMetadata(key, value);
   });
 
   decorateArea();
