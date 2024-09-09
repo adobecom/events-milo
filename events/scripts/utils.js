@@ -150,6 +150,8 @@ export function getSusiOptions(conf) {
     opts[key] = susiOptions[key][envName] || susiOptions[key];
     return opts;
   }, {});
+
+  return susiOptions;
 }
 
 export function readBlockConfig(block) {
