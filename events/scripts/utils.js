@@ -1,4 +1,4 @@
-import { SUSI_OPTIONS } from "./constances";
+import { SUSI_OPTIONS } from './constances.js';
 
 export function createTag(tag, attributes, html, options = {}) {
   const el = document.createElement(tag);
