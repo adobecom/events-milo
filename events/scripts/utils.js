@@ -147,7 +147,7 @@ function toClassName(name) {
 export function getSusiOptions(conf) {
   const { env: { name: envName } } = conf;
   const susiOptions = Object.keys(SUSI_OPTIONS).reduce((opts, key) => {
-    opts[key] = susiOptions[key][envName] || susiOptions[key];
+    opts[key] = SUSI_OPTIONS[key][envName] || SUSI_OPTIONS[key];
     return opts;
   }, {});
 
