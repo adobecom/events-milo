@@ -583,7 +583,7 @@ export default async function decorate(block, formData = null) {
     formContainer: block.querySelector(':scope > div:nth-of-type(2)'),
     form: block.querySelector(':scope > div:nth-of-type(2) a[href$=".json"]'),
     terms: block.querySelector(':scope > div:nth-of-type(3)'),
-    successMsg: block.querySelector(':scope > div:last-of-type > div'),
+    successMsg: block.querySelector(':scope > div:nth-of-type(4) > div'),
   };
 
   await onProfile(bp, formData);

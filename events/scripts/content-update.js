@@ -161,7 +161,8 @@ async function handleRSVPBtnBasedOnProfile(rsvpBtn, miloLibs, profile) {
       rsvpBtn.el.textContent = rsvpBtn.originalText;
       rsvpBtn.el.classList.remove('disabled');
       rsvpBtn.el.setAttribute('tabindex', 0);
-      rsvpBtn.el.addEventListener('click', () => {
+      rsvpBtn.el.addEventListener('click', (e) => {
+        e.preventDefault();
         signIn();
       });
     }
