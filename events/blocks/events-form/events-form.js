@@ -125,7 +125,7 @@ function showSuccessMsg(bp) {
   clearForm(bp.form);
   bp.form.classList.add('hidden');
   bp.eventHero.classList.add('hidden');
-  bp.successMsg.classList.remove('hidden');
+  bp.rsvpSuccessScreen.classList.remove('hidden');
 }
 
 function eventFormSendAnalytics(bp, view) {
@@ -334,10 +334,10 @@ function addTerms(form, terms) {
 }
 
 function decorateSuccessMsg(form, bp) {
-  const ctas = bp.successMsg.querySelectorAll('a');
+  const ctas = bp.rsvpSuccessScreen.querySelectorAll('a');
   const hgroup = createTag('hgroup');
-  const eyeBrowText = bp.successMsg.querySelector('p:first-child');
-  const headings = bp.successMsg.querySelectorAll('h1, h2, h3, h4, h5, h6');
+  const eyeBrowText = bp.rsvpSuccessScreen.querySelector('p:first-child');
+  const headings = bp.rsvpSuccessScreen.querySelectorAll('h1, h2, h3, h4, h5, h6');
   headings.forEach((h) => {
     hgroup.append(h);
   });
@@ -347,7 +347,7 @@ function decorateSuccessMsg(form, bp) {
     hgroup.prepend(eyeBrowText);
   }
 
-  bp.successMsg.prepend(hgroup);
+  bp.rsvpSuccessScreen.prepend(hgroup);
   ctas.forEach((cta, i) => {
     if (i === 0) {
       cta.parentElement.classList.add('post-rsvp-button-wrapper');
@@ -365,7 +365,7 @@ function decorateSuccessMsg(form, bp) {
         const resp = await deleteAttendeeFromEvent(getMetadata('event-id'));
         cta.classList.remove('loading');
         if (resp?.espProvider?.status !== 204) {
-          buildErrorMsg(bp.successMsg);
+          buildErrorMsg(bp.rsvpSuccessScreen);
           return;
         }
 
@@ -377,7 +377,7 @@ function decorateSuccessMsg(form, bp) {
     });
   });
 
-  bp.successMsg.classList.add('hidden');
+  bp.rsvpSuccessScreen.classList.add('hidden');
 }
 
 async function createForm(bp, formData) {
@@ -496,7 +496,7 @@ function decorateHero(heroEl) {
 async function buildEventform(bp, formData) {
   if (!bp.formContainer || !bp.form) return;
   bp.formContainer.classList.add('form-container');
-  bp.successMsg.classList.add('form-success-msg');
+  bp.rsvpSuccessScreen.classList.add('form-success-msg');
   const { formEl, sanitizeList } = await createForm(
     bp,
     formData,
@@ -583,7 +583,8 @@ export default async function decorate(block, formData = null) {
     formContainer: block.querySelector(':scope > div:nth-of-type(2)'),
     form: block.querySelector(':scope > div:nth-of-type(2) a[href$=".json"]'),
     terms: block.querySelector(':scope > div:nth-of-type(3)'),
-    successMsg: block.querySelector(':scope > div:nth-of-type(4) > div'),
+    rsvpSuccessScreen: block.querySelector(':scope > div:nth-of-type(4) > div'),
+    waitlistSuccessScreen: block.querySelector(':scope > div:nth-of-type(5) > div'),
   };
 
   await onProfile(bp, formData);
