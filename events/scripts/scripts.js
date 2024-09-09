@@ -12,7 +12,7 @@
 
 import { lazyCaptureProfile } from './profile.js';
 import autoUpdateContent, { getNonProdData, validatePageAndRedirect } from './content-update.js';
-import { setMetadata } from './utils.js';
+import { getSusiOptions, setMetadata } from './utils.js';
 
 export const LIBS = (() => {
   const { hostname, search } = window.location;
@@ -22,7 +22,7 @@ export const LIBS = (() => {
   return branch.includes('--') ? `https://${branch}.hlx.live/libs` : `https://${branch}--milo--adobecom.hlx.live/libs`;
 })();
 
-const { loadArea, setConfig, getConfig, loadLana } = await import(`${LIBS}/utils/utils.js`);
+const { loadArea, setConfig, updateConfig, getConfig, loadLana } = await import(`${LIBS}/utils/utils.js`);
 
 function getMetadata(name) {
   const attr = name && name.includes(':') ? 'property' : 'name';
@@ -108,12 +108,6 @@ const CONFIG = {
   codeRoot: '/events',
   contentRoot: '/events',
   imsClientId: 'events-milo',
-  susiOptions: {
-    dctx_id: {
-      stage: 'v:2,s,bg:milo,51364e80-648b-11ef-9bf6-ad6724e2c153',
-      prod: 'v:2,s,bg:milo,b719a8b0-6ba6-11ef-933e-7f38920b05fd',
-    },
-  },
   miloLibs: LIBS,
   // imsScope: 'AdobeID,openid,gnav',
   // geoRouting: 'off',
@@ -127,6 +121,8 @@ const CONFIG = {
 };
 
 export const MILO_CONFIG = setConfig({ ...CONFIG });
+
+updateConfig(...MILO_CONFIG, getSusiOptions(MILO_CONFIG));
 // FIXME: Code smell. This should be exportable.
 window.eccEnv = getECCEnv(MILO_CONFIG);
 

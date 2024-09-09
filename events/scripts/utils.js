@@ -1,3 +1,5 @@
+import { SUSI_OPTIONS } from "./constances";
+
 export function createTag(tag, attributes, html, options = {}) {
   const el = document.createElement(tag);
   if (html) {
@@ -140,6 +142,14 @@ function toClassName(name) {
   return name && typeof name === 'string'
     ? name.toLowerCase().replace(/[^0-9a-z]/gi, '-')
     : '';
+}
+
+export function getSusiOptions(conf) {
+  const { env: { name: envName } } = conf;
+  const susiOptions = Object.keys(SUSI_OPTIONS).reduce((opts, key) => {
+    opts[key] = susiOptions[key][envName] || susiOptions[key];
+    return opts;
+  }, {});
 }
 
 export function readBlockConfig(block) {

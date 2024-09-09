@@ -1,7 +1,14 @@
 import { ICON_REG, META_REG } from './constances.js';
 import BlockMediator from './deps/block-mediator.min.js';
 import { getEvent } from './esp-controller.js';
-import { handlize, getMetadata, setMetadata, getIcon, readBlockConfig } from './utils.js';
+import {
+  handlize,
+  getMetadata,
+  setMetadata,
+  getIcon,
+  readBlockConfig,
+  getSusiOptions,
+} from './utils.js';
 
 const preserveFormatKeys = [
   'description',
@@ -135,7 +142,7 @@ export function signIn(options) {
 }
 
 async function handleRSVPBtnBasedOnProfile(rsvpBtn, miloLibs, profile) {
-  const { getSusiOptions } = await import(`${miloLibs}/utils/utils.js`);
+  const { getConfig } = await import(`${miloLibs}/utils/utils.js`);
   const eventInfo = await getEvent(getMetadata('event-id'));
 
   if (!eventInfo || eventInfo.error) {
@@ -157,7 +164,7 @@ async function handleRSVPBtnBasedOnProfile(rsvpBtn, miloLibs, profile) {
       rsvpBtn.el.setAttribute('tabindex', 0);
       rsvpBtn.el.addEventListener('click', (e) => {
         e.preventDefault();
-        signIn(getSusiOptions());
+        signIn(getSusiOptions(getConfig()));
       });
     }
   } else if (profile) {
@@ -170,7 +177,7 @@ async function handleRSVPBtnBasedOnProfile(rsvpBtn, miloLibs, profile) {
 }
 
 export async function validatePageAndRedirect(miloLibs) {
-  const { getSusiOptions } = await import(`${miloLibs}/utils/utils.js`);
+  const { getConfig } = await import(`${miloLibs}/utils/utils.js`);
   const env = window.eccEnv;
   const pagePublished = getMetadata('published') === 'true' || getMetadata('status') === 'live';
   const invalidStagePage = env === 'stage' && window.location.hostname === 'www.stage.adobe.com' && !getMetadata('event-id');
@@ -187,7 +194,7 @@ export async function validatePageAndRedirect(miloLibs) {
     document.body.style.display = 'none';
     BlockMediator.subscribe('imsProfile', ({ newValue }) => {
       if (newValue?.noProfile) {
-        signIn(getSusiOptions());
+        signIn(getSusiOptions(getConfig()));
       } else if (!newValue.email.endsWith('@adobe.com')) {
         window.location.replace('/404');
       } else {
