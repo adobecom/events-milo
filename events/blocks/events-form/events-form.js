@@ -48,8 +48,6 @@ function constructPayload(form) {
     if (fe.type.match(/(?:checkbox|radio)/)) {
       if (fe.checked) {
         payload[fe.name] = payload[fe.name] ? `${fe.value}, ${payload[fe.name]}` : fe.value;
-      } else {
-        payload[fe.name] = payload[fe.name] || '';
       }
       return;
     }
