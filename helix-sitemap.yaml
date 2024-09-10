@@ -14,6 +14,6 @@ sitemaps:
     languages:
       default:
         source: /events/default/metadata.json?sheet=sitemap
-        destination: /events/create-now/event-sitemap.xml
+        destination: /events/create-now/events-sitemap.xml
         hreflang: en
         alternate: /{path}

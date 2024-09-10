@@ -195,7 +195,7 @@ export async function validatePageAndRedirect(miloLibs) {
     BlockMediator.subscribe('imsProfile', ({ newValue }) => {
       if (newValue?.noProfile) {
         signIn(getSusiOptions(getConfig()));
-      } else if (!newValue.email.endsWith('@adobe.com')) {
+      } else if (!newValue.email?.toLowerCase().endsWith('@adobe.com')) {
         window.location.replace('/404');
       } else {
         document.body.removeAttribute('style');
