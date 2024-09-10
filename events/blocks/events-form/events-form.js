@@ -122,6 +122,7 @@ async function buildErrorMsg(parent, status) {
 }
 
 function showSuccessMsg(bp) {
+  const rsvpData = BlockMediator.get('rsvpData');
   clearForm(bp.form);
   bp.form.classList.add('hidden');
   bp.eventHero.classList.add('hidden');
@@ -333,7 +334,10 @@ function addTerms(form, terms) {
   submit.disabled = none(Array.from(checkboxes), (c) => c.checked);
 }
 
-function decorateSuccessMsg(form, bp) {
+function decorateSuccessMsg(bp) {
+  const [firstScreen, secondScreen] = bp.rsvpSuccessScreen.querySelectorAll('div');
+
+  console.log(firstScreen, secondScreen);
   const ctas = bp.rsvpSuccessScreen.querySelectorAll('a');
   const hgroup = createTag('hgroup');
   const eyeBrowText = bp.rsvpSuccessScreen.querySelector('p:first-child');
@@ -372,12 +376,13 @@ function decorateSuccessMsg(form, bp) {
         if (resp?.espProvider?.attendeeDeleted) BlockMediator.set('rsvpData', null);
       }
 
-      const modal = form.closest('.dialog-modal');
+      const modal = bp.el.closest('.dialog-modal');
       closeModal(modal);
     });
   });
 
   bp.rsvpSuccessScreen.classList.add('hidden');
+  bp.waitlistSuccessScreen.classList.add('hidden');
 }
 
 async function createForm(bp, formData) {
@@ -466,7 +471,6 @@ async function createForm(bp, formData) {
   });
 
   addTerms(formEl, terms);
-  decorateSuccessMsg(formEl, bp);
 
   formEl.addEventListener('input', () => applyRules(formEl, rules));
   applyRules(formEl, rules);
@@ -497,10 +501,9 @@ async function buildEventform(bp, formData) {
   if (!bp.formContainer || !bp.form) return;
   bp.formContainer.classList.add('form-container');
   bp.rsvpSuccessScreen.classList.add('form-success-msg');
-  const { formEl, sanitizeList } = await createForm(
-    bp,
-    formData,
-  );
+  bp.waitlistSuccessScreen.classList.add('form-success-msg');
+  const { formEl, sanitizeList } = await createForm(bp, formData);
+  decorateSuccessMsg(bp);
 
   if (formEl) {
     bp.form.replaceWith(formEl);
@@ -583,9 +586,31 @@ export default async function decorate(block, formData = null) {
     formContainer: block.querySelector(':scope > div:nth-of-type(2)'),
     form: block.querySelector(':scope > div:nth-of-type(2) a[href$=".json"]'),
     terms: block.querySelector(':scope > div:nth-of-type(3)'),
-    rsvpSuccessScreen: block.querySelector(':scope > div:nth-of-type(4) > div'),
-    waitlistSuccessScreen: block.querySelector(':scope > div:nth-of-type(5) > div'),
+    rsvpSuccessScreen: block.querySelector(':scope > div:nth-of-type(4)'),
+    waitlistSuccessScreen: block.querySelector(':scope > div:nth-of-type(5)'),
   };
 
+  BlockMediator.set('imsProfile', {
+    account_type: 'type3',
+    utcOffset: 'null',
+    preferred_languages: null,
+    displayName: 'Qiyun Dai',
+    last_name: 'Dai',
+    userId: 'B90719A765B288680A494219@c62f24cc5b5b7e0e0a494004',
+    authId: 'B90719A765B288680A494219@c62f24cc5b5b7e0e0a494004',
+    tags: [
+      'agegroup_unknown',
+      'edu',
+      'edu_k12',
+    ],
+    emailVerified: 'true',
+    phoneNumber: null,
+    countryCode: 'US',
+    name: 'Qiyun Dai',
+    mrktPerm: '',
+    mrktPermEmail: null,
+    first_name: 'Qiyun',
+    email: 'cod87753@adobe.com',
+  });
   await onProfile(bp, formData);
 }
