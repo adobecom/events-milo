@@ -376,7 +376,7 @@ function decorateSuccessScreen(screen) {
           cta.parentElement.classList.add('post-rsvp-button-wrapper');
           cta.classList.add('con-button', 'outline', 'button-l', 'cancel-button');
         } else if (ctaUrl.hash.startsWith('#ok')) {
-          cta.classList.add('con-button', 'black', 'button-l');
+          cta.classList.add('con-button', 'black', 'button-l', 'ok-button');
         }
 
         cta.addEventListener('click', async (e) => {
@@ -397,6 +397,11 @@ function decorateSuccessScreen(screen) {
             firstScreen.classList.add('hidden');
             secondScreen.classList.remove('hidden');
             cta.classList.remove('loading');
+          }
+
+          if (cta.classList.contains('ok-button')) {
+            const modal = screen.closest('.dialog-modal');
+            if (modal) closeModal(modal);
           }
         });
       });
