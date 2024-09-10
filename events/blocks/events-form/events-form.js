@@ -121,12 +121,21 @@ async function buildErrorMsg(parent, status) {
   }, 3000);
 }
 
-function showSuccessMsg(bp) {
+function showSuccessMsgFirstScreen(bp) {
   const rsvpData = BlockMediator.get('rsvpData');
   clearForm(bp.form);
   bp.form.classList.add('hidden');
   bp.eventHero.classList.add('hidden');
-  bp.rsvpSuccessScreen.classList.remove('hidden');
+
+  if (rsvpData?.espProvider?.waitlisted) {
+    bp.waitlistSuccessScreen.classList.remove('hidden');
+    bp.waitlistSuccessScreen.querySelector('.first-screen')?.classList.remove('hidden');
+  }
+
+  if (rsvpData?.espProvider?.registered) {
+    bp.rsvpSuccessScreen.classList.remove('hidden');
+    bp.rsvpSuccessScreen.querySelector('.first-screen')?.classList.remove('hidden');
+  }
 }
 
 function eventFormSendAnalytics(bp, view) {
@@ -334,55 +343,84 @@ function addTerms(form, terms) {
   submit.disabled = none(Array.from(checkboxes), (c) => c.checked);
 }
 
-function decorateSuccessMsg(bp) {
-  const [firstScreen, secondScreen] = bp.rsvpSuccessScreen.querySelectorAll('div');
+function decorateSuccessScreen(screen) {
+  screen.classList.add('form-success-msg');
+  const subScreens = screen.querySelectorAll('div');
 
-  console.log(firstScreen, secondScreen);
-  const ctas = bp.rsvpSuccessScreen.querySelectorAll('a');
-  const hgroup = createTag('hgroup');
-  const eyeBrowText = bp.rsvpSuccessScreen.querySelector('p:first-child');
-  const headings = bp.rsvpSuccessScreen.querySelectorAll('h1, h2, h3, h4, h5, h6');
-  headings.forEach((h) => {
-    hgroup.append(h);
-  });
+  const [firstScreen, secondScreen] = subScreens;
 
-  if (eyeBrowText) {
-    eyeBrowText.classList.add('eyebrow');
-    hgroup.prepend(eyeBrowText);
-  }
+  subScreens.forEach((ss, i) => {
+    ss.classList.add('hidden');
+    const hgroup = createTag('hgroup');
+    const eyeBrowText = ss.querySelector('p:first-child');
+    const headings = ss.querySelectorAll('h1, h2, h3, h4, h5, h6');
 
-  bp.rsvpSuccessScreen.prepend(hgroup);
-  ctas.forEach((cta, i) => {
-    if (i === 0) {
-      cta.parentElement.classList.add('post-rsvp-button-wrapper');
-      cta.classList.add('con-button', 'outline', 'button-l');
-    } else if (i === 1) {
-      cta.classList.add('con-button', 'black', 'button-l');
+    headings.forEach((h) => {
+      hgroup.append(h);
+    });
+
+    if (eyeBrowText) {
+      eyeBrowText.classList.add('eyebrow');
+      hgroup.prepend(eyeBrowText);
     }
 
-    cta.addEventListener('click', async (e) => {
-      e.preventDefault();
+    ss.prepend(hgroup);
 
-      cta.classList.add('loading');
+    if (i === 0) {
+      ss.classList.add('first-screen');
+      const firstScreenCtas = ss.querySelectorAll('a');
 
-      if (i === 0) {
-        const resp = await deleteAttendeeFromEvent(getMetadata('event-id'));
-        cta.classList.remove('loading');
-        if (resp?.espProvider?.status !== 204) {
-          buildErrorMsg(bp.rsvpSuccessScreen);
-          return;
+      firstScreenCtas.forEach((cta) => {
+        const ctaUrl = new URL(cta.href);
+        if (ctaUrl.hash.startsWith('#cancel')) {
+          cta.parentElement.classList.add('post-rsvp-button-wrapper');
+          cta.classList.add('con-button', 'outline', 'button-l', 'cancel-button');
+        } else if (ctaUrl.hash.startsWith('#ok')) {
+          cta.classList.add('con-button', 'black', 'button-l');
         }
 
-        if (resp?.espProvider?.attendeeDeleted) BlockMediator.set('rsvpData', null);
-      }
+        cta.addEventListener('click', async (e) => {
+          e.preventDefault();
 
-      const modal = bp.el.closest('.dialog-modal');
-      closeModal(modal);
-    });
+          cta.classList.add('loading');
+
+          if (cta.classList.contains('cancel-button')) {
+            const resp = await deleteAttendeeFromEvent(getMetadata('event-id'));
+            cta.classList.remove('loading');
+            if (resp?.espProvider?.status !== 204) {
+              buildErrorMsg(screen);
+              return;
+            }
+
+            if (resp?.espProvider?.attendeeDeleted) BlockMediator.set('rsvpData', null);
+
+            firstScreen.classList.add('hidden');
+            secondScreen.classList.remove('hidden');
+            cta.classList.remove('loading');
+          }
+        });
+      });
+    }
+
+    if (i === 1) {
+      ss.classList.add('second-screen');
+      const secondScreenCtas = ss.querySelectorAll('a');
+
+      secondScreenCtas.forEach((cta) => {
+        const ctaUrl = new URL(cta.href);
+        if (ctaUrl.hash.startsWith('#ok')) {
+          cta.classList.add('con-button', 'black', 'button-l');
+          cta.addEventListener('click', async (e) => {
+            e.preventDefault();
+            const modal = screen.closest('.dialog-modal');
+            if (modal) closeModal(modal);
+          });
+        }
+      });
+    }
   });
 
-  bp.rsvpSuccessScreen.classList.add('hidden');
-  bp.waitlistSuccessScreen.classList.add('hidden');
+  screen.classList.add('hidden');
 }
 
 async function createForm(bp, formData) {
@@ -500,10 +538,11 @@ function decorateHero(heroEl) {
 async function buildEventform(bp, formData) {
   if (!bp.formContainer || !bp.form) return;
   bp.formContainer.classList.add('form-container');
-  bp.rsvpSuccessScreen.classList.add('form-success-msg');
-  bp.waitlistSuccessScreen.classList.add('form-success-msg');
   const { formEl, sanitizeList } = await createForm(bp, formData);
-  decorateSuccessMsg(bp);
+
+  [bp.rsvpSuccessScreen, bp.waitlistSuccessScreen].forEach((screen) => {
+    decorateSuccessScreen(screen);
+  });
 
   if (formEl) {
     bp.form.replaceWith(formEl);
@@ -516,16 +555,20 @@ function initFormBasedOnRSVPData(bp) {
   const { block } = bp;
   const profile = BlockMediator.get('imsProfile');
   const rsvpData = BlockMediator.get('rsvpData');
-  if (rsvpData?.espProvider?.registered || rsvpData?.externalAttendeeId) {
-    showSuccessMsg(bp);
+  if (rsvpData?.espProvider?.registered
+    || rsvpData?.espProvider?.waitlisted
+    || rsvpData?.externalAttendeeId) {
+    showSuccessMsgFirstScreen(bp);
     eventFormSendAnalytics(bp, 'Confirmation Modal View');
   } else {
     personalizeForm(block, profile);
   }
 
   BlockMediator.subscribe('rsvpData', ({ newValue }) => {
-    if (newValue?.espProvider?.registered || newValue?.externalAttendeeId) {
-      showSuccessMsg(bp);
+    if (newValue?.espProvider?.registered
+      || newValue?.espProvider?.waitlisted
+      || newValue?.externalAttendeeId) {
+      showSuccessMsgFirstScreen(bp);
       eventFormSendAnalytics(bp, 'Confirmation Modal View');
     }
   });
