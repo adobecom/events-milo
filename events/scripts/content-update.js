@@ -186,7 +186,7 @@ export async function validatePageAndRedirect() {
     BlockMediator.subscribe('imsProfile', ({ newValue }) => {
       if (newValue?.noProfile) {
         signIn();
-      } else if (!newValue.email.endsWith('@adobe.com')) {
+      } else if (!newValue.email?.toLowerCase().endsWith('@adobe.com')) {
         window.location.replace('/404');
       } else {
         document.body.removeAttribute('style');
