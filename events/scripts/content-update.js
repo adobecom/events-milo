@@ -93,7 +93,7 @@ function createTag(tag, attributes, html, options = {}) {
 async function updateRSVPButtonState(rsvpBtn, miloLibs, eventInfo) {
   const rsvpData = BlockMediator.get('rsvpData');
   const checkRed = getIcon('check-circle-red');
-  const { attendeeLimit, attendeeCount, allowWaitlisting, cloudType } = eventInfo;
+  const { attendeeLimit, attendeeCount, allowWaitlisting } = eventInfo;
   const eventFull = +attendeeLimit <= +attendeeCount;
 
   const enableBtn = () => {
@@ -108,19 +108,7 @@ async function updateRSVPButtonState(rsvpBtn, miloLibs, eventInfo) {
   };
 
   const closedState = async () => {
-    let placeholderKey;
-
-    switch (cloudType) {
-      case 'DX':
-        placeholderKey = 'waitlist-full-cta-text';
-        break;
-      case 'CreativeCloud':
-      default:
-        placeholderKey = 'event-full-cta-text';
-    }
-
-    const closedText = await miloReplaceKey(miloLibs, placeholderKey);
-
+    const closedText = await miloReplaceKey(miloLibs, 'event-full-cta-text');
     disableBtn();
     updateAnalyticTag(rsvpBtn.el, closedText);
     rsvpBtn.el.textContent = closedText;
