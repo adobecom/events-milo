@@ -93,41 +93,90 @@ function createTag(tag, attributes, html, options = {}) {
 async function updateRSVPButtonState(rsvpBtn, miloLibs, eventInfo) {
   const rsvpData = BlockMediator.get('rsvpData');
   const checkRed = getIcon('check-circle-red');
-  const eventFull = +eventInfo.attendeeLimit <= +eventInfo.attendeeCount;
+  const { attendeeLimit, attendeeCount, allowWaitlisting, cloudType } = eventInfo;
+  const eventFull = +attendeeLimit <= +attendeeCount;
 
-  if (!rsvpData) {
-    if (eventFull) {
-      const eventFullText = await miloReplaceKey(miloLibs, 'event-full-cta-text');
-      rsvpBtn.el.setAttribute('tabindex', -1);
-      rsvpBtn.el.href = '';
-      rsvpBtn.el.classList.add('disabled');
-      updateAnalyticTag(rsvpBtn.el, eventFullText);
-      rsvpBtn.el.textContent = eventFullText;
-      checkRed.remove();
-    } else {
-      rsvpBtn.el.classList.remove('disabled');
-      rsvpBtn.el.setAttribute('tabindex', 0);
-      updateAnalyticTag(rsvpBtn.el, rsvpBtn.originalText);
-      rsvpBtn.el.textContent = rsvpBtn.originalText;
-      checkRed.remove();
-    }
-  } else if (rsvpData.espProvider?.registered || rsvpData.externalAttendeeId) {
-    const registeredText = await miloReplaceKey(miloLibs, 'registered-cta-text');
+  const enableBtn = () => {
     rsvpBtn.el.classList.remove('disabled');
     rsvpBtn.el.setAttribute('tabindex', 0);
+  };
+
+  const disableBtn = () => {
+    rsvpBtn.el.setAttribute('tabindex', -1);
+    rsvpBtn.el.href = '';
+    rsvpBtn.el.classList.add('disabled');
+  };
+
+  const closedState = async () => {
+    let placeholderKey;
+
+    switch (cloudType) {
+      case 'DX':
+        placeholderKey = 'waitlist-full-cta-text';
+        break;
+      case 'CreativeCloud':
+      default:
+        placeholderKey = 'event-full-cta-text';
+    }
+
+    const closedText = await miloReplaceKey(miloLibs, placeholderKey);
+
+    disableBtn();
+    updateAnalyticTag(rsvpBtn.el, closedText);
+    rsvpBtn.el.textContent = closedText;
+    checkRed.remove();
+  };
+
+  const defaultState = () => {
+    enableBtn();
+    updateAnalyticTag(rsvpBtn.el, rsvpBtn.originalText);
+    rsvpBtn.el.textContent = rsvpBtn.originalText;
+    checkRed.remove();
+  };
+
+  const registeredState = async () => {
+    const registeredText = await miloReplaceKey(miloLibs, 'registered-cta-text');
+    enableBtn();
     updateAnalyticTag(rsvpBtn.el, registeredText);
     rsvpBtn.el.textContent = registeredText;
     rsvpBtn.el.prepend(checkRed);
+  };
+
+  const waitlistState = async () => {
+    const waitlistText = await miloReplaceKey(miloLibs, 'waitlist-cta-text');
+    enableBtn();
+    updateAnalyticTag(rsvpBtn.el, waitlistText);
+    rsvpBtn.el.textContent = waitlistText;
+    checkRed.remove();
+  };
+
+  const waitlistedState = async () => {
+    const waitlistedText = await miloReplaceKey(miloLibs, 'waitlisted-cta-text');
+    disableBtn();
+    updateAnalyticTag(rsvpBtn.el, waitlistedText);
+    rsvpBtn.el.textContent = waitlistedText;
+    rsvpBtn.el.prepend(checkRed);
+  };
+
+  if (!rsvpData) {
+    if (eventFull) {
+      if (allowWaitlisting) {
+        await waitlistState();
+      } else {
+        await closedState();
+      }
+    } else {
+      defaultState();
+    }
+  // RSVP data changed by register submission || rsvp data received on page load
+  } else if (rsvpData.espProvider?.registered || rsvpData.attendeeStatus === 'registered') {
+    await registeredState();
+  } else if (rsvpData.espProvider?.waitlisted || rsvpData.attendeeStatus === 'waitlisted') {
+    await waitlistedState();
   } else if (!rsvpData.ok) {
     // FIXME: temporary solution for ESL returning 500 on ESP 400 response
     if (rsvpData.error?.message === 'Request to ESP failed: Event is full') {
-      const eventFullText = await miloReplaceKey(miloLibs, 'event-full-cta-text');
-      rsvpBtn.el.setAttribute('tabindex', -1);
-      rsvpBtn.el.href = '';
-      rsvpBtn.el.classList.add('disabled');
-      updateAnalyticTag(rsvpBtn.el, eventFullText);
-      rsvpBtn.el.textContent = eventFullText;
-      checkRed.remove();
+      await closedState();
     }
   }
 }
