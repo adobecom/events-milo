@@ -93,7 +93,7 @@ function createTag(tag, attributes, html, options = {}) {
 async function updateRSVPButtonState(rsvpBtn, miloLibs, eventInfo) {
   const rsvpData = BlockMediator.get('rsvpData');
   const checkRed = getIcon('check-circle-red');
-  const { attendeeLimit, attendeeCount, allowWaitlisting } = eventInfo;
+  const { attendeeLimit, attendeeCount, allowWaitListing } = eventInfo;
   const eventFull = +attendeeLimit <= +attendeeCount;
 
   const enableBtn = () => {
@@ -148,7 +148,7 @@ async function updateRSVPButtonState(rsvpBtn, miloLibs, eventInfo) {
 
   if (!rsvpData) {
     if (eventFull) {
-      if (allowWaitlisting) {
+      if (allowWaitListing) {
         await waitlistState();
       } else {
         await closedState();
