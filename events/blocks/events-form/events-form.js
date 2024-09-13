@@ -48,6 +48,8 @@ function constructPayload(form) {
     if (fe.type.match(/(?:checkbox|radio)/)) {
       if (fe.checked) {
         payload[fe.name] = payload[fe.name] ? `${fe.value}, ${payload[fe.name]}` : fe.value;
+      } else {
+        payload[fe.name] = payload[fe.name] || '';
       }
       return;
     }
@@ -85,7 +87,13 @@ async function submitForm(bp) {
 
   if (!isValid) return false;
 
-  return getAndCreateAndAddAttendee(getMetadata('event-id'), payload);
+  // filter out empty keys
+  const cleanPayload = Object.keys(payload).reduce((acc, key) => {
+    if (payload[key]) acc[key] = payload[key];
+    return acc;
+  }, {});
+
+  return getAndCreateAndAddAttendee(getMetadata('event-id'), cleanPayload);
 }
 
 function clearForm(form) {
