@@ -122,7 +122,7 @@ const CONFIG = {
 
 export const MILO_CONFIG = setConfig({ ...CONFIG });
 
-updateConfig({ ...MILO_CONFIG, susiOptions: getSusiOptions(MILO_CONFIG) });
+updateConfig({ ...MILO_CONFIG, signInContext: getSusiOptions(MILO_CONFIG) });
 // FIXME: Code smell. This should be exportable.
 window.eccEnv = getECCEnv(MILO_CONFIG);
 
