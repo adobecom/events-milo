@@ -51,6 +51,17 @@ export async function getSVGsfromFile(path, selectors) {
   });
 }
 
+function createSocialIcon(svg, platform) {
+  if (!svg || !platform || !(svg instanceof Node)) return null;
+  const icon = svg.cloneNode(true);
+  icon.classList.add('card-social-icon');
+  icon.setAttribute('alt', `${platform} logo`);
+  icon.setAttribute('height', 20);
+  icon.setAttribute('width', 20);
+
+  return icon;
+}
+
 async function decorateSocialIcons(cardContainer, socialLinks) {
   const SUPPORTED_SOCIAL = ['instagram', 'facebook', 'twitter', 'linkedin', 'youtube', 'pinterest', 'discord', 'behance', 'web'];
   const svgPath = `${MILO_CONFIG.codeRoot}/icons/social-icons.svg`;
@@ -62,15 +73,11 @@ async function decorateSocialIcons(cardContainer, socialLinks) {
   socialLinks.forEach((social) => {
     const { link } = social;
     const platform = SUPPORTED_SOCIAL.find((p) => link.toLowerCase().includes(p)) || 'web';
-    const svg = svgEls.find((el) => el.name === platform);
-    if (!svg) return;
+    const svgEl = svgEls.find((el) => el.name === platform);
+    if (!svgEl) return;
 
-    const icon = svg.svg;
     const li = createTag('li', { class: 'card-social-icon' });
-    icon.classList.add('card-social-icon');
-    icon.setAttribute('alt', `${platform} logo`);
-    icon.setAttribute('height', 20);
-    icon.setAttribute('width', 20);
+    const icon = createSocialIcon(svgEl.svg, platform);
 
     const a = createTag('a', {
       href: link,
