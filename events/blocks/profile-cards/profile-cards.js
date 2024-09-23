@@ -95,9 +95,14 @@ function decorateContent(cardContainer, data) {
   const textContainer = createTag('div', { class: 'card-text-container' });
   const title = createTag('p', { class: 'card-title' }, data.title);
   const name = createTag('h3', { class: 'card-name' }, `${data.firstName} ${data.lastName}`);
-  const description = createTag('p', { class: 'card-desc' }, data.bio);
 
-  textContainer.append(title, name, description);
+  textContainer.append(title, name);
+
+  if (data.bio) {
+    const description = createTag('p', { class: 'card-desc' }, data.bio);
+    textContainer.append(description);
+  }
+
   contentContainer.append(textContainer);
 
   decorateSocialIcons(contentContainer, data.socialLinks || data.socialMedia || []);
