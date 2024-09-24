@@ -1,7 +1,13 @@
 import { ICON_REG, META_REG, SUSI_CONTEXTS } from './constances.js';
 import BlockMediator from './deps/block-mediator.min.js';
 import { getEvent } from './esp-controller.js';
-import { handlize, getMetadata, setMetadata, getIcon, readBlockConfig } from './utils.js';
+import {
+  handlize,
+  getMetadata,
+  setMetadata,
+  getIcon,
+  readBlockConfig,
+} from './utils.js';
 
 const preserveFormatKeys = [
   'description',

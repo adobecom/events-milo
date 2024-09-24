@@ -12,16 +12,8 @@
 
 import { lazyCaptureProfile } from './profile.js';
 import autoUpdateContent, { getNonProdData, validatePageAndRedirect } from './content-update.js';
-import { setMetadata } from './utils.js';
+import { setMetadata, LIBS } from './utils.js';
 import { SUSI_CONTEXTS } from './constances.js';
-
-export const LIBS = (() => {
-  const { hostname, search } = window.location;
-  if (!(hostname.includes('.hlx.') || hostname.includes('local'))) return '/libs';
-  const branch = new URLSearchParams(search).get('milolibs') || 'main';
-  if (branch === 'local') return 'http://localhost:6456/libs';
-  return branch.includes('--') ? `https://${branch}.hlx.live/libs` : `https://${branch}--milo--adobecom.hlx.live/libs`;
-})();
 
 const { loadArea, setConfig, getConfig, loadLana } = await import(`${LIBS}/utils/utils.js`);
 
@@ -52,7 +44,7 @@ function getECCEnv(miloConfig) {
   return 'dev';
 }
 
-export function decorateArea(area = document) {
+function decorateArea(area = document) {
   const parsePhotosData = () => {
     const output = {};
 
@@ -121,10 +113,9 @@ const CONFIG = {
     kr: { ietf: 'ko-KR', tk: 'zfo3ouc' },
   },
 };
-
-export const MILO_CONFIG = setConfig({ ...CONFIG });
+setConfig({ ...CONFIG });
 // FIXME: Code smell. This should be exportable.
-window.eccEnv = getECCEnv(MILO_CONFIG);
+window.eccEnv = getECCEnv(getConfig());
 
 function renderWithNonProdMetadata() {
   const isEventDetailsPage = getMetadata('event-details-page') === 'yes';
