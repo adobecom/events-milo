@@ -52,7 +52,7 @@ export async function getSVGsfromFile(path, selectors) {
 
 async function decorateSocialIcons(cardContainer, socialLinks) {
   const SUPPORTED_SOCIAL = ['instagram', 'facebook', 'twitter', 'linkedin', 'youtube', 'pinterest', 'discord', 'behance', 'web'];
-  const svgPath = `${getConfig().codeRoot}/icons/social-icons.svg`;
+  const svgPath = `${getConfig().codeRoot || '/events'}/icons/social-icons.svg`;
   const socialList = createTag('ul', { class: 'card-social-icons' });
 
   const svgEls = await getSVGsfromFile(svgPath, SUPPORTED_SOCIAL);
@@ -143,7 +143,7 @@ function decorateCards(el, data) {
 }
 
 export default function init(el) {
-  let data;
+  let data = [];
 
   try {
     data = JSON.parse(getMetadata('speakers'));
