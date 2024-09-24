@@ -65,7 +65,11 @@ export async function constructRequestOptions(method, body = null) {
 
   const headers = new Headers();
   const authToken = window.adobeIMS?.getAccessToken()?.token;
+
+  if (!authToken) window.lana?.log('Error: Failed to get Adobe IMS auth token');
+
   headers.append('Authorization', `Bearer ${authToken}`);
+  headers.append('x-api-key', 'acom_event_service');
   headers.append('content-type', 'application/json');
 
   const options = {
