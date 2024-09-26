@@ -1,3 +1,26 @@
+export function getECCEnv() {
+  const validEnvs = ['dev', 'stage', 'prod'];
+  const { host, search } = window.location;
+  const SLD = host.includes('.aem.') ? 'aem' : 'hlx';
+  const usp = new URLSearchParams(search);
+  const eccEnv = usp.get('eccEnv');
+
+  if (validEnvs.includes(eccEnv)) return eccEnv;
+
+  if (((host.includes(`${SLD}.page`) || host.includes(`${SLD}.live`)) && host.startsWith('dev--'))
+    || host.includes('localhost')) return 'dev';
+
+  if (((host.includes(`${SLD}.page`) || host.includes(`${SLD}.live`)) && host.startsWith('stage--'))
+    || host.includes('stage.adobe')
+    || host.includes('corp.adobe')
+    || host.includes('graybox.adobe')) return 'stage';
+
+  if (((host.includes(`${SLD}.page`) || host.includes(`${SLD}.live`)) && host.startsWith('main--')) || host.endsWith === 'adobe.com') return 'prod';
+
+  // fallback to dev
+  return 'dev';
+}
+
 export function createTag(tag, attributes, html, options = {}) {
   const el = document.createElement(tag);
   if (html) {
