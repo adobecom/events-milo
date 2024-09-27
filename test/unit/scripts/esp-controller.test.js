@@ -37,7 +37,7 @@ describe('Adobe Event Service API', () => {
 
   describe('getEvent', () => {
     it('should fetch event details', async () => {
-      window.eccEnv = 'local';
+      window.location.search = '?eccEnv=local';
       const fetchStub = sinon.stub(window, 'fetch').resolves({ json: () => ({ eventId: '123' }), ok: true });
       const event = await api.getEvent('123');
       expect(event).to.be.an('object');
@@ -48,7 +48,7 @@ describe('Adobe Event Service API', () => {
 
   describe('getAttendee', () => {
     it('should fetch attendee details', async () => {
-      window.eccEnv = 'local';
+      window.location.search = '?eccEnv=local';
       const fetchStub = sinon.stub(window, 'fetch').resolves({ json: () => ({ attendeeId: '456' }), ok: true });
       const attendee = await api.getAttendee('123');
       expect(attendee).to.be.an('object');
@@ -59,7 +59,7 @@ describe('Adobe Event Service API', () => {
 
   describe('createAttendee', () => {
     it('should create an attendee and receive complete attendee data', async () => {
-      window.eccEnv = 'local';
+      window.location.search = '?eccEnv=local';
       const fetchStub = sinon.stub(window, 'fetch')
         .onFirstCall().resolves({ json: () => ({}), ok: true })
         .onSecondCall()
@@ -75,7 +75,7 @@ describe('Adobe Event Service API', () => {
 
   describe('addAttendeeToEvent', () => {
     it('should add an attendee to an event and receive complete attendee data', async () => {
-      window.eccEnv = 'local';
+      window.location.search = '?eccEnv=local';
       const fetchStub = sinon.stub(window, 'fetch')
         .onFirstCall().resolves({ json: () => ({}), ok: true })
         .onSecondCall()
@@ -91,7 +91,7 @@ describe('Adobe Event Service API', () => {
 
   describe('updateAttendee', () => {
     it('should update attendee details and fetch complete attendee data', async () => {
-      window.eccEnv = 'local';
+      window.location.search = '?eccEnv=local';
       const fetchStub = sinon.stub(window, 'fetch')
         .onFirstCall().resolves({ json: () => ({}), ok: true })
         .onSecondCall()
@@ -107,7 +107,7 @@ describe('Adobe Event Service API', () => {
 
   describe('deleteAttendeeFromEvent', () => {
     it('should delete an attendee and fetch complete attendee data', async () => {
-      window.eccEnv = 'local';
+      window.location.search = '?eccEnv=local';
       const fetchStub = sinon.stub(window, 'fetch')
         .onFirstCall().resolves({ json: () => ({}), ok: true })
         .onSecondCall()

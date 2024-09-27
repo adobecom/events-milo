@@ -12,7 +12,7 @@
 
 import { lazyCaptureProfile } from './profile.js';
 import autoUpdateContent, { getNonProdData, validatePageAndRedirect } from './content-update.js';
-import { setMetadata } from './utils.js';
+import { setMetadata, getECCEnv } from './utils.js';
 import { SUSI_CONTEXTS } from './constances.js';
 
 export const LIBS = (() => {
@@ -29,27 +29,6 @@ function getMetadata(name) {
   const attr = name && name.includes(':') ? 'property' : 'name';
   const meta = document.head.querySelector(`meta[${attr}="${name}"]`);
   return meta && meta.content;
-}
-
-function getECCEnv(miloConfig) {
-  const { env } = miloConfig;
-
-  if (env.name === 'prod') return 'prod';
-
-  if (env.name === 'stage') {
-    const { host, search } = window.location;
-    const usp = new URLSearchParams(search);
-    const eccEnv = usp.get('eccEnv');
-
-    if (eccEnv) return eccEnv;
-
-    if (host.startsWith('main--')) return 'prod';
-    if (host.startsWith('stage--') || host.startsWith('www.stage')) return 'stage';
-    if (host.startsWith('dev--') || host.startsWith('www.dev')) return 'dev';
-  }
-
-  // fallback to dev
-  return 'dev';
 }
 
 export function decorateArea(area = document) {
@@ -123,15 +102,13 @@ const CONFIG = {
 };
 
 export const MILO_CONFIG = setConfig({ ...CONFIG });
-// FIXME: Code smell. This should be exportable.
-window.eccEnv = getECCEnv(MILO_CONFIG);
 
 function renderWithNonProdMetadata() {
   const isEventDetailsPage = getMetadata('event-details-page') === 'yes';
 
   if (!isEventDetailsPage) return false;
 
-  const isLiveProd = window.eccEnv === 'prod' && window.location.hostname === 'www.adobe.com';
+  const isLiveProd = getECCEnv() === 'prod' && window.location.hostname === 'www.adobe.com';
   const isMissingEventId = !getMetadata('event-id');
 
   if (!isLiveProd && isMissingEventId) return true;
@@ -145,7 +122,7 @@ function renderWithNonProdMetadata() {
 
 async function fetchAndDecorateArea() {
   // Load non-prod data for stage and dev environments
-  const nonProdData = await getNonProdData(window.eccEnv);
+  const nonProdData = await getNonProdData(getECCEnv());
   if (!nonProdData) return;
   Object.entries(nonProdData).forEach(([key, value]) => {
     setMetadata(key, value);
