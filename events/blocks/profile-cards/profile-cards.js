@@ -62,7 +62,7 @@ function createSocialIcon(svg, platform) {
 }
 
 async function decorateSocialIcons(cardContainer, socialLinks) {
-  const SUPPORTED_SOCIAL = ['instagram', 'facebook', 'twitter', 'linkedin', 'youtube', 'pinterest', 'discord', 'behance', 'web', 'x'];
+  const SUPPORTED_SOCIAL = ['instagram', 'facebook', 'twitter', 'linkedin', 'youtube', 'pinterest', 'discord', 'behance', 'web', 'x', 'tiktok'];
   const svgPath = `${getConfig().codeRoot || '/events'}/icons/social-icons.svg`;
   const socialList = createTag('ul', { class: 'card-social-icons' });
 
