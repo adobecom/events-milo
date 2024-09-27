@@ -12,16 +12,10 @@
 
 import { lazyCaptureProfile } from './profile.js';
 import autoUpdateContent, { getNonProdData, validatePageAndRedirect } from './content-update.js';
-import { setMetadata, getECCEnv, LIBS } from './utils.js';
+import { setMetadata, getMetadata, getECCEnv, LIBS } from './utils.js';
 import { SUSI_CONTEXTS } from './constances.js';
 
 const { loadArea, setConfig, getConfig, loadLana } = await import(`${LIBS}/utils/utils.js`);
-
-function getMetadata(name) {
-  const attr = name && name.includes(':') ? 'property' : 'name';
-  const meta = document.head.querySelector(`meta[${attr}="${name}"]`);
-  return meta && meta.content;
-}
 
 function decorateArea(area = document) {
   const parsePhotosData = () => {
