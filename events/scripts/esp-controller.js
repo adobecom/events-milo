@@ -1,3 +1,5 @@
+import { getECCEnv } from './utils.js';
+
 export const API_CONFIG = {
   esl: {
     local: { host: 'http://localhost:8499' },
@@ -81,7 +83,7 @@ export async function constructRequestOptions(method, body = null) {
 }
 
 export async function getEvent(eventId) {
-  const { host } = API_CONFIG.esp[window.eccEnv];
+  const { host } = API_CONFIG.esp[getECCEnv()];
   const options = await constructRequestOptions('GET');
 
   try {
@@ -101,7 +103,7 @@ export async function getEvent(eventId) {
 }
 
 export async function getEventAttendee(eventId) {
-  const { host } = API_CONFIG.esp[window.eccEnv];
+  const { host } = API_CONFIG.esp[getECCEnv()];
   const options = await constructRequestOptions('GET');
 
   try {
@@ -124,7 +126,7 @@ export async function getEventAttendee(eventId) {
 }
 
 export async function getAttendee() {
-  const { host } = API_CONFIG.esl[window.eccEnv];
+  const { host } = API_CONFIG.esl[getECCEnv()];
   const options = await constructRequestOptions('GET');
 
   try {
@@ -149,7 +151,7 @@ export async function getAttendee() {
 export async function createAttendee(attendeeData) {
   if (!attendeeData) return false;
 
-  const { host } = API_CONFIG.esl[window.eccEnv];
+  const { host } = API_CONFIG.esl[getECCEnv()];
   const raw = JSON.stringify(attendeeData);
   const options = await constructRequestOptions('POST', raw);
 
@@ -173,7 +175,7 @@ export async function addAttendeeToEvent(eventId, attendee) {
   if (!eventId || !attendee) return false;
 
   const { firstName, lastName, email } = attendee;
-  const { host } = API_CONFIG.esl[window.eccEnv];
+  const { host } = API_CONFIG.esl[getECCEnv()];
   const raw = JSON.stringify({ firstName, lastName, email });
   const options = await constructRequestOptions('POST', raw);
 
@@ -196,7 +198,7 @@ export async function addAttendeeToEvent(eventId, attendee) {
 export async function updateAttendee(attendeeData) {
   if (!attendeeData) return false;
 
-  const { host } = API_CONFIG.esl[window.eccEnv];
+  const { host } = API_CONFIG.esl[getECCEnv()];
   const raw = JSON.stringify(attendeeData);
   const options = await constructRequestOptions('PUT', raw);
 
@@ -219,7 +221,7 @@ export async function updateAttendee(attendeeData) {
 export async function deleteAttendeeFromEvent(eventId) {
   if (!eventId) return false;
 
-  const { host } = API_CONFIG.esl[window.eccEnv];
+  const { host } = API_CONFIG.esl[getECCEnv()];
   const options = await constructRequestOptions('DELETE');
 
   try {
