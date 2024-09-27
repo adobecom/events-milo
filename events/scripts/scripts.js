@@ -12,26 +12,12 @@
 
 import { lazyCaptureProfile } from './profile.js';
 import autoUpdateContent, { getNonProdData, validatePageAndRedirect } from './content-update.js';
-import { setMetadata, getECCEnv } from './utils.js';
+import { setMetadata, getMetadata, getECCEnv, LIBS } from './utils.js';
 import { SUSI_CONTEXTS } from './constances.js';
-
-export const LIBS = (() => {
-  const { hostname, search } = window.location;
-  if (!(hostname.includes('.hlx.') || hostname.includes('local'))) return '/libs';
-  const branch = new URLSearchParams(search).get('milolibs') || 'main';
-  if (branch === 'local') return 'http://localhost:6456/libs';
-  return branch.includes('--') ? `https://${branch}.hlx.live/libs` : `https://${branch}--milo--adobecom.hlx.live/libs`;
-})();
 
 const { loadArea, setConfig, getConfig, loadLana } = await import(`${LIBS}/utils/utils.js`);
 
-function getMetadata(name) {
-  const attr = name && name.includes(':') ? 'property' : 'name';
-  const meta = document.head.querySelector(`meta[${attr}="${name}"]`);
-  return meta && meta.content;
-}
-
-export function decorateArea(area = document) {
+function decorateArea(area = document) {
   const parsePhotosData = () => {
     const output = {};
 
@@ -101,7 +87,7 @@ const CONFIG = {
   },
 };
 
-export const MILO_CONFIG = setConfig({ ...CONFIG });
+setConfig({ ...CONFIG });
 
 function renderWithNonProdMetadata() {
   const isEventDetailsPage = getMetadata('event-details-page') === 'yes';

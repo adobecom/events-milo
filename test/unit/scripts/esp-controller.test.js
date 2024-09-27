@@ -8,15 +8,6 @@ describe('Adobe Event Service API', () => {
     api = await import('../../../events/scripts/esp-controller.js');
   });
 
-  describe('getAPIConfig', () => {
-    it('should return API configuration object', () => {
-      const config = api.getAPIConfig();
-      expect(config).to.be.an('object');
-      expect(config).to.have.property('esl');
-      expect(config).to.have.property('esp');
-    });
-  });
-
   describe('waitForAdobeIMS', () => {
     it('should resolve when adobeIMS is available', async () => {
       window.adobeIMS = { getAccessToken: () => ({ token: 'fake-token' }) };

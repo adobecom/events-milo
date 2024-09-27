@@ -144,11 +144,11 @@ export function signIn() {
 async function handleRSVPBtnBasedOnProfile(rsvpBtn, miloLibs, profile) {
   const eventInfo = await getEvent(getMetadata('event-id'));
 
-  if (!eventInfo || eventInfo.error) {
+  if (!eventInfo) {
     return;
   }
 
-  if (profile?.noProfile) {
+  if (profile?.noProfile || eventInfo.status === 401) {
     const eventFull = +eventInfo.attendeeLimit <= +eventInfo.attendeeCount;
     if (eventFull) {
       const eventFullText = await miloReplaceKey(miloLibs, 'event-full-cta-text');
