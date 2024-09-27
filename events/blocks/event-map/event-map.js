@@ -1,5 +1,4 @@
-import { LIBS } from '../../scripts/scripts.js';
-import { getMetadata } from '../../scripts/utils.js';
+import { LIBS, getMetadata } from '../../scripts/utils.js';
 
 const { createTag } = await import(`${LIBS}/utils/utils.js`);
 

@@ -1,9 +1,8 @@
-import { LIBS } from '../../scripts/scripts.js';
-import { getIcon } from '../../scripts/utils.js';
+import { LIBS, getIcon } from '../../scripts/utils.js';
 
 const { createTag, getMetadata } = await import(`${LIBS}/utils/utils.js`);
 
-function getEventStatus() {
+export function getEventStatus() {
   const publishedMeta = getMetadata('published')?.toLowerCase() === 'true' || getMetadata('status')?.toLowerCase() === 'live';
   const dot = publishedMeta ? getIcon('dot-purple') : getIcon('dot-green');
   const text = publishedMeta ? 'Published' : 'Draft';
@@ -13,7 +12,7 @@ function getEventStatus() {
   return statusTag.outerHTML;
 }
 
-function getPreviewTarget() {
+export function getPreviewTarget() {
   if (window.location.hash.startsWith('#rsvp-form')) return 'RSVP';
 
   const params = new URLSearchParams(document.location.search);
@@ -25,7 +24,7 @@ function getPreviewTarget() {
   return 'Event details';
 }
 
-function getCloseBtn(el) {
+export function getCloseBtn(el) {
   const btn = createTag('button', { class: 'preview-close-btn' }, getIcon('close-x-circle'));
 
   btn.addEventListener('click', () => {
@@ -35,7 +34,7 @@ function getCloseBtn(el) {
   return btn;
 }
 
-export default async function init(el) {
+export default function init(el) {
   const params = new URLSearchParams(document.location.search);
   if (!params.get('previewMode')) {
     el.remove();

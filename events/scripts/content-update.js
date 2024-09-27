@@ -1,7 +1,14 @@
 import { ICON_REG, META_REG, SUSI_CONTEXTS } from './constances.js';
 import BlockMediator from './deps/block-mediator.min.js';
 import { getEvent } from './esp-controller.js';
-import { handlize, getMetadata, setMetadata, getIcon, readBlockConfig } from './utils.js';
+import {
+  handlize,
+  getMetadata,
+  setMetadata,
+  getIcon,
+  readBlockConfig,
+  getECCEnv,
+} from './utils.js';
 
 const preserveFormatKeys = [
   'description',
@@ -131,17 +138,17 @@ export function signIn() {
     return;
   }
 
-  window.adobeIMS?.signIn({ dctx_id: SUSI_CONTEXTS[window.eccEnv] });
+  window.adobeIMS?.signIn({ dctx_id: SUSI_CONTEXTS[getECCEnv()] });
 }
 
 async function handleRSVPBtnBasedOnProfile(rsvpBtn, miloLibs, profile) {
   const eventInfo = await getEvent(getMetadata('event-id'));
 
-  if (!eventInfo || eventInfo.error) {
+  if (!eventInfo) {
     return;
   }
 
-  if (profile?.noProfile) {
+  if (profile?.noProfile || eventInfo.status === 401) {
     const eventFull = +eventInfo.attendeeLimit <= +eventInfo.attendeeCount;
     if (eventFull) {
       const eventFullText = await miloReplaceKey(miloLibs, 'event-full-cta-text');
@@ -169,7 +176,7 @@ async function handleRSVPBtnBasedOnProfile(rsvpBtn, miloLibs, profile) {
 }
 
 export async function validatePageAndRedirect() {
-  const env = window.eccEnv;
+  const env = getECCEnv();
   const pagePublished = getMetadata('published') === 'true' || getMetadata('status') === 'live';
   const invalidStagePage = env === 'stage' && window.location.hostname === 'www.stage.adobe.com' && !getMetadata('event-id');
   const isPreviewMode = new URLSearchParams(window.location.search).get('previewMode');
@@ -405,7 +412,13 @@ function injectFragments(parent) {
 
 export async function getNonProdData(env) {
   const isPreviewMode = new URLSearchParams(window.location.search).get('previewMode') || window.location.hostname.endsWith('.hlx.page');
-  const resp = await fetch(`/events/default/${env === 'prod' ? '' : `${env}/`}metadata${isPreviewMode ? '-preview' : ''}.json`);
+  const resp = await fetch(`/events/default/${env === 'prod' ? '' : `${env}/`}metadata${isPreviewMode ? '-preview' : ''}.json`, {
+    headers: {
+      'Content-Type': 'application/json',
+      'Cache-Control': 'no-cache',
+      Pragma: 'no-cache',
+    },
+  });
   if (resp.ok) {
     const json = await resp.json();
     let { pathname } = window.location;
@@ -602,5 +615,5 @@ export default function autoUpdateContent(parent, miloDeps, extraData) {
   autoUpdateLinks(parent, miloLibs);
   injectFragments(parent);
   decorateProfileCardsZPattern(parent);
-  if (window.eccEnv !== 'prod') updateExtraMetaTags(parent);
+  if (getECCEnv() !== 'prod') updateExtraMetaTags(parent);
 }

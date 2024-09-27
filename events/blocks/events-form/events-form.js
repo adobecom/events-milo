@@ -1,5 +1,4 @@
-import { LIBS } from '../../scripts/scripts.js';
-import { getMetadata } from '../../scripts/utils.js';
+import { LIBS, getMetadata } from '../../scripts/utils.js';
 import HtmlSanitizer from '../../scripts/deps/html-sanitizer.js';
 import { deleteAttendeeFromEvent, getAndCreateAndAddAttendee } from '../../scripts/esp-controller.js';
 import BlockMediator from '../../scripts/deps/block-mediator.min.js';

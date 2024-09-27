@@ -1,3 +1,20 @@
+import { getECCEnv } from './utils.js';
+
+export const API_CONFIG = {
+  esl: {
+    local: { host: 'http://localhost:8499' },
+    dev: { host: 'https://wcms-events-service-layer-deploy-ethos102-stage-va-9c3ecd.stage.cloud.adobe.io' },
+    stage: { host: 'https://events-service-layer-stage.adobe.io' },
+    prod: { host: 'https://events-service-layer.adobe.io' },
+  },
+  esp: {
+    local: { host: 'http://localhost:8500' },
+    dev: { host: 'https://wcms-events-service-platform-deploy-ethos102-stage-caff5f.stage.cloud.adobe.io' },
+    stage: { host: 'https://events-service-platform-stage.adobe.io' },
+    prod: { host: 'https://events-service-platform.adobe.io' },
+  },
+};
+
 export const getCaasTags = (() => {
   let cache;
   let promise;
@@ -30,23 +47,6 @@ export const getCaasTags = (() => {
   };
 })();
 
-export function getAPIConfig() {
-  return {
-    esl: {
-      local: { host: 'http://localhost:8499' },
-      dev: { host: 'https://wcms-events-service-layer-deploy-ethos102-stage-va-9c3ecd.stage.cloud.adobe.io' },
-      stage: { host: 'https://events-service-layer-stage.adobe.io' },
-      prod: { host: 'https://events-service-layer.adobe.io' },
-    },
-    esp: {
-      local: { host: 'http://localhost:8500' },
-      dev: { host: 'https://wcms-events-service-platform-deploy-ethos102-stage-caff5f.stage.cloud.adobe.io' },
-      stage: { host: 'https://events-service-platform-stage.adobe.io' },
-      prod: { host: 'https://events-service-platform.adobe.io' },
-    },
-  };
-}
-
 export function waitForAdobeIMS() {
   return new Promise((resolve) => {
     const checkIMS = () => {
@@ -65,7 +65,11 @@ export async function constructRequestOptions(method, body = null) {
 
   const headers = new Headers();
   const authToken = window.adobeIMS?.getAccessToken()?.token;
+
+  if (!authToken) window.lana?.log('Error: Failed to get Adobe IMS auth token');
+
   headers.append('Authorization', `Bearer ${authToken}`);
+  headers.append('x-api-key', 'acom_event_service');
   headers.append('content-type', 'application/json');
 
   const options = {
@@ -79,7 +83,7 @@ export async function constructRequestOptions(method, body = null) {
 }
 
 export async function getEvent(eventId) {
-  const { host } = getAPIConfig().esp[window.eccEnv];
+  const { host } = API_CONFIG.esp[getECCEnv()];
   const options = await constructRequestOptions('GET');
 
   try {
@@ -99,7 +103,7 @@ export async function getEvent(eventId) {
 }
 
 export async function getEventAttendee(eventId) {
-  const { host } = getAPIConfig().esp[window.eccEnv];
+  const { host } = API_CONFIG.esp[getECCEnv()];
   const options = await constructRequestOptions('GET');
 
   try {
@@ -122,7 +126,7 @@ export async function getEventAttendee(eventId) {
 }
 
 export async function getAttendee() {
-  const { host } = getAPIConfig().esl[window.eccEnv];
+  const { host } = API_CONFIG.esl[getECCEnv()];
   const options = await constructRequestOptions('GET');
 
   try {
@@ -147,7 +151,7 @@ export async function getAttendee() {
 export async function createAttendee(attendeeData) {
   if (!attendeeData) return false;
 
-  const { host } = getAPIConfig().esl[window.eccEnv];
+  const { host } = API_CONFIG.esl[getECCEnv()];
   const raw = JSON.stringify(attendeeData);
   const options = await constructRequestOptions('POST', raw);
 
@@ -171,7 +175,7 @@ export async function addAttendeeToEvent(eventId, attendee) {
   if (!eventId || !attendee) return false;
 
   const { firstName, lastName, email } = attendee;
-  const { host } = getAPIConfig().esl[window.eccEnv];
+  const { host } = API_CONFIG.esl[getECCEnv()];
   const raw = JSON.stringify({ firstName, lastName, email });
   const options = await constructRequestOptions('POST', raw);
 
@@ -194,7 +198,7 @@ export async function addAttendeeToEvent(eventId, attendee) {
 export async function updateAttendee(attendeeData) {
   if (!attendeeData) return false;
 
-  const { host } = getAPIConfig().esl[window.eccEnv];
+  const { host } = API_CONFIG.esl[getECCEnv()];
   const raw = JSON.stringify(attendeeData);
   const options = await constructRequestOptions('PUT', raw);
 
@@ -217,7 +221,7 @@ export async function updateAttendee(attendeeData) {
 export async function deleteAttendeeFromEvent(eventId) {
   if (!eventId) return false;
 
-  const { host } = getAPIConfig().esl[window.eccEnv];
+  const { host } = API_CONFIG.esl[getECCEnv()];
   const options = await constructRequestOptions('DELETE');
 
   try {

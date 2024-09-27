@@ -7,6 +7,7 @@
 
 .event-agenda h2 {
   text-align: center;
+  font-size: var(--type-heading-xl-size);
 }
 
 .event-agenda .agenda-container {
