@@ -1,7 +1,6 @@
 import { readFile } from '@web/test-runner-commands';
 import { expect } from '@esm-bundle/chai';
-import { setMetadata } from '../../../events/scripts/utils.js';
-import { LIBS } from '../../../events/scripts/scripts.js';
+import { setMetadata, LIBS } from '../../../events/scripts/utils.js';
 import BlockMediator from '../../../events/scripts/deps/block-mediator.min.js';
 
 const { default: autoUpdateContent } = await import('../../../events/scripts/content-update.js');

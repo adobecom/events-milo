@@ -1,8 +1,7 @@
-import { LIBS, MILO_CONFIG } from '../../scripts/scripts.js';
 import buildMiloCarousel from '../../features/milo-carousel.js';
-import { getMetadata } from '../../scripts/utils.js';
+import { getMetadata, LIBS } from '../../scripts/utils.js';
 
-const { createTag } = await import(`${LIBS}/utils/utils.js`);
+const { createTag, getConfig } = await import(`${LIBS}/utils/utils.js`);
 
 function decorateImage(card, photo) {
   if (!photo) return;
@@ -51,9 +50,20 @@ export async function getSVGsfromFile(path, selectors) {
   });
 }
 
+function createSocialIcon(svg, platform) {
+  if (!svg || !platform || !(svg instanceof Node)) return null;
+  const icon = svg.cloneNode(true);
+  icon.classList.add('card-social-icon');
+  icon.setAttribute('alt', `${platform} logo`);
+  icon.setAttribute('height', 20);
+  icon.setAttribute('width', 20);
+
+  return icon;
+}
+
 async function decorateSocialIcons(cardContainer, socialLinks) {
-  const SUPPORTED_SOCIAL = ['instagram', 'facebook', 'twitter', 'linkedin', 'youtube', 'pinterest', 'discord', 'behance', 'web'];
-  const svgPath = `${MILO_CONFIG.codeRoot}/icons/social-icons.svg`;
+  const SUPPORTED_SOCIAL = ['instagram', 'facebook', 'twitter', 'linkedin', 'youtube', 'pinterest', 'discord', 'behance', 'web', 'x', 'tiktok'];
+  const svgPath = `${getConfig().codeRoot || '/events'}/icons/social-icons.svg`;
   const socialList = createTag('ul', { class: 'card-social-icons' });
 
   const svgEls = await getSVGsfromFile(svgPath, SUPPORTED_SOCIAL);
@@ -62,15 +72,11 @@ async function decorateSocialIcons(cardContainer, socialLinks) {
   socialLinks.forEach((social) => {
     const { link } = social;
     const platform = SUPPORTED_SOCIAL.find((p) => link.toLowerCase().includes(p)) || 'web';
-    const svg = svgEls.find((el) => el.name === platform);
-    if (!svg) return;
+    const svgEl = svgEls.find((el) => el.name === platform);
+    if (!svgEl) return;
 
-    const icon = svg.svg;
     const li = createTag('li', { class: 'card-social-icon' });
-    icon.classList.add('card-social-icon');
-    icon.setAttribute('alt', `${platform} logo`);
-    icon.setAttribute('height', 20);
-    icon.setAttribute('width', 20);
+    const icon = createSocialIcon(svgEl.svg, platform);
 
     const a = createTag('a', {
       href: link,
@@ -95,9 +101,14 @@ function decorateContent(cardContainer, data) {
   const textContainer = createTag('div', { class: 'card-text-container' });
   const title = createTag('p', { class: 'card-title' }, data.title);
   const name = createTag('h3', { class: 'card-name' }, `${data.firstName} ${data.lastName}`);
-  const description = createTag('p', { class: 'card-desc' }, data.bio);
 
-  textContainer.append(title, name, description);
+  textContainer.append(title, name);
+
+  if (data.bio) {
+    const description = createTag('p', { class: 'card-desc' }, data.bio);
+    textContainer.append(description);
+  }
+
   contentContainer.append(textContainer);
 
   decorateSocialIcons(contentContainer, data.socialLinks || data.socialMedia || []);
@@ -139,7 +150,7 @@ function decorateCards(el, data) {
 }
 
 export default function init(el) {
-  let data;
+  let data = [];
 
   try {
     data = JSON.parse(getMetadata('speakers'));
