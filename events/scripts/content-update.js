@@ -96,18 +96,9 @@ async function updateRSVPButtonState(rsvpBtn, miloLibs, eventInfo) {
   const {
     attendeeLimit,
     attendeeCount,
-    waitlistAttendeeCount,
-    waitlistAttendeeLimit,
     allowWaitListing,
-    cloudType,
   } = eventInfo;
-  let eventFull = false;
-
-  if (cloudType === 'CreativeCloud') {
-    eventFull = +attendeeLimit <= +attendeeCount;
-  } else if (cloudType === 'DX') {
-    eventFull = +waitlistAttendeeLimit <= +waitlistAttendeeCount;
-  }
+  const eventFull = +attendeeLimit <= +attendeeCount;
 
   const enableBtn = () => {
     rsvpBtn.el.classList.remove('disabled');
