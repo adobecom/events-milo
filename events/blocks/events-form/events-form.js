@@ -127,12 +127,14 @@ function showSuccessMsgFirstScreen(bp) {
   bp.form.classList.add('hidden');
   bp.eventHero.classList.add('hidden');
 
-  if (rsvpData?.espProvider?.waitlisted) {
+  const registrationStatus = rsvpData?.espProvider?.registrationStatus;
+
+  if (registrationStatus === 'waitlisted') {
     bp.waitlistSuccessScreen.classList.remove('hidden');
     bp.waitlistSuccessScreen.querySelector('.first-screen')?.classList.remove('hidden');
   }
 
-  if (rsvpData?.espProvider?.registered) {
+  if (registrationStatus === 'registered') {
     bp.rsvpSuccessScreen.classList.remove('hidden');
     bp.rsvpSuccessScreen.querySelector('.first-screen')?.classList.remove('hidden');
   }
@@ -390,15 +392,15 @@ function decorateSuccessScreen(screen) {
           if (cta.classList.contains('cancel-button')) {
             const resp = await deleteAttendeeFromEvent(getMetadata('event-id'));
             if (!resp.ok) return;
-    
+
             const { data } = resp;
-    
+
             cta.classList.remove('loading');
             if (data?.espProvider?.status !== 204) {
-              buildErrorMsg(bp.successMsg);
+              buildErrorMsg(screen);
               return;
             }
-    
+
             if (data?.espProvider?.attendeeDeleted) BlockMediator.set('rsvpData', null);
 
             firstScreen.classList.add('hidden');
@@ -564,12 +566,11 @@ async function buildEventform(bp, formData) {
 }
 
 function initFormBasedOnRSVPData(bp) {
+  const validRegistrationStatus = ['registered', 'waitlisted'];
   const { block } = bp;
   const profile = BlockMediator.get('imsProfile');
   const rsvpData = BlockMediator.get('rsvpData');
-  if (rsvpData?.espProvider?.registered
-    || rsvpData?.espProvider?.waitlisted
-    || rsvpData?.externalAttendeeId) {
+  if (validRegistrationStatus.includes(rsvpData.espProvider.registrationStatus)) {
     showSuccessMsgFirstScreen(bp);
     eventFormSendAnalytics(bp, 'Confirmation Modal View');
   } else {
@@ -577,13 +578,12 @@ function initFormBasedOnRSVPData(bp) {
   }
 
   BlockMediator.subscribe('rsvpData', ({ newValue }) => {
-    if (newValue?.espProvider?.registered
-      || newValue?.espProvider?.waitlisted
-      || newValue?.externalAttendeeId) {
+    if (validRegistrationStatus.includes(newValue?.espProvider.registrationStatus)) {
       showSuccessMsgFirstScreen(bp);
       eventFormSendAnalytics(bp, 'Confirmation Modal View');
     }
   });
+
   if (bp.block.querySelector('.form-success-msg.hidden')) {
     eventFormSendAnalytics(bp, 'Form View');
   }

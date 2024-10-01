@@ -161,9 +161,9 @@ async function updateRSVPButtonState(rsvpBtn, miloLibs, eventInfo) {
       defaultState();
     }
   // RSVP data changed by register submission || rsvp data received on page load
-  } else if (rsvpData.espProvider?.registered || rsvpData.attendeeStatus === 'registered') {
+  } else if (rsvpData.espProvider?.registrationStatus === 'registered' || rsvpData.attendeeStatus === 'registered') {
     await registeredState();
-  } else if (rsvpData.espProvider?.waitlisted || rsvpData.attendeeStatus === 'waitlisted') {
+  } else if (rsvpData.espProvider?.registrationStatus === 'waitlisted' || rsvpData.attendeeStatus === 'waitlisted') {
     await waitlistedState();
   } else if (!rsvpData.ok) {
     // FIXME: temporary solution for ESL returning 500 on ESP 400 response
