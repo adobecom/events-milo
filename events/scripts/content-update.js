@@ -450,9 +450,11 @@ function decorateProfileCardsZPattern(parent) {
 
   const profileBlocks = [];
   let flippedIndex = -1;
+  let visibleIndex = 0;
 
   const allBlocks = parent.querySelectorAll('body > div > div:not(.section-metadata)');
-  allBlocks.forEach((block, index) => {
+  allBlocks.forEach((block) => {
+    visibleIndex += 1;
     if (!block.classList.contains('profile-cards')) return;
 
     const blockConfig = readBlockConfig(block);
@@ -463,7 +465,11 @@ function decorateProfileCardsZPattern(parent) {
     });
 
     if (relatedProfiles.length === 1) {
-      profileBlocks.push({ block, blockIndex: index });
+      profileBlocks.push({ block, blockIndex: visibleIndex });
+    }
+
+    if (relatedProfiles.length === 0) {
+      visibleIndex -= 1;
     }
   });
 
