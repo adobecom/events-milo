@@ -468,6 +468,7 @@ function decorateProfileCardsZPattern(parent) {
       profileBlocks.push({ block, blockIndex: visibleIndex });
     }
 
+    // visibileIndex only accounts for profile-cards blocks
     if (relatedProfiles.length === 0) {
       visibleIndex -= 1;
     }
