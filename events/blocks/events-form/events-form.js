@@ -349,6 +349,8 @@ function addTerms(form, terms) {
 }
 
 function decorateSuccessScreen(screen) {
+  if (!screen) return;
+
   screen.classList.add('form-success-msg');
   const subScreens = screen.querySelectorAll('div');
 
