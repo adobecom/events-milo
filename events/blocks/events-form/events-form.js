@@ -130,13 +130,13 @@ function showSuccessMsgFirstScreen(bp) {
   const registrationStatus = rsvpData?.espProvider?.registrationStatus;
 
   if (registrationStatus === 'waitlisted') {
-    bp.waitlistSuccessScreen.classList.remove('hidden');
-    bp.waitlistSuccessScreen.querySelector('.first-screen')?.classList.remove('hidden');
+    bp.waitlistSuccessScreen?.classList.remove('hidden');
+    bp.waitlistSuccessScreen?.querySelector('.first-screen')?.classList.remove('hidden');
   }
 
   if (registrationStatus === 'registered') {
-    bp.rsvpSuccessScreen.classList.remove('hidden');
-    bp.rsvpSuccessScreen.querySelector('.first-screen')?.classList.remove('hidden');
+    bp.rsvpSuccessScreen?.classList.remove('hidden');
+    bp.rsvpSuccessScreen?.querySelector('.first-screen')?.classList.remove('hidden');
   }
 }
 
