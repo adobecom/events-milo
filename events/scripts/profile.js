@@ -42,7 +42,7 @@ export function lazyCaptureProfile() {
       if (!profile.noProfile) {
         const rsvpData = await getEventAttendee(getMetadata('event-id'));
         if (!rsvpData.error) {
-          BlockMediator.set('rsvpData', rsvpData);
+          BlockMediator.set('rsvpData', rsvpData.data);
         } else {
           BlockMediator.set('rsvpData', null);
         }
