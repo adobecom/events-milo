@@ -118,8 +118,7 @@ export async function getEventAttendee(eventId) {
       };
     }
 
-    const data = await response.json();
-    return { ok: true, data };
+    return { ok: true, data: await response.json() };
   } catch (error) {
     window.lana?.log(`Failed to get attendee for event ${eventId}. Error:`, error);
     return { ok: false, status: 'Network Error', error: error.message };
