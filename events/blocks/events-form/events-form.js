@@ -151,7 +151,7 @@ function createButton({ type, label }, bp) {
         button.classList.remove('submitting');
         if (!respJson) return;
         if (respJson.ok !== false && !respJson.error) eventFormSendAnalytics(bp, 'Form Submit');
-        BlockMediator.set('rsvpData', respJson);
+        BlockMediator.set('rsvpData', respJson.data);
         if (respJson.error) {
           let { status } = respJson;
 
@@ -519,7 +519,8 @@ function initFormBasedOnRSVPData(bp) {
   }
 
   BlockMediator.subscribe('rsvpData', ({ newValue }) => {
-    if (newValue?.espProvider?.registered || newValue?.externalAttendeeId) {
+    const { data } = newValue;
+    if (data?.espProvider?.registered || data?.externalAttendeeId) {
       showSuccessMsg(bp);
       eventFormSendAnalytics(bp, 'Confirmation Modal View');
     }
