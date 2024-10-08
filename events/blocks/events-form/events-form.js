@@ -364,12 +364,12 @@ function decorateSuccessMsg(form, bp) {
       if (i === 0) {
         const resp = await deleteAttendeeFromEvent(getMetadata('event-id'));
         cta.classList.remove('loading');
-        if (resp?.espProvider?.status !== 204) {
+        if (resp?.data.espProvider?.status !== 204) {
           buildErrorMsg(bp.successMsg);
           return;
         }
 
-        if (resp?.espProvider?.attendeeDeleted) BlockMediator.set('rsvpData', null);
+        if (resp?.data.espProvider?.attendeeDeleted) BlockMediator.set('rsvpData', null);
       }
 
       const modal = form.closest('.dialog-modal');
