@@ -144,15 +144,13 @@ export function signIn() {
 async function handleRSVPBtnBasedOnProfile(rsvpBtn, miloLibs, profile) {
   const resp = await getEvent(getMetadata('event-id'));
 
-  if (!resp || !resp.ok) {
+  if (!resp) {
     return;
   }
-
   const eventInfo = resp.data;
 
-  if (profile?.noProfile || eventInfo.status === 401) {
-    const eventFull = +eventInfo.attendeeLimit <= +eventInfo.attendeeCount;
-    if (eventFull) {
+  if (profile?.noProfile || resp.status === 401) {
+    if (eventInfo && +eventInfo.attendeeLimit <= +eventInfo.attendeeCount) {
       const eventFullText = await miloReplaceKey(miloLibs, 'event-full-cta-text');
       updateAnalyticTag(rsvpBtn.el, eventFullText);
       rsvpBtn.el.setAttribute('tabindex', -1);
