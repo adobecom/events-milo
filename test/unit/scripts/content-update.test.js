@@ -395,7 +395,7 @@ describe('Content Update Script', () => {
 
     const buttonOriginalText = document.querySelector('a[href$="#rsvp-form-1"]').textContent;
     autoUpdateContent(document, miloDeps);
-    BlockMediator.set('rsvpData', { status: { registered: false } });
+    BlockMediator.set('rsvpData', { ok: true, data: { status: { registered: false } } });
 
     expect(document.querySelector('a[href$="#rsvp-form-1"]').textContent).to.be.equal(buttonOriginalText);
   });

@@ -151,7 +151,7 @@ function createButton({ type, label }, bp) {
         button.classList.remove('submitting');
         if (!respJson) return;
         if (respJson.ok !== false && !respJson.error) eventFormSendAnalytics(bp, 'Form Submit');
-        BlockMediator.set('rsvpData', respJson);
+        BlockMediator.set('rsvpData', respJson.data);
         if (respJson.error) {
           let { status } = respJson;
 
@@ -364,12 +364,12 @@ function decorateSuccessMsg(form, bp) {
       if (i === 0) {
         const resp = await deleteAttendeeFromEvent(getMetadata('event-id'));
         cta.classList.remove('loading');
-        if (resp?.espProvider?.status !== 204) {
+        if (resp?.data?.espProvider?.status !== 204) {
           buildErrorMsg(bp.successMsg);
           return;
         }
 
-        if (resp?.espProvider?.attendeeDeleted) BlockMediator.set('rsvpData', null);
+        if (resp?.data?.espProvider?.attendeeDeleted) BlockMediator.set('rsvpData', null);
       }
 
       const modal = form.closest('.dialog-modal');
@@ -439,9 +439,7 @@ async function createForm(bp, formData) {
 
   json.data.forEach((fd) => {
     fd.type = fd.type || 'text';
-    if (fd.type === 'text' || fd.type === 'email' || fd.type === 'phone') {
-      sanitizeList.push(fd.field);
-    }
+    if (fd.type === 'text') sanitizeList.push(fd.field);
     const style = fd.extra ? ` events-form-${fd.extra}` : '';
     const fieldWrapper = createTag(
       'div',
