@@ -498,9 +498,7 @@ async function createForm(bp, formData) {
 
   json.data.forEach((fd) => {
     fd.type = fd.type || 'text';
-    if (fd.type === 'text' || fd.type === 'email' || fd.type === 'phone') {
-      sanitizeList.push(fd.field);
-    }
+    if (fd.type === 'text') sanitizeList.push(fd.field);
     const style = fd.extra ? ` events-form-${fd.extra}` : '';
     const fieldWrapper = createTag(
       'div',

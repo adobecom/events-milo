@@ -41,11 +41,7 @@ export function lazyCaptureProfile() {
 
       if (!profile.noProfile) {
         const resp = await getEventAttendee(getMetadata('event-id'));
-        if (!resp.error) {
-          BlockMediator.set('rsvpData', resp.data);
-        } else {
-          BlockMediator.set('rsvpData', null);
-        }
+        BlockMediator.set('rsvpData', resp.data);
       }
 
       clearInterval(profileRetryer);
