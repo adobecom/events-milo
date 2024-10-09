@@ -314,6 +314,8 @@ function updateImgTag(child, matchCallback, parentElement) {
   const originalAlt = child.alt;
   const photoMeta = originalAlt.replace(META_REG, (_match, p1) => matchCallback(_match, p1, child));
 
+  if (photoMeta === originalAlt) return;
+
   try {
     const photoData = JSON.parse(photoMeta);
     const { sharepointUrl, imageUrl, altText } = photoData;
@@ -539,6 +541,7 @@ export default function autoUpdateContent(parent, miloDeps, extraData) {
 
   const getImgData = (_match, p1, n) => {
     let data;
+
     if (p1.includes('.')) {
       const [key, subKey] = p1.split('.');
       try {

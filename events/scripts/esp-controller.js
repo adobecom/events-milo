@@ -66,7 +66,7 @@ export async function constructRequestOptions(method, body = null) {
   const headers = new Headers();
   const authToken = window.adobeIMS?.getAccessToken()?.token;
 
-  if (!authToken) window.lana?.log('Error: Failed to get Adobe IMS auth token');
+  if (!authToken) return null;
 
   headers.append('Authorization', `Bearer ${authToken}`);
   headers.append('x-api-key', 'acom_event_service');
@@ -86,18 +86,26 @@ export async function getEvent(eventId) {
   const { host } = API_CONFIG.esp[getECCEnv()];
   const options = await constructRequestOptions('GET');
 
+  if (!options) {
+    return {
+      ok: false,
+      status: 'Auth Error',
+      error: 'Failed to get Adobe IMS auth token',
+    };
+  }
+
   try {
     const response = await fetch(`${host}/v1/events/${eventId}`, options);
     const data = await response.json();
 
     if (!response.ok) {
-      window.lana?.log(`Failed to get details for event ${eventId}. Status:`, response.status, 'Error:', data);
+      window.lana?.log(`Error: Failed to get details for event ${eventId}. Status:`, response.status, 'E:', data);
       return { ok: response.ok, status: response.status, error: data };
     }
 
     return data;
   } catch (error) {
-    window.lana?.log(`Failed to get details for event ${eventId}. Error:`, error);
+    window.lana?.log(`Error: Failed to get details for event ${eventId}:`, error);
     return { ok: false, status: 'Network Error', error: error.message };
   }
 }
@@ -106,11 +114,19 @@ export async function getEventAttendee(eventId) {
   const { host } = API_CONFIG.esp[getECCEnv()];
   const options = await constructRequestOptions('GET');
 
+  if (!options) {
+    return {
+      ok: false,
+      status: 'Auth Error',
+      error: 'Failed to get Adobe IMS auth token',
+    };
+  }
+
   try {
     const response = await fetch(`${host}/v1/events/${eventId}/attendees/me`, options);
 
     if (!response.ok) {
-      window.lana?.log(`Failed to get attendee for event ${eventId}. Error:`, response.status);
+      window.lana?.log(`Error: Failed to get attendee for event ${eventId}:`, response.status);
       return {
         ok: response.ok,
         status: response.status,
@@ -120,7 +136,7 @@ export async function getEventAttendee(eventId) {
 
     return await response.json();
   } catch (error) {
-    window.lana?.log(`Failed to get attendee for event ${eventId}. Error:`, error);
+    window.lana?.log(`Error: Failed to get attendee for event ${eventId}. E:`, error);
     return { ok: false, status: 'Network Error', error: error.message };
   }
 }
@@ -129,11 +145,19 @@ export async function getAttendee() {
   const { host } = API_CONFIG.esl[getECCEnv()];
   const options = await constructRequestOptions('GET');
 
+  if (!options) {
+    return {
+      ok: false,
+      status: 'Auth Error',
+      error: 'Failed to get Adobe IMS auth token',
+    };
+  }
+
   try {
     const response = await fetch(`${host}/v1/attendees/me`, options);
 
     if (!response.ok) {
-      window.lana?.log('Failed to get attendee details. Status:', response.status);
+      window.lana?.log('Error: Failed to get attendee details. Status:', response.status);
       return {
         ok: response.ok,
         status: response.status,
@@ -143,7 +167,7 @@ export async function getAttendee() {
 
     return response.json();
   } catch (error) {
-    window.lana?.log('Failed to get attendee. Error:', error);
+    window.lana?.log('Error: Failed to get attendee. Error:', error);
     return { ok: false, status: 'Network Error', error: error.message };
   }
 }
@@ -155,18 +179,26 @@ export async function createAttendee(attendeeData) {
   const raw = JSON.stringify(attendeeData);
   const options = await constructRequestOptions('POST', raw);
 
+  if (!options) {
+    return {
+      ok: false,
+      status: 'Auth Error',
+      error: 'Failed to get Adobe IMS auth token',
+    };
+  }
+
   try {
     const response = await fetch(`${host}/v1/attendees`, options);
     const data = await response.json();
 
     if (!response.ok) {
-      window.lana?.log('Failed to create attendee. Status:', response.status, 'Error:', data);
+      window.lana?.log('Error: Failed to create attendee. Status:', response.status, 'E:', data);
       return { ok: response.ok, status: response.status, error: data };
     }
 
     return data;
   } catch (error) {
-    window.lana?.log('Failed to create attendee. Error:', error);
+    window.lana?.log('Error: Failed to create attendee. Error:', error);
     return { ok: false, status: 'Network Error', error: error.message };
   }
 }
@@ -179,18 +211,26 @@ export async function addAttendeeToEvent(eventId, attendee) {
   const raw = JSON.stringify({ firstName, lastName, email });
   const options = await constructRequestOptions('POST', raw);
 
+  if (!options) {
+    return {
+      ok: false,
+      status: 'Auth Error',
+      error: 'Failed to get Adobe IMS auth token',
+    };
+  }
+
   try {
     const response = await fetch(`${host}/v1/events/${eventId}/attendees/me`, options);
     const data = await response.json();
 
     if (!response.ok) {
-      window.lana?.log(`Failed to add attendee for event ${eventId}. Status:`, response.status, 'Error:', data);
+      window.lana?.log(`Error: Failed to add attendee for event ${eventId}. Status:`, response.status, 'E:', data);
       return { ok: response.ok, status: response.status, error: data };
     }
 
     return data;
   } catch (error) {
-    window.lana?.log(`Failed to add attendee for event ${eventId}. Error:`, error);
+    window.lana?.log(`Error: Failed to add attendee for event ${eventId}:`, error);
     return { ok: false, status: 'Network Error', error: error.message };
   }
 }
@@ -202,18 +242,26 @@ export async function updateAttendee(attendeeData) {
   const raw = JSON.stringify(attendeeData);
   const options = await constructRequestOptions('PUT', raw);
 
+  if (!options) {
+    return {
+      ok: false,
+      status: 'Auth Error',
+      error: 'Failed to get Adobe IMS auth token',
+    };
+  }
+
   try {
     const response = await fetch(`${host}/v1/attendees/me`, options);
     const data = await response.json();
 
     if (!response.ok) {
-      window.lana?.log('Failed to update attendee. Status:', response.status, 'Error:', data);
+      window.lana?.log('Error: Failed to update attendee. Status:', response.status, 'E:', data);
       return { ok: response.ok, status: response.status, error: data };
     }
 
     return data;
   } catch (error) {
-    window.lana?.log('Failed to update attendee. Error:', error);
+    window.lana?.log('Error: Failed to update attendee:', error);
     return { ok: false, status: 'Network Error', error: error.message };
   }
 }
@@ -224,11 +272,19 @@ export async function deleteAttendeeFromEvent(eventId) {
   const { host } = API_CONFIG.esl[getECCEnv()];
   const options = await constructRequestOptions('DELETE');
 
+  if (!options) {
+    return {
+      ok: false,
+      status: 'Auth Error',
+      error: 'Failed to get Adobe IMS auth token',
+    };
+  }
+
   try {
     const response = await fetch(`${host}/v1/events/${eventId}/attendees/me`, options);
 
     if (!response.ok) {
-      window.lana?.log(`Failed to delete attendee for event ${eventId}. Status:`, response.status, 'Error:', response.status);
+      window.lana?.log(`Error: Failed to delete attendee for event ${eventId}. Status:`, response.status);
       return {
         ok: response.ok,
         status: response.status,
@@ -238,7 +294,7 @@ export async function deleteAttendeeFromEvent(eventId) {
 
     return response.json();
   } catch (error) {
-    window.lana?.log(`Failed to delete attendee for event ${eventId}. Error:`, error);
+    window.lana?.log(`Error: Failed to delete attendee for event ${eventId}:`, error);
     return { ok: false, status: 'Network Error', error: error.message };
   }
 }
