@@ -66,9 +66,7 @@ export async function constructRequestOptions(method, body = null) {
   const headers = new Headers();
   const authToken = window.adobeIMS?.getAccessToken()?.token;
 
-  if (!authToken) return null;
-
-  headers.append('Authorization', `Bearer ${authToken}`);
+  if (authToken) headers.append('Authorization', `Bearer ${authToken}`);
   headers.append('x-api-key', 'acom_event_service');
   headers.append('content-type', 'application/json');
 
@@ -85,14 +83,6 @@ export async function constructRequestOptions(method, body = null) {
 export async function getEvent(eventId) {
   const { host } = API_CONFIG.esp[getECCEnv()];
   const options = await constructRequestOptions('GET');
-
-  if (!options) {
-    return {
-      ok: false,
-      status: 'Auth Error',
-      error: 'Failed to get Adobe IMS auth token',
-    };
-  }
 
   try {
     const response = await fetch(`${host}/v1/events/${eventId}`, options);
@@ -113,14 +103,6 @@ export async function getEvent(eventId) {
 export async function getEventAttendee(eventId) {
   const { host } = API_CONFIG.esp[getECCEnv()];
   const options = await constructRequestOptions('GET');
-
-  if (!options) {
-    return {
-      ok: false,
-      status: 'Auth Error',
-      error: 'Failed to get Adobe IMS auth token',
-    };
-  }
 
   try {
     const response = await fetch(`${host}/v1/events/${eventId}/attendees/me`, options);
@@ -144,14 +126,6 @@ export async function getEventAttendee(eventId) {
 export async function getAttendee() {
   const { host } = API_CONFIG.esl[getECCEnv()];
   const options = await constructRequestOptions('GET');
-
-  if (!options) {
-    return {
-      ok: false,
-      status: 'Auth Error',
-      error: 'Failed to get Adobe IMS auth token',
-    };
-  }
 
   try {
     const response = await fetch(`${host}/v1/attendees/me`, options);
@@ -179,14 +153,6 @@ export async function createAttendee(attendeeData) {
   const raw = JSON.stringify(attendeeData);
   const options = await constructRequestOptions('POST', raw);
 
-  if (!options) {
-    return {
-      ok: false,
-      status: 'Auth Error',
-      error: 'Failed to get Adobe IMS auth token',
-    };
-  }
-
   try {
     const response = await fetch(`${host}/v1/attendees`, options);
     const data = await response.json();
@@ -211,14 +177,6 @@ export async function addAttendeeToEvent(eventId, attendee) {
   const raw = JSON.stringify({ firstName, lastName, email });
   const options = await constructRequestOptions('POST', raw);
 
-  if (!options) {
-    return {
-      ok: false,
-      status: 'Auth Error',
-      error: 'Failed to get Adobe IMS auth token',
-    };
-  }
-
   try {
     const response = await fetch(`${host}/v1/events/${eventId}/attendees/me`, options);
     const data = await response.json();
@@ -242,14 +200,6 @@ export async function updateAttendee(attendeeData) {
   const raw = JSON.stringify(attendeeData);
   const options = await constructRequestOptions('PUT', raw);
 
-  if (!options) {
-    return {
-      ok: false,
-      status: 'Auth Error',
-      error: 'Failed to get Adobe IMS auth token',
-    };
-  }
-
   try {
     const response = await fetch(`${host}/v1/attendees/me`, options);
     const data = await response.json();
@@ -271,14 +221,6 @@ export async function deleteAttendeeFromEvent(eventId) {
 
   const { host } = API_CONFIG.esl[getECCEnv()];
   const options = await constructRequestOptions('DELETE');
-
-  if (!options) {
-    return {
-      ok: false,
-      status: 'Auth Error',
-      error: 'Failed to get Adobe IMS auth token',
-    };
-  }
 
   try {
     const response = await fetch(`${host}/v1/events/${eventId}/attendees/me`, options);
