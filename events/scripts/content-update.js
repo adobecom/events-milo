@@ -8,6 +8,7 @@ import {
   getIcon,
   readBlockConfig,
   getSusiOptions,
+  getECCEnv,
 } from './utils.js';
 
 const preserveFormatKeys = [
@@ -145,11 +146,11 @@ async function handleRSVPBtnBasedOnProfile(rsvpBtn, miloLibs, profile) {
   const { getConfig } = await import(`${miloLibs}/utils/utils.js`);
   const eventInfo = await getEvent(getMetadata('event-id'));
 
-  if (!eventInfo || eventInfo.error) {
+  if (!eventInfo) {
     return;
   }
 
-  if (profile?.noProfile) {
+  if (profile?.noProfile || eventInfo.status === 401) {
     const eventFull = +eventInfo.attendeeLimit <= +eventInfo.attendeeCount;
     if (eventFull) {
       const eventFullText = await miloReplaceKey(miloLibs, 'event-full-cta-text');
@@ -178,7 +179,7 @@ async function handleRSVPBtnBasedOnProfile(rsvpBtn, miloLibs, profile) {
 
 export async function validatePageAndRedirect(miloLibs) {
   const { getConfig } = await import(`${miloLibs}/utils/utils.js`);
-  const env = window.eccEnv;
+  const env = getECCEnv();
   const pagePublished = getMetadata('published') === 'true' || getMetadata('status') === 'live';
   const invalidStagePage = env === 'stage' && window.location.hostname === 'www.stage.adobe.com' && !getMetadata('event-id');
   const isPreviewMode = new URLSearchParams(window.location.search).get('previewMode');
@@ -414,7 +415,13 @@ function injectFragments(parent) {
 
 export async function getNonProdData(env) {
   const isPreviewMode = new URLSearchParams(window.location.search).get('previewMode') || window.location.hostname.endsWith('.hlx.page');
-  const resp = await fetch(`/events/default/${env === 'prod' ? '' : `${env}/`}metadata${isPreviewMode ? '-preview' : ''}.json`);
+  const resp = await fetch(`/events/default/${env === 'prod' ? '' : `${env}/`}metadata${isPreviewMode ? '-preview' : ''}.json`, {
+    headers: {
+      'Content-Type': 'application/json',
+      'Cache-Control': 'no-cache',
+      Pragma: 'no-cache',
+    },
+  });
   if (resp.ok) {
     const json = await resp.json();
     let { pathname } = window.location;
@@ -446,9 +453,11 @@ function decorateProfileCardsZPattern(parent) {
 
   const profileBlocks = [];
   let flippedIndex = -1;
+  let visibleIndex = 0;
 
   const allBlocks = parent.querySelectorAll('body > div > div:not(.section-metadata)');
-  allBlocks.forEach((block, index) => {
+  allBlocks.forEach((block) => {
+    visibleIndex += 1;
     if (!block.classList.contains('profile-cards')) return;
 
     const blockConfig = readBlockConfig(block);
@@ -459,7 +468,12 @@ function decorateProfileCardsZPattern(parent) {
     });
 
     if (relatedProfiles.length === 1) {
-      profileBlocks.push({ block, blockIndex: index });
+      profileBlocks.push({ block, blockIndex: visibleIndex });
+    }
+
+    // visibileIndex only accounts for profile-cards blocks
+    if (relatedProfiles.length === 0) {
+      visibleIndex -= 1;
     }
   });
 
@@ -611,5 +625,5 @@ export default function autoUpdateContent(parent, miloDeps, extraData) {
   autoUpdateLinks(parent, miloLibs);
   injectFragments(parent);
   decorateProfileCardsZPattern(parent);
-  if (window.eccEnv !== 'prod') updateExtraMetaTags(parent);
+  if (getECCEnv() !== 'prod') updateExtraMetaTags(parent);
 }
