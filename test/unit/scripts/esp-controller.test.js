@@ -32,7 +32,7 @@ describe('Adobe Event Service API', () => {
       const fetchStub = sinon.stub(window, 'fetch').resolves({ json: () => ({ eventId: '123' }), ok: true });
       const event = await api.getEvent('123');
       expect(event).to.be.an('object');
-      expect(event).to.have.property('eventId', '123');
+      expect(event.data).to.have.property('eventId', '123');
       fetchStub.restore();
     });
   });
@@ -43,7 +43,7 @@ describe('Adobe Event Service API', () => {
       const fetchStub = sinon.stub(window, 'fetch').resolves({ json: () => ({ attendeeId: '456' }), ok: true });
       const attendee = await api.getAttendee('123');
       expect(attendee).to.be.an('object');
-      expect(attendee).to.have.property('attendeeId', '456');
+      expect(attendee.data).to.have.property('attendeeId', '456');
       fetchStub.restore();
     });
   });
@@ -59,7 +59,7 @@ describe('Adobe Event Service API', () => {
         .resolves({ json: () => ({ status: 'statusData' }), ok: true });
 
       const rsvpData = await api.createAttendee({ name: 'John Doe' });
-      expect(rsvpData).to.be.an('object');
+      expect(rsvpData.data).to.be.an('object');
       fetchStub.restore();
     });
   });
@@ -75,7 +75,7 @@ describe('Adobe Event Service API', () => {
         .resolves({ json: () => ({ status: 'statusData' }), ok: true });
 
       const rsvpData = await api.addAttendeeToEvent('123', { name: 'John Doe' });
-      expect(rsvpData).to.be.an('object');
+      expect(rsvpData.data).to.be.an('object');
       fetchStub.restore();
     });
   });
@@ -91,7 +91,7 @@ describe('Adobe Event Service API', () => {
         .resolves({ json: () => ({ status: 'statusData' }), ok: true });
 
       const rsvpData = await api.updateAttendee('123', { name: 'John Doe' });
-      expect(rsvpData).to.be.an('object');
+      expect(rsvpData.data).to.be.an('object');
       fetchStub.restore();
     });
   });
@@ -107,7 +107,7 @@ describe('Adobe Event Service API', () => {
         .resolves({ json: () => ({ status: 'statusData' }), ok: true });
 
       const rsvpData = await api.deleteAttendeeFromEvent('123');
-      expect(rsvpData).to.be.an('object');
+      expect(rsvpData.data).to.be.an('object');
       fetchStub.restore();
     });
   });
