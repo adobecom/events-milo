@@ -647,27 +647,5 @@ export default async function decorate(block, formData = null) {
     waitlistSuccessScreen: block.querySelector(':scope > div:nth-of-type(5)'),
   };
 
-  BlockMediator.set('imsProfile', {
-    account_type: 'type3',
-    utcOffset: 'null',
-    preferred_languages: null,
-    displayName: 'Qiyun Dai',
-    last_name: 'Dai',
-    userId: 'B90719A765B288680A494219@c62f24cc5b5b7e0e0a494004',
-    authId: 'B90719A765B288680A494219@c62f24cc5b5b7e0e0a494004',
-    tags: [
-      'agegroup_unknown',
-      'edu',
-      'edu_k12',
-    ],
-    emailVerified: 'true',
-    phoneNumber: null,
-    countryCode: 'US',
-    name: 'Qiyun Dai',
-    mrktPerm: '',
-    mrktPermEmail: null,
-    first_name: 'Qiyun',
-    email: 'cod87753@adobe.com',
-  });
   await onProfile(bp, formData);
 }
