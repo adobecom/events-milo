@@ -533,7 +533,7 @@ async function onProfile(bp, formData) {
   const { block, eventHero } = bp;
   const profile = BlockMediator.get('imsProfile');
 
-  if (profile && !profile.noProfile) {
+  if (profile) {
     eventHero.classList.remove('loading');
     decorateHero(bp.eventHero);
     buildEventform(bp, formData).then(() => {
@@ -544,7 +544,7 @@ async function onProfile(bp, formData) {
     });
   } else if (!profile) {
     BlockMediator.subscribe('imsProfile', ({ newValue }) => {
-      if (newValue && !newValue.noProfile) {
+      if (newValue) {
         eventHero.classList.remove('loading');
         decorateHero(bp.eventHero);
         buildEventform(bp, formData).then(() => {

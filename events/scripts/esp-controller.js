@@ -13,7 +13,34 @@ export const API_CONFIG = {
     stage: { host: 'https://events-service-platform-stage.adobe.io' },
     prod: { host: 'https://events-service-platform.adobe.io' },
   },
+  imsToken: {
+    local: { host: 'https://ims-na1-stg1.adobelogin.com/ims/check/v6/token?client_id=events-milo&scope=openid%2CAdobeID&guest_allowe=true' },
+    dev: { host: 'https://ims-na1-stg1.adobelogin.com/ims/check/v6/token?client_id=events-milo&scope=openid%2CAdobeID&guest_allowe=true' },
+    stage: { host: 'https://ims-na1-stg1.adobelogin.com/ims/check/v6/token?client_id=events-milo&scope=openid%2CAdobeID&guest_allowe=true' },
+    prod: { host: 'https://ims-na1.adobelogin.com/ims/check/v6/token?client_id=events-milo&scope=openid%2CAdobeID&guest_allowe=true' },
+  },
 };
+
+async function fetchGuestToken() {
+  try {
+    const response = await fetch(
+      API_CONFIG.imsToken[getECCEnv()].host,
+      { method: 'POST' },
+    );
+
+    if (!response.ok) {
+      window.lana?.log(`Error fetching guest token: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    console.log('Guest Access Token:', data.token);
+
+    return data.token;
+  } catch (error) {
+    window.lana?.log('Error fetching guest token:', error);
+    return null;
+  }
+}
 
 export const getCaasTags = (() => {
   let cache;
@@ -66,7 +93,12 @@ export async function constructRequestOptions(method, body = null) {
   const headers = new Headers();
   const authToken = window.adobeIMS?.getAccessToken()?.token;
 
-  if (authToken) headers.append('Authorization', `Bearer ${authToken}`);
+  if (authToken) {
+    headers.append('Authorization', `Bearer ${authToken}`);
+  } else {
+    const guestToken = await fetchGuestToken();
+    if (guestToken) headers.append('Authorization', `Bearer ${guestToken}`);
+  }
   headers.append('x-api-key', 'acom_event_service');
   headers.append('content-type', 'application/json');
 
