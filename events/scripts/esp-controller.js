@@ -33,6 +33,8 @@ async function fetchGuestToken() {
     }
 
     const data = await response.json();
+
+    // TODO: remove console.log
     console.log('Guest Access Token:', data.token);
 
     return data.token;
