@@ -171,12 +171,12 @@ export async function createAttendee(attendeeData) {
   }
 }
 
-export async function addAttendeeToEvent(eventId, attendee) {
+export async function addAttendeeToEvent(eventId, attendee, registrationStatus) {
   if (!eventId || !attendee) return false;
 
   const { firstName, lastName, email } = attendee;
   const { host } = API_CONFIG.esl[getECCEnv()];
-  const raw = JSON.stringify({ firstName, lastName, email });
+  const raw = JSON.stringify({ firstName, lastName, email, registrationStatus });
   const options = await constructRequestOptions('POST', raw);
 
   try {
@@ -244,7 +244,7 @@ export async function deleteAttendeeFromEvent(eventId) {
 }
 
 // compound helper functions
-export async function getAndCreateAndAddAttendee(eventId, attendeeData) {
+export async function getAndCreateAndAddAttendee(eventId, attendeeData, registrationStatus) {
   const attendeeResp = await getAttendee(eventId);
   let attendee;
 
@@ -258,5 +258,5 @@ export async function getAndCreateAndAddAttendee(eventId, attendeeData) {
 
   const newAttendeeData = attendee.data;
 
-  return addAttendeeToEvent(eventId, newAttendeeData);
+  return addAttendeeToEvent(eventId, newAttendeeData, registrationStatus);
 }
