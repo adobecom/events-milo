@@ -487,7 +487,7 @@ function decorateProfileCardsZPattern(parent) {
 function updateExtraMetaTags(parent) {
   if (parent !== document) return;
 
-  const title = getMetadata('title');
+  const title = getMetadata('event-title');
   const description = getMetadata('description');
   let photos;
 
