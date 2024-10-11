@@ -92,7 +92,14 @@ async function submitForm(bp) {
     return acc;
   }, {});
 
-  return getAndCreateAndAddAttendee(getMetadata('event-id'), cleanPayload);
+  let rsvpType = 'registered';
+  const eventInfo = BlockMediator.get('eventInfo');
+  if (eventInfo) {
+    const { allowWaitlisting, attendeeLimit, attendeeCount } = eventInfo;
+    if (allowWaitlisting && attendeeCount >= attendeeLimit) rsvpType = 'waitlisted';
+  }
+
+  return getAndCreateAndAddAttendee(getMetadata('event-id'), cleanPayload, rsvpType);
 }
 
 function clearForm(form) {
@@ -123,6 +130,9 @@ async function buildErrorMsg(parent, status) {
 
 function showSuccessMsgFirstScreen(bp) {
   const rsvpData = BlockMediator.get('rsvpData');
+
+  if (!rsvpData) return;
+
   clearForm(bp.form);
   bp.form.classList.add('hidden');
   bp.eventHero.classList.add('hidden');
@@ -570,7 +580,8 @@ function initFormBasedOnRSVPData(bp) {
   const { block } = bp;
   const profile = BlockMediator.get('imsProfile');
   const rsvpData = BlockMediator.get('rsvpData');
-  if (validRegistrationStatus.includes(rsvpData.registrationStatus)) {
+
+  if (validRegistrationStatus.includes(rsvpData?.registrationStatus)) {
     showSuccessMsgFirstScreen(bp);
     eventFormSendAnalytics(bp, 'Confirmation Modal View');
   } else {
