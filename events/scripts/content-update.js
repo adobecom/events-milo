@@ -160,9 +160,9 @@ async function updateRSVPButtonState(rsvpBtn, miloLibs, eventInfo) {
     } else {
       defaultState();
     }
-  } else if (rsvpData.attendeeStatus === 'registered') {
+  } else if (rsvpData.registrationStatus === 'registered') {
     await registeredState();
-  } else if (rsvpData.attendeeStatus === 'waitlisted') {
+  } else if (rsvpData.registrationStatus === 'waitlisted') {
     await waitlistedState();
   } else if (!rsvpData.ok) {
     // FIXME: temporary solution for ESL returning 500 on ESP 400 response

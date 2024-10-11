@@ -127,14 +127,14 @@ function showSuccessMsgFirstScreen(bp) {
   bp.form.classList.add('hidden');
   bp.eventHero.classList.add('hidden');
 
-  const { attendeeStatus } = rsvpData;
+  const { registrationStatus } = rsvpData;
 
-  if (attendeeStatus === 'waitlisted') {
+  if (registrationStatus === 'waitlisted') {
     bp.waitlistSuccessScreen?.classList.remove('hidden');
     bp.waitlistSuccessScreen?.querySelector('.first-screen')?.classList.remove('hidden');
   }
 
-  if (attendeeStatus === 'registered') {
+  if (registrationStatus === 'registered') {
     bp.rsvpSuccessScreen?.classList.remove('hidden');
     bp.rsvpSuccessScreen?.querySelector('.first-screen')?.classList.remove('hidden');
   }
@@ -570,7 +570,7 @@ function initFormBasedOnRSVPData(bp) {
   const { block } = bp;
   const profile = BlockMediator.get('imsProfile');
   const rsvpData = BlockMediator.get('rsvpData');
-  if (validRegistrationStatus.includes(rsvpData.attendeeStatus)) {
+  if (validRegistrationStatus.includes(rsvpData.registrationStatus)) {
     showSuccessMsgFirstScreen(bp);
     eventFormSendAnalytics(bp, 'Confirmation Modal View');
   } else {
@@ -578,7 +578,7 @@ function initFormBasedOnRSVPData(bp) {
   }
 
   BlockMediator.subscribe('rsvpData', ({ newValue }) => {
-    if (validRegistrationStatus.includes(newValue?.attendeeStatus)) {
+    if (validRegistrationStatus.includes(newValue?.registrationStatus)) {
       showSuccessMsgFirstScreen(bp);
       eventFormSendAnalytics(bp, 'Confirmation Modal View');
     }
