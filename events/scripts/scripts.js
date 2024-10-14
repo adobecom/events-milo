@@ -17,7 +17,7 @@ import { SUSI_CONTEXTS } from './constances.js';
 
 const { loadArea, setConfig, getConfig, loadLana } = await import(`${LIBS}/utils/utils.js`);
 
-function decorateArea(area = document) {
+export default function decorateArea(area = document) {
   const parsePhotosData = () => {
     const output = {};
 

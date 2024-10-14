@@ -3,6 +3,7 @@ import HtmlSanitizer from '../../scripts/deps/html-sanitizer.js';
 import { deleteAttendeeFromEvent, getAndCreateAndAddAttendee } from '../../scripts/esp-controller.js';
 import BlockMediator from '../../scripts/deps/block-mediator.min.js';
 import { miloReplaceKey } from '../../scripts/content-update.js';
+import decorateArea from '../../scripts/scripts.js';
 
 const { createTag } = await import(`${LIBS}/utils/utils.js`);
 const { closeModal, sendAnalytics } = await import(`${LIBS}/blocks/modal/modal.js`);
@@ -92,14 +93,7 @@ async function submitForm(bp) {
     return acc;
   }, {});
 
-  let rsvpType = 'registered';
-  const eventInfo = BlockMediator.get('eventInfo');
-  if (eventInfo) {
-    const { allowWaitlisting, attendeeLimit, attendeeCount } = eventInfo;
-    if (allowWaitlisting && attendeeCount >= attendeeLimit) rsvpType = 'waitlisted';
-  }
-
-  return getAndCreateAndAddAttendee(getMetadata('event-id'), cleanPayload, rsvpType);
+  return getAndCreateAndAddAttendee(getMetadata('event-id'), cleanPayload);
 }
 
 function clearForm(form) {
@@ -651,6 +645,7 @@ async function futureProofing(block) {
 
     const eventsForm = doc.querySelector('.events-form');
     if (eventsForm) {
+      decorateArea(eventsForm);
       block.innerHTML = eventsForm.innerHTML;
     }
   }
