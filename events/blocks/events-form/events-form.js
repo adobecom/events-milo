@@ -650,18 +650,17 @@ async function futureProofing(block) {
     const doc = parser.parseFromString(resp, 'text/html');
 
     const eventsForm = doc.querySelector('.events-form');
-    const rsvpSuccessScreen = eventsForm.querySelector(':scope > div:nth-of-type(4)');
-    const waitlistSuccessScreen = eventsForm.querySelector(':scope > div:nth-of-type(5)');
-
-    return { rsvpSuccessScreen, waitlistSuccessScreen };
+    if (eventsForm) {
+      block.parentElement.replaceChild(eventsForm, block);
+    }
   }
-
-  return null;
 }
 
 export default async function decorate(block, formData = null) {
   block.classList.add('loading');
   const toastArea = await decorateToastArea();
+
+  futureProofing(block);
 
   const bp = {
     block,
