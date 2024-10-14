@@ -641,6 +641,24 @@ async function decorateToastArea() {
   return toastArea;
 }
 
+async function futureProofing(block) {
+  const authoredWaitlistSuccessScreen = block.querySelector(':scope > div:nth-of-type(5)');
+
+  if (!authoredWaitlistSuccessScreen) {
+    const resp = await fetch('/events/fragments/drafts/draft-rsvp-form').then((res) => res.text());
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(resp, 'text/html');
+
+    const eventsForm = doc.querySelector('.events-form');
+    const rsvpSuccessScreen = eventsForm.querySelector(':scope > div:nth-of-type(4)');
+    const waitlistSuccessScreen = eventsForm.querySelector(':scope > div:nth-of-type(5)');
+
+    return { rsvpSuccessScreen, waitlistSuccessScreen };
+  }
+
+  return null;
+}
+
 export default async function decorate(block, formData = null) {
   block.classList.add('loading');
   const toastArea = await decorateToastArea();
@@ -655,6 +673,13 @@ export default async function decorate(block, formData = null) {
     rsvpSuccessScreen: block.querySelector(':scope > div:nth-of-type(4)'),
     waitlistSuccessScreen: block.querySelector(':scope > div:nth-of-type(5)'),
   };
+
+  if (!bp.waitlistSuccessScreen) {
+    const { rsvpSuccessScreen, waitlistSuccessScreen } = await futureProofing(block);
+
+    if (rsvpSuccessScreen) bp.rsvpSuccessScreen = rsvpSuccessScreen;
+    if (waitlistSuccessScreen) bp.waitlistSuccessScreen = waitlistSuccessScreen;
+  }
 
   await onProfile(bp, formData);
 }
