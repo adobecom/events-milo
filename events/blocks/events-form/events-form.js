@@ -660,7 +660,7 @@ export default async function decorate(block, formData = null) {
   block.classList.add('loading');
   const toastArea = await decorateToastArea();
 
-  futureProofing(block);
+  await futureProofing(block);
 
   const bp = {
     block,
