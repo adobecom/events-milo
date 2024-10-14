@@ -655,6 +655,7 @@ export default async function decorate(block, formData = null) {
   block.classList.add('loading');
   const toastArea = await decorateToastArea();
 
+  // TODO: remove after authoring updates
   await futureProofing(block);
 
   const bp = {
