@@ -651,7 +651,7 @@ async function futureProofing(block) {
 
     const eventsForm = doc.querySelector('.events-form');
     if (eventsForm) {
-      block.parentElement.replaceChild(eventsForm, block);
+      block.innerHTML = eventsForm.innerHTML;
     }
   }
 }
