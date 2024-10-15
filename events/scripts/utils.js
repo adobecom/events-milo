@@ -1,3 +1,5 @@
+import { SUSI_OPTIONS } from './constances.js';
+
 export const LIBS = (() => {
   const { hostname, search } = window.location;
   if (!(hostname.includes('.hlx.') || hostname.includes('local'))) return '/libs';
@@ -15,15 +17,21 @@ export function getECCEnv() {
 
   if (validEnvs.includes(eccEnv)) return eccEnv;
 
-  if (((host.includes(`${SLD}.page`) || host.includes(`${SLD}.live`)) && host.startsWith('dev--'))
-    || host.includes('localhost')) return 'dev';
+  if ((host.includes(`${SLD}.page`) || host.includes(`${SLD}.live`))) {
+    if (host.startsWith('dev--')) return 'dev';
+    if (host.startsWith('dev02--')) return 'dev02';
+    if (host.startsWith('stage--')) return 'stage';
+    if (host.startsWith('stage02--')) return 'stage02';
+    if (host.startsWith('main--')) return 'prod';
+  }
 
-  if (((host.includes(`${SLD}.page`) || host.includes(`${SLD}.live`)) && host.startsWith('stage--'))
-    || host.includes('stage.adobe')
+  if (host.includes('localhost')) return 'dev';
+
+  if (host.includes('stage.adobe')
     || host.includes('corp.adobe')
     || host.includes('graybox.adobe')) return 'stage';
 
-  if (((host.includes(`${SLD}.page`) || host.includes(`${SLD}.live`)) && host.startsWith('main--')) || host.endsWith('adobe.com')) return 'prod';
+  if (host.endsWith('adobe.com')) return 'prod';
 
   // fallback to dev
   return 'dev';
@@ -171,6 +179,16 @@ function toClassName(name) {
   return name && typeof name === 'string'
     ? name.toLowerCase().replace(/[^0-9a-z]/gi, '-')
     : '';
+}
+
+export function getSusiOptions(conf) {
+  const { env: { name: envName } } = conf;
+  const susiOptions = Object.keys(SUSI_OPTIONS).reduce((opts, key) => {
+    opts[key] = SUSI_OPTIONS[key][envName] || SUSI_OPTIONS[key];
+    return opts;
+  }, {});
+
+  return susiOptions;
 }
 
 export function readBlockConfig(block) {

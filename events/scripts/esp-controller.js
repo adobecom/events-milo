@@ -2,22 +2,24 @@ import { getECCEnv } from './utils.js';
 
 export const API_CONFIG = {
   esl: {
-    local: { host: 'http://localhost:8499' },
     dev: { host: 'https://wcms-events-service-layer-deploy-ethos102-stage-va-9c3ecd.stage.cloud.adobe.io' },
+    devO2: { host: 'https://wcms-events-service-layer-deploy-ethos102-stage-va-d5dc93.stage.cloud.adobe.io' },
     stage: { host: 'https://events-service-layer-stage.adobe.io' },
+    stage02: { host: 'https://events-service-layer-stage02.adobe.io' },
     prod: { host: 'https://events-service-layer.adobe.io' },
   },
   esp: {
-    local: { host: 'http://localhost:8500' },
     dev: { host: 'https://wcms-events-service-platform-deploy-ethos102-stage-caff5f.stage.cloud.adobe.io' },
+    devO2: { host: 'https://wcms-events-service-platform-deploy-ethos102-stage-c81eb6.stage.cloud.adobe.io' },
     stage: { host: 'https://events-service-platform-stage.adobe.io' },
+    stage02: { host: 'https://events-service-platform-stage02.adobe.io' },
     prod: { host: 'https://events-service-platform.adobe.io' },
   },
   imsToken: {
-    local: { host: 'https://ims-na1-stg1.adobelogin.com/ims/check/v6/token?client_id=events-milo&scope=openid%2CAdobeID&guest_allowe=true' },
-    dev: { host: 'https://ims-na1-stg1.adobelogin.com/ims/check/v6/token?client_id=events-milo&scope=openid%2CAdobeID&guest_allowe=true' },
-    stage: { host: 'https://ims-na1-stg1.adobelogin.com/ims/check/v6/token?client_id=events-milo&scope=openid%2CAdobeID&guest_allowe=true' },
-    prod: { host: 'https://ims-na1.adobelogin.com/ims/check/v6/token?client_id=events-milo&scope=openid%2CAdobeID&guest_allowe=true' },
+    local: { host: 'https://ims-na1-stg1.adobelogin.com/ims/check/v6/token?client_id=events-milo&scope=openid%2CAdobeID&guest_allowed=true' },
+    dev: { host: 'https://ims-na1-stg1.adobelogin.com/ims/check/v6/token?client_id=events-milo&scope=openid%2CAdobeID&guest_allowed=true' },
+    stage: { host: 'https://ims-na1-stg1.adobelogin.com/ims/check/v6/token?client_id=events-milo&scope=openid%2CAdobeID&guest_allowed=true' },
+    prod: { host: 'https://ims-na1.adobelogin.com/ims/check/v6/token?client_id=events-milo&scope=openid%2CAdobeID&guest_allowed=true' },
   },
 };
 
