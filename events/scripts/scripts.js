@@ -12,10 +12,9 @@
 
 import { lazyCaptureProfile } from './profile.js';
 import autoUpdateContent, { getNonProdData, validatePageAndRedirect } from './content-update.js';
-import { setMetadata, getMetadata, getECCEnv, LIBS } from './utils.js';
-import { SUSI_CONTEXTS } from './constances.js';
+import { getSusiOptions, setMetadata, getMetadata, getECCEnv, LIBS } from './utils.js';
 
-const { loadArea, setConfig, getConfig, loadLana } = await import(`${LIBS}/utils/utils.js`);
+const { loadArea, setConfig, updateConfig, getConfig, loadLana } = await import(`${LIBS}/utils/utils.js`);
 
 export default function decorateArea(area = document) {
   const parsePhotosData = () => {
@@ -74,7 +73,6 @@ const CONFIG = {
   codeRoot: '/events',
   contentRoot: '/events',
   imsClientId: 'events-milo',
-  susiContexts: SUSI_CONTEXTS,
   miloLibs: LIBS,
   // imsScope: 'AdobeID,openid,gnav',
   // geoRouting: 'off',
@@ -87,7 +85,8 @@ const CONFIG = {
   },
 };
 
-setConfig({ ...CONFIG });
+const MILO_CONFIG = setConfig({ ...CONFIG });
+updateConfig({ ...MILO_CONFIG, signInContext: getSusiOptions(MILO_CONFIG) });
 
 function renderWithNonProdMetadata() {
   const isEventDetailsPage = getMetadata('event-details-page') === 'yes';
@@ -125,7 +124,7 @@ decorateArea();
 if (renderWithNonProdMetadata()) await fetchAndDecorateArea();
 
 // Validate the page and redirect if is event-details-page
-if (getMetadata('event-details-page') === 'yes') await validatePageAndRedirect();
+if (getMetadata('event-details-page') === 'yes') await validatePageAndRedirect(LIBS);
 
 /*
  * ------------------------------------------------------------
