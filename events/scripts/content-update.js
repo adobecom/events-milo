@@ -158,7 +158,7 @@ async function handleRSVPBtnBasedOnProfile(rsvpBtn, miloLibs, profile) {
       rsvpBtn.el.setAttribute('tabindex', -1);
       rsvpBtn.el.href = '';
       rsvpBtn.el.textContent = eventFullText;
-    } else {
+    } else if (getMetadata('cloud-type') === 'CreativeCloud') {
       updateAnalyticTag(rsvpBtn.el, rsvpBtn.originalText);
       rsvpBtn.el.textContent = rsvpBtn.originalText;
       rsvpBtn.el.classList.remove('disabled');
@@ -167,6 +167,11 @@ async function handleRSVPBtnBasedOnProfile(rsvpBtn, miloLibs, profile) {
         e.preventDefault();
         signIn(getSusiOptions(getConfig()));
       });
+    } else {
+      updateAnalyticTag(rsvpBtn.el, rsvpBtn.originalText);
+      rsvpBtn.el.textContent = rsvpBtn.originalText;
+      rsvpBtn.el.classList.remove('disabled');
+      rsvpBtn.el.setAttribute('tabindex', 0);
     }
   } else if (profile) {
     await updateRSVPButtonState(rsvpBtn, miloLibs, eventInfo);
