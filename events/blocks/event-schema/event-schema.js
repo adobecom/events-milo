@@ -18,7 +18,7 @@ export function injectEventSchema() {
   const schemaData = {
     '@context': 'https://schema.org',
     '@type': 'Event',
-    name: getMetadata('title'),
+    name: getMetadata('event-title'),
     startDate: getMetadata('start-date'),
     endDate: getMetadata('end-date'),
     location: {

@@ -14,7 +14,7 @@ function prepareDOM() {
   setMetadata('template-id', '/events/fragments/event-templates/dme/simple');
   setMetadata('series', '{"seriesId":"3fd45107-16ee-49cd-aa1f-8dfd87368d38","seriesName":"Create Now","creationTime":1719258418200,"modificationTime":1719258418200}');
   setMetadata('event-type', 'InPerson');
-  setMetadata('title', 'Create Now Chicago 2024 Test');
+  setMetadata('event-title', 'Create Now Chicago 2024 Test');
   setMetadata('event-title', '');
   setMetadata('description', "Dive into an evening of creativity with Adobe!\n\nJoin the design community at Adobe Create Now to connect with fellow local creators, explore new ways to collaborate, and enhance your creative process. Discover Adobe's latest features, and get pro tips for Photoshop, Illustrator, Adobe Firefly, Adobe Express, and more. Enjoy appetizers, drinks, and a chance to win a Creative Cloud membership program");
   setMetadata('start-date', '2024-07-27T13:00:00.000Z');

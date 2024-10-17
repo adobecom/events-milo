@@ -10,7 +10,7 @@ describe('Event Schema Module', () => {
     });
 
     it('should inject event schema into the document head', () => {
-      setMetadata('title', 'Sample Event');
+      setMetadata('event-title', 'Sample Event');
       setMetadata('start-date', '2024-08-01T00:00:00Z');
       setMetadata('end-date', '2024-08-02T00:00:00Z');
       setMetadata('description', 'This is a sample event.');
@@ -67,7 +67,7 @@ describe('Event Schema Module', () => {
     });
 
     it('should inject schema without optional metadata fields', () => {
-      setMetadata('title', 'Sample Event');
+      setMetadata('event-title', 'Sample Event');
       setMetadata('start-date', '2024-08-01T00:00:00Z');
       setMetadata('end-date', '2024-08-02T00:00:00Z');
       setMetadata('venue', JSON.stringify({
@@ -131,7 +131,7 @@ describe('Event Schema Module', () => {
     });
 
     it('should remove the element and inject event schema', () => {
-      setMetadata('title', 'Sample Event');
+      setMetadata('event-title', 'Sample Event');
       setMetadata('start-date', '2024-08-01T00:00:00Z');
       setMetadata('end-date', '2024-08-02T00:00:00Z');
       setMetadata('description', 'This is a sample event.');
