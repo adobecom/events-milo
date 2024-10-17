@@ -149,7 +149,7 @@ async function updateRSVPButtonState(rsvpBtn, miloLibs, eventInfo) {
 
   if (!rsvpData) {
     if (eventFull) {
-      if (eventInfo?.allowWaitListing) {
+      if (eventInfo?.allowWaitlisting) {
         await waitlistState();
       } else {
         await closedState();
