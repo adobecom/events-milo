@@ -91,7 +91,7 @@ function createTag(tag, attributes, html, options = {}) {
   return el;
 }
 
-async function updateRSVPButtonState(rsvpBtn, miloLibs, eventInfo) {
+export async function updateRSVPButtonState(rsvpBtn, miloLibs, eventInfo) {
   const rsvpData = BlockMediator.get('rsvpData');
   const checkRed = getIcon('check-circle-red');
   const eventFull = +eventInfo.attendeeLimit <= +eventInfo.attendeeCount;
@@ -275,7 +275,7 @@ function autoUpdateLinks(scope, miloLibs) {
   });
 }
 
-function updatePictureElement(imageUrl, parentPic, altText) {
+export function updatePictureElement(imageUrl, parentPic, altText) {
   let imgUrlObj;
   let imgUrl = imageUrl;
   if (imageUrl.startsWith('https://www.adobe.com/')) {
