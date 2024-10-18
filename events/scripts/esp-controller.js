@@ -174,9 +174,9 @@ export async function createAttendee(attendeeData) {
 export async function addAttendeeToEvent(eventId, attendee) {
   if (!eventId || !attendee) return false;
 
-  const { firstName, lastName, email } = attendee;
+  const { firstName, lastName, email, registrationStatus } = attendee;
   const { host } = API_CONFIG.esl[getECCEnv()];
-  const raw = JSON.stringify({ firstName, lastName, email });
+  const raw = JSON.stringify({ firstName, lastName, email, registrationStatus });
   const options = await constructRequestOptions('POST', raw);
 
   try {
