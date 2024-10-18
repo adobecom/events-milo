@@ -245,8 +245,13 @@ export async function deleteAttendeeFromEvent(eventId) {
 
 // compound helper functions
 export async function getAndCreateAndAddAttendee(eventId, attendeeData) {
-  const attendeeResp = await getAttendee(eventId);
+  const [attendeeResp, eventResp] = await Promise.all([
+    getAttendee(),
+    getEvent(eventId),
+  ]);
+
   let attendee;
+  let registrationStatus = 'registered';
 
   if (!attendeeResp.ok && attendeeResp.status === 404) {
     attendee = await createAttendee(attendeeData);
@@ -258,5 +263,6 @@ export async function getAndCreateAndAddAttendee(eventId, attendeeData) {
 
   const newAttendeeData = attendee.data;
 
-  return addAttendeeToEvent(eventId, newAttendeeData);
+  if (eventResp.data?.attendeeLimit <= eventResp.data?.attendeeCount) registrationStatus = 'waitlisted';
+  return addAttendeeToEvent(eventId, { ...newAttendeeData, registrationStatus });
 }
