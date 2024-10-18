@@ -8,6 +8,15 @@ describe('Adobe Event Service API', () => {
     api = await import('../../../events/scripts/esp-controller.js');
   });
 
+  describe('getCaasTags', () => {
+    it('should fetch CAAS tags', async () => {
+      const fetchStub = sinon.stub(window, 'fetch').resolves({ json: () => ({}), ok: true });
+      const tags = await api.getCaasTags();
+      expect(tags).to.be.an('object');
+      fetchStub.restore();
+    });
+  });
+
   describe('waitForAdobeIMS', () => {
     it('should resolve when adobeIMS is available', async () => {
       window.adobeIMS = { getAccessToken: () => ({ token: 'fake-token' }) };

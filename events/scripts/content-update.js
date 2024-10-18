@@ -33,7 +33,7 @@ export async function miloReplaceKey(miloLibs, key) {
   }
 }
 
-function updateAnalyticTag(el, newVal) {
+export function updateAnalyticTag(el, newVal) {
   const eventTitle = getMetadata('event-title');
   const newDaaLL = `${newVal}${eventTitle ? `|${eventTitle}` : ''}`;
   el.setAttribute('daa-ll', newDaaLL);
