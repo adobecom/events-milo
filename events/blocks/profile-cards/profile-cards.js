@@ -50,7 +50,7 @@ export async function getSVGsfromFile(path, selectors) {
   });
 }
 
-function createSocialIcon(svg, platform) {
+export function createSocialIcon(svg, platform) {
   if (!svg || !platform || !(svg instanceof Node)) return null;
   const icon = svg.cloneNode(true);
   icon.classList.add('card-social-icon');

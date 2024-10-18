@@ -24,14 +24,14 @@ export async function getProfile() {
 }
 
 export function lazyCaptureProfile() {
-  let attempCounter = 0;
+  let counter = 0;
   const profileRetryer = setInterval(async () => {
     if (!window.adobeIMS) {
-      attempCounter += 1;
+      counter += 1;
       return;
     }
 
-    if (attempCounter >= 10) {
+    if (counter >= 10) {
       clearInterval(profileRetryer);
     }
 
@@ -55,7 +55,7 @@ export function lazyCaptureProfile() {
         BlockMediator.set('imsProfile', { noProfile: true });
       }
 
-      attempCounter += 1;
+      counter += 1;
     }
   }, 1000);
 }
