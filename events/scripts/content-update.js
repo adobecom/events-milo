@@ -141,7 +141,7 @@ async function updateRSVPButtonState(rsvpBtn, miloLibs, eventInfo) {
 
   const waitlistedState = async () => {
     const waitlistedText = await miloReplaceKey(miloLibs, 'waitlisted-cta-text');
-    disableBtn();
+    enableBtn();
     updateAnalyticTag(rsvpBtn.el, waitlistedText);
     rsvpBtn.el.textContent = waitlistedText;
     rsvpBtn.el.prepend(checkRed);
