@@ -188,9 +188,9 @@ export async function createAttendee(attendeeData) {
 export async function addAttendeeToEvent(eventId, attendee) {
   if (!eventId || !attendee) return false;
 
-  const { firstName, lastName, email } = attendee;
+  const { firstName, lastName, email, registrationStatus } = attendee;
   const { host } = API_CONFIG.esl[getECCEnv()];
-  const raw = JSON.stringify({ firstName, lastName, email });
+  const raw = JSON.stringify({ firstName, lastName, email, registrationStatus });
   const options = await constructRequestOptions('POST', raw);
 
   try {
@@ -266,8 +266,13 @@ export async function deleteAttendeeFromEvent(eventId) {
 
 // compound helper functions
 export async function getAndCreateAndAddAttendee(eventId, attendeeData) {
-  const attendeeResp = await getAttendee(eventId);
+  const [attendeeResp, eventResp] = await Promise.all([
+    getAttendee(),
+    getEvent(eventId),
+  ]);
+
   let attendee;
+  let registrationStatus = 'registered';
 
   if (!attendeeResp.ok && attendeeResp.status === 404) {
     attendee = await createAttendee(attendeeData);
@@ -279,5 +284,6 @@ export async function getAndCreateAndAddAttendee(eventId, attendeeData) {
 
   const newAttendeeData = attendee.data;
 
-  return addAttendeeToEvent(eventId, newAttendeeData);
+  if (eventResp.data?.attendeeLimit <= eventResp.data?.attendeeCount) registrationStatus = 'waitlisted';
+  return addAttendeeToEvent(eventId, { ...newAttendeeData, registrationStatus });
 }

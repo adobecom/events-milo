@@ -94,41 +94,77 @@ function createTag(tag, attributes, html, options = {}) {
 export async function updateRSVPButtonState(rsvpBtn, miloLibs, eventInfo) {
   const rsvpData = BlockMediator.get('rsvpData');
   const checkRed = getIcon('check-circle-red');
-  const eventFull = +eventInfo.attendeeLimit <= +eventInfo.attendeeCount;
+  let eventFull = false;
+  if (eventInfo) eventFull = +eventInfo.attendeeLimit <= +eventInfo.attendeeCount;
 
-  if (!rsvpData) {
-    if (eventFull) {
-      const eventFullText = await miloReplaceKey(miloLibs, 'event-full-cta-text');
-      rsvpBtn.el.setAttribute('tabindex', -1);
-      rsvpBtn.el.href = '';
-      rsvpBtn.el.classList.add('disabled');
-      updateAnalyticTag(rsvpBtn.el, eventFullText);
-      rsvpBtn.el.textContent = eventFullText;
-      checkRed.remove();
-    } else {
-      rsvpBtn.el.classList.remove('disabled');
-      rsvpBtn.el.setAttribute('tabindex', 0);
-      updateAnalyticTag(rsvpBtn.el, rsvpBtn.originalText);
-      rsvpBtn.el.textContent = rsvpBtn.originalText;
-      checkRed.remove();
-    }
-  } else if (rsvpData.espProvider?.registered || rsvpData.externalAttendeeId) {
-    const registeredText = await miloReplaceKey(miloLibs, 'registered-cta-text');
+  const enableBtn = () => {
     rsvpBtn.el.classList.remove('disabled');
     rsvpBtn.el.setAttribute('tabindex', 0);
+  };
+
+  const disableBtn = () => {
+    rsvpBtn.el.setAttribute('tabindex', -1);
+    rsvpBtn.el.href = '';
+    rsvpBtn.el.classList.add('disabled');
+  };
+
+  const closedState = async () => {
+    const closedText = await miloReplaceKey(miloLibs, 'event-full-cta-text');
+    disableBtn();
+    updateAnalyticTag(rsvpBtn.el, closedText);
+    rsvpBtn.el.textContent = closedText;
+    checkRed.remove();
+  };
+
+  const defaultState = () => {
+    enableBtn();
+    updateAnalyticTag(rsvpBtn.el, rsvpBtn.originalText);
+    rsvpBtn.el.textContent = rsvpBtn.originalText;
+    checkRed.remove();
+  };
+
+  const registeredState = async () => {
+    const registeredText = await miloReplaceKey(miloLibs, 'registered-cta-text');
+    enableBtn();
     updateAnalyticTag(rsvpBtn.el, registeredText);
     rsvpBtn.el.textContent = registeredText;
     rsvpBtn.el.prepend(checkRed);
+  };
+
+  const waitlistState = async () => {
+    const waitlistText = await miloReplaceKey(miloLibs, 'waitlist-cta-text');
+    enableBtn();
+    updateAnalyticTag(rsvpBtn.el, waitlistText);
+    rsvpBtn.el.textContent = waitlistText;
+    checkRed.remove();
+  };
+
+  const waitlistedState = async () => {
+    const waitlistedText = await miloReplaceKey(miloLibs, 'waitlisted-cta-text');
+    enableBtn();
+    updateAnalyticTag(rsvpBtn.el, waitlistedText);
+    rsvpBtn.el.textContent = waitlistedText;
+    rsvpBtn.el.prepend(checkRed);
+  };
+
+  if (!rsvpData) {
+    if (eventFull) {
+      if (eventInfo?.allowWaitlisting) {
+        await waitlistState();
+      } else {
+        await closedState();
+      }
+    } else {
+      defaultState();
+    }
+  } else if (rsvpData.registrationStatus === 'registered') {
+    await registeredState();
+  } else if (rsvpData.registrationStatus === 'waitlisted') {
+    await waitlistedState();
   } else if (!rsvpData.ok) {
     // FIXME: temporary solution for ESL returning 500 on ESP 400 response
     if (rsvpData.error?.message === 'Request to ESP failed: Event is full') {
-      const eventFullText = await miloReplaceKey(miloLibs, 'event-full-cta-text');
-      rsvpBtn.el.setAttribute('tabindex', -1);
-      rsvpBtn.el.href = '';
-      rsvpBtn.el.classList.add('disabled');
-      updateAnalyticTag(rsvpBtn.el, eventFullText);
-      rsvpBtn.el.textContent = eventFullText;
-      checkRed.remove();
+      await closedState();
     }
   }
 }
@@ -145,12 +181,8 @@ export function signIn(options) {
 async function handleRSVPBtnBasedOnProfile(rsvpBtn, miloLibs, profile) {
   const { getConfig } = await import(`${miloLibs}/utils/utils.js`);
   const resp = await getEvent(getMetadata('event-id'));
-
-  if (!resp) {
-    return;
-  }
+  if (!resp) return;
   const eventInfo = resp.data;
-
   if (profile?.noProfile || resp.status === 401) {
     if (eventInfo && +eventInfo.attendeeLimit <= +eventInfo.attendeeCount) {
       const eventFullText = await miloReplaceKey(miloLibs, 'event-full-cta-text');

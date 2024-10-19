@@ -309,8 +309,26 @@
 }
 
 .events-form .form-success-msg {
+  position: relative;
   text-align: center;
   padding: 80px 40px;
+  min-height: 300px;
+}
+
+.events-form .form-success-msg > div:not(.hidden) {
+  height: 100%;
+  min-height: 300px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.events-form .form-success-msg > .second-screen > hgroup {
+  flex-basis: 56%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
 }
 
 .events-form .form-success-msg h1,
@@ -417,6 +435,10 @@
 
   .events-form .terms-and-conditions-wrapper .checkbox-wrapper label {
     width: auto;
+  }
+
+  .events-form .form-success-msg {
+    min-width: 720px;
   }
 
   .events-form .form-success-msg .post-rsvp-button-wrapper {
