@@ -1,4 +1,4 @@
-import { ICON_REG, META_REG, SUSI_CONTEXTS } from './constances.js';
+import { ICON_REG, META_REG } from './constances.js';
 import BlockMediator from './deps/block-mediator.min.js';
 import { getEvent } from './esp-controller.js';
 import {
@@ -7,6 +7,7 @@ import {
   setMetadata,
   getIcon,
   readBlockConfig,
+  getSusiOptions,
   getECCEnv,
 } from './utils.js';
 
@@ -32,7 +33,7 @@ export async function miloReplaceKey(miloLibs, key) {
   }
 }
 
-function updateAnalyticTag(el, newVal) {
+export function updateAnalyticTag(el, newVal) {
   const eventTitle = getMetadata('event-title');
   const newDaaLL = `${newVal}${eventTitle ? `|${eventTitle}` : ''}`;
   el.setAttribute('daa-ll', newDaaLL);
@@ -90,65 +91,98 @@ function createTag(tag, attributes, html, options = {}) {
   return el;
 }
 
-async function updateRSVPButtonState(rsvpBtn, miloLibs, eventInfo) {
+export async function updateRSVPButtonState(rsvpBtn, miloLibs, eventInfo) {
   const rsvpData = BlockMediator.get('rsvpData');
   const checkRed = getIcon('check-circle-red');
-  const eventFull = +eventInfo.attendeeLimit <= +eventInfo.attendeeCount;
+  let eventFull = false;
+  if (eventInfo) eventFull = +eventInfo.attendeeLimit <= +eventInfo.attendeeCount;
 
-  if (!rsvpData) {
-    if (eventFull) {
-      const eventFullText = await miloReplaceKey(miloLibs, 'event-full-cta-text');
-      rsvpBtn.el.setAttribute('tabindex', -1);
-      rsvpBtn.el.href = '';
-      rsvpBtn.el.classList.add('disabled');
-      updateAnalyticTag(rsvpBtn.el, eventFullText);
-      rsvpBtn.el.textContent = eventFullText;
-      checkRed.remove();
-    } else {
-      rsvpBtn.el.classList.remove('disabled');
-      rsvpBtn.el.setAttribute('tabindex', 0);
-      updateAnalyticTag(rsvpBtn.el, rsvpBtn.originalText);
-      rsvpBtn.el.textContent = rsvpBtn.originalText;
-      checkRed.remove();
-    }
-  } else if (rsvpData.espProvider?.registered || rsvpData.externalAttendeeId) {
-    const registeredText = await miloReplaceKey(miloLibs, 'registered-cta-text');
+  const enableBtn = () => {
     rsvpBtn.el.classList.remove('disabled');
     rsvpBtn.el.setAttribute('tabindex', 0);
+  };
+
+  const disableBtn = () => {
+    rsvpBtn.el.setAttribute('tabindex', -1);
+    rsvpBtn.el.href = '';
+    rsvpBtn.el.classList.add('disabled');
+  };
+
+  const closedState = async () => {
+    const closedText = await miloReplaceKey(miloLibs, 'event-full-cta-text');
+    disableBtn();
+    updateAnalyticTag(rsvpBtn.el, closedText);
+    rsvpBtn.el.textContent = closedText;
+    checkRed.remove();
+  };
+
+  const defaultState = () => {
+    enableBtn();
+    updateAnalyticTag(rsvpBtn.el, rsvpBtn.originalText);
+    rsvpBtn.el.textContent = rsvpBtn.originalText;
+    checkRed.remove();
+  };
+
+  const registeredState = async () => {
+    const registeredText = await miloReplaceKey(miloLibs, 'registered-cta-text');
+    enableBtn();
     updateAnalyticTag(rsvpBtn.el, registeredText);
     rsvpBtn.el.textContent = registeredText;
     rsvpBtn.el.prepend(checkRed);
+  };
+
+  const waitlistState = async () => {
+    const waitlistText = await miloReplaceKey(miloLibs, 'waitlist-cta-text');
+    enableBtn();
+    updateAnalyticTag(rsvpBtn.el, waitlistText);
+    rsvpBtn.el.textContent = waitlistText;
+    checkRed.remove();
+  };
+
+  const waitlistedState = async () => {
+    const waitlistedText = await miloReplaceKey(miloLibs, 'waitlisted-cta-text');
+    enableBtn();
+    updateAnalyticTag(rsvpBtn.el, waitlistedText);
+    rsvpBtn.el.textContent = waitlistedText;
+    rsvpBtn.el.prepend(checkRed);
+  };
+
+  if (!rsvpData) {
+    if (eventFull) {
+      if (eventInfo?.allowWaitlisting) {
+        await waitlistState();
+      } else {
+        await closedState();
+      }
+    } else {
+      defaultState();
+    }
+  } else if (rsvpData.registrationStatus === 'registered') {
+    await registeredState();
+  } else if (rsvpData.registrationStatus === 'waitlisted') {
+    await waitlistedState();
   } else if (!rsvpData.ok) {
     // FIXME: temporary solution for ESL returning 500 on ESP 400 response
     if (rsvpData.error?.message === 'Request to ESP failed: Event is full') {
-      const eventFullText = await miloReplaceKey(miloLibs, 'event-full-cta-text');
-      rsvpBtn.el.setAttribute('tabindex', -1);
-      rsvpBtn.el.href = '';
-      rsvpBtn.el.classList.add('disabled');
-      updateAnalyticTag(rsvpBtn.el, eventFullText);
-      rsvpBtn.el.textContent = eventFullText;
-      checkRed.remove();
+      await closedState();
     }
   }
 }
 
-export function signIn() {
+export function signIn(options) {
   if (typeof window.adobeIMS?.signIn !== 'function') {
     window?.lana.log({ message: 'IMS signIn method not available', tags: 'errorType=warn,module=gnav' });
     return;
   }
 
-  window.adobeIMS?.signIn({ dctx_id: SUSI_CONTEXTS[getECCEnv()] });
+  window.adobeIMS?.signIn(options);
 }
 
 async function handleRSVPBtnBasedOnProfile(rsvpBtn, miloLibs, profile) {
+  const { getConfig } = await import(`${miloLibs}/utils/utils.js`);
   const resp = await getEvent(getMetadata('event-id'));
-
-  if (!resp) {
-    return;
-  }
+  if (!resp) return;
   const eventInfo = resp.data;
-
   if (profile?.noProfile || resp.status === 401) {
     if (eventInfo && +eventInfo.attendeeLimit <= +eventInfo.attendeeCount) {
       const eventFullText = await miloReplaceKey(miloLibs, 'event-full-cta-text');
@@ -163,7 +197,7 @@ async function handleRSVPBtnBasedOnProfile(rsvpBtn, miloLibs, profile) {
       rsvpBtn.el.setAttribute('tabindex', 0);
       rsvpBtn.el.addEventListener('click', (e) => {
         e.preventDefault();
-        signIn();
+        signIn(getSusiOptions(getConfig()));
       });
     }
   } else if (profile) {
@@ -175,7 +209,8 @@ async function handleRSVPBtnBasedOnProfile(rsvpBtn, miloLibs, profile) {
   }
 }
 
-export async function validatePageAndRedirect() {
+export async function validatePageAndRedirect(miloLibs) {
+  const { getConfig } = await import(`${miloLibs}/utils/utils.js`);
   const env = getECCEnv();
   const pagePublished = getMetadata('published') === 'true' || getMetadata('status') === 'live';
   const invalidStagePage = env === 'stage' && window.location.hostname === 'www.stage.adobe.com' && !getMetadata('event-id');
@@ -192,7 +227,7 @@ export async function validatePageAndRedirect() {
     document.body.style.display = 'none';
     BlockMediator.subscribe('imsProfile', ({ newValue }) => {
       if (newValue?.noProfile) {
-        signIn();
+        signIn(getSusiOptions(getConfig()));
       } else if (!newValue.email?.toLowerCase().endsWith('@adobe.com')) {
         window.location.replace('/404');
       } else {
@@ -272,7 +307,7 @@ function autoUpdateLinks(scope, miloLibs) {
   });
 }
 
-function updatePictureElement(imageUrl, parentPic, altText) {
+export function updatePictureElement(imageUrl, parentPic, altText) {
   let imgUrlObj;
   let imgUrl = imageUrl;
   if (imageUrl.startsWith('https://www.adobe.com/')) {
@@ -313,6 +348,8 @@ function updateImgTag(child, matchCallback, parentElement) {
   const parentPic = child.closest('picture');
   const originalAlt = child.alt;
   const photoMeta = originalAlt.replace(META_REG, (_match, p1) => matchCallback(_match, p1, child));
+
+  if (photoMeta === originalAlt) return;
 
   try {
     const photoData = JSON.parse(photoMeta);
@@ -487,7 +524,7 @@ function decorateProfileCardsZPattern(parent) {
 function updateExtraMetaTags(parent) {
   if (parent !== document) return;
 
-  const title = getMetadata('title');
+  const title = getMetadata('event-title');
   const description = getMetadata('description');
   let photos;
 
@@ -539,6 +576,7 @@ export default function autoUpdateContent(parent, miloDeps, extraData) {
 
   const getImgData = (_match, p1, n) => {
     let data;
+
     if (p1.includes('.')) {
       const [key, subKey] = p1.split('.');
       try {
