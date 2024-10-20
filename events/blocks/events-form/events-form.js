@@ -352,6 +352,56 @@ function addTerms(form, terms) {
   submit.disabled = none(Array.from(checkboxes), (c) => c.checked);
 }
 
+async function fetchEvents() {
+  let events = [
+    {
+      title: 'Event 1',
+      description: 'This is a detailed description for event 1 that explains what the event is about.',
+      image: 'https://via.placeholder.com/300x150.png?text=Event+1',
+      date: 'Fri, Aug 09 | 02:00 AM - 04:30 AM GMT+5:30'
+    },
+    {
+      title: 'Event 2',
+      description: 'This is a detailed description for event 2 that explains what the event is about.',
+      image: 'https://via.placeholder.com/300x150.png?text=Event+2',
+      date: 'Sat, Aug 10 | 03:00 AM - 05:30 AM GMT+5:30'
+    },
+    {
+      title: 'Event 3',
+      description: 'This is a detailed description for event 3 that explains what the event is about.',
+      image: 'https://via.placeholder.com/300x150.png?text=Event+3',
+      date: 'Sun, Aug 11 | 01:00 AM - 03:30 AM GMT+5:30'
+    },
+    {
+      title: 'Event 4',
+      description: 'This is a detailed description for event 4 that explains what the event is about.',
+      image: 'https://via.placeholder.com/300x150.png?text=Event+4',
+      date: 'Mon, Aug 12 | 04:00 AM - 06:30 AM GMT+5:30'
+    },
+  ];
+  try {
+    const response = await fetch('http://localhost:3001/recommend-events', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        username: 'Eve',
+        eventName: 'Narrative Visions Conference',
+      }),
+    });
+
+    if (!response.ok) {
+      console.error(`Error fetching events: ${response.statusText}`);
+      return events;
+    }
+
+    events = await response.json();
+    return events;
+  } catch (error) {
+    console.error('Error fetching events:', error);
+    return events;
+  }
+}
+
 function createCard(event) {
   const card = document.createElement('div');
   card.classList.add('event-card');
@@ -403,7 +453,7 @@ function displayCards(events, container) {
   });
 }
 
-function decorateSuccessScreen(screen) {
+async function decorateSuccessScreen(screen) {
   if (!screen) return;
 
   screen.classList.add('form-success-msg');
@@ -490,7 +540,20 @@ function decorateSuccessScreen(screen) {
       });
     }
   });
-  
+
+  const tag = createTag('div', { class: 'dialog' });
+  tag.append(createTag('div', { class: 'dialog-header' }, 'Find Similar Events'));
+  const container2 = createTag('div', { class: 'carousel', id: 'card-container' });
+  tag.append(container2);
+
+  // Fetch events from the API
+  const events = await fetchEvents();
+  console.log('Event data:', events);
+
+  // Call the function to display cards
+  displayCards(events, container2);
+
+  screen.append(tag);
 
   screen.classList.add('hidden');
 }
@@ -610,8 +673,8 @@ async function buildEventform(bp, formData) {
   bp.formContainer.classList.add('form-container');
   const { formEl, sanitizeList } = await createForm(bp, formData);
 
-  [bp.rsvpSuccessScreen, bp.waitlistSuccessScreen].forEach((screen) => {
-    decorateSuccessScreen(screen);
+  [bp.rsvpSuccessScreen, bp.waitlistSuccessScreen].forEach(async (screen) => {
+    await decorateSuccessScreen(screen);
   });
 
   if (formEl) {
