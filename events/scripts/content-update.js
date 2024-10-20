@@ -33,7 +33,7 @@ export async function miloReplaceKey(miloLibs, key) {
   }
 }
 
-function updateAnalyticTag(el, newVal) {
+export function updateAnalyticTag(el, newVal) {
   const eventTitle = getMetadata('event-title');
   const newDaaLL = `${newVal}${eventTitle ? `|${eventTitle}` : ''}`;
   el.setAttribute('daa-ll', newDaaLL);
@@ -91,7 +91,7 @@ function createTag(tag, attributes, html, options = {}) {
   return el;
 }
 
-async function updateRSVPButtonState(rsvpBtn, miloLibs, eventInfo) {
+export async function updateRSVPButtonState(rsvpBtn, miloLibs, eventInfo) {
   const rsvpData = BlockMediator.get('rsvpData');
   const checkRed = getIcon('check-circle-red');
   let eventFull = false;
@@ -307,7 +307,7 @@ function autoUpdateLinks(scope, miloLibs) {
   });
 }
 
-function updatePictureElement(imageUrl, parentPic, altText) {
+export function updatePictureElement(imageUrl, parentPic, altText) {
   let imgUrlObj;
   let imgUrl = imageUrl;
   if (imageUrl.startsWith('https://www.adobe.com/')) {

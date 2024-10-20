@@ -111,10 +111,17 @@ export async function getEventAttendee(eventId) {
 
     if (!response.ok) {
       window.lana?.log(`Error: Failed to get attendee for event ${eventId}:`, response.status);
+      let textResp;
+      try {
+        textResp = await response.text();
+      } catch (e) {
+        window.lana?.log('Error: Failed to parse response text:', e);
+      }
+
       return {
         ok: response.ok,
         status: response.status,
-        error: response.text() || response.status,
+        error: textResp || response.status,
       };
     }
 
@@ -134,10 +141,17 @@ export async function getAttendee() {
 
     if (!response.ok) {
       window.lana?.log('Error: Failed to get attendee details. Status:', response.status);
+      let textResp;
+      try {
+        textResp = await response.text();
+      } catch (e) {
+        window.lana?.log('Error: Failed to parse response text:', e);
+      }
+
       return {
         ok: response.ok,
         status: response.status,
-        error: response.text() || response.status,
+        error: textResp || response.status,
       };
     }
 
@@ -229,10 +243,17 @@ export async function deleteAttendeeFromEvent(eventId) {
 
     if (!response.ok) {
       window.lana?.log(`Error: Failed to delete attendee for event ${eventId}. Status:`, response.status);
+      let textResp;
+      try {
+        textResp = await response.text();
+      } catch (e) {
+        window.lana?.log('Error: Failed to parse response text:', e);
+      }
+
       return {
         ok: response.ok,
         status: response.status,
-        error: response.text() || response.status,
+        error: textResp || response.status,
       };
     }
 
