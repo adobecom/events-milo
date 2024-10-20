@@ -687,10 +687,8 @@ async function buildEventform(bp, formData) {
 function initFormBasedOnRSVPData(bp) {
   const validRegistrationStatus = ['registered', 'waitlisted'];
   const { block } = bp;
-  // const profile = BlockMediator.get('imsProfile');
-  const profile = { firstName: 'John', lastName: 'Doe', email: 'gbajaj@adobe.com' };
-  // const rsvpData = BlockMediator.get('rsvpData');
-  const rsvpData = { registrationStatus: 'registered' };
+  const profile = BlockMediator.get('imsProfile');
+  const rsvpData = BlockMediator.get('rsvpData');
 
   if (validRegistrationStatus.includes(rsvpData?.registrationStatus)) {
     showSuccessMsgFirstScreen(bp);
