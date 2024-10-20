@@ -17,6 +17,57 @@ export function convertToLocaleTimeFormat(time, locale) {
   return formatter.format(date);
 }
 
+function createCard(event) {
+  const card = document.createElement('div');
+  card.classList.add('event-card');
+
+  const cardHeader = document.createElement('div');
+  cardHeader.classList.add('card-header');
+  const img = document.createElement('img');
+  img.src = event.image;
+  img.alt = event.title;
+
+  const cardContent = document.createElement('div');
+  cardContent.classList.add('card-content');
+
+  const title = document.createElement('h3');
+  title.classList.add('card-title');
+  title.textContent = event.title;
+
+  const description = document.createElement('p');
+  description.classList.add('card-description');
+  description.textContent = event.description;
+
+  const details = document.createElement('div');
+  details.classList.add('card-details');
+  details.innerHTML = `<span>${event.date}</span>`;
+
+  const viewEvent = document.createElement('a');
+  viewEvent.classList.add('consonant-BtnInfobit');
+  viewEvent.href = '#';
+
+  const buttonText = document.createElement('span');
+  buttonText.textContent = 'View Event';
+  viewEvent.appendChild(buttonText);
+
+  cardHeader.appendChild(img);
+  cardContent.appendChild(title);
+  cardContent.appendChild(description);
+  cardContent.appendChild(details);
+  cardContent.appendChild(viewEvent);
+  card.appendChild(cardHeader);
+  card.appendChild(cardContent);
+
+  return card;
+}
+
+function displayCards(events, container) {
+  events.forEach((event) => {
+    const card = createCard(event);
+    container.appendChild(card);
+  });
+}
+
 export default async function init(el) {
   if (getMetadata('show-agenda-post-event') !== 'true' && document.body.classList.contains('timing-post-event')) {
     el.remove();
@@ -86,4 +137,38 @@ export default async function init(el) {
     createTag('span', { class: 'agenda-time' }, convertToLocaleTimeFormat(a.startTime, localeString), { parent: agendaItemWrapper });
     createTag('span', { class: 'agenda-desciption' }, a.description, { parent: agendaItemWrapper });
   });
+
+  const events = [
+    {
+      title: 'Event 1',
+      description: 'This is a detailed description for event 1 that explains what the event is about.',
+      image: 'https://via.placeholder.com/300x150.png?text=Event+1',
+      date: 'Fri, Aug 09 | 02:00 AM - 04:30 AM GMT+5:30'
+    },
+    {
+      title: 'Event 2',
+      description: 'This is a detailed description for event 2 that explains what the event is about.',
+      image: 'https://via.placeholder.com/300x150.png?text=Event+2',
+      date: 'Sat, Aug 10 | 03:00 AM - 05:30 AM GMT+5:30'
+    },
+    {
+      title: 'Event 3',
+      description: 'This is a detailed description for event 3 that explains what the event is about.',
+      image: 'https://via.placeholder.com/300x150.png?text=Event+3',
+      date: 'Sun, Aug 11 | 01:00 AM - 03:30 AM GMT+5:30'
+    },
+    {
+      title: 'Event 4',
+      description: 'This is a detailed description for event 4 that explains what the event is about.',
+      image: 'https://via.placeholder.com/300x150.png?text=Event+4',
+      date: 'Mon, Aug 12 | 04:00 AM - 06:30 AM GMT+5:30'
+    },
+  ];
+  const tag = createTag('div', { class: 'dialog' });
+  tag.append(createTag('div', { class: 'dialog-header' }, 'Find Similar Events'));
+  const container2 = createTag('div', { class: 'carousel', id: 'card-container' });
+  tag.append(container2);
+  // Call the function to display cards
+  displayCards(events, container2);
+  el.append(tag);
 }

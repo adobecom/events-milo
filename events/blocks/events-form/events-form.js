@@ -489,42 +489,8 @@ function decorateSuccessScreen(screen) {
         }
       });
     }
-
-    const events = [
-      {
-        title: 'Event 1',
-        description: 'This is a detailed description for event 1 that explains what the event is about.',
-        image: 'https://via.placeholder.com/300x150.png?text=Event+1',
-        date: 'Fri, Aug 09 | 02:00 AM - 04:30 AM GMT+5:30'
-      },
-      {
-        title: 'Event 2',
-        description: 'This is a detailed description for event 2 that explains what the event is about.',
-        image: 'https://via.placeholder.com/300x150.png?text=Event+2',
-        date: 'Sat, Aug 10 | 03:00 AM - 05:30 AM GMT+5:30'
-      },
-      {
-        title: 'Event 3',
-        description: 'This is a detailed description for event 3 that explains what the event is about.',
-        image: 'https://via.placeholder.com/300x150.png?text=Event+3',
-        date: 'Sun, Aug 11 | 01:00 AM - 03:30 AM GMT+5:30'
-      },
-      {
-        title: 'Event 4',
-        description: 'This is a detailed description for event 4 that explains what the event is about.',
-        image: 'https://via.placeholder.com/300x150.png?text=Event+4',
-        date: 'Mon, Aug 12 | 04:00 AM - 06:30 AM GMT+5:30'
-      },
-    ];
-
-    const tag = createTag('div', { class: 'dialog' });
-    tag.append(createTag('div', { class: 'dialog-header' }, 'Find Similar Events'));
-    const container = createTag('div', { class: 'carousel', id: 'card-container' })
-    tag.append(container);
-    // Call the function to display cards
-    displayCards(events, container);
   });
-  screen.append(tag);
+  
 
   screen.classList.add('hidden');
 }
@@ -658,8 +624,10 @@ async function buildEventform(bp, formData) {
 function initFormBasedOnRSVPData(bp) {
   const validRegistrationStatus = ['registered', 'waitlisted'];
   const { block } = bp;
-  const profile = BlockMediator.get('imsProfile');
-  const rsvpData = BlockMediator.get('rsvpData');
+  // const profile = BlockMediator.get('imsProfile');
+  const profile = { firstName: 'John', lastName: 'Doe', email: 'gbajaj@adobe.com' };
+  // const rsvpData = BlockMediator.get('rsvpData');
+  const rsvpData = { registrationStatus: 'registered' };
 
   if (validRegistrationStatus.includes(rsvpData?.registrationStatus)) {
     showSuccessMsgFirstScreen(bp);
