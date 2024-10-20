@@ -673,9 +673,10 @@ async function buildEventform(bp, formData) {
   bp.formContainer.classList.add('form-container');
   const { formEl, sanitizeList } = await createForm(bp, formData);
 
-  [bp.rsvpSuccessScreen, bp.waitlistSuccessScreen].forEach(async (screen) => {
+  const list = [bp.rsvpSuccessScreen, bp.waitlistSuccessScreen]
+  await Promise.all(list.map(async (screen) => {
     await decorateSuccessScreen(screen);
-  });
+  }));
 
   if (formEl) {
     bp.form.replaceWith(formEl);
