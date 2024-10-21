@@ -95,7 +95,7 @@ export async function updateRSVPButtonState(rsvpBtn, miloLibs, eventInfo) {
   const rsvpData = BlockMediator.get('rsvpData');
   const checkRed = getIcon('check-circle-red');
   let eventFull = false;
-  if (eventInfo) eventFull = +eventInfo.attendeeLimit <= +eventInfo.attendeeCount;
+  if (eventInfo) eventFull = eventInfo.isFull;
 
   const enableBtn = () => {
     rsvpBtn.el.classList.remove('disabled');
@@ -184,7 +184,7 @@ async function handleRSVPBtnBasedOnProfile(rsvpBtn, miloLibs, profile) {
   if (!resp) return;
   const eventInfo = resp.data;
   if (profile?.noProfile || resp.status === 401) {
-    if (eventInfo && +eventInfo.attendeeLimit <= +eventInfo.attendeeCount) {
+    if (eventInfo?.isFull) {
       const eventFullText = await miloReplaceKey(miloLibs, 'event-full-cta-text');
       updateAnalyticTag(rsvpBtn.el, eventFullText);
       rsvpBtn.el.setAttribute('tabindex', -1);
