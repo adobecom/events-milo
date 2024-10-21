@@ -540,7 +540,7 @@
   padding-top: 30px;
 }
 
-.events-form .card-details .span {
+.events-form .card-details span {
   display: block;
     min-width: 0;
     max-width: 100%;
@@ -577,7 +577,7 @@
   max-width: 40%;
 }
 
-.events-form .consonant-BtnInfobit .span {
+.events-form .consonant-BtnInfobit span {
 font-family: adobe-clean,Segoe UI,Roboto,sans-serif;
 font-size: .8235rem;
 line-height: .9375rem;
@@ -595,7 +595,6 @@ transition: color .3s ease-in-out
 .events-form .consonant-BtnInfobit:hover {
   background-color: #333;
 }
-
 
 }
 
