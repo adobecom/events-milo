@@ -284,6 +284,6 @@ export async function getAndCreateAndAddAttendee(eventId, attendeeData) {
 
   const newAttendeeData = attendee.data;
 
-  if (eventResp.data?.attendeeLimit <= eventResp.data?.attendeeCount) registrationStatus = 'waitlisted';
+  if (eventResp.data?.isFull) registrationStatus = 'waitlisted';
   return addAttendeeToEvent(eventId, { ...newAttendeeData, registrationStatus });
 }
