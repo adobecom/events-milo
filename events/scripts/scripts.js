@@ -16,7 +16,7 @@ import { getSusiOptions, setMetadata, getMetadata, getECCEnv, LIBS } from './uti
 
 const { loadArea, setConfig, updateConfig, getConfig, loadLana } = await import(`${LIBS}/utils/utils.js`);
 
-function decorateArea(area = document) {
+export default function decorateArea(area = document) {
   const parsePhotosData = () => {
     const output = {};
 
