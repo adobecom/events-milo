@@ -541,20 +541,23 @@ async function decorateSuccessScreen(screen) {
     }
   });
 
-  const tag = createTag('div', { class: 'dialog' });
-  tag.append(createTag('div', { class: 'dialog-header' }, 'Find Similar Events'));
+  // const tag = createTag('div', { class: 'dialog' });
+  // tag.append(createTag('div', { class: 'dialog-header' }, 'Find Similar Events'));
+  // const container2 = createTag('div', { class: 'carousel', id: 'card-container' });
+  // tag.append(container2);
+
+
+  const tag = createTag('section', { class: 'recommended-events' });
+  tag.append(createTag('div', { class: 'section-header' }, 'Recommended Events'));
   const container2 = createTag('div', { class: 'carousel', id: 'card-container' });
   tag.append(container2);
 
-  // Fetch events from the API
   const events = await fetchEvents();
   console.log('Event data:', events);
 
-  // Call the function to display cards
   displayCards(events, container2);
 
   screen.append(tag);
-
   screen.classList.add('hidden');
 }
 
