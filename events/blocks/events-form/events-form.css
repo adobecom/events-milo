@@ -437,13 +437,14 @@
   border-radius: 8px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   max-width: 1200px;
-  margin: 0 auto;
+  margin: 2% 20%; 
 }
+
 
 /* Header for the Recommended Events Section */
 .events-form .section-header {
-  font-size: var(--type-heading-xl-size);
-  line-height: var(--type-heading-xl-lh);
+  font-size: var(--type-heading-s-size);
+  line-height: var(--type-heading-s-lh);
   margin-bottom: 20px;
   color: #333;
   font-weight: bold;
