@@ -574,6 +574,22 @@
   font-size: 0.85em;
   font-weight: bold;
   transition: background-color 0.3s;
+  max-width: 40%;
+}
+
+.events-form .consonant-BtnInfobit .span {
+font-family: adobe-clean,Segoe UI,Roboto,sans-serif;
+font-size: .8235rem;
+line-height: .9375rem;
+font-weight: 700;
+font-style: normal;
+word-break: break-word;
+text-align: center;
+display: -webkit-box;
+-webkit-box-orient: vertical;
+-webkit-line-clamp: 2;
+overflow: hidden;
+transition: color .3s ease-in-out
 }
 
 .events-form .consonant-BtnInfobit:hover {
