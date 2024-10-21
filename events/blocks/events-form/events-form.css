@@ -442,7 +442,8 @@
 
 /* Header for the Recommended Events Section */
 .events-form .section-header {
-  font-size: 2em;
+  font-size: var(--type-heading-xl-size);
+  line-height: var(--type-heading-xl-lh);
   margin-bottom: 20px;
   color: #333;
   font-weight: bold;
@@ -501,7 +502,11 @@
 
 /* Title in Event Card */
 .events-form .card-title {
-  font-size: 1.2em;
+  font-family: adobe-clean,Segoe UI,Roboto,sans-serif;
+  font-style: normal;
+  text-align: left;
+  word-break: break-word;
+  overflow: hidden;
   margin: 0 0 10px;
   color: #333;
   font-weight: bold;
@@ -509,13 +514,14 @@
 
 /* Description in Event Card */
 .events-form .card-description {
-  font-size: 0.95em;
-  color: #666;
-  margin-bottom: 15px;
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 3; /* Limit description to 3 lines */
-  overflow: hidden;
+  max-height: 3.9375rem;
+  margin: 0 0 14px;
+  padding: 0;
+  font-size: .875rem;
+  line-height: 1.3125rem;
+  font-weight: 400;
+  color: #747474;
+  -webkit-line-clamp: 3
 }
 
 /* Card Details (Date) */
