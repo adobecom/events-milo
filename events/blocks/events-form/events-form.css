@@ -503,14 +503,21 @@
 
 /* Title in Event Card */
 .events-form .card-title {
-  font-family: adobe-clean,Segoe UI,Roboto,sans-serif;
+  max-height: 2.75rem;
+  margin: 0 0 7px;
+  font-size: 1.125rem;
+  line-height: 1.375rem;
+  font-weight: 700;
+  color: #323232;
+  text-decoration: none;
+  -webkit-line-clamp: 2;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  font-family: adobe-clean, Segoe UI, Roboto, sans-serif;
   font-style: normal;
   text-align: left;
   word-break: break-word;
-  overflow: hidden;
-  margin: 0 0 10px;
-  color: #333;
-  font-weight: bold;
+  overflow: hidden
 }
 
 /* Description in Event Card */
@@ -530,7 +537,31 @@
   font-size: 0.85em;
   color: #999;
   margin-bottom: 15px;
+  padding-top: 30px;
 }
+
+.events-form .card-details .span {
+  display: block;
+    min-width: 0;
+    max-width: 100%;
+    max-height: 2rem;
+    margin-left: 16px;
+    font-family: adobe-clean,Segoe UI,Roboto,sans-serif;
+    font-size: .875rem;
+    line-height: 1rem;
+    font-weight: 400;
+    color: #747474;
+    font-style: normal;
+    word-break: break-word;
+    text-align: left;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    white-space: normal;
+    text-overflow: clip;
+    overflow: hidden
+}
+
 
 /* View Event Button */
 .events-form .consonant-BtnInfobit {
