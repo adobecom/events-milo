@@ -1,4 +1,4 @@
-import { getECCEnv } from './utils.js';
+import { getECCEnv, LIBS } from './utils.js';
 
 export const API_CONFIG = {
   esl: {
@@ -63,13 +63,14 @@ export function waitForAdobeIMS() {
 }
 
 export async function constructRequestOptions(method, body = null) {
-  await waitForAdobeIMS();
+  const [{ default: getUuid }] = await Promise.all([import(`${LIBS}/utils/getUuid.js`), waitForAdobeIMS()]);
 
   const headers = new Headers();
   const authToken = window.adobeIMS?.getAccessToken()?.token;
 
   if (authToken) headers.append('Authorization', `Bearer ${authToken}`);
   headers.append('x-api-key', 'acom_event_service');
+  headers.append('x-request-id', await getUuid(new Date().getTime()));
   headers.append('content-type', 'application/json');
 
   const options = {

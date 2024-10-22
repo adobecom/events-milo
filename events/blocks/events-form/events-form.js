@@ -1,6 +1,6 @@
 import { LIBS, getMetadata } from '../../scripts/utils.js';
 import HtmlSanitizer from '../../scripts/deps/html-sanitizer.js';
-import { deleteAttendeeFromEvent, getAndCreateAndAddAttendee } from '../../scripts/esp-controller.js';
+import { deleteAttendeeFromEvent, getAndCreateAndAddAttendee, getEvent } from '../../scripts/esp-controller.js';
 import BlockMediator from '../../scripts/deps/block-mediator.min.js';
 import { miloReplaceKey } from '../../scripts/content-update.js';
 import decorateArea from '../../scripts/scripts.js';
@@ -178,6 +178,12 @@ function createButton({ type, label }, bp) {
           if (!status || status === 500) {
             if (respJson.error?.message === 'Request to ESP failed: Event is full') {
               status = 400;
+
+              const eventResp = await getEvent(getMetadata('event-id'));
+              if (eventResp.ok && eventResp.data?.isFull) {
+                button.textContent = await miloReplaceKey(LIBS, 'waitlist-cta-text');
+                BlockMediator.set('eventData', eventResp.data);
+              }
             }
           }
           buildErrorMsg(bp.form, status);

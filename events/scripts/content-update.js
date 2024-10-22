@@ -91,8 +91,9 @@ function createTag(tag, attributes, html, options = {}) {
   return el;
 }
 
-export async function updateRSVPButtonState(rsvpBtn, miloLibs, eventInfo) {
+export async function updateRSVPButtonState(rsvpBtn, miloLibs) {
   const rsvpData = BlockMediator.get('rsvpData');
+  const eventInfo = BlockMediator.get('eventData');
   const checkRed = getIcon('check-circle-red');
   let eventFull = false;
   if (eventInfo) eventFull = eventInfo.isFull;
@@ -183,6 +184,7 @@ async function handleRSVPBtnBasedOnProfile(rsvpBtn, miloLibs, profile) {
   const resp = await getEvent(getMetadata('event-id'));
   if (!resp) return;
   const eventInfo = resp.data;
+  BlockMediator.set('eventData', eventInfo);
   if (profile?.noProfile || resp.status === 401) {
     if (eventInfo?.isFull) {
       const eventFullText = await miloReplaceKey(miloLibs, 'event-full-cta-text');
@@ -201,10 +203,14 @@ async function handleRSVPBtnBasedOnProfile(rsvpBtn, miloLibs, profile) {
       });
     }
   } else if (profile) {
-    await updateRSVPButtonState(rsvpBtn, miloLibs, eventInfo);
+    await updateRSVPButtonState(rsvpBtn, miloLibs);
 
     BlockMediator.subscribe('rsvpData', () => {
-      updateRSVPButtonState(rsvpBtn, miloLibs, eventInfo);
+      updateRSVPButtonState(rsvpBtn, miloLibs);
+    });
+
+    BlockMediator.subscribe('eventData', () => {
+      updateRSVPButtonState(rsvpBtn, miloLibs);
     });
   }
 }
