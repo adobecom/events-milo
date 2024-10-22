@@ -1,5 +1,5 @@
 import { getECCEnv, LIBS } from './utils.js';
-
+import BlockMediator from './deps/block-mediator.min.js';
 
 export const API_CONFIG = {
   esl: {
