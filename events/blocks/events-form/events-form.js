@@ -154,10 +154,8 @@ function eventFormSendAnalytics(bp, view) {
   sendAnalytics(event);
 }
 
-let eventsPromise = null; // To cache the Promise
-
 async function fetchRelevantEvents() {
-  let defaultEvents = [
+  let events = [
     {
       title: 'Event 1',
       description: 'This is a detailed description for event 1 that explains what the event is about.',
@@ -183,49 +181,36 @@ async function fetchRelevantEvents() {
       date: 'Mon, Aug 12 | 04:00 AM - 06:30 AM GMT+5:30',
     },
   ];
+  try {
+    const attendee = BlockMediator.get('attendee') ?? {};
+    const response = await fetch('http://localhost:3001/recommend-events', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        username: `${attendee.firstName} ${attendee.lastName}`,
+        jobTitle: attendee.jobTitle,
+        companyName: attendee.companyName,
+        eventName: getMetadata('event-title'),
+      }),
+    });
 
-  // If eventsPromise is already set, return the existing Promise
-  if (eventsPromise) {
-    return eventsPromise;
-  }
-
-  // Cache the Promise for the fetch request
-  eventsPromise = new Promise(async (resolve, reject) => {
-    try {
-      const attendee = BlockMediator.get('attendee') ?? {};
-      const response = await fetch('http://localhost:3001/recommend-events', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          username: `${attendee.firstName} ${attendee.lastName}`,
-          jobTitle: attendee.jobTitle,
-          companyName: attendee.companyName,
-          eventName: getMetadata('event-title'),
-        }),
-      });
-
-      if (!response.ok) {
-        console.error(`Error fetching events: ${response.statusText}`);
-        resolve(defaultEvents); // Resolve with default events on error
-        return;
-      }
-
-      const fetchedEvents = await response.json();
-      resolve(fetchedEvents || defaultEvents); // Resolve with fetched events or fallback to default
-
-    } catch (error) {
-      console.error('Error fetching events:', error);
-      // Fallback to default events after 3 seconds delay in case of error
-      setTimeout(() => {
-        resolve(defaultEvents);
-      }, 3000);
+    if (!response.ok) {
+      console.error(`Error fetching events: ${response.statusText}`);
+      return events;
     }
-  });
 
-  // Return the cached promise (whether resolved or pending)
-  return eventsPromise;
+    events = await response.json();
+    return events;
+  } catch (error) {
+    console.error('Error fetching events:', error);
+    // wait 3 seconds before returning default events
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        resolve(events);
+      }, 3000);
+    });
+  }
 }
-
 
 function createCard(event) {
   const card = createTag('div', { class: 'event-card' });
