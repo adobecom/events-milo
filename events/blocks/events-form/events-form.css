@@ -564,7 +564,7 @@
 
 
 /* View Event Button */
-.events-form .consonant-BtnInfobit {
+.events-form .card-details .consonant-BtnInfobit {
   background-color: #000;
   color: #fff;
   text-align: center;
@@ -577,7 +577,7 @@
   max-width: 40%;
 }
 
-.events-form .consonant-BtnInfobit span {
+.events-form .card-details .consonant-BtnInfobit span {
 font-family: adobe-clean,Segoe UI,Roboto,sans-serif;
 font-size: .8235rem;
 line-height: .9375rem;
