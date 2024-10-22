@@ -525,7 +525,7 @@
   max-height: 3.9375rem;
   margin: 0 0 14px;
   padding: 0;
-  font-size: .875rem;
+  font-size: .787rem;
   line-height: 1.3125rem;
   font-weight: 400;
   color: #747474;
@@ -539,6 +539,8 @@
   color: #999;
   margin-bottom: 15px;
   padding-top: 30px;
+  display: flex;
+  justify-content: space-between;
 }
 
 .events-form .card-details span {
@@ -547,7 +549,7 @@
     max-width: 100%;
     max-height: 2rem;
     font-family: adobe-clean,Segoe UI,Roboto,sans-serif;
-    font-size: .875rem;
+    font-size: .844rem;
     line-height: 1rem;
     font-weight: 400;
     color: #747474;
@@ -589,7 +591,10 @@ display: -webkit-box;
 -webkit-box-orient: vertical;
 -webkit-line-clamp: 2;
 overflow: hidden;
-transition: color .3s ease-in-out
+transition: color .3s ease-in-out;
+width: max-content;
+margin-top: 7%;
+padding: 1% 4%;
 }
 
 .events-form .card-details .consonant-BtnInfobit:hover {
