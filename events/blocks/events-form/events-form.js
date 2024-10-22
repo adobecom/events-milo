@@ -223,8 +223,7 @@ function createCard(event) {
   const dateSpan = createTag('span', {}, event.date);
   const viewEvent = createTag('a', { class: 'consonant-BtnInfobit', href: '#' });
   const buttonText = createTag('span', {}, 'View Event');
-
-  const venue = createTag('div', { class: 'card-venue' });
+  const venue = createTag('div', { class: 'card-venue' }, event.venue);
 
   viewEvent.append(buttonText);
   details.append(dateSpan, viewEvent);
