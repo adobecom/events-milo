@@ -680,7 +680,7 @@ async function buildEventform(bp, formData) {
   bp.formContainer.classList.add('form-container');
   const { formEl, sanitizeList } = await createForm(bp, formData);
 
-  const list = [bp.rsvpSuccessScreen, bp.waitlistSuccessScreen]
+  const list = [bp.rsvpSuccessScreen, bp.waitlistSuccessScreen];
   await Promise.all(list.map(async (screen) => {
     await decorateSuccessScreen(screen);
   }));
