@@ -154,11 +154,10 @@ function eventFormSendAnalytics(bp, view) {
   sendAnalytics(event);
 }
 
-let isEventsFetched = false; // Flag to track if events have been fetched
-let cachedEvents = []; // Cache for storing fetched events
+let eventsPromise = null; // To cache the Promise
 
 async function fetchRelevantEvents() {
-  let events = [
+  let defaultEvents = [
     {
       title: 'Event 1',
       description: 'This is a detailed description for event 1 that explains what the event is about.',
@@ -185,46 +184,46 @@ async function fetchRelevantEvents() {
     },
   ];
 
-  // If events have already been fetched, return the cached events
-  if (isEventsFetched) {
-    console.log('Returning cached events');
-    return cachedEvents;
+  // If eventsPromise is already set, return the existing Promise
+  if (eventsPromise) {
+    return eventsPromise;
   }
 
-  try {
-    const attendee = BlockMediator.get('attendee') ?? {};
-    const response = await fetch('http://localhost:3001/recommend-events', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        username: `${attendee.firstName} ${attendee.lastName}`,
-        jobTitle: attendee.jobTitle,
-        companyName: attendee.companyName,
-        eventName: getMetadata('event-title'),
-      }),
-    });
+  // Cache the Promise for the fetch request
+  eventsPromise = new Promise(async (resolve, reject) => {
+    try {
+      const attendee = BlockMediator.get('attendee') ?? {};
+      const response = await fetch('http://localhost:3001/recommend-events', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          username: `${attendee.firstName} ${attendee.lastName}`,
+          jobTitle: attendee.jobTitle,
+          companyName: attendee.companyName,
+          eventName: getMetadata('event-title'),
+        }),
+      });
 
-    if (!response.ok) {
-      console.error(`Error fetching events: ${response.statusText}`);
-      return events;
-    }
+      if (!response.ok) {
+        console.error(`Error fetching events: ${response.statusText}`);
+        resolve(defaultEvents); // Resolve with default events on error
+        return;
+      }
 
-    events = await response.json();
+      const fetchedEvents = await response.json();
+      resolve(fetchedEvents || defaultEvents); // Resolve with fetched events or fallback to default
 
-    // Cache the events and mark as fetched
-    cachedEvents = events;
-    isEventsFetched = true;
-
-    return events;
-  } catch (error) {
-    console.error('Error fetching events:', error);
-    // Return default events after a 3-second delay in case of error
-    return new Promise((resolve) => {
+    } catch (error) {
+      console.error('Error fetching events:', error);
+      // Fallback to default events after 3 seconds delay in case of error
       setTimeout(() => {
-        resolve(events);
+        resolve(defaultEvents);
       }, 3000);
-    });
-  }
+    }
+  });
+
+  // Return the cached promise (whether resolved or pending)
+  return eventsPromise;
 }
 
 
