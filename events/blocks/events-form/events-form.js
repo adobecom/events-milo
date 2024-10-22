@@ -443,7 +443,7 @@ function createCard(event) {
   cardContent.appendChild(title);
   cardContent.appendChild(description);
   cardContent.appendChild(details);
-  cardContent.appendChild(viewEvent);
+  //cardContent.appendChild(viewEvent);
   card.appendChild(cardHeader);
   card.appendChild(cardContent);
 
