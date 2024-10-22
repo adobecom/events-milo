@@ -241,14 +241,15 @@ function displayCards(events, container) {
 }
 
 async function decorateEventsRecommendations(screen) {
-  if (!screen) return;
+  if (!screen || screen.querySelector('section.recommended-events')) return;
 
   const tag = createTag('section', { class: 'recommended-events loading' });
-  const loadingOverlay = createTag('sp-theme', { color: 'light', scale: 'medium', class: 'loading-overlay' });
-  createTag('sp-progress-circle', { size: 'l', indeterminate: true }, '', { parent: loadingOverlay });
-  tag.append(createTag('div', { class: 'section-header' }, 'You May Be Interested In'));
+  const header = createTag('div', { class: 'section-header' }, 'You May Be Interested In');
   const carouselContainer = createTag('div', { class: 'carousel', id: 'card-container' });
-  tag.append(carouselContainer);
+  const loadingOverlay = createTag('sp-theme', { color: 'light', scale: 'medium', class: 'loading-overlay' }, '', { parent: carouselContainer });
+  createTag('sp-progress-circle', { size: 'l', indeterminate: true }, '', { parent: loadingOverlay });
+
+  tag.append(header, carouselContainer);
 
   screen.append(tag);
 
@@ -259,11 +260,17 @@ async function decorateEventsRecommendations(screen) {
   ]);
 
   const events = await fetchRelevantEvents();
-  console.log('Event data:', events);
 
   tag.classList.remove('loading');
 
   displayCards(events, carouselContainer);
+}
+
+async function decorateEventsRecommendationsOnAllScreens(bp) {
+  const list = [bp.rsvpSuccessScreen, bp.waitlistSuccessScreen];
+  return Promise.all(list.map(async (screen) => {
+    await decorateEventsRecommendations(screen);
+  }));
 }
 
 function createButton({ type, label }, bp) {
@@ -295,10 +302,7 @@ function createButton({ type, label }, bp) {
           buildErrorMsg(bp.form, status);
         }
 
-        const list = [bp.rsvpSuccessScreen, bp.waitlistSuccessScreen];
-        await Promise.all(list.map(async (screen) => {
-          await decorateEventsRecommendations(screen);
-        }));
+        await decorateEventsRecommendationsOnAllScreens(bp);
       }
     });
   }
@@ -699,6 +703,7 @@ function initFormBasedOnRSVPData(bp) {
   const rsvpData = BlockMediator.get('rsvpData');
 
   if (validRegistrationStatus.includes(rsvpData?.registrationStatus)) {
+    decorateEventsRecommendationsOnAllScreens(bp);
     showSuccessMsgFirstScreen(bp);
     eventFormSendAnalytics(bp, 'Confirmation Modal View');
   } else {
@@ -707,6 +712,7 @@ function initFormBasedOnRSVPData(bp) {
 
   BlockMediator.subscribe('rsvpData', ({ newValue }) => {
     if (validRegistrationStatus.includes(newValue?.registrationStatus)) {
+      decorateEventsRecommendationsOnAllScreens(bp);
       showSuccessMsgFirstScreen(bp);
       eventFormSendAnalytics(bp, 'Confirmation Modal View');
     }
