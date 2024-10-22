@@ -10,6 +10,8 @@ const { closeModal, sendAnalytics } = await import(`${LIBS}/blocks/modal/modal.j
 const { default: sanitizeComment } = await import(`${LIBS}/utils/sanitizeComment.js`);
 const { decorateDefaultLinkAnalytics } = await import(`${LIBS}/martech/attributes.js`);
 
+let isEventsFetched = false;
+
 const RULE_OPERATORS = {
   equal: '=',
   notEqual: '!=',
@@ -181,6 +183,8 @@ async function fetchRelevantEvents() {
       date: 'Mon, Aug 12 | 04:00 AM - 06:30 AM GMT+5:30',
     },
   ];
+  if (isEventsFetched) return;
+  isEventsFetched = true; 
   try {
     const attendee = BlockMediator.get('attendee') ?? {};
     const response = await fetch('http://localhost:3001/recommend-events', {
@@ -219,7 +223,7 @@ function createCard(event) {
   const defaultImage = 'https://images.unsplash.com/photo-1528605248644-14dd04022da1?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTV8fGV2ZW50fGVufDB8fDB8fHww';
   const imgSrc = event.image ? event.image : defaultImage;
   const img = createTag('img', { src: imgSrc, alt: event.title });
-  
+
   const cardContent = createTag('div', { class: 'card-content' });
   const title = createTag('h3', { class: 'card-title' }, event.title);
   const description = createTag('p', { class: 'card-description' }, event.description);
