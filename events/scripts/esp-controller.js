@@ -1,4 +1,5 @@
 import { getECCEnv, LIBS } from './utils.js';
+import BlockMediator from './deps/block-mediator.min.js';
 
 export const API_CONFIG = {
   esl: {
@@ -267,10 +268,8 @@ export async function deleteAttendeeFromEvent(eventId) {
 
 // compound helper functions
 export async function getAndCreateAndAddAttendee(eventId, attendeeData) {
-  const [attendeeResp, eventResp] = await Promise.all([
-    getAttendee(),
-    getEvent(eventId),
-  ]);
+  const attendeeResp = await getAttendee();
+  const eventData = BlockMediator.get('eventData');
 
   let attendee;
   let registrationStatus = 'registered';
@@ -285,6 +284,6 @@ export async function getAndCreateAndAddAttendee(eventId, attendeeData) {
 
   const newAttendeeData = attendee.data;
 
-  if (eventResp.data?.isFull) registrationStatus = 'waitlisted';
+  if (eventData?.isFull) registrationStatus = 'waitlisted';
   return addAttendeeToEvent(eventId, { ...newAttendeeData, registrationStatus });
 }
