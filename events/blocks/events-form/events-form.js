@@ -425,7 +425,10 @@ function createCard(event) {
 
   const details = document.createElement('div');
   details.classList.add('card-details');
-  details.innerHTML = `<span>${event.date}</span>`;
+
+  const dateSpan = document.createElement('span');
+  dateSpan.textContent = event.date;
+  details.appendChild(dateSpan);
 
   const viewEvent = document.createElement('a');
   viewEvent.classList.add('consonant-BtnInfobit');
