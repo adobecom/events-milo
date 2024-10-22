@@ -245,7 +245,7 @@ async function decorateEventsRecommendations(screen) {
   if (!screen || screen.querySelector('section.recommended-events')) return;
 
   const tag = createTag('section', { class: 'recommended-events loading' });
-  const header = createTag('div', { class: 'section-header' }, 'You May Be Interested In');
+  const header = createTag('div', { class: 'section-header' }, 'Other interesting events for you');
   const carouselContainer = createTag('div', { class: 'carousel', id: 'card-container' });
   const loadingOverlay = createTag('sp-theme', { color: 'light', scale: 'medium', class: 'loading-overlay' }, '', { parent: carouselContainer });
   createTag('sp-progress-circle', { size: 'l', indeterminate: true }, '', { parent: loadingOverlay });

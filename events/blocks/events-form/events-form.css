@@ -624,6 +624,21 @@ color: white;
   background-color: #333;
 }
 
+/* Description in Event Card */
+.events-form .card-venue {
+  padding: 0;
+  font-size: .887rem;
+  line-height: 1.3125rem;
+  font-weight: 400;
+  color: #747474;
+  -webkit-line-clamp: 3;
+  text-align: left;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  -webkit-line-clamp: 3;
+}
+
 @media screen and (min-width: 900px) {
   .events-form .event-form-hero {
     flex-direction: row;
