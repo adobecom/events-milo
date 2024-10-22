@@ -154,6 +154,130 @@ function eventFormSendAnalytics(bp, view) {
   sendAnalytics(event);
 }
 
+async function fetchEvents() {
+  let events = [
+    {
+      title: 'Event 1',
+      description: 'This is a detailed description for event 1 that explains what the event is about.',
+      image: 'https://via.placeholder.com/300x150.png?text=Event+1',
+      date: 'Fri, Aug 09 | 02:00 AM - 04:30 AM GMT+5:30',
+    },
+    {
+      title: 'Event 2',
+      description: 'This is a detailed description for event 2 that explains what the event is about.',
+      image: 'https://via.placeholder.com/300x150.png?text=Event+2',
+      date: 'Sat, Aug 10 | 03:00 AM - 05:30 AM GMT+5:30',
+    },
+    {
+      title: 'Event 3',
+      description: 'This is a detailed description for event 3 that explains what the event is about.',
+      image: 'https://via.placeholder.com/300x150.png?text=Event+3',
+      date: 'Sun, Aug 11 | 01:00 AM - 03:30 AM GMT+5:30',
+    },
+    {
+      title: 'Event 4',
+      description: 'This is a detailed description for event 4 that explains what the event is about.',
+      image: 'https://via.placeholder.com/300x150.png?text=Event+4',
+      date: 'Mon, Aug 12 | 04:00 AM - 06:30 AM GMT+5:30',
+    },
+  ];
+  try {
+    const attendee = BlockMediator.get('attendee') ?? {};
+    const response = await fetch('http://localhost:3001/recommend-events', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        username: `${attendee.firstName} ${attendee.lastName}`,
+        jobTitle: attendee.jobTitle,
+        companyName: attendee.companyName,
+        eventName: getMetadata('event-title'),
+      }),
+    });
+
+    if (!response.ok) {
+      console.error(`Error fetching events: ${response.statusText}`);
+      return events;
+    }
+
+    events = await response.json();
+    return events;
+  } catch (error) {
+    console.error('Error fetching events:', error);
+    return events;
+  }
+}
+
+function createCard(event) {
+  const card = document.createElement('div');
+  card.classList.add('event-card');
+
+  const cardHeader = document.createElement('div');
+  cardHeader.classList.add('card-header');
+  const img = document.createElement('img');
+  img.src = event.image;
+  img.alt = event.title;
+
+  const cardContent = document.createElement('div');
+  cardContent.classList.add('card-content');
+
+  const title = document.createElement('h3');
+  title.classList.add('card-title');
+  title.textContent = event.title;
+
+  const description = document.createElement('p');
+  description.classList.add('card-description');
+  description.textContent = event.description;
+
+  const details = document.createElement('div');
+  details.classList.add('card-details');
+
+  const dateSpan = document.createElement('span');
+  dateSpan.textContent = event.date;
+  details.appendChild(dateSpan);
+
+  const viewEvent = document.createElement('a');
+  viewEvent.classList.add('consonant-BtnInfobit');
+  viewEvent.href = '#';
+
+  const buttonText = document.createElement('span');
+  buttonText.textContent = 'View Event';
+  viewEvent.appendChild(buttonText);
+  details.appendChild(viewEvent);
+
+  cardHeader.appendChild(img);
+  cardContent.appendChild(title);
+  cardContent.appendChild(description);
+  cardContent.appendChild(details);
+  //cardContent.appendChild(viewEvent);
+  card.appendChild(cardHeader);
+  card.appendChild(cardContent);
+
+  return card;
+}
+
+function displayCards(events, container) {
+  events.forEach((event) => {
+    const card = createCard(event);
+    container.appendChild(card);
+  });
+}
+
+async function decorateEventsRecommendations(screen) {
+  if (!screen) return;
+
+  const tag = createTag('section', { class: 'recommended-events' });
+  tag.append(createTag('div', { class: 'section-header' }, 'You May Be Interested In'));
+  const container2 = createTag('div', { class: 'carousel', id: 'card-container' });
+  tag.append(container2);
+
+  const events = await fetchEvents();
+  console.log('Event data:', events);
+
+  displayCards(events, container2);
+
+  screen.append(tag);
+}
+
 function createButton({ type, label }, bp) {
   const button = createTag('button', { class: 'button' }, label);
   if (type === 'submit') {
@@ -182,6 +306,11 @@ function createButton({ type, label }, bp) {
           }
           buildErrorMsg(bp.form, status);
         }
+
+        const list = [bp.rsvpSuccessScreen, bp.waitlistSuccessScreen]
+        await Promise.all(list.map(async (screen) => {
+          await decorateEventsRecommendations(screen);
+        }));
       }
     });
   }
@@ -352,113 +481,7 @@ function addTerms(form, terms) {
   submit.disabled = none(Array.from(checkboxes), (c) => c.checked);
 }
 
-async function fetchEvents() {
-  let events = [
-    {
-      title: 'Event 1',
-      description: 'This is a detailed description for event 1 that explains what the event is about.',
-      image: 'https://via.placeholder.com/300x150.png?text=Event+1',
-      date: 'Fri, Aug 09 | 02:00 AM - 04:30 AM GMT+5:30',
-    },
-    {
-      title: 'Event 2',
-      description: 'This is a detailed description for event 2 that explains what the event is about.',
-      image: 'https://via.placeholder.com/300x150.png?text=Event+2',
-      date: 'Sat, Aug 10 | 03:00 AM - 05:30 AM GMT+5:30',
-    },
-    {
-      title: 'Event 3',
-      description: 'This is a detailed description for event 3 that explains what the event is about.',
-      image: 'https://via.placeholder.com/300x150.png?text=Event+3',
-      date: 'Sun, Aug 11 | 01:00 AM - 03:30 AM GMT+5:30',
-    },
-    {
-      title: 'Event 4',
-      description: 'This is a detailed description for event 4 that explains what the event is about.',
-      image: 'https://via.placeholder.com/300x150.png?text=Event+4',
-      date: 'Mon, Aug 12 | 04:00 AM - 06:30 AM GMT+5:30',
-    },
-  ];
-  try {
-    const attendee = BlockMediator.get('attendee') ?? {};
-    const response = await fetch('http://localhost:3001/recommend-events', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        username: `${attendee.firstName} ${attendee.lastName}`,
-        jobTitle: attendee.jobTitle,
-        companyName: attendee.companyName,
-        eventName: getMetadata('event-title'),
-      }),
-    });
 
-    if (!response.ok) {
-      console.error(`Error fetching events: ${response.statusText}`);
-      return events;
-    }
-
-    events = await response.json();
-    return events;
-  } catch (error) {
-    console.error('Error fetching events:', error);
-    return events;
-  }
-}
-
-function createCard(event) {
-  const card = document.createElement('div');
-  card.classList.add('event-card');
-
-  const cardHeader = document.createElement('div');
-  cardHeader.classList.add('card-header');
-  const img = document.createElement('img');
-  img.src = event.image;
-  img.alt = event.title;
-
-  const cardContent = document.createElement('div');
-  cardContent.classList.add('card-content');
-
-  const title = document.createElement('h3');
-  title.classList.add('card-title');
-  title.textContent = event.title;
-
-  const description = document.createElement('p');
-  description.classList.add('card-description');
-  description.textContent = event.description;
-
-  const details = document.createElement('div');
-  details.classList.add('card-details');
-
-  const dateSpan = document.createElement('span');
-  dateSpan.textContent = event.date;
-  details.appendChild(dateSpan);
-
-  const viewEvent = document.createElement('a');
-  viewEvent.classList.add('consonant-BtnInfobit');
-  viewEvent.href = '#';
-
-  const buttonText = document.createElement('span');
-  buttonText.textContent = 'View Event';
-  viewEvent.appendChild(buttonText);
-  details.appendChild(viewEvent);
-
-  cardHeader.appendChild(img);
-  cardContent.appendChild(title);
-  cardContent.appendChild(description);
-  cardContent.appendChild(details);
-  //cardContent.appendChild(viewEvent);
-  card.appendChild(cardHeader);
-  card.appendChild(cardContent);
-
-  return card;
-}
-
-function displayCards(events, container) {
-  events.forEach((event) => {
-    const card = createCard(event);
-    container.appendChild(card);
-  });
-}
 
 async function decorateSuccessScreen(screen) {
   if (!screen) return;
@@ -553,18 +576,6 @@ async function decorateSuccessScreen(screen) {
   // const container2 = createTag('div', { class: 'carousel', id: 'card-container' });
   // tag.append(container2);
 
-
-  const tag = createTag('section', { class: 'recommended-events' });
-  tag.append(createTag('div', { class: 'section-header' }, 'You May Be Interested In'));
-  const container2 = createTag('div', { class: 'carousel', id: 'card-container' });
-  tag.append(container2);
-
-  const events = await fetchEvents();
-  console.log('Event data:', events);
-
-  displayCards(events, container2);
-
-  screen.append(tag);
   screen.classList.add('hidden');
 }
 
