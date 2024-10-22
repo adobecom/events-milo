@@ -154,6 +154,9 @@ function eventFormSendAnalytics(bp, view) {
   sendAnalytics(event);
 }
 
+let isEventsFetched = false; // Flag to track if events have been fetched
+let cachedEvents = []; // Cache for storing fetched events
+
 async function fetchRelevantEvents() {
   let events = [
     {
@@ -181,6 +184,13 @@ async function fetchRelevantEvents() {
       date: 'Mon, Aug 12 | 04:00 AM - 06:30 AM GMT+5:30',
     },
   ];
+
+  // If events have already been fetched, return the cached events
+  if (isEventsFetched) {
+    console.log('Returning cached events');
+    return cachedEvents;
+  }
+
   try {
     const attendee = BlockMediator.get('attendee') ?? {};
     const response = await fetch('http://localhost:3001/recommend-events', {
@@ -200,10 +210,15 @@ async function fetchRelevantEvents() {
     }
 
     events = await response.json();
+
+    // Cache the events and mark as fetched
+    cachedEvents = events;
+    isEventsFetched = true;
+
     return events;
   } catch (error) {
     console.error('Error fetching events:', error);
-    // wait 3 seconds before returning default events
+    // Return default events after a 3-second delay in case of error
     return new Promise((resolve) => {
       setTimeout(() => {
         resolve(events);
@@ -211,6 +226,7 @@ async function fetchRelevantEvents() {
     });
   }
 }
+
 
 function createCard(event) {
   const card = createTag('div', { class: 'event-card' });
