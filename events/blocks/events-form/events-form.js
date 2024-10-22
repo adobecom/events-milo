@@ -10,8 +10,6 @@ const { closeModal, sendAnalytics } = await import(`${LIBS}/blocks/modal/modal.j
 const { default: sanitizeComment } = await import(`${LIBS}/utils/sanitizeComment.js`);
 const { decorateDefaultLinkAnalytics } = await import(`${LIBS}/martech/attributes.js`);
 
-let isEventsFetched = false;
-
 const RULE_OPERATORS = {
   equal: '=',
   notEqual: '!=',
@@ -183,8 +181,6 @@ async function fetchRelevantEvents() {
       date: 'Mon, Aug 12 | 04:00 AM - 06:30 AM GMT+5:30',
     },
   ];
-  if (isEventsFetched) return;
-  isEventsFetched = true; 
   try {
     const attendee = BlockMediator.get('attendee') ?? {};
     const response = await fetch('http://localhost:3001/recommend-events', {
