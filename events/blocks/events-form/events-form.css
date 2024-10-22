@@ -531,6 +531,10 @@
   color: #747474;
   -webkit-line-clamp: 3;
   text-align: left;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  -webkit-line-clamp: 3;
 }
 
 /* Card Details (Date) */
@@ -595,6 +599,7 @@ transition: color .3s ease-in-out;
 width: max-content;
 margin-top: 15%;
 max-width: 100%;
+color: white;
 }
 
 .events-form .card-details .consonant-BtnInfobit:hover {
