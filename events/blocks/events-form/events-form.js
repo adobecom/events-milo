@@ -154,7 +154,7 @@ function eventFormSendAnalytics(bp, view) {
   sendAnalytics(event);
 }
 
-async function fetchEvents() {
+async function fetchRelevantEvents() {
   let events = [
     {
       title: 'Event 1',
@@ -203,54 +203,32 @@ async function fetchEvents() {
     return events;
   } catch (error) {
     console.error('Error fetching events:', error);
-    return events;
+    // wait 3 seconds before returning default events
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        resolve(events);
+      }, 3000);
+    });
   }
 }
 
 function createCard(event) {
-  const card = document.createElement('div');
-  card.classList.add('event-card');
+  const card = createTag('div', { class: 'event-card' });
+  const cardHeader = createTag('div', { class: 'card-header' });
+  const img = createTag('img', { src: event.image, alt: event.title });
+  const cardContent = createTag('div', { class: 'card-content' });
+  const title = createTag('h3', { class: 'card-title' }, event.title);
+  const description = createTag('p', { class: 'card-description' }, event.description);
+  const details = createTag('div', { class: 'card-details' });
+  const dateSpan = createTag('span', {}, event.date);
+  const viewEvent = createTag('a', { class: 'consonant-BtnInfobit', href: '#' });
+  const buttonText = createTag('span', {}, 'View Event');
 
-  const cardHeader = document.createElement('div');
-  cardHeader.classList.add('card-header');
-  const img = document.createElement('img');
-  img.src = event.image;
-  img.alt = event.title;
-
-  const cardContent = document.createElement('div');
-  cardContent.classList.add('card-content');
-
-  const title = document.createElement('h3');
-  title.classList.add('card-title');
-  title.textContent = event.title;
-
-  const description = document.createElement('p');
-  description.classList.add('card-description');
-  description.textContent = event.description;
-
-  const details = document.createElement('div');
-  details.classList.add('card-details');
-
-  const dateSpan = document.createElement('span');
-  dateSpan.textContent = event.date;
-  details.appendChild(dateSpan);
-
-  const viewEvent = document.createElement('a');
-  viewEvent.classList.add('consonant-BtnInfobit');
-  viewEvent.href = '#';
-
-  const buttonText = document.createElement('span');
-  buttonText.textContent = 'View Event';
-  viewEvent.appendChild(buttonText);
-  details.appendChild(viewEvent);
-
-  cardHeader.appendChild(img);
-  cardContent.appendChild(title);
-  cardContent.appendChild(description);
-  cardContent.appendChild(details);
-  //cardContent.appendChild(viewEvent);
-  card.appendChild(cardHeader);
-  card.appendChild(cardContent);
+  viewEvent.append(buttonText);
+  details.append(dateSpan, viewEvent);
+  cardHeader.append(img);
+  cardContent.append(title, description, details);
+  card.append(cardHeader, cardContent);
 
   return card;
 }
@@ -265,17 +243,27 @@ function displayCards(events, container) {
 async function decorateEventsRecommendations(screen) {
   if (!screen) return;
 
-  const tag = createTag('section', { class: 'recommended-events' });
+  const tag = createTag('section', { class: 'recommended-events loading' });
+  const loadingOverlay = createTag('sp-theme', { color: 'light', scale: 'medium', class: 'loading-overlay' });
+  createTag('sp-progress-circle', { size: 'l', indeterminate: true }, '', { parent: loadingOverlay });
   tag.append(createTag('div', { class: 'section-header' }, 'You May Be Interested In'));
-  const container2 = createTag('div', { class: 'carousel', id: 'card-container' });
-  tag.append(container2);
-
-  const events = await fetchEvents();
-  console.log('Event data:', events);
-
-  displayCards(events, container2);
+  const carouselContainer = createTag('div', { class: 'carousel', id: 'card-container' });
+  tag.append(carouselContainer);
 
   screen.append(tag);
+
+  await Promise.all([
+    import(`${LIBS}/deps/lit-all.min.js`),
+    import(`${LIBS}/features/spectrum-web-components/dist/theme.js`),
+    import(`${LIBS}/features/spectrum-web-components/dist/progress-circle.js`),
+  ]);
+
+  const events = await fetchRelevantEvents();
+  console.log('Event data:', events);
+
+  tag.classList.remove('loading');
+
+  displayCards(events, carouselContainer);
 }
 
 function createButton({ type, label }, bp) {
@@ -307,7 +295,7 @@ function createButton({ type, label }, bp) {
           buildErrorMsg(bp.form, status);
         }
 
-        const list = [bp.rsvpSuccessScreen, bp.waitlistSuccessScreen]
+        const list = [bp.rsvpSuccessScreen, bp.waitlistSuccessScreen];
         await Promise.all(list.map(async (screen) => {
           await decorateEventsRecommendations(screen);
         }));
@@ -480,8 +468,6 @@ function addTerms(form, terms) {
 
   submit.disabled = none(Array.from(checkboxes), (c) => c.checked);
 }
-
-
 
 async function decorateSuccessScreen(screen) {
   if (!screen) return;
