@@ -1,5 +1,6 @@
 import { getECCEnv, LIBS } from './utils.js';
 
+
 export const API_CONFIG = {
   esl: {
     dev: { host: 'https://wcms-events-service-layer-deploy-ethos102-stage-va-9c3ecd.stage.cloud.adobe.io' },
@@ -267,10 +268,8 @@ export async function deleteAttendeeFromEvent(eventId) {
 
 // compound helper functions
 export async function getAndCreateAndAddAttendee(eventId, attendeeData) {
-  const [attendeeResp, eventResp] = await Promise.all([
-    getAttendee(),
-    getEvent(eventId),
-  ]);
+  const attendeeResp = await getAttendee();
+  const eventData = BlockMediator.get('eventData');
 
   let attendee;
   let registrationStatus = 'registered';
@@ -285,6 +284,6 @@ export async function getAndCreateAndAddAttendee(eventId, attendeeData) {
 
   const newAttendeeData = attendee.data;
 
-  if (eventResp.data?.isFull) registrationStatus = 'waitlisted';
+  if (eventData?.isFull) registrationStatus = 'waitlisted';
   return addAttendeeToEvent(eventId, { ...newAttendeeData, registrationStatus });
 }
