@@ -284,9 +284,8 @@ export async function getAndCreateAndAddAttendee(eventId, attendeeData) {
   if (!attendee?.ok) return { ok: false, error: 'Failed to create or update attendee' };
 
   const newAttendeeData = attendee.data;
-
   BlockMediator.set('attendee', newAttendeeData);
 
-  if (eventResp.data?.attendeeLimit <= eventResp.data?.attendeeCount) registrationStatus = 'waitlisted';
+  if (eventResp.data?.isFull) registrationStatus = 'waitlisted';
   return addAttendeeToEvent(eventId, { ...newAttendeeData, registrationStatus });
 }
