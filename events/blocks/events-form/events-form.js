@@ -358,34 +358,37 @@ async function fetchEvents() {
       title: 'Event 1',
       description: 'This is a detailed description for event 1 that explains what the event is about.',
       image: 'https://via.placeholder.com/300x150.png?text=Event+1',
-      date: 'Fri, Aug 09 | 02:00 AM - 04:30 AM GMT+5:30'
+      date: 'Fri, Aug 09 | 02:00 AM - 04:30 AM GMT+5:30',
     },
     {
       title: 'Event 2',
       description: 'This is a detailed description for event 2 that explains what the event is about.',
       image: 'https://via.placeholder.com/300x150.png?text=Event+2',
-      date: 'Sat, Aug 10 | 03:00 AM - 05:30 AM GMT+5:30'
+      date: 'Sat, Aug 10 | 03:00 AM - 05:30 AM GMT+5:30',
     },
     {
       title: 'Event 3',
       description: 'This is a detailed description for event 3 that explains what the event is about.',
       image: 'https://via.placeholder.com/300x150.png?text=Event+3',
-      date: 'Sun, Aug 11 | 01:00 AM - 03:30 AM GMT+5:30'
+      date: 'Sun, Aug 11 | 01:00 AM - 03:30 AM GMT+5:30',
     },
     {
       title: 'Event 4',
       description: 'This is a detailed description for event 4 that explains what the event is about.',
       image: 'https://via.placeholder.com/300x150.png?text=Event+4',
-      date: 'Mon, Aug 12 | 04:00 AM - 06:30 AM GMT+5:30'
+      date: 'Mon, Aug 12 | 04:00 AM - 06:30 AM GMT+5:30',
     },
   ];
   try {
+    const attendee = BlockMediator.get('attendee') ?? {};
     const response = await fetch('http://localhost:3001/recommend-events', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        username: 'Eve',
-        eventName: 'Narrative Visions Conference',
+        username: `${attendee.firstName} ${attendee.lastName}`,
+        jobTitle: attendee.jobTitle,
+        companyName: attendee.companyName,
+        eventName: getMetadata('event-title'),
       }),
     });
 

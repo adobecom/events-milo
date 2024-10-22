@@ -1,3 +1,4 @@
+import BlockMediator from './deps/block-mediator.min.js';
 import { getECCEnv } from './utils.js';
 
 export const API_CONFIG = {
@@ -283,6 +284,8 @@ export async function getAndCreateAndAddAttendee(eventId, attendeeData) {
   if (!attendee?.ok) return { ok: false, error: 'Failed to create or update attendee' };
 
   const newAttendeeData = attendee.data;
+
+  BlockMediator.set('attendee', newAttendeeData);
 
   if (eventResp.data?.attendeeLimit <= eventResp.data?.attendeeCount) registrationStatus = 'waitlisted';
   return addAttendeeToEvent(eventId, { ...newAttendeeData, registrationStatus });
