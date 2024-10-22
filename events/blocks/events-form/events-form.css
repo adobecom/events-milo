@@ -592,7 +592,7 @@ overflow: hidden;
 transition: color .3s ease-in-out
 }
 
-.events-form .consonant-BtnInfobit:hover {
+.events-form .card-details .consonant-BtnInfobit:hover {
   background-color: #333;
 }
 
