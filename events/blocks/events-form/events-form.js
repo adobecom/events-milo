@@ -434,6 +434,7 @@ function createCard(event) {
   const buttonText = document.createElement('span');
   buttonText.textContent = 'View Event';
   viewEvent.appendChild(buttonText);
+  details.appendChild(viewEvent);
 
   cardHeader.appendChild(img);
   cardContent.appendChild(title);
