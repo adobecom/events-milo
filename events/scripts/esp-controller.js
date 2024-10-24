@@ -1,17 +1,17 @@
-import { getECCEnv, LIBS } from './utils.js';
+import { getEventServiceEnv, LIBS } from './utils.js';
 import BlockMediator from './deps/block-mediator.min.js';
 
-export const API_CONFIG = {
+const API_CONFIG = {
   esl: {
     dev: { host: 'https://wcms-events-service-layer-deploy-ethos102-stage-va-9c3ecd.stage.cloud.adobe.io' },
-    devO2: { host: 'https://wcms-events-service-layer-deploy-ethos102-stage-va-d5dc93.stage.cloud.adobe.io' },
+    dev02: { host: 'https://wcms-events-service-layer-deploy-ethos102-stage-va-d5dc93.stage.cloud.adobe.io' },
     stage: { host: 'https://events-service-layer-stage.adobe.io' },
     stage02: { host: 'https://events-service-layer-stage02.adobe.io' },
     prod: { host: 'https://events-service-layer.adobe.io' },
   },
   esp: {
     dev: { host: 'https://wcms-events-service-platform-deploy-ethos102-stage-caff5f.stage.cloud.adobe.io' },
-    devO2: { host: 'https://wcms-events-service-platform-deploy-ethos102-stage-c81eb6.stage.cloud.adobe.io' },
+    dev02: { host: 'https://wcms-events-service-platform-deploy-ethos102-stage-c81eb6.stage.cloud.adobe.io' },
     stage: { host: 'https://events-service-platform-stage.adobe.io' },
     stage02: { host: 'https://events-service-platform-stage02.adobe.io' },
     prod: { host: 'https://events-service-platform.adobe.io' },
@@ -85,7 +85,7 @@ export async function constructRequestOptions(method, body = null) {
 }
 
 export async function getEvent(eventId) {
-  const { host } = API_CONFIG.esp[getECCEnv()];
+  const { host } = API_CONFIG.esp[getEventServiceEnv()];
   const options = await constructRequestOptions('GET');
 
   try {
@@ -105,7 +105,7 @@ export async function getEvent(eventId) {
 }
 
 export async function getEventAttendee(eventId) {
-  const { host } = API_CONFIG.esp[getECCEnv()];
+  const { host } = API_CONFIG.esp[getEventServiceEnv()];
   const options = await constructRequestOptions('GET');
 
   try {
@@ -135,7 +135,7 @@ export async function getEventAttendee(eventId) {
 }
 
 export async function getAttendee() {
-  const { host } = API_CONFIG.esl[getECCEnv()];
+  const { host } = API_CONFIG.esl[getEventServiceEnv()];
   const options = await constructRequestOptions('GET');
 
   try {
@@ -167,7 +167,7 @@ export async function getAttendee() {
 export async function createAttendee(attendeeData) {
   if (!attendeeData) return false;
 
-  const { host } = API_CONFIG.esl[getECCEnv()];
+  const { host } = API_CONFIG.esl[getEventServiceEnv()];
   const raw = JSON.stringify(attendeeData);
   const options = await constructRequestOptions('POST', raw);
 
@@ -191,7 +191,7 @@ export async function addAttendeeToEvent(eventId, attendee) {
   if (!eventId || !attendee) return false;
 
   const { firstName, lastName, email, registrationStatus } = attendee;
-  const { host } = API_CONFIG.esl[getECCEnv()];
+  const { host } = API_CONFIG.esl[getEventServiceEnv()];
   const raw = JSON.stringify({ firstName, lastName, email, registrationStatus });
   const options = await constructRequestOptions('POST', raw);
 
@@ -214,7 +214,7 @@ export async function addAttendeeToEvent(eventId, attendee) {
 export async function updateAttendee(attendeeData) {
   if (!attendeeData) return false;
 
-  const { host } = API_CONFIG.esl[getECCEnv()];
+  const { host } = API_CONFIG.esl[getEventServiceEnv()];
   const raw = JSON.stringify(attendeeData);
   const options = await constructRequestOptions('PUT', raw);
 
@@ -237,7 +237,7 @@ export async function updateAttendee(attendeeData) {
 export async function deleteAttendeeFromEvent(eventId) {
   if (!eventId) return false;
 
-  const { host } = API_CONFIG.esl[getECCEnv()];
+  const { host } = API_CONFIG.esl[getEventServiceEnv()];
   const options = await constructRequestOptions('DELETE');
 
   try {
