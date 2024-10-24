@@ -399,13 +399,18 @@ function decorateSuccessScreen(screen) {
 
           if (cta.classList.contains('cancel-button')) {
             const resp = await deleteAttendeeFromEvent(getMetadata('event-id'));
-            if (!resp.ok) return;
+            cta.classList.remove('loading');
+
+            if (!resp.ok) {
+              buildErrorMsg(screen, resp.status);
+              return;
+            }
 
             const { data } = resp;
+            const espStatus = data?.espProvider?.status;
 
-            cta.classList.remove('loading');
-            if (data?.espProvider?.status !== 204) {
-              buildErrorMsg(screen);
+            if ((espStatus && espStatus !== 204)) {
+              buildErrorMsg(screen, espStatus);
               return;
             }
 
