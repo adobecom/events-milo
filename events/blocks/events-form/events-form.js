@@ -172,20 +172,16 @@ function createButton({ type, label }, bp) {
         if (respJson.ok) {
           eventFormSendAnalytics(bp, 'Form Submit');
         } else {
-          let { status } = respJson;
+          const { status } = respJson;
 
-          // FIXME: temporary fix for ESL 500 on ESP 400
-          if (!status || status === 500) {
-            if (respJson.error?.message === 'Request to ESP failed: Event is full') {
-              status = 400;
-
-              const eventResp = await getEvent(getMetadata('event-id'));
-              if (eventResp.ok && eventResp.data?.isFull) {
-                button.textContent = await miloReplaceKey(LIBS, 'waitlist-cta-text');
-                BlockMediator.set('eventData', eventResp.data);
-              }
+          if (status === 400 && respJson.error?.message === 'Request to ESP failed: Event is full') {
+            const eventResp = await getEvent(getMetadata('event-id'));
+            if (eventResp.ok && eventResp.data?.isFull) {
+              button.textContent = await miloReplaceKey(LIBS, 'waitlist-cta-text');
+              BlockMediator.set('eventData', eventResp.data);
             }
           }
+
           buildErrorMsg(bp.form, status);
         }
       }
