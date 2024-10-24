@@ -79,15 +79,17 @@
   font-style: normal;
   font-weight: 400;
   margin-top: 0;
+  margin-bottom: 8px;
 }
 
 .profile-cards .card-name {
-  margin-top: -6px;
+  margin-top: 0;
   font-size: var(--type-heading-l-size);
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   align-self: stretch;
+  margin-bottom: 14px;
 }
 
 .profile-cards .card-desc {
@@ -97,7 +99,7 @@
   font-style: normal;
   font-weight: 400;
   line-height: 21px;
-  margin-top: -15px;
+  margin-top: 0;
 }
 
 .profile-cards .card-social-icons {
@@ -107,6 +109,7 @@
   list-style: none;
   padding: 0;
   margin: 0;
+  margin-top: 4px;
 }
 
 .profile-cards .card-social-icon {

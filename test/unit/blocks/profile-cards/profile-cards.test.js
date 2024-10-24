@@ -1,6 +1,6 @@
 import { expect } from '@esm-bundle/chai';
 import { readFile } from '@web/test-runner-commands';
-import init from '../../../../events/blocks/profile-cards/profile-cards.js';
+import init, { createSocialIcon } from '../../../../events/blocks/profile-cards/profile-cards.js';
 
 const head = await readFile({ path: './mocks/head.html' });
 const body = await readFile({ path: './mocks/default.html' });
@@ -43,6 +43,25 @@ describe('Profile Cards Module', () => {
       expect(el).to.not.be.null;
       expect(hostCards).to.have.lengthOf(1);
       expect(el.classList.contains('single')).to.be.true;
+    });
+
+    it('show remove block if no related profile types found', () => {
+      const el = document.querySelector('#keynotes-cards');
+      init(el);
+
+      const noSpeakers = document.querySelector('#keynotes-cards');
+
+      expect(noSpeakers).to.be.null;
+    });
+  });
+
+  describe('createSocialIcon', () => {
+    it('should return a social icon element', () => {
+      const icon = createSocialIcon(document.createElement('svg'), 'facebook');
+      const iconAlt = icon.getAttribute('alt');
+
+      expect(icon).to.not.be.null;
+      expect(iconAlt).to.equal('facebook logo');
     });
   });
 });
