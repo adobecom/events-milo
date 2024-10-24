@@ -172,20 +172,16 @@ function createButton({ type, label }, bp) {
         if (respJson.ok) {
           eventFormSendAnalytics(bp, 'Form Submit');
         } else {
-          let { status } = respJson;
+          const { status } = respJson;
 
-          // FIXME: temporary fix for ESL 500 on ESP 400
-          if (!status || status === 500) {
-            if (respJson.error?.message === 'Request to ESP failed: Event is full') {
-              status = 400;
-
-              const eventResp = await getEvent(getMetadata('event-id'));
-              if (eventResp.ok && eventResp.data?.isFull) {
-                button.textContent = await miloReplaceKey(LIBS, 'waitlist-cta-text');
-                BlockMediator.set('eventData', eventResp.data);
-              }
+          if (status === 400 && respJson.error?.message === 'Request to ESP failed: Event is full') {
+            const eventResp = await getEvent(getMetadata('event-id'));
+            if (eventResp.ok && eventResp.data?.isFull) {
+              button.textContent = await miloReplaceKey(LIBS, 'waitlist-cta-text');
+              BlockMediator.set('eventData', eventResp.data);
             }
           }
+
           buildErrorMsg(bp.form, status);
         }
       }
@@ -403,13 +399,18 @@ function decorateSuccessScreen(screen) {
 
           if (cta.classList.contains('cancel-button')) {
             const resp = await deleteAttendeeFromEvent(getMetadata('event-id'));
-            if (!resp.ok) return;
+            cta.classList.remove('loading');
+
+            if (!resp.ok) {
+              buildErrorMsg(screen, resp.status);
+              return;
+            }
 
             const { data } = resp;
+            const espStatus = data?.espProvider?.status;
 
-            cta.classList.remove('loading');
-            if (data?.espProvider?.status !== 204) {
-              buildErrorMsg(screen);
+            if ((espStatus && espStatus !== 204)) {
+              buildErrorMsg(screen, espStatus);
               return;
             }
 
