@@ -8,7 +8,7 @@ export const LIBS = (() => {
   return branch.includes('--') ? `https://${branch}.hlx.live/libs` : `https://${branch}--milo--adobecom.hlx.live/libs`;
 })();
 
-export function getECCEnv() {
+export function getEventServiceEnv() {
   const validEnvs = ['dev', 'stage', 'prod'];
   const { host, search } = window.location;
   const SLD = host.includes('.aem.') ? 'aem' : 'hlx';
@@ -19,7 +19,7 @@ export function getECCEnv() {
 
   if ((host.includes(`${SLD}.page`) || host.includes(`${SLD}.live`))) {
     if (host.startsWith('dev--')) return 'dev';
-    if (host.startsWith('dev02--')) return 'dev02';
+    if (host.startsWith('dev02--') || host.startsWith('main02--')) return 'dev02';
     if (host.startsWith('stage--')) return 'stage';
     if (host.startsWith('stage02--')) return 'stage02';
     if (host.startsWith('main--')) return 'prod';
@@ -32,7 +32,6 @@ export function getECCEnv() {
     || host.includes('graybox.adobe')) return 'stage';
 
   if (host.endsWith('adobe.com')) return 'prod';
-
   // fallback to dev
   return 'dev';
 }

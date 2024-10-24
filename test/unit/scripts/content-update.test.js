@@ -126,18 +126,12 @@ describe('updateRSVPButtonState', () => {
       originalText: 'RSVP',
     };
 
-    let eventInfo = {
-      attendeeLimit: 100,
-      attendeeCount: 0,
-    };
+    let eventInfo = { isFull: false };
 
     await updateRSVPButtonState(rsvpBtn, LIBS, eventInfo);
     expect(rsvpBtn.el.textContent).to.equal('RSVP');
 
-    eventInfo = {
-      attendeeLimit: 100,
-      attendeeCount: 100,
-    };
+    eventInfo = { isFull: true };
     await updateRSVPButtonState(rsvpBtn, LIBS, eventInfo);
     BlockMediator.set('rsvpData', { ok: false, error: { message: 'Request to ESP failed: Event is full' } });
     await updateRSVPButtonState(rsvpBtn, LIBS, eventInfo);

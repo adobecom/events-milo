@@ -1,8 +1,8 @@
-import { LIBS, getMetadata } from '../../scripts/utils.js';
+import { LIBS, getMetadata, getSusiOptions } from '../../scripts/utils.js';
 import HtmlSanitizer from '../../scripts/deps/html-sanitizer.js';
-import { deleteAttendeeFromEvent, getAndCreateAndAddAttendee } from '../../scripts/esp-controller.js';
+import { deleteAttendeeFromEvent, getAndCreateAndAddAttendee, getEvent } from '../../scripts/esp-controller.js';
 import BlockMediator from '../../scripts/deps/block-mediator.min.js';
-import { miloReplaceKey } from '../../scripts/content-update.js';
+import { miloReplaceKey, signIn } from '../../scripts/content-update.js';
 import decorateArea from '../../scripts/scripts.js';
 
 const { createTag } = await import(`${LIBS}/utils/utils.js`);
@@ -178,6 +178,12 @@ function createButton({ type, label }, bp) {
           if (!status || status === 500) {
             if (respJson.error?.message === 'Request to ESP failed: Event is full') {
               status = 400;
+
+              const eventResp = await getEvent(getMetadata('event-id'));
+              if (eventResp.ok && eventResp.data?.isFull) {
+                button.textContent = await miloReplaceKey(LIBS, 'waitlist-cta-text');
+                BlockMediator.set('eventData', eventResp.data);
+              }
             }
           }
           buildErrorMsg(bp.form, status);
@@ -597,19 +603,28 @@ function initFormBasedOnRSVPData(bp) {
 async function onProfile(bp, formData) {
   const { block, eventHero } = bp;
   const profile = BlockMediator.get('imsProfile');
+  const { getConfig } = await import(`${LIBS}/utils/utils.js`);
 
-  if (profile && !profile.noProfile) {
-    eventHero.classList.remove('loading');
-    decorateHero(bp.eventHero);
-    buildEventform(bp, formData).then(() => {
-      initFormBasedOnRSVPData(bp);
-    }).finally(() => {
-      decorateDefaultLinkAnalytics(block);
-      block.classList.remove('loading');
-    });
-  } else if (!profile) {
+  if (profile) {
+    if (profile.noProfile && /#rsvp-form.*/.test(window.location.hash)) {
+      // TODO: also check for guestCheckout enablement for future iterations
+      signIn(getSusiOptions(getConfig()));
+    } else {
+      eventHero.classList.remove('loading');
+      decorateHero(bp.eventHero);
+      buildEventform(bp, formData).then(() => {
+        initFormBasedOnRSVPData(bp);
+      }).finally(() => {
+        decorateDefaultLinkAnalytics(block);
+        block.classList.remove('loading');
+      });
+    }
+  } else {
     BlockMediator.subscribe('imsProfile', ({ newValue }) => {
-      if (newValue && !newValue.noProfile) {
+      if (newValue?.noProfile && /#rsvp-form.*/.test(window.location.hash)) {
+        // TODO: also check for guestCheckout enablement for future iterations
+        signIn(getSusiOptions(getConfig()));
+      } else {
         eventHero.classList.remove('loading');
         decorateHero(bp.eventHero);
         buildEventform(bp, formData).then(() => {

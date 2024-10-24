@@ -8,7 +8,7 @@ import {
   getIcon,
   readBlockConfig,
   getSusiOptions,
-  getECCEnv,
+  getEventServiceEnv,
 } from './utils.js';
 
 const preserveFormatKeys = [
@@ -91,11 +91,12 @@ function createTag(tag, attributes, html, options = {}) {
   return el;
 }
 
-export async function updateRSVPButtonState(rsvpBtn, miloLibs, eventInfo) {
+export async function updateRSVPButtonState(rsvpBtn, miloLibs) {
   const rsvpData = BlockMediator.get('rsvpData');
+  const eventInfo = BlockMediator.get('eventData');
   const checkRed = getIcon('check-circle-red');
   let eventFull = false;
-  if (eventInfo) eventFull = +eventInfo.attendeeLimit <= +eventInfo.attendeeCount;
+  if (eventInfo) eventFull = eventInfo.isFull;
 
   const enableBtn = () => {
     rsvpBtn.el.classList.remove('disabled');
@@ -183,8 +184,9 @@ async function handleRSVPBtnBasedOnProfile(rsvpBtn, miloLibs, profile) {
   const resp = await getEvent(getMetadata('event-id'));
   if (!resp) return;
   const eventInfo = resp.data;
+  BlockMediator.set('eventData', eventInfo);
   if (profile?.noProfile || resp.status === 401) {
-    if (eventInfo && +eventInfo.attendeeLimit <= +eventInfo.attendeeCount) {
+    if (eventInfo?.isFull) {
       const eventFullText = await miloReplaceKey(miloLibs, 'event-full-cta-text');
       updateAnalyticTag(rsvpBtn.el, eventFullText);
       rsvpBtn.el.setAttribute('tabindex', -1);
@@ -201,17 +203,21 @@ async function handleRSVPBtnBasedOnProfile(rsvpBtn, miloLibs, profile) {
       });
     }
   } else if (profile) {
-    await updateRSVPButtonState(rsvpBtn, miloLibs, eventInfo);
+    await updateRSVPButtonState(rsvpBtn, miloLibs);
 
     BlockMediator.subscribe('rsvpData', () => {
-      updateRSVPButtonState(rsvpBtn, miloLibs, eventInfo);
+      updateRSVPButtonState(rsvpBtn, miloLibs);
+    });
+
+    BlockMediator.subscribe('eventData', () => {
+      updateRSVPButtonState(rsvpBtn, miloLibs);
     });
   }
 }
 
 export async function validatePageAndRedirect(miloLibs) {
   const { getConfig } = await import(`${miloLibs}/utils/utils.js`);
-  const env = getECCEnv();
+  const env = getEventServiceEnv();
   const pagePublished = getMetadata('published') === 'true' || getMetadata('status') === 'live';
   const invalidStagePage = env === 'stage' && window.location.hostname === 'www.stage.adobe.com' && !getMetadata('event-id');
   const isPreviewMode = new URLSearchParams(window.location.search).get('previewMode');
@@ -660,5 +666,5 @@ export default function autoUpdateContent(parent, miloDeps, extraData) {
   autoUpdateLinks(parent, miloLibs);
   injectFragments(parent);
   decorateProfileCardsZPattern(parent);
-  if (getECCEnv() !== 'prod') updateExtraMetaTags(parent);
+  if (getEventServiceEnv() !== 'prod') updateExtraMetaTags(parent);
 }
