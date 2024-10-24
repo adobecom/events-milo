@@ -8,7 +8,7 @@ import {
   getIcon,
   readBlockConfig,
   getSusiOptions,
-  getECCEnv,
+  getEventServiceEnv,
 } from './utils.js';
 
 const preserveFormatKeys = [
@@ -217,7 +217,7 @@ async function handleRSVPBtnBasedOnProfile(rsvpBtn, miloLibs, profile) {
 
 export async function validatePageAndRedirect(miloLibs) {
   const { getConfig } = await import(`${miloLibs}/utils/utils.js`);
-  const env = getECCEnv();
+  const env = getEventServiceEnv();
   const pagePublished = getMetadata('published') === 'true' || getMetadata('status') === 'live';
   const invalidStagePage = env === 'stage' && window.location.hostname === 'www.stage.adobe.com' && !getMetadata('event-id');
   const isPreviewMode = new URLSearchParams(window.location.search).get('previewMode');
@@ -666,5 +666,5 @@ export default function autoUpdateContent(parent, miloDeps, extraData) {
   autoUpdateLinks(parent, miloLibs);
   injectFragments(parent);
   decorateProfileCardsZPattern(parent);
-  if (getECCEnv() !== 'prod') updateExtraMetaTags(parent);
+  if (getEventServiceEnv() !== 'prod') updateExtraMetaTags(parent);
 }

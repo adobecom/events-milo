@@ -12,7 +12,7 @@
 
 import { lazyCaptureProfile } from './profile.js';
 import autoUpdateContent, { getNonProdData, validatePageAndRedirect } from './content-update.js';
-import { getSusiOptions, setMetadata, getMetadata, getECCEnv, LIBS } from './utils.js';
+import { getSusiOptions, setMetadata, getMetadata, getEventServiceEnv, LIBS } from './utils.js';
 
 const { loadArea, setConfig, updateConfig, getConfig, loadLana } = await import(`${LIBS}/utils/utils.js`);
 
@@ -93,7 +93,7 @@ function renderWithNonProdMetadata() {
 
   if (!isEventDetailsPage) return false;
 
-  const isLiveProd = getECCEnv() === 'prod' && window.location.hostname === 'www.adobe.com';
+  const isLiveProd = getEventServiceEnv() === 'prod' && window.location.hostname === 'www.adobe.com';
   const isMissingEventId = !getMetadata('event-id');
 
   if (!isLiveProd && isMissingEventId) return true;
@@ -107,7 +107,7 @@ function renderWithNonProdMetadata() {
 
 async function fetchAndDecorateArea() {
   // Load non-prod data for stage and dev environments
-  const nonProdData = await getNonProdData(getECCEnv());
+  const nonProdData = await getNonProdData(getEventServiceEnv());
   if (!nonProdData) return;
   Object.entries(nonProdData).forEach(([key, value]) => {
     setMetadata(key, value);
