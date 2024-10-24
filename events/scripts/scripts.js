@@ -83,6 +83,11 @@ const CONFIG = {
     de: { ietf: 'de-DE', tk: 'hah7vzn.css' },
     kr: { ietf: 'ko-KR', tk: 'zfo3ouc' },
   },
+  adobeid: {
+    onTokenExpired: () => {
+      window.locaton.reload();
+    },
+  },
 };
 
 const MILO_CONFIG = setConfig({ ...CONFIG });
