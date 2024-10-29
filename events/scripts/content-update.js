@@ -198,15 +198,13 @@ async function handleRSVPBtnBasedOnProfile(rsvpBtn, miloLibs, profile) {
         await setCtaState('eventClosed', rsvpBtn, miloLibs);
       }
     } else {
-      updateAnalyticTag(rsvpBtn.el, rsvpBtn.originalText);
-      rsvpBtn.el.textContent = rsvpBtn.originalText;
-      rsvpBtn.el.classList.remove('disabled');
-      rsvpBtn.el.setAttribute('tabindex', 0);
-      rsvpBtn.el.addEventListener('click', (e) => {
-        e.preventDefault();
-        signIn(getSusiOptions(getConfig()));
-      });
+      await setCtaState('default', rsvpBtn, miloLibs);
     }
+    // TODO: add condition once guest checkout is available
+    rsvpBtn.el.addEventListener('click', (e) => {
+      e.preventDefault();
+      signIn(getSusiOptions(getConfig()));
+    });
   } else if (profile) {
     await updateRSVPButtonState(rsvpBtn, miloLibs);
 
