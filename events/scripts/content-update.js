@@ -96,7 +96,12 @@ export async function updateRSVPButtonState(rsvpBtn, miloLibs) {
   const eventInfo = BlockMediator.get('eventData');
   const checkRed = getIcon('check-circle-red');
   let eventFull = false;
-  if (eventInfo) eventFull = eventInfo.isFull;
+  let allowWaitlisting = getMetadata('allow-wait-listing') === 'true';
+
+  if (eventInfo) {
+    eventFull = eventInfo.isFull;
+    allowWaitlisting = eventInfo.allowWaitlisting;
+  }
 
   const enableBtn = () => {
     rsvpBtn.el.classList.remove('disabled');
@@ -150,7 +155,7 @@ export async function updateRSVPButtonState(rsvpBtn, miloLibs) {
 
   if (!rsvpData) {
     if (eventFull) {
-      if (eventInfo?.allowWaitlisting) {
+      if (allowWaitlisting) {
         await waitlistState();
       } else {
         await closedState();
@@ -163,9 +168,12 @@ export async function updateRSVPButtonState(rsvpBtn, miloLibs) {
   } else if (rsvpData.registrationStatus === 'waitlisted') {
     await waitlistedState();
   } else if (!rsvpData.ok) {
-    // FIXME: temporary solution for ESL returning 500 on ESP 400 response
     if (rsvpData.error?.message === 'Request to ESP failed: Event is full') {
-      await closedState();
+      if (allowWaitlisting) {
+        await waitlistState();
+      } else {
+        await closedState();
+      }
     }
   }
 }
@@ -179,40 +187,21 @@ export function signIn(options) {
   window.adobeIMS?.signIn(options);
 }
 
-async function handleRSVPBtnBasedOnProfile(rsvpBtn, miloLibs, profile) {
-  const { getConfig } = await import(`${miloLibs}/utils/utils.js`);
+async function handleRSVPBtnBasedOnProfile(rsvpBtn, miloLibs) {
   const resp = await getEvent(getMetadata('event-id'));
   if (!resp) return;
+
   const eventInfo = resp.data;
   BlockMediator.set('eventData', eventInfo);
-  if (profile?.noProfile || resp.status === 401) {
-    if (eventInfo?.isFull) {
-      const eventFullText = await miloReplaceKey(miloLibs, 'event-full-cta-text');
-      updateAnalyticTag(rsvpBtn.el, eventFullText);
-      rsvpBtn.el.setAttribute('tabindex', -1);
-      rsvpBtn.el.href = '';
-      rsvpBtn.el.textContent = eventFullText;
-    } else {
-      updateAnalyticTag(rsvpBtn.el, rsvpBtn.originalText);
-      rsvpBtn.el.textContent = rsvpBtn.originalText;
-      rsvpBtn.el.classList.remove('disabled');
-      rsvpBtn.el.setAttribute('tabindex', 0);
-      rsvpBtn.el.addEventListener('click', (e) => {
-        e.preventDefault();
-        signIn(getSusiOptions(getConfig()));
-      });
-    }
-  } else if (profile) {
-    await updateRSVPButtonState(rsvpBtn, miloLibs);
+  await updateRSVPButtonState(rsvpBtn, miloLibs);
 
-    BlockMediator.subscribe('rsvpData', () => {
-      updateRSVPButtonState(rsvpBtn, miloLibs);
-    });
+  BlockMediator.subscribe('rsvpData', () => {
+    updateRSVPButtonState(rsvpBtn, miloLibs);
+  });
 
-    BlockMediator.subscribe('eventData', () => {
-      updateRSVPButtonState(rsvpBtn, miloLibs);
-    });
-  }
+  BlockMediator.subscribe('eventData', () => {
+    updateRSVPButtonState(rsvpBtn, miloLibs);
+  });
 }
 
 export async function validatePageAndRedirect(miloLibs) {
