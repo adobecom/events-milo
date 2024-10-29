@@ -69,6 +69,58 @@ function convertEccIcon(n) {
   });
 }
 
+function setCtaState(targetState, rsvpBtn, miloLibs, icon = null) {
+  const enableBtn = () => {
+    rsvpBtn.el.classList.remove('disabled');
+    rsvpBtn.el.setAttribute('tabindex', 0);
+  };
+
+  const disableBtn = () => {
+    rsvpBtn.el.setAttribute('tabindex', -1);
+    rsvpBtn.el.href = '';
+    rsvpBtn.el.classList.add('disabled');
+  };
+
+  const stateTrigger = {
+    registered: async () => {
+      const registeredText = await miloReplaceKey(miloLibs, 'registered-cta-text');
+      enableBtn();
+      updateAnalyticTag(rsvpBtn.el, registeredText);
+      rsvpBtn.el.textContent = registeredText;
+      if (icon) rsvpBtn.el.prepend(icon);
+    },
+    waitlisted: async () => {
+      const waitlistedText = await miloReplaceKey(miloLibs, 'waitlisted-cta-text');
+      enableBtn();
+      updateAnalyticTag(rsvpBtn.el, waitlistedText);
+      rsvpBtn.el.textContent = waitlistedText;
+      if (icon) rsvpBtn.el.prepend(icon);
+    },
+    toWaitlist: async () => {
+      const waitlistText = await miloReplaceKey(miloLibs, 'waitlist-cta-text');
+      enableBtn();
+      updateAnalyticTag(rsvpBtn.el, waitlistText);
+      rsvpBtn.el.textContent = waitlistText;
+      icon?.remove();
+    },
+    eventClosed: async () => {
+      const closedText = await miloReplaceKey(miloLibs, 'event-full-cta-text');
+      disableBtn();
+      updateAnalyticTag(rsvpBtn.el, closedText);
+      rsvpBtn.el.textContent = closedText;
+      icon?.remove();
+    },
+    default: async () => {
+      enableBtn();
+      updateAnalyticTag(rsvpBtn.el, rsvpBtn.originalText);
+      rsvpBtn.el.textContent = rsvpBtn.originalText;
+      icon?.remove();
+    },
+  };
+
+  stateTrigger[targetState]();
+}
+
 function createTag(tag, attributes, html, options = {}) {
   const el = document.createElement(tag);
   if (html) {
@@ -103,70 +155,20 @@ export async function updateRSVPButtonState(rsvpBtn, miloLibs) {
     allowWaitlisting = eventInfo.allowWaitlisting;
   }
 
-  const enableBtn = () => {
-    rsvpBtn.el.classList.remove('disabled');
-    rsvpBtn.el.setAttribute('tabindex', 0);
-  };
-
-  const disableBtn = () => {
-    rsvpBtn.el.setAttribute('tabindex', -1);
-    rsvpBtn.el.href = '';
-    rsvpBtn.el.classList.add('disabled');
-  };
-
-  const closedState = async () => {
-    const closedText = await miloReplaceKey(miloLibs, 'event-full-cta-text');
-    disableBtn();
-    updateAnalyticTag(rsvpBtn.el, closedText);
-    rsvpBtn.el.textContent = closedText;
-    checkRed.remove();
-  };
-
-  const defaultState = () => {
-    enableBtn();
-    updateAnalyticTag(rsvpBtn.el, rsvpBtn.originalText);
-    rsvpBtn.el.textContent = rsvpBtn.originalText;
-    checkRed.remove();
-  };
-
-  const registeredState = async () => {
-    const registeredText = await miloReplaceKey(miloLibs, 'registered-cta-text');
-    enableBtn();
-    updateAnalyticTag(rsvpBtn.el, registeredText);
-    rsvpBtn.el.textContent = registeredText;
-    rsvpBtn.el.prepend(checkRed);
-  };
-
-  const waitlistState = async () => {
-    const waitlistText = await miloReplaceKey(miloLibs, 'waitlist-cta-text');
-    enableBtn();
-    updateAnalyticTag(rsvpBtn.el, waitlistText);
-    rsvpBtn.el.textContent = waitlistText;
-    checkRed.remove();
-  };
-
-  const waitlistedState = async () => {
-    const waitlistedText = await miloReplaceKey(miloLibs, 'waitlisted-cta-text');
-    enableBtn();
-    updateAnalyticTag(rsvpBtn.el, waitlistedText);
-    rsvpBtn.el.textContent = waitlistedText;
-    rsvpBtn.el.prepend(checkRed);
-  };
-
   if (!rsvpData) {
     if (eventFull) {
       if (allowWaitlisting) {
-        await waitlistState();
+        await setCtaState('toWaitlist', rsvpBtn, miloLibs, checkRed);
       } else {
-        await closedState();
+        await setCtaState('eventClosed', rsvpBtn, miloLibs, checkRed);
       }
     } else {
-      defaultState();
+      await setCtaState('default', rsvpBtn, miloLibs);
     }
   } else if (rsvpData.registrationStatus === 'registered') {
-    await registeredState();
+    await setCtaState('registered', rsvpBtn, miloLibs, checkRed);
   } else if (rsvpData.registrationStatus === 'waitlisted') {
-    await waitlistedState();
+    await setCtaState('waitlisted', rsvpBtn, miloLibs, checkRed);
   }
 }
 
@@ -179,21 +181,43 @@ export function signIn(options) {
   window.adobeIMS?.signIn(options);
 }
 
-async function handleRSVPBtnBasedOnProfile(rsvpBtn, miloLibs) {
+async function handleRSVPBtnBasedOnProfile(rsvpBtn, miloLibs, profile) {
+  const { getConfig } = await import(`${miloLibs}/utils/utils.js`);
   const resp = await getEvent(getMetadata('event-id'));
+  let allowWaitlisting = getMetadata('allow-wait-listing') === 'true';
   if (!resp) return;
 
   const eventInfo = resp.data;
   BlockMediator.set('eventData', eventInfo);
-  await updateRSVPButtonState(rsvpBtn, miloLibs);
+  if (profile?.noProfile || resp.status === 401) {
+    if (eventInfo && eventInfo.isFull) {
+      allowWaitlisting = eventInfo.allowWaitlisting;
+      if (allowWaitlisting) {
+        await setCtaState('toWaitlist', rsvpBtn, miloLibs);
+      } else {
+        await setCtaState('eventClosed', rsvpBtn, miloLibs);
+      }
+    } else {
+      updateAnalyticTag(rsvpBtn.el, rsvpBtn.originalText);
+      rsvpBtn.el.textContent = rsvpBtn.originalText;
+      rsvpBtn.el.classList.remove('disabled');
+      rsvpBtn.el.setAttribute('tabindex', 0);
+      rsvpBtn.el.addEventListener('click', (e) => {
+        e.preventDefault();
+        signIn(getSusiOptions(getConfig()));
+      });
+    }
+  } else if (profile) {
+    await updateRSVPButtonState(rsvpBtn, miloLibs);
 
-  BlockMediator.subscribe('rsvpData', () => {
-    updateRSVPButtonState(rsvpBtn, miloLibs);
-  });
+    BlockMediator.subscribe('rsvpData', () => {
+      updateRSVPButtonState(rsvpBtn, miloLibs);
+    });
 
-  BlockMediator.subscribe('eventData', () => {
-    updateRSVPButtonState(rsvpBtn, miloLibs);
-  });
+    BlockMediator.subscribe('eventData', () => {
+      updateRSVPButtonState(rsvpBtn, miloLibs);
+    });
+  }
 }
 
 export async function validatePageAndRedirect(miloLibs) {
