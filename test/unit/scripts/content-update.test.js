@@ -88,7 +88,7 @@ describe('Content Update Script', () => {
 
     const buttonOriginalText = document.querySelector('a[href$="#rsvp-form-1"]').textContent;
     autoUpdateContent(document, miloDeps);
-    BlockMediator.set('rsvpData', { ok: true, data: { status: { registered: false } } });
+    BlockMediator.set('rsvpData', null);
 
     expect(document.querySelector('a[href$="#rsvp-form-1"]').textContent).to.be.equal(buttonOriginalText);
   });
@@ -126,16 +126,36 @@ describe('updateRSVPButtonState', () => {
       originalText: 'RSVP',
     };
 
-    let eventInfo = { isFull: false };
+    BlockMediator.set('eventData', { isFull: false });
 
-    await updateRSVPButtonState(rsvpBtn, LIBS, eventInfo);
+    await updateRSVPButtonState(rsvpBtn, LIBS);
     expect(rsvpBtn.el.textContent).to.equal('RSVP');
 
-    eventInfo = { isFull: true };
-    await updateRSVPButtonState(rsvpBtn, LIBS, eventInfo);
-    BlockMediator.set('rsvpData', { ok: false, error: { message: 'Request to ESP failed: Event is full' } });
-    await updateRSVPButtonState(rsvpBtn, LIBS, eventInfo);
+    BlockMediator.set('eventData', { isFull: true, allowWaitlisting: false });
+    await updateRSVPButtonState(rsvpBtn, LIBS);
     expect(rsvpBtn.el.classList.contains('disabled')).to.be.true;
+
+    BlockMediator.set('eventData', { isFull: true, allowWaitlisting: true });
+    await updateRSVPButtonState(rsvpBtn, LIBS);
+    expect(rsvpBtn.el.classList.contains('disabled')).to.be.false;
+
+    BlockMediator.set('rsvpData', { registrationStatus: 'registered' });
+    BlockMediator.set('eventData', { isFull: true, allowWaitlisting: false });
+    await updateRSVPButtonState(rsvpBtn, LIBS);
+    expect(rsvpBtn.el.classList.contains('disabled')).to.be.false;
+
+    BlockMediator.set('eventData', { isFull: true, allowWaitlisting: true });
+    await updateRSVPButtonState(rsvpBtn, LIBS);
+    expect(rsvpBtn.el.classList.contains('disabled')).to.be.false;
+
+    BlockMediator.set('rsvpData', { registrationStatus: 'waitlisted' });
+    BlockMediator.set('eventData', { isFull: true, allowWaitlisting: false });
+    await updateRSVPButtonState(rsvpBtn, LIBS);
+    expect(rsvpBtn.el.classList.contains('disabled')).to.be.false;
+
+    BlockMediator.set('eventData', { isFull: true, allowWaitlisting: true });
+    await updateRSVPButtonState(rsvpBtn, LIBS);
+    expect(rsvpBtn.el.classList.contains('disabled')).to.be.false;
   });
 });
 
