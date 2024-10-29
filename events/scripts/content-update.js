@@ -69,7 +69,8 @@ function convertEccIcon(n) {
   });
 }
 
-function setCtaState(targetState, rsvpBtn, miloLibs, icon = null) {
+async function setCtaState(targetState, rsvpBtn, miloLibs) {
+  const checkRed = getIcon('check-circle-red');
   const enableBtn = () => {
     rsvpBtn.el.classList.remove('disabled');
     rsvpBtn.el.setAttribute('tabindex', 0);
@@ -87,38 +88,38 @@ function setCtaState(targetState, rsvpBtn, miloLibs, icon = null) {
       enableBtn();
       updateAnalyticTag(rsvpBtn.el, registeredText);
       rsvpBtn.el.textContent = registeredText;
-      if (icon) rsvpBtn.el.prepend(icon);
+      rsvpBtn.el.prepend(checkRed);
     },
     waitlisted: async () => {
       const waitlistedText = await miloReplaceKey(miloLibs, 'waitlisted-cta-text');
       enableBtn();
       updateAnalyticTag(rsvpBtn.el, waitlistedText);
       rsvpBtn.el.textContent = waitlistedText;
-      if (icon) rsvpBtn.el.prepend(icon);
+      rsvpBtn.el.prepend(checkRed);
     },
     toWaitlist: async () => {
       const waitlistText = await miloReplaceKey(miloLibs, 'waitlist-cta-text');
       enableBtn();
       updateAnalyticTag(rsvpBtn.el, waitlistText);
       rsvpBtn.el.textContent = waitlistText;
-      icon?.remove();
+      checkRed.remove();
     },
     eventClosed: async () => {
       const closedText = await miloReplaceKey(miloLibs, 'event-full-cta-text');
       disableBtn();
       updateAnalyticTag(rsvpBtn.el, closedText);
       rsvpBtn.el.textContent = closedText;
-      icon?.remove();
+      checkRed.remove();
     },
     default: async () => {
       enableBtn();
       updateAnalyticTag(rsvpBtn.el, rsvpBtn.originalText);
       rsvpBtn.el.textContent = rsvpBtn.originalText;
-      icon?.remove();
+      checkRed.remove();
     },
   };
 
-  stateTrigger[targetState]();
+  await stateTrigger[targetState]();
 }
 
 function createTag(tag, attributes, html, options = {}) {
@@ -146,7 +147,6 @@ function createTag(tag, attributes, html, options = {}) {
 export async function updateRSVPButtonState(rsvpBtn, miloLibs) {
   const rsvpData = BlockMediator.get('rsvpData');
   const eventInfo = BlockMediator.get('eventData');
-  const checkRed = getIcon('check-circle-red');
   let eventFull = false;
   let allowWaitlisting = getMetadata('allow-wait-listing') === 'true';
 
@@ -158,17 +158,17 @@ export async function updateRSVPButtonState(rsvpBtn, miloLibs) {
   if (!rsvpData) {
     if (eventFull) {
       if (allowWaitlisting) {
-        await setCtaState('toWaitlist', rsvpBtn, miloLibs, checkRed);
+        await setCtaState('toWaitlist', rsvpBtn, miloLibs);
       } else {
-        await setCtaState('eventClosed', rsvpBtn, miloLibs, checkRed);
+        await setCtaState('eventClosed', rsvpBtn, miloLibs);
       }
     } else {
       await setCtaState('default', rsvpBtn, miloLibs);
     }
   } else if (rsvpData.registrationStatus === 'registered') {
-    await setCtaState('registered', rsvpBtn, miloLibs, checkRed);
+    await setCtaState('registered', rsvpBtn, miloLibs);
   } else if (rsvpData.registrationStatus === 'waitlisted') {
-    await setCtaState('waitlisted', rsvpBtn, miloLibs, checkRed);
+    await setCtaState('waitlisted', rsvpBtn, miloLibs);
   }
 }
 
