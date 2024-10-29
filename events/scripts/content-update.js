@@ -167,14 +167,6 @@ export async function updateRSVPButtonState(rsvpBtn, miloLibs) {
     await registeredState();
   } else if (rsvpData.registrationStatus === 'waitlisted') {
     await waitlistedState();
-  } else if (!rsvpData.ok) {
-    if (rsvpData.error?.message === 'Request to ESP failed: Event is full') {
-      if (allowWaitlisting) {
-        await waitlistState();
-      } else {
-        await closedState();
-      }
-    }
   }
 }
 
