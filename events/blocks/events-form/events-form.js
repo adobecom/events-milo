@@ -1,8 +1,9 @@
-import { LIBS, getMetadata } from '../../scripts/utils.js';
+import { LIBS, getMetadata, getSusiOptions } from '../../scripts/utils.js';
 import HtmlSanitizer from '../../scripts/deps/html-sanitizer.js';
-import { deleteAttendeeFromEvent, getAndCreateAndAddAttendee } from '../../scripts/esp-controller.js';
+import { deleteAttendeeFromEvent, getAndCreateAndAddAttendee, getEvent } from '../../scripts/esp-controller.js';
 import BlockMediator from '../../scripts/deps/block-mediator.min.js';
-import { miloReplaceKey } from '../../scripts/content-update.js';
+import { miloReplaceKey, signIn } from '../../scripts/content-update.js';
+import decorateArea from '../../scripts/scripts.js';
 
 const { createTag } = await import(`${LIBS}/utils/utils.js`);
 const { closeModal, sendAnalytics } = await import(`${LIBS}/blocks/modal/modal.js`);
@@ -121,11 +122,26 @@ async function buildErrorMsg(parent, status) {
   }, 3000);
 }
 
-function showSuccessMsg(bp) {
+function showSuccessMsgFirstScreen(bp) {
+  const rsvpData = BlockMediator.get('rsvpData');
+
+  if (!rsvpData) return;
+
   clearForm(bp.form);
   bp.form.classList.add('hidden');
   bp.eventHero.classList.add('hidden');
-  bp.successMsg.classList.remove('hidden');
+
+  const { registrationStatus } = rsvpData;
+
+  if (registrationStatus === 'waitlisted') {
+    bp.waitlistSuccessScreen?.classList.remove('hidden');
+    bp.waitlistSuccessScreen?.querySelector('.first-screen')?.classList.remove('hidden');
+  }
+
+  if (registrationStatus === 'registered') {
+    bp.rsvpSuccessScreen?.classList.remove('hidden');
+    bp.rsvpSuccessScreen?.querySelector('.first-screen')?.classList.remove('hidden');
+  }
 }
 
 function eventFormSendAnalytics(bp, view) {
@@ -150,17 +166,22 @@ function createButton({ type, label }, bp) {
         button.removeAttribute('disabled');
         button.classList.remove('submitting');
         if (!respJson) return;
-        if (respJson.ok !== false && !respJson.error) eventFormSendAnalytics(bp, 'Form Submit');
-        BlockMediator.set('rsvpData', respJson.data);
-        if (respJson.error) {
-          let { status } = respJson;
 
-          // FIXME: temporary fix for ESL 500 on ESP 400
-          if (!status || status === 500) {
-            if (respJson.error?.message === 'Request to ESP failed: Event is full') {
-              status = 400;
+        BlockMediator.set('rsvpData', respJson.data);
+
+        if (respJson.ok) {
+          eventFormSendAnalytics(bp, 'Form Submit');
+        } else {
+          const { status } = respJson;
+
+          if (status === 400 && respJson.error?.message === 'Request to ESP failed: Event is full') {
+            const eventResp = await getEvent(getMetadata('event-id'));
+            if (eventResp.ok && eventResp.data?.isFull) {
+              button.textContent = await miloReplaceKey(LIBS, 'waitlist-cta-text');
+              BlockMediator.set('eventData', eventResp.data);
             }
           }
+
           buildErrorMsg(bp.form, status);
         }
       }
@@ -333,51 +354,100 @@ function addTerms(form, terms) {
   submit.disabled = none(Array.from(checkboxes), (c) => c.checked);
 }
 
-function decorateSuccessMsg(form, bp) {
-  const ctas = bp.successMsg.querySelectorAll('a');
-  const hgroup = createTag('hgroup');
-  const eyeBrowText = bp.successMsg.querySelector('p:first-child');
-  const headings = bp.successMsg.querySelectorAll('h1, h2, h3, h4, h5, h6');
-  headings.forEach((h) => {
-    hgroup.append(h);
-  });
+function decorateSuccessScreen(screen) {
+  if (!screen) return;
 
-  if (eyeBrowText) {
-    eyeBrowText.classList.add('eyebrow');
-    hgroup.prepend(eyeBrowText);
-  }
+  screen.classList.add('form-success-msg');
+  const subScreens = screen.querySelectorAll('div');
 
-  bp.successMsg.prepend(hgroup);
-  ctas.forEach((cta, i) => {
-    if (i === 0) {
-      cta.parentElement.classList.add('post-rsvp-button-wrapper');
-      cta.classList.add('con-button', 'outline', 'button-l');
-    } else if (i === 1) {
-      cta.classList.add('con-button', 'black', 'button-l');
+  const [firstScreen, secondScreen] = subScreens;
+
+  subScreens.forEach((ss, i) => {
+    ss.classList.add('hidden');
+    const hgroup = createTag('hgroup');
+    const eyeBrowText = ss.querySelector('p:first-child');
+    const headings = ss.querySelectorAll('h1, h2, h3, h4, h5, h6');
+
+    headings.forEach((h) => {
+      hgroup.append(h);
+    });
+
+    if (eyeBrowText) {
+      eyeBrowText.classList.add('eyebrow');
+      hgroup.prepend(eyeBrowText);
     }
 
-    cta.addEventListener('click', async (e) => {
-      e.preventDefault();
+    ss.prepend(hgroup);
 
-      cta.classList.add('loading');
+    if (i === 0) {
+      ss.classList.add('first-screen');
+      const firstScreenCtas = ss.querySelectorAll('a');
 
-      if (i === 0) {
-        const resp = await deleteAttendeeFromEvent(getMetadata('event-id'));
-        cta.classList.remove('loading');
-        if (resp?.data?.espProvider?.status !== 204) {
-          buildErrorMsg(bp.successMsg);
-          return;
+      firstScreenCtas.forEach((cta) => {
+        const ctaUrl = new URL(cta.href);
+        if (ctaUrl.hash.startsWith('#cancel')) {
+          cta.parentElement.classList.add('post-rsvp-button-wrapper');
+          cta.classList.add('con-button', 'outline', 'button-l', 'cancel-button');
+        } else if (ctaUrl.hash.startsWith('#ok')) {
+          cta.classList.add('con-button', 'black', 'button-l', 'ok-button');
         }
 
-        if (resp?.data?.espProvider?.attendeeDeleted) BlockMediator.set('rsvpData', null);
-      }
+        cta.addEventListener('click', async (e) => {
+          e.preventDefault();
 
-      const modal = form.closest('.dialog-modal');
-      closeModal(modal);
-    });
+          cta.classList.add('loading');
+
+          if (cta.classList.contains('cancel-button')) {
+            const resp = await deleteAttendeeFromEvent(getMetadata('event-id'));
+            cta.classList.remove('loading');
+
+            if (!resp.ok) {
+              buildErrorMsg(screen, resp.status);
+              return;
+            }
+
+            const { data } = resp;
+            const espStatus = data?.espProvider?.status;
+
+            if ((espStatus && espStatus !== 204)) {
+              buildErrorMsg(screen, espStatus);
+              return;
+            }
+
+            if (data?.espProvider?.attendeeDeleted) BlockMediator.set('rsvpData', null);
+
+            firstScreen.classList.add('hidden');
+            secondScreen.classList.remove('hidden');
+            cta.classList.remove('loading');
+          }
+
+          if (cta.classList.contains('ok-button')) {
+            const modal = screen.closest('.dialog-modal');
+            if (modal) closeModal(modal);
+          }
+        });
+      });
+    }
+
+    if (i === 1) {
+      ss.classList.add('second-screen');
+      const secondScreenCtas = ss.querySelectorAll('a');
+
+      secondScreenCtas.forEach((cta) => {
+        const ctaUrl = new URL(cta.href);
+        if (ctaUrl.hash.startsWith('#ok')) {
+          cta.classList.add('con-button', 'black', 'button-l');
+          cta.addEventListener('click', async (e) => {
+            e.preventDefault();
+            const modal = screen.closest('.dialog-modal');
+            if (modal) closeModal(modal);
+          });
+        }
+      });
+    }
   });
 
-  bp.successMsg.classList.add('hidden');
+  screen.classList.add('hidden');
 }
 
 async function createForm(bp, formData) {
@@ -464,7 +534,6 @@ async function createForm(bp, formData) {
   });
 
   addTerms(formEl, terms);
-  decorateSuccessMsg(formEl, bp);
 
   formEl.addEventListener('input', () => applyRules(formEl, rules));
   applyRules(formEl, rules);
@@ -494,11 +563,11 @@ function decorateHero(heroEl) {
 async function buildEventform(bp, formData) {
   if (!bp.formContainer || !bp.form) return;
   bp.formContainer.classList.add('form-container');
-  bp.successMsg.classList.add('form-success-msg');
-  const { formEl, sanitizeList } = await createForm(
-    bp,
-    formData,
-  );
+  const { formEl, sanitizeList } = await createForm(bp, formData);
+
+  [bp.rsvpSuccessScreen, bp.waitlistSuccessScreen].forEach((screen) => {
+    decorateSuccessScreen(screen);
+  });
 
   if (formEl) {
     bp.form.replaceWith(formEl);
@@ -508,22 +577,25 @@ async function buildEventform(bp, formData) {
 }
 
 function initFormBasedOnRSVPData(bp) {
+  const validRegistrationStatus = ['registered', 'waitlisted'];
   const { block } = bp;
   const profile = BlockMediator.get('imsProfile');
   const rsvpData = BlockMediator.get('rsvpData');
-  if (rsvpData?.espProvider?.registered || rsvpData?.externalAttendeeId) {
-    showSuccessMsg(bp);
+
+  if (validRegistrationStatus.includes(rsvpData?.registrationStatus)) {
+    showSuccessMsgFirstScreen(bp);
     eventFormSendAnalytics(bp, 'Confirmation Modal View');
   } else {
     personalizeForm(block, profile);
   }
 
   BlockMediator.subscribe('rsvpData', ({ newValue }) => {
-    if (newValue?.espProvider?.registered || newValue?.externalAttendeeId) {
-      showSuccessMsg(bp);
+    if (validRegistrationStatus.includes(newValue?.registrationStatus)) {
+      showSuccessMsgFirstScreen(bp);
       eventFormSendAnalytics(bp, 'Confirmation Modal View');
     }
   });
+
   if (bp.block.querySelector('.form-success-msg.hidden')) {
     eventFormSendAnalytics(bp, 'Form View');
   }
@@ -532,19 +604,28 @@ function initFormBasedOnRSVPData(bp) {
 async function onProfile(bp, formData) {
   const { block, eventHero } = bp;
   const profile = BlockMediator.get('imsProfile');
+  const { getConfig } = await import(`${LIBS}/utils/utils.js`);
 
   if (profile) {
-    eventHero.classList.remove('loading');
-    decorateHero(bp.eventHero);
-    buildEventform(bp, formData).then(() => {
-      initFormBasedOnRSVPData(bp);
-    }).finally(() => {
-      decorateDefaultLinkAnalytics(block);
-      block.classList.remove('loading');
-    });
-  } else if (!profile) {
+    if (profile.noProfile && /#rsvp-form.*/.test(window.location.hash)) {
+      // TODO: also check for guestCheckout enablement for future iterations
+      signIn(getSusiOptions(getConfig()));
+    } else {
+      eventHero.classList.remove('loading');
+      decorateHero(bp.eventHero);
+      buildEventform(bp, formData).then(() => {
+        initFormBasedOnRSVPData(bp);
+      }).finally(() => {
+        decorateDefaultLinkAnalytics(block);
+        block.classList.remove('loading');
+      });
+    }
+  } else {
     BlockMediator.subscribe('imsProfile', ({ newValue }) => {
-      if (newValue) {
+      if (newValue?.noProfile && /#rsvp-form.*/.test(window.location.hash)) {
+        // TODO: also check for guestCheckout enablement for future iterations
+        signIn(getSusiOptions(getConfig()));
+      } else {
         eventHero.classList.remove('loading');
         decorateHero(bp.eventHero);
         buildEventform(bp, formData).then(() => {
@@ -570,9 +651,28 @@ async function decorateToastArea() {
   return toastArea;
 }
 
+async function futureProofing(block) {
+  const authoredWaitlistSuccessScreen = block.querySelector(':scope > div:nth-of-type(5)');
+
+  if (!authoredWaitlistSuccessScreen) {
+    const resp = await fetch('/events/fragments/drafts/draft-rsvp-form').then((res) => res.text());
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(resp, 'text/html');
+
+    const eventsForm = doc.querySelector('.events-form');
+    if (eventsForm) {
+      decorateArea(eventsForm);
+      block.innerHTML = eventsForm.innerHTML;
+    }
+  }
+}
+
 export default async function decorate(block, formData = null) {
   block.classList.add('loading');
   const toastArea = await decorateToastArea();
+
+  // TODO: remove after authoring updates
+  await futureProofing(block);
 
   const bp = {
     block,
@@ -581,8 +681,16 @@ export default async function decorate(block, formData = null) {
     formContainer: block.querySelector(':scope > div:nth-of-type(2)'),
     form: block.querySelector(':scope > div:nth-of-type(2) a[href$=".json"]'),
     terms: block.querySelector(':scope > div:nth-of-type(3)'),
-    successMsg: block.querySelector(':scope > div:last-of-type > div'),
+    rsvpSuccessScreen: block.querySelector(':scope > div:nth-of-type(4)'),
+    waitlistSuccessScreen: block.querySelector(':scope > div:nth-of-type(5)'),
   };
+
+  if (!bp.waitlistSuccessScreen) {
+    const { rsvpSuccessScreen, waitlistSuccessScreen } = await futureProofing(block);
+
+    if (rsvpSuccessScreen) bp.rsvpSuccessScreen = rsvpSuccessScreen;
+    if (waitlistSuccessScreen) bp.waitlistSuccessScreen = waitlistSuccessScreen;
+  }
 
   await onProfile(bp, formData);
 }

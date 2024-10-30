@@ -8,7 +8,7 @@ import {
   getIcon,
   readBlockConfig,
   getSusiOptions,
-  getECCEnv,
+  getEventServiceEnv,
 } from './utils.js';
 
 const preserveFormatKeys = [
@@ -33,7 +33,7 @@ export async function miloReplaceKey(miloLibs, key) {
   }
 }
 
-function updateAnalyticTag(el, newVal) {
+export function updateAnalyticTag(el, newVal) {
   const eventTitle = getMetadata('event-title');
   const newDaaLL = `${newVal}${eventTitle ? `|${eventTitle}` : ''}`;
   el.setAttribute('daa-ll', newDaaLL);
@@ -69,6 +69,59 @@ function convertEccIcon(n) {
   });
 }
 
+async function setCtaState(targetState, rsvpBtn, miloLibs) {
+  const checkRed = getIcon('check-circle-red');
+  const enableBtn = () => {
+    rsvpBtn.el.classList.remove('disabled');
+    rsvpBtn.el.setAttribute('tabindex', 0);
+  };
+
+  const disableBtn = () => {
+    rsvpBtn.el.setAttribute('tabindex', -1);
+    rsvpBtn.el.href = '';
+    rsvpBtn.el.classList.add('disabled');
+  };
+
+  const stateTrigger = {
+    registered: async () => {
+      const registeredText = await miloReplaceKey(miloLibs, 'registered-cta-text');
+      enableBtn();
+      updateAnalyticTag(rsvpBtn.el, registeredText);
+      rsvpBtn.el.textContent = registeredText;
+      rsvpBtn.el.prepend(checkRed);
+    },
+    waitlisted: async () => {
+      const waitlistedText = await miloReplaceKey(miloLibs, 'waitlisted-cta-text');
+      enableBtn();
+      updateAnalyticTag(rsvpBtn.el, waitlistedText);
+      rsvpBtn.el.textContent = waitlistedText;
+      rsvpBtn.el.prepend(checkRed);
+    },
+    toWaitlist: async () => {
+      const waitlistText = await miloReplaceKey(miloLibs, 'waitlist-cta-text');
+      enableBtn();
+      updateAnalyticTag(rsvpBtn.el, waitlistText);
+      rsvpBtn.el.textContent = waitlistText;
+      checkRed.remove();
+    },
+    eventClosed: async () => {
+      const closedText = await miloReplaceKey(miloLibs, 'event-full-cta-text');
+      disableBtn();
+      updateAnalyticTag(rsvpBtn.el, closedText);
+      rsvpBtn.el.textContent = closedText;
+      checkRed.remove();
+    },
+    default: async () => {
+      enableBtn();
+      updateAnalyticTag(rsvpBtn.el, rsvpBtn.originalText);
+      rsvpBtn.el.textContent = rsvpBtn.originalText;
+      checkRed.remove();
+    },
+  };
+
+  await stateTrigger[targetState]();
+}
+
 function createTag(tag, attributes, html, options = {}) {
   const el = document.createElement(tag);
   if (html) {
@@ -91,45 +144,31 @@ function createTag(tag, attributes, html, options = {}) {
   return el;
 }
 
-async function updateRSVPButtonState(rsvpBtn, miloLibs, eventInfo) {
+export async function updateRSVPButtonState(rsvpBtn, miloLibs) {
   const rsvpData = BlockMediator.get('rsvpData');
-  const checkRed = getIcon('check-circle-red');
-  const eventFull = +eventInfo.attendeeLimit <= +eventInfo.attendeeCount;
+  const eventInfo = BlockMediator.get('eventData');
+  let eventFull = false;
+  let allowWaitlisting = getMetadata('allow-wait-listing') === 'true';
+
+  if (eventInfo) {
+    eventFull = eventInfo.isFull;
+    allowWaitlisting = eventInfo.allowWaitlisting;
+  }
 
   if (!rsvpData) {
     if (eventFull) {
-      const eventFullText = await miloReplaceKey(miloLibs, 'event-full-cta-text');
-      rsvpBtn.el.setAttribute('tabindex', -1);
-      rsvpBtn.el.href = '';
-      rsvpBtn.el.classList.add('disabled');
-      updateAnalyticTag(rsvpBtn.el, eventFullText);
-      rsvpBtn.el.textContent = eventFullText;
-      checkRed.remove();
+      if (allowWaitlisting) {
+        await setCtaState('toWaitlist', rsvpBtn, miloLibs);
+      } else {
+        await setCtaState('eventClosed', rsvpBtn, miloLibs);
+      }
     } else {
-      rsvpBtn.el.classList.remove('disabled');
-      rsvpBtn.el.setAttribute('tabindex', 0);
-      updateAnalyticTag(rsvpBtn.el, rsvpBtn.originalText);
-      rsvpBtn.el.textContent = rsvpBtn.originalText;
-      checkRed.remove();
+      await setCtaState('default', rsvpBtn, miloLibs);
     }
-  } else if (rsvpData.espProvider?.registered || rsvpData.externalAttendeeId) {
-    const registeredText = await miloReplaceKey(miloLibs, 'registered-cta-text');
-    rsvpBtn.el.classList.remove('disabled');
-    rsvpBtn.el.setAttribute('tabindex', 0);
-    updateAnalyticTag(rsvpBtn.el, registeredText);
-    rsvpBtn.el.textContent = registeredText;
-    rsvpBtn.el.prepend(checkRed);
-  } else if (!rsvpData.ok) {
-    // FIXME: temporary solution for ESL returning 500 on ESP 400 response
-    if (rsvpData.error?.message === 'Request to ESP failed: Event is full') {
-      const eventFullText = await miloReplaceKey(miloLibs, 'event-full-cta-text');
-      rsvpBtn.el.setAttribute('tabindex', -1);
-      rsvpBtn.el.href = '';
-      rsvpBtn.el.classList.add('disabled');
-      updateAnalyticTag(rsvpBtn.el, eventFullText);
-      rsvpBtn.el.textContent = eventFullText;
-      checkRed.remove();
-    }
+  } else if (rsvpData.registrationStatus === 'registered') {
+    await setCtaState('registered', rsvpBtn, miloLibs);
+  } else if (rsvpData.registrationStatus === 'waitlisted') {
+    await setCtaState('waitlisted', rsvpBtn, miloLibs);
   }
 }
 
@@ -145,46 +184,45 @@ export function signIn(options) {
 async function handleRSVPBtnBasedOnProfile(rsvpBtn, miloLibs, profile) {
   const { getConfig } = await import(`${miloLibs}/utils/utils.js`);
   const resp = await getEvent(getMetadata('event-id'));
+  let allowWaitlisting = getMetadata('allow-wait-listing') === 'true';
+  if (!resp) return;
 
-  if (!resp) {
-    return;
-  }
   const eventInfo = resp.data;
-
+  BlockMediator.set('eventData', eventInfo);
   if (profile?.noProfile || resp.status === 401) {
-    if (eventInfo && +eventInfo.attendeeLimit <= +eventInfo.attendeeCount) {
-      const eventFullText = await miloReplaceKey(miloLibs, 'event-full-cta-text');
-      updateAnalyticTag(rsvpBtn.el, eventFullText);
-      rsvpBtn.el.setAttribute('tabindex', -1);
-      rsvpBtn.el.href = '';
-      rsvpBtn.el.textContent = eventFullText;
-    } else if (getMetadata('cloud-type') === 'CreativeCloud') {
-      updateAnalyticTag(rsvpBtn.el, rsvpBtn.originalText);
-      rsvpBtn.el.textContent = rsvpBtn.originalText;
-      rsvpBtn.el.classList.remove('disabled');
-      rsvpBtn.el.setAttribute('tabindex', 0);
-      rsvpBtn.el.addEventListener('click', (e) => {
-        e.preventDefault();
-        signIn(getSusiOptions(getConfig()));
-      });
+    if (eventInfo && eventInfo.isFull) {
+      allowWaitlisting = eventInfo.allowWaitlisting;
+      if (allowWaitlisting) {
+        await setCtaState('toWaitlist', rsvpBtn, miloLibs);
+      } else if (getMetadata('cloud-type') === 'CreativeCloud') {
+        await setCtaState('eventClosed', rsvpBtn, miloLibs);
+      } else {
+        await setCtaState('default', rsvpBtn, miloLibs);
+      }
     } else {
-      updateAnalyticTag(rsvpBtn.el, rsvpBtn.originalText);
-      rsvpBtn.el.textContent = rsvpBtn.originalText;
-      rsvpBtn.el.classList.remove('disabled');
-      rsvpBtn.el.setAttribute('tabindex', 0);
+      await setCtaState('default', rsvpBtn, miloLibs);
     }
+    // TODO: add condition once guest checkout is available
+    rsvpBtn.el.addEventListener('click', (e) => {
+      e.preventDefault();
+      signIn(getSusiOptions(getConfig()));
+    });
   } else if (profile) {
-    await updateRSVPButtonState(rsvpBtn, miloLibs, eventInfo);
+    await updateRSVPButtonState(rsvpBtn, miloLibs);
 
     BlockMediator.subscribe('rsvpData', () => {
-      updateRSVPButtonState(rsvpBtn, miloLibs, eventInfo);
+      updateRSVPButtonState(rsvpBtn, miloLibs);
+    });
+
+    BlockMediator.subscribe('eventData', () => {
+      updateRSVPButtonState(rsvpBtn, miloLibs);
     });
   }
 }
 
 export async function validatePageAndRedirect(miloLibs) {
   const { getConfig } = await import(`${miloLibs}/utils/utils.js`);
-  const env = getECCEnv();
+  const env = getEventServiceEnv();
   const pagePublished = getMetadata('published') === 'true' || getMetadata('status') === 'live';
   const invalidStagePage = env === 'stage' && window.location.hostname === 'www.stage.adobe.com' && !getMetadata('event-id');
   const isPreviewMode = new URLSearchParams(window.location.search).get('previewMode');
@@ -280,7 +318,7 @@ function autoUpdateLinks(scope, miloLibs) {
   });
 }
 
-function updatePictureElement(imageUrl, parentPic, altText) {
+export function updatePictureElement(imageUrl, parentPic, altText) {
   let imgUrlObj;
   let imgUrl = imageUrl;
   if (imageUrl.startsWith('https://www.adobe.com/')) {
@@ -633,5 +671,5 @@ export default function autoUpdateContent(parent, miloDeps, extraData) {
   autoUpdateLinks(parent, miloLibs);
   injectFragments(parent);
   decorateProfileCardsZPattern(parent);
-  if (getECCEnv() !== 'prod') updateExtraMetaTags(parent);
+  if (getEventServiceEnv() !== 'prod') updateExtraMetaTags(parent);
 }
