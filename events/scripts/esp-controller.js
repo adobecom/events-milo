@@ -27,7 +27,7 @@ const API_CONFIG = {
 async function fetchGuestToken() {
   try {
     const response = await fetch(
-      API_CONFIG.imsToken[getECCEnv()].host,
+      API_CONFIG.imsToken[getEventServiceEnv()].host,
       { method: 'POST' },
     );
 
