@@ -273,7 +273,7 @@ async function handleRegisterButton(a, miloLibs) {
   }
 }
 
-function autoUpdateLinks(scope, miloLibs) {
+function autoUpdateLinks(scope, miloLibs, getConfig) {
   scope.querySelectorAll('a[href*="#"]').forEach(async (a) => {
     try {
       const url = new URL(a.href);
@@ -284,19 +284,30 @@ function autoUpdateLinks(scope, miloLibs) {
         if (getMetadata('template-id')) {
           const params = new URLSearchParams(document.location.search);
           const testTiming = params.get('timing');
+          const testEndTime = params.get('endTime');
           let timeSuffix = '';
+          const currentTimestamp = new Date().getTime();
+          const eventEndTime = +testEndTime || +getMetadata('local-end-time-millis');
 
           if (testTiming) {
-            timeSuffix = +testTiming > +getMetadata('local-end-time-millis') ? '-post' : '-pre';
+            timeSuffix = +testTiming > eventEndTime ? '-post' : '-pre';
           } else {
-            const currentDate = new Date();
-            const currentTimestamp = currentDate.getTime();
-            timeSuffix = currentTimestamp > +getMetadata('local-end-time-millis') ? '-post' : '-pre';
+            timeSuffix = currentTimestamp > eventEndTime ? '-post' : '-pre';
+          }
+
+          if (timeSuffix === '-pre') {
+            const worker = new Worker(`${getConfig().codeRoot}/scripts/timing-worker.js`);
+            worker.postMessage(eventEndTime);
+
+            worker.onmessage = (event) => {
+              const { data } = event;
+              worker.terminate();
+              window.dispatchEvent(new CustomEvent(data));
+            };
           }
 
           a.href = `${getMetadata('template-id')}${timeSuffix}`;
-          const timingClass = `timing${timeSuffix}-event`;
-          document.body.classList.add(timingClass);
+          document.body.classList.add(`timing${timeSuffix}-event`);
         }
       } else if (a.href.endsWith('#host-email')) {
         if (getMetadata('host-email')) {
@@ -666,7 +677,7 @@ export default function autoUpdateContent(parent, miloDeps, extraData) {
   });
 
   // handle link replacement. To keep when switching to metadata based rendering
-  autoUpdateLinks(parent, miloLibs);
+  autoUpdateLinks(parent, miloLibs, getConfig);
   injectFragments(parent);
   decorateProfileCardsZPattern(parent);
   if (getEventServiceEnv() !== 'prod') updateExtraMetaTags(parent);

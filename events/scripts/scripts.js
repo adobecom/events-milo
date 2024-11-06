@@ -14,6 +14,8 @@ import { lazyCaptureProfile } from './profile.js';
 import autoUpdateContent, { getNonProdData, validatePageAndRedirect } from './content-update.js';
 import { getSusiOptions, setMetadata, getMetadata, getEventServiceEnv, LIBS } from './utils.js';
 
+const VANILLA_BODY = document.body.innerHTML;
+
 const { loadArea, setConfig, updateConfig, getConfig, loadLana } = await import(`${LIBS}/utils/utils.js`);
 
 export default function decorateArea(area = document) {
@@ -124,7 +126,9 @@ decorateArea();
 if (renderWithNonProdMetadata()) await fetchAndDecorateArea();
 
 // Validate the page and redirect if is event-details-page
-if (getMetadata('event-details-page') === 'yes') await validatePageAndRedirect(LIBS);
+if (getMetadata('event-details-page') === 'yes') {
+  await validatePageAndRedirect(LIBS);
+}
 
 /*
  * ------------------------------------------------------------
@@ -132,7 +136,7 @@ if (getMetadata('event-details-page') === 'yes') await validatePageAndRedirect(L
  * ------------------------------------------------------------
  */
 
-(function loadStyles() {
+function loadStyles() {
   const paths = [`${LIBS}/styles/styles.css`];
   if (STYLES) { paths.push(STYLES); }
   paths.forEach((path) => {
@@ -141,7 +145,9 @@ if (getMetadata('event-details-page') === 'yes') await validatePageAndRedirect(L
     link.setAttribute('href', path);
     document.head.appendChild(link);
   });
-}());
+}
+
+loadStyles();
 
 (async function loadPage() {
   await loadLana({ clientId: 'events-milo' });
@@ -149,3 +155,10 @@ if (getMetadata('event-details-page') === 'yes') await validatePageAndRedirect(L
     lazyCaptureProfile();
   });
 }());
+
+window.addEventListener('next-event-state', async () => {
+  document.body.innerHTML = VANILLA_BODY;
+  console.log('next-event-state message received from timing-worker. Re-decorating area.');
+  decorateArea();
+  await loadArea();
+});
