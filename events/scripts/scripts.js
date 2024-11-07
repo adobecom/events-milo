@@ -136,7 +136,7 @@ if (getMetadata('event-details-page') === 'yes') {
  * ------------------------------------------------------------
  */
 
-function loadStyles() {
+(function loadStyles() {
   const paths = [`${LIBS}/styles/styles.css`];
   if (STYLES) { paths.push(STYLES); }
   paths.forEach((path) => {
@@ -145,9 +145,7 @@ function loadStyles() {
     link.setAttribute('href', path);
     document.head.appendChild(link);
   });
-}
-
-loadStyles();
+}());
 
 (async function loadPage() {
   await loadLana({ clientId: 'events-milo' });
@@ -156,9 +154,14 @@ loadStyles();
   });
 }());
 
-window.addEventListener('next-event-state', async () => {
-  document.body.innerHTML = VANILLA_BODY;
-  console.log('next-event-state message received from timing-worker. Re-decorating area.');
-  decorateArea();
-  await loadArea();
+window.addEventListener('next-event-state', async (e) => {
+  const { detail } = e;
+
+  if (detail.variation && document.body.dataset.eventState !== detail.variation) {
+    document.body.innerHTML = VANILLA_BODY;
+    document.body.dataset.eventState = detail.variation;
+    console.log(`next-event-state message received from timing-worker. Re-decorating area with variation: ${detail.variation}.`);
+    decorateArea();
+    await loadArea();
+  }
 });

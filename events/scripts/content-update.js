@@ -284,30 +284,54 @@ function autoUpdateLinks(scope, miloLibs, getConfig) {
         if (getMetadata('template-id')) {
           const params = new URLSearchParams(document.location.search);
           const testTiming = params.get('timing');
-          const testEndTime = params.get('endTime');
-          let timeSuffix = '';
-          const currentTimestamp = new Date().getTime();
-          const eventEndTime = +testEndTime || +getMetadata('local-end-time-millis');
+          const currentTimestamp = testTiming || new Date().getTime();
 
-          if (testTiming) {
-            timeSuffix = +testTiming > eventEndTime ? '-post' : '-pre';
-          } else {
-            timeSuffix = currentTimestamp > eventEndTime ? '-post' : '-pre';
-          }
+          // TODO: mock timing JSON
+          const timings = [
+            {
+              toggleValue: 1730995950951,
+              variation: '/events/fragments/event-templates/max-2077/pre',
+              mobileRiderLiveNextSession: false,
+              mobileRiderType: 'none',
+            },
+            {
+              toggleValue: 1730995960951,
+              variation: '/events/fragments/event-templates/max-2077/during',
+              mobileRiderLiveNextSession: false,
+              mobileRiderType: 'none',
+            },
+            {
+              toggleValue: 1730995970951,
+              variation: '/events/fragments/event-templates/max-2077/post',
+              mobileRiderLiveNextSession: false,
+              mobileRiderType: 'none',
+            },
+          ];
 
-          if (timeSuffix === '-pre') {
+          let currentState = document.body.dataset.eventState;
+
+          if (!currentState) {
+            currentState = timings.filter((timingObj) => {
+              const { toggleValue } = timingObj;
+              return currentTimestamp > toggleValue && currentTimestamp !== toggleValue;
+            })[timings.length - 1].variation;
+
             const worker = new Worker(`${getConfig().codeRoot}/scripts/timing-worker.js`);
-            worker.postMessage(eventEndTime);
+            worker.postMessage(timings);
 
             worker.onmessage = (event) => {
               const { data } = event;
-              worker.terminate();
-              window.dispatchEvent(new CustomEvent(data));
+              window.dispatchEvent(new CustomEvent('next-event-state', { detail: { data } }));
+
+              if (data === 'no-next-variation') {
+                worker.terminate();
+              }
             };
+
+            document.body.dataset.eventState = currentState.variation;
           }
 
-          a.href = `${getMetadata('template-id')}${timeSuffix}`;
-          document.body.classList.add(`timing${timeSuffix}-event`);
+          a.href = currentState.variation;
         }
       } else if (a.href.endsWith('#host-email')) {
         if (getMetadata('host-email')) {

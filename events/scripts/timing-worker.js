@@ -1,38 +1,33 @@
-async function getCurrentTimeFromAPI() {
-  try {
-    const response = await fetch('https://worldtimeapi.org/api/ip');
-    const data = await response.json();
-    return new Date(data.datetime).getTime();
-  } catch (error) {
-    console.error('Error fetching time from API:', error);
-    return null;
-  }
-}
-
-function getRandomInterval() {
-  const min = 45000;
-  const max = 60000;
-  return Math.floor(Math.random() * (max - min + 1)) + min;
-}
+let currentState;
 
 onmessage = async (event) => {
-  const targetTimestamp = event.data;
+  const timings = event.data;
 
-  async function checkTime() {
-    const currentTime = await getCurrentTimeFromAPI();
-
-    if (currentTime === null) {
-      setTimeout(checkTime, getRandomInterval());
-      return;
-    }
-
-    if (currentTime > targetTimestamp) {
-      postMessage('next-event-state');
-      return;
-    }
-
-    setTimeout(checkTime, getRandomInterval());
+  if (!timings) {
+    postMessage('no-timing-data');
+    return;
   }
 
-  checkTime();
+  async function runTimingCheck() {
+    const currentTime = new Date().getTime();
+
+    const nextVariation = timings.filter((timingObj) => {
+      const { toggleValue } = timingObj;
+      return currentTime > toggleValue && currentState !== toggleValue;
+    })[timings.length - 1];
+
+    if (!nextVariation) {
+      postMessage('no-next-variation');
+      return;
+    }
+
+    if (nextVariation && nextVariation.toggleValue !== currentState) {
+      postMessage(nextVariation);
+      currentState = nextVariation.toggleValue;
+    }
+
+    setTimeout(runTimingCheck, 1000);
+  }
+
+  runTimingCheck();
 };
