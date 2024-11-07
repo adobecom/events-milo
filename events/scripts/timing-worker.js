@@ -1,7 +1,7 @@
 let currentState;
 
 onmessage = async (event) => {
-  const timings = event.data;
+  const { timings, currentTimestamp } = event.data;
 
   if (!timings) {
     postMessage('no-timing-data');

@@ -284,7 +284,18 @@ function autoUpdateLinks(scope, miloLibs, getConfig) {
         if (getMetadata('template-id')) {
           const params = new URLSearchParams(document.location.search);
           const testTiming = params.get('timing');
-          const currentTimestamp = testTiming || new Date().getTime();
+          let currentTimestamp = testTiming;
+
+          if (!currentTimestamp) {
+            const akamaiTimeResp = await fetch('http://time.akamai.com');
+            if (!akamaiTimeResp.ok) {
+              window.lana?.log('Failed to fetch time from Akamai');
+              currentTimestamp = Date.now().getTime();
+            } else {
+              const time = await akamaiTimeResp.text();
+              currentTimestamp = +time * 1000;
+            }
+          }
 
           // TODO: mock timing JSON
           const timings = [
@@ -317,7 +328,10 @@ function autoUpdateLinks(scope, miloLibs, getConfig) {
             })[timings.length - 1].variation;
 
             const worker = new Worker(`${getConfig().codeRoot}/scripts/timing-worker.js`);
-            worker.postMessage(timings);
+            worker.postMessage({
+              timings,
+              currentTimestamp,
+            });
 
             worker.onmessage = (event) => {
               const { data } = event;
