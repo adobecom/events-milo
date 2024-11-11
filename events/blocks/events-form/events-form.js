@@ -1,6 +1,6 @@
 import { LIBS, getMetadata, getSusiOptions } from '../../scripts/utils.js';
 import HtmlSanitizer from '../../scripts/deps/html-sanitizer.js';
-import { deleteAttendeeFromEvent, getAndCreateAndAddAttendee, getEvent } from '../../scripts/esp-controller.js';
+import { deleteAttendeeFromEvent, getAndCreateAndAddAttendee, getAttendee, getEvent } from '../../scripts/esp-controller.js';
 import BlockMediator from '../../scripts/deps/block-mediator.min.js';
 import { miloReplaceKey, signIn } from '../../scripts/content-update.js';
 import decorateArea from '../../scripts/scripts.js';
@@ -548,11 +548,13 @@ function personalizeForm(form, data) {
   if (!data || !form) return;
 
   Object.entries(data).forEach(([key, value]) => {
-    const matchedInput = form.querySelector(`#${snakeToCamel(key)}`);
-    if (matchedInput && value && !matchedInput.value) {
-      matchedInput.value = value;
-      matchedInput.disabled = true;
-    }
+    Object.entries(value).forEach(([k, v]) => {
+      const matchedInput = form.querySelector(`#${snakeToCamel(k)}`);
+      if (matchedInput && v && !matchedInput.v) {
+        matchedInput.value = v;
+        if (key === 'profile') matchedInput.disabled = true;
+      }
+    });
   });
 }
 
@@ -576,7 +578,7 @@ async function buildEventform(bp, formData) {
   }
 }
 
-function initFormBasedOnRSVPData(bp) {
+async function initFormBasedOnRSVPData(bp) {
   const validRegistrationStatus = ['registered', 'waitlisted'];
   const { block } = bp;
   const profile = BlockMediator.get('imsProfile');
@@ -586,7 +588,10 @@ function initFormBasedOnRSVPData(bp) {
     showSuccessMsgFirstScreen(bp);
     eventFormSendAnalytics(bp, 'Confirmation Modal View');
   } else {
-    personalizeForm(block, profile);
+    let existingAttendeeData = {};
+    const attendeeResp = await getAttendee();
+    if (attendeeResp.ok) existingAttendeeData = attendeeResp.data;
+    personalizeForm(block, { profile, existingAttendeeData });
   }
 
   BlockMediator.subscribe('rsvpData', ({ newValue }) => {
