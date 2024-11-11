@@ -68,10 +68,20 @@ async function decorateSocialIcons(cardContainer, socialLinks) {
 
   const svgEls = await getSVGsfromFile(svgPath, SUPPORTED_SOCIAL);
   if (!svgEls || svgEls.length === 0) return;
-
   socialLinks.forEach((social) => {
     const { link } = social;
-    const platform = SUPPORTED_SOCIAL.find((p) => link.toLowerCase().includes(p)) || 'web';
+
+    if (!link) return;
+
+    let platform = '';
+    try {
+      const url = new URL(link);
+      const hostname = url.hostname.toLowerCase();
+      platform = SUPPORTED_SOCIAL.find((p) => hostname.includes(`${p}.`)) || 'web';
+    } catch (error) {
+      platform = 'web';
+    }
+
     const svgEl = svgEls.find((el) => el.name === platform);
     if (!svgEl) return;
 
