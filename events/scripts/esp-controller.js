@@ -24,29 +24,6 @@ const API_CONFIG = {
   },
 };
 
-async function fetchGuestToken() {
-  try {
-    const response = await fetch(
-      API_CONFIG.imsToken[getEventServiceEnv()].host,
-      { method: 'POST' },
-    );
-
-    if (!response.ok) {
-      window.lana?.log(`Error fetching guest token: ${response.statusText}`);
-    }
-
-    const data = await response.json();
-
-    // TODO: remove console.log
-    console.log('Guest Access Token:', data.token);
-
-    return data.token;
-  } catch (error) {
-    window.lana?.log('Error fetching guest token:', error);
-    return null;
-  }
-}
-
 export const getCaasTags = (() => {
   let cache;
   let promise;
@@ -98,12 +75,7 @@ export async function constructRequestOptions(method, body = null) {
   const headers = new Headers();
   const authToken = window.adobeIMS?.getAccessToken()?.token;
 
-  if (authToken) {
-    headers.append('Authorization', `Bearer ${authToken}`);
-  } else {
-    const guestToken = await fetchGuestToken();
-    if (guestToken) headers.append('Authorization', `Bearer ${guestToken}`);
-  }
+  if (authToken) headers.append('Authorization', `Bearer ${authToken}`);
   headers.append('x-api-key', 'acom_event_service');
   headers.append('x-request-id', await getUuid(new Date().getTime()));
   headers.append('content-type', 'application/json');
