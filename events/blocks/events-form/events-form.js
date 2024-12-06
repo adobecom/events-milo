@@ -605,9 +605,9 @@ async function onProfile(bp, formData) {
   const { block, eventHero } = bp;
   const profile = BlockMediator.get('imsProfile');
   const { getConfig } = await import(`${LIBS}/utils/utils.js`);
-
+  const guestCheckout =  getMetadata('guest-checkout')
   if (profile) {
-    if (profile.noProfile && /#rsvp-form.*/.test(window.location.hash)) {
+    if (profile.noProfile && /#rsvp-form.*/.test(window.location.hash) && !guestCheckout) {
       // TODO: also check for guestCheckout enablement for future iterations
       signIn(getSusiOptions(getConfig()));
     } else {
@@ -622,7 +622,7 @@ async function onProfile(bp, formData) {
     }
   } else {
     BlockMediator.subscribe('imsProfile', ({ newValue }) => {
-      if (newValue?.noProfile && /#rsvp-form.*/.test(window.location.hash)) {
+      if (newValue?.noProfile && /#rsvp-form.*/.test(window.location.hash)&& !guestCheckout) {
         // TODO: also check for guestCheckout enablement for future iterations
         signIn(getSusiOptions(getConfig()));
       } else {

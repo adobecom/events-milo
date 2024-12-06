@@ -202,11 +202,13 @@ async function handleRSVPBtnBasedOnProfile(rsvpBtn, miloLibs, profile) {
     } else {
       await setCtaState('default', rsvpBtn, miloLibs);
     }
-    // TODO: add condition once guest checkout is available
-    rsvpBtn.el.addEventListener('click', (e) => {
-      e.preventDefault();
-      signIn(getSusiOptions(getConfig()));
-    });
+    if(!getMetadata('guest-checkout')){
+      rsvpBtn.el.addEventListener('click', (e) => {
+        e.preventDefault();
+        signIn(getSusiOptions(getConfig()));
+      });
+    }
+    
   } else if (profile) {
     await updateRSVPButtonState(rsvpBtn, miloLibs);
 
