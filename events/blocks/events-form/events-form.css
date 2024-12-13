@@ -288,14 +288,20 @@
   background: var(--color-gray-200);
 }
 
-.events-form .terms-and-conditions-wrapper .checkbox-wrapper {
+.events-form .terms-and-conditions-wrapper {
   display: flex;
-  align-items: flex-start;
+  flex-direction: column;
+  opacity: 1;
 }
 
-.events-form .terms-and-conditions-wrapper .checkbox-wrapper input[type='checkbox'] {
-  width: auto;
-  margin: 6px 8px;
+.events-form .terms-and-conditions-wrapper.transparent {
+  opacity: 0;
+}
+
+.events-form .terms-and-conditions-wrapper .check-item-wrap {
+  display: flex;
+  width: max-content;
+  white-space: nowrap;
 }
 
 .events-form .field-wrapper.events-form-submit-wrapper button {
@@ -435,10 +441,6 @@
 
   .events-form .field-wrapper {
     display: flex;
-  }
-
-  .events-form label {
-    width: 72%;
   }
 
   .events-form .terms-and-conditions-wrapper .checkbox-wrapper label {
