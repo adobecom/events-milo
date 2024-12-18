@@ -350,7 +350,7 @@ async function loadConsent(form, path) {
 
   const field = 'contactMethod';
   const defval = '';
-  const required = 'x';
+  const required = '';
   const type = 'checkbox';
 
   termsWrapper.append(createCheckGroup({ options, field, defval, required }, type));
@@ -588,7 +588,7 @@ async function createForm(bp, formData) {
     formEl.append(fieldWrapper);
   });
 
-  await addConsentSuite(formEl);
+  if (getMetadata('login-required')) await addConsentSuite(formEl);
 
   formEl.addEventListener('input', () => applyRules(formEl, rules));
   applyRules(formEl, rules);
