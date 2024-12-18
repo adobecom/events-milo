@@ -712,28 +712,9 @@ async function decorateToastArea() {
   return toastArea;
 }
 
-async function futureProofing(block) {
-  const authoredWaitlistSuccessScreen = block.querySelector(':scope > div:nth-of-type(5)');
-
-  if (!authoredWaitlistSuccessScreen) {
-    const resp = await fetch('/events/fragments/drafts/draft-rsvp-form').then((res) => res.text());
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(resp, 'text/html');
-
-    const eventsForm = doc.querySelector('.events-form');
-    if (eventsForm) {
-      decorateArea(eventsForm);
-      block.innerHTML = eventsForm.innerHTML;
-    }
-  }
-}
-
 export default async function decorate(block, formData = null) {
   block.classList.add('loading');
   const toastArea = await decorateToastArea();
-
-  // TODO: remove after authoring updates
-  await futureProofing(block);
 
   const bp = {
     block,
