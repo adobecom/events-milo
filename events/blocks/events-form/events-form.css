@@ -134,6 +134,11 @@
   padding: var(--spacing-xs) 0;
 }
 
+.events-form .field-wrapper.event-terms-wrapper {
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
 .events-form .field-group-wrapper {
   flex-direction: column;
 }

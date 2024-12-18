@@ -1,8 +1,8 @@
 import { LIBS, getMetadata, getSusiOptions } from '../../scripts/utils.js';
+import HtmlSanitizer from '../../scripts/deps/html-sanitizer.js';
 import { deleteAttendeeFromEvent, getAndCreateAndAddAttendee, getAttendee, getEvent } from '../../scripts/esp-controller.js';
 import BlockMediator from '../../scripts/deps/block-mediator.min.js';
 import { miloReplaceKey, signIn } from '../../scripts/content-update.js';
-import decorateArea from '../../scripts/scripts.js';
 
 const { createTag } = await import(`${LIBS}/utils/utils.js`);
 const { closeModal, sendAnalytics } = await import(`${LIBS}/blocks/modal/modal.js`);
@@ -499,14 +499,42 @@ async function addConsentSuite(form) {
   }
 
   const submitWrapper = form.querySelector('.events-form-submit-wrapper');
-  submitWrapper.before(fieldWrapper, termsWrapper);
+  const eventTermsWrapper = form.querySelector('.event-terms-wrapper');
+
+  if (eventTermsWrapper) {
+    eventTermsWrapper.before(fieldWrapper);
+    submitWrapper.before(termsWrapper);
+  } else {
+    submitWrapper.before(fieldWrapper, termsWrapper);
+  }
+}
+
+function addTerms(form, terms) {
+  if (!terms || terms.textContent === '') return;
+  const submitWrapper = form.querySelector('.events-form-submit-wrapper');
+  const termsWrapper = createTag('div', { class: 'field-wrapper events-form-full-width event-terms-wrapper' });
+  const termsTexts = terms.querySelectorAll('p');
+  const lis = terms.querySelectorAll('li');
+
+  termsTexts.forEach((t, i) => {
+    termsWrapper.append(t);
+
+    if (i === 1) {
+      t.remove();
+    }
+  });
+
+  lis.forEach((li) => {
+    li.remove();
+  });
+
+  terms.remove();
+
+  submitWrapper.before(termsWrapper);
 }
 
 async function createForm(bp, formData) {
   const { form, terms } = bp;
-
-  // TODO: remove backward compatibility
-  // terms.remove();
 
   let rsvpFieldsData;
 
@@ -589,6 +617,7 @@ async function createForm(bp, formData) {
     formEl.append(fieldWrapper);
   });
 
+  addTerms(formEl, terms);
   if (!getMetadata('login-required')) await addConsentSuite(formEl);
 
   formEl.addEventListener('input', () => applyRules(formEl, rules));
@@ -728,14 +757,5 @@ export default async function decorate(block, formData = null) {
     waitlistSuccessScreen: block.querySelector(':scope > div:nth-of-type(5)'),
   };
 
-  // await onProfile(bp, formData);
-
-  bp.eventHero.classList.remove('loading');
-  decorateHero(bp.eventHero);
-  buildEventform(bp, formData).then(() => {
-    initFormBasedOnRSVPData(bp);
-  }).finally(() => {
-    decorateDefaultLinkAnalytics(block);
-    block.classList.remove('loading');
-  });
+  await onProfile(bp, formData);
 }
