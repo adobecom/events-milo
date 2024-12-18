@@ -504,8 +504,9 @@ async function addConsentSuite(form) {
 
 async function createForm(bp, formData) {
   const { form, terms } = bp;
-  // backward compatibility
-  terms.remove();
+
+  // TODO: remove backward compatibility
+  // terms.remove();
 
   let rsvpFieldsData;
 
@@ -588,7 +589,7 @@ async function createForm(bp, formData) {
     formEl.append(fieldWrapper);
   });
 
-  if (getMetadata('login-required')) await addConsentSuite(formEl);
+  if (!getMetadata('login-required')) await addConsentSuite(formEl);
 
   formEl.addEventListener('input', () => applyRules(formEl, rules));
   applyRules(formEl, rules);
@@ -727,5 +728,14 @@ export default async function decorate(block, formData = null) {
     waitlistSuccessScreen: block.querySelector(':scope > div:nth-of-type(5)'),
   };
 
-  await onProfile(bp, formData);
+  // await onProfile(bp, formData);
+
+  bp.eventHero.classList.remove('loading');
+  decorateHero(bp.eventHero);
+  buildEventform(bp, formData).then(() => {
+    initFormBasedOnRSVPData(bp);
+  }).finally(() => {
+    decorateDefaultLinkAnalytics(block);
+    block.classList.remove('loading');
+  });
 }
