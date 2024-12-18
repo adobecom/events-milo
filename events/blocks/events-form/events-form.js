@@ -1,5 +1,4 @@
 import { LIBS, getMetadata, getSusiOptions } from '../../scripts/utils.js';
-import HtmlSanitizer from '../../scripts/deps/html-sanitizer.js';
 import { deleteAttendeeFromEvent, getAndCreateAndAddAttendee, getAttendee, getEvent } from '../../scripts/esp-controller.js';
 import BlockMediator from '../../scripts/deps/block-mediator.min.js';
 import { miloReplaceKey, signIn } from '../../scripts/content-update.js';
