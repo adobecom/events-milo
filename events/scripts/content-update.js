@@ -1,4 +1,4 @@
-import { ICON_REG, META_REG } from './constances.js';
+import { ICON_REG, INLINE_LINK_REG, META_REG } from './constances.js';
 import BlockMediator from './deps/block-mediator.min.js';
 import { getEvent } from './esp-controller.js';
 import {
@@ -376,6 +376,36 @@ function updateImgTag(child, matchCallback, parentElement) {
   }
 }
 
+function parseLinkMarkdown(match, textNode) {
+  if (!match) return;
+
+  const [firstMatch] = match;
+  const [text, url] = firstMatch.slice(1, -1).split('](');
+
+  if (!(firstMatch || text || url)) return;
+
+  const matchIndex = textNode.textContent.indexOf(firstMatch);
+
+  let isExternalUrl = false;
+
+  try {
+    const urlObj = new URL(url);
+    isExternalUrl = urlObj.hostname !== window.location.hostname;
+  } catch (e) {
+    window.lana?.log('Error while parsing link MD URL:', e);
+  }
+
+  const a = createTag('a', { href: url, target: isExternalUrl ? '_blank' : '_self' }, text);
+
+  // insert a tag into the matchIndex position
+  const nextTextNode = textNode.splitText(matchIndex);
+  textNode.parentElement.insertBefore(a, nextTextNode);
+
+  nextTextNode.textContent = nextTextNode.textContent.replace(firstMatch, '');
+
+  parseLinkMarkdown(nextTextNode.textContent.match(INLINE_LINK_REG), nextTextNode);
+}
+
 function updateTextNode(child, matchCallback) {
   const originalText = child.nodeValue;
   const replacedText = originalText.replace(
@@ -387,11 +417,15 @@ function updateTextNode(child, matchCallback) {
     const lines = replacedText.split('\\n');
     lines.forEach((line, index) => {
       const textNode = document.createTextNode(line);
+
       child.parentElement.appendChild(textNode);
       if (index < lines.length - 1) {
         child.parentElement.appendChild(document.createElement('br'));
       }
+
+      parseLinkMarkdown(line.match(INLINE_LINK_REG), textNode);
     });
+
     child.remove();
   }
 }
