@@ -397,7 +397,6 @@ function parseLinkMarkdown(match, textNode) {
 
   const a = createTag('a', { href: url, target: isExternalUrl ? '_blank' : '_self' }, text);
 
-  // insert a tag into the matchIndex position
   const nextTextNode = textNode.splitText(matchIndex);
   textNode.parentElement.insertBefore(a, nextTextNode);
 
