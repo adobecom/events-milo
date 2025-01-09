@@ -169,6 +169,11 @@ export default function init(el) {
     return;
   }
 
+  if (!data || data.length === 0) {
+    el.remove();
+    return;
+  }
+
   const cardsWrapper = createTag('div', { class: 'cards-wrapper' });
   el.append(cardsWrapper);
 
