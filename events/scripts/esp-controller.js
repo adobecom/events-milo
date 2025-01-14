@@ -261,6 +261,7 @@ export async function deleteAttendeeFromEvent(eventId) {
       };
     }
 
+    if (response.status === 204) return { ok: true, data: { status: 204, attendeeDeleted: true } };
     return { ok: true, data: await response.json() };
   } catch (error) {
     window.lana?.log(`Error: Failed to delete attendee for event ${eventId}:`, error);
