@@ -10,29 +10,6 @@ function decorateTextContainer(el) {
 
   textContentWrapper.classList.add('text-wrapper');
   wrapper.append(textContentWrapper);
-
-  // forward and backward compatibility
-
-  textContentWrapper.querySelectorAll('p').forEach((p) => {
-    p.remove();
-  });
-
-  const venueObj = JSON.parse(getMetadata('venue'));
-
-  if (!venueObj) return;
-
-  const { formattedAddress, venueName } = venueObj;
-
-  createTag('p', { class: 'venue-name-text' }, createTag('strong', {}, venueName), { parent: textContentWrapper });
-
-  if (formattedAddress) {
-    createTag('p', { class: 'venue-address-text' }, formattedAddress, { parent: textContentWrapper });
-  } else {
-    const { address, city, state, postalCode } = venueObj;
-
-    if (address) createTag('p', { class: 'venue-address-text' }, address, { parent: textContentWrapper });
-    if (city && state && postalCode) createTag('p', { class: 'venue-address-text' }, `${city}, ${state} ${postalCode}`, { parent: textContentWrapper });
-  }
 }
 
 function decorateMap(el) {
