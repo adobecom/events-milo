@@ -87,7 +87,7 @@ export async function constructRequestOptions(method, body = null) {
 }
 
 export async function getEvent(eventId) {
-  const { host } = API_CONFIG.esp[getEventServiceEnv()];
+  const { host } = API_CONFIG.esl[getEventServiceEnv()];
   const options = await constructRequestOptions('GET');
 
   try {
@@ -107,7 +107,7 @@ export async function getEvent(eventId) {
 }
 
 export async function getEventAttendee(eventId) {
-  const { host } = API_CONFIG.esp[getEventServiceEnv()];
+  const { host } = API_CONFIG.esl[getEventServiceEnv()];
   const options = await constructRequestOptions('GET');
 
   try {
