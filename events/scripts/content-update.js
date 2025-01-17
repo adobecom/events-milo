@@ -29,7 +29,7 @@ export async function miloReplaceKey(miloLibs, key) {
     return await replaceKey(key, config);
   } catch (error) {
     window.lana?.log('Error trying to replace placeholder:', error);
-    return 'RSVP';
+    return key;
   }
 }
 
@@ -189,7 +189,10 @@ async function handleRSVPBtnBasedOnProfile(rsvpBtn, miloLibs, profile) {
 
   const eventInfo = resp.data;
   BlockMediator.set('eventData', eventInfo);
+
   if (profile?.noProfile || resp.status === 401) {
+    const allowGuestCheckout = getMetadata('allow-guest-registration') === 'true';
+
     if (eventInfo && eventInfo.isFull) {
       allowWaitlisting = eventInfo.allowWaitlisting;
       if (allowWaitlisting) {
@@ -202,13 +205,13 @@ async function handleRSVPBtnBasedOnProfile(rsvpBtn, miloLibs, profile) {
     } else {
       await setCtaState('default', rsvpBtn, miloLibs);
     }
-    if(!getMetadata('guest-checkout')){
+
+    if (!allowGuestCheckout) {
       rsvpBtn.el.addEventListener('click', (e) => {
         e.preventDefault();
         signIn(getSusiOptions(getConfig()));
       });
     }
-    
   } else if (profile) {
     await updateRSVPButtonState(rsvpBtn, miloLibs);
 
