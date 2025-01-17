@@ -3,17 +3,19 @@ import BlockMediator from './deps/block-mediator.min.js';
 
 const API_CONFIG = {
   esl: {
+    local: { host: 'http://localhost:8499' },
     dev: { host: 'https://wcms-events-service-layer-deploy-ethos102-stage-va-9c3ecd.stage.cloud.adobe.io' },
     dev02: { host: 'https://wcms-events-service-layer-deploy-ethos102-stage-va-d5dc93.stage.cloud.adobe.io' },
     stage: { host: 'https://events-service-layer-stage.adobe.io' },
-    stage02: { host: 'https://events-service-layer-stage02.adobe.io' },
+    stage02: { host: 'https://wcms-events-service-layer-deploy-ethos105-stage-or-8f7ce1.stage.cloud.adobe.io' },
     prod: { host: 'https://events-service-layer.adobe.io' },
   },
   esp: {
+    local: { host: 'http://localhost:8500' },
     dev: { host: 'https://wcms-events-service-platform-deploy-ethos102-stage-caff5f.stage.cloud.adobe.io' },
     dev02: { host: 'https://wcms-events-service-platform-deploy-ethos102-stage-c81eb6.stage.cloud.adobe.io' },
-    stage: { host: 'https://events-service-platform-stage.adobe.io' },
-    stage02: { host: 'https://events-service-platform-stage02.adobe.io' },
+    stage: { host: 'https://events-service-platform-stage-or2.adobe.io' },
+    stage02: { host: 'https://wcms-events-service-platform-deploy-ethos105-stage-9a5fdc.stage.cloud.adobe.io' },
     prod: { host: 'https://events-service-platform.adobe.io' },
   },
   imsToken: {
@@ -91,7 +93,7 @@ export async function constructRequestOptions(method, body = null) {
 }
 
 export async function getEvent(eventId) {
-  const { host } = API_CONFIG.esp[getEventServiceEnv()];
+  const { host } = API_CONFIG.esl[getEventServiceEnv()];
   const options = await constructRequestOptions('GET');
 
   try {
@@ -111,7 +113,7 @@ export async function getEvent(eventId) {
 }
 
 export async function getEventAttendee(eventId) {
-  const { host } = API_CONFIG.esp[getEventServiceEnv()];
+  const { host } = API_CONFIG.esl[getEventServiceEnv()];
   const options = await constructRequestOptions('GET');
 
   try {
@@ -265,6 +267,7 @@ export async function deleteAttendeeFromEvent(eventId) {
       };
     }
 
+    if (response.status === 204) return { ok: true, data: { status: 204, attendeeDeleted: true } };
     return { ok: true, data: await response.json() };
   } catch (error) {
     window.lana?.log(`Error: Failed to delete attendee for event ${eventId}:`, error);
