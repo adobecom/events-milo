@@ -457,7 +457,9 @@ function injectFragments(parent) {
 }
 
 export async function getNonProdData(env) {
-  const isPreviewMode = new URLSearchParams(window.location.search).get('previewMode') || window.location.hostname.endsWith('.hlx.page');
+  const isPreviewMode = new URLSearchParams(window.location.search).get('previewMode')
+  || window.location.hostname.includes('.hlx.')
+  || window.location.hostname.includes('.aem.');
   const resp = await fetch(`/events/default/${env === 'prod' ? '' : `${env}/`}metadata${isPreviewMode ? '-preview' : ''}.json`, {
     headers: {
       'Content-Type': 'application/json',
