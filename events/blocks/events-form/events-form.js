@@ -41,12 +41,12 @@ function createSelect({ field, placeholder, options, defval, required }) {
 }
 
 function constructPayload(form) {
-  const exceptions = (el) => el.tagName !== 'BUTTON' && el.id !== 'terms-and-conditions';
+  const exceptions = (el) => el.tagName !== 'BUTTON';
   const payload = {};
   [...form.elements].filter(exceptions).forEach((fe) => {
     if (fe.type.match(/(?:checkbox|radio)/)) {
       if (fe.checked) {
-        payload[fe.name] = payload[fe.name] ? `${fe.value}, ${payload[fe.name]}` : fe.value;
+        payload[fe.name] = payload[fe.name] ? `${payload[fe.name]}+${fe.value}` : fe.value;
       } else {
         payload[fe.name] = payload[fe.name] || '';
       }
@@ -86,13 +86,7 @@ async function submitForm(bp) {
 
   if (!isValid) return false;
 
-  // filter out empty keys
-  const cleanPayload = Object.keys(payload).reduce((acc, key) => {
-    if (payload[key]) acc[key] = payload[key];
-    return acc;
-  }, {});
-
-  return getAndCreateAndAddAttendee(getMetadata('event-id'), cleanPayload);
+  return getAndCreateAndAddAttendee(getMetadata('event-id'), payload);
 }
 
 function clearForm(form) {
@@ -359,9 +353,12 @@ async function loadConsent(form, path) {
 
   const attendeeResp = await getAttendee();
   if (attendeeResp.ok) {
-    const contactMethods = attendeeResp.data.contactMethod.split(',').map((s) => s.trim());
-    const matchingCheckbox = termsWrapper.querySelector(`input[value="${contactMethods[0]}"`);
-    if (matchingCheckbox) matchingCheckbox.setAttribute('checked', '');
+    const contactMethods = attendeeResp.data.contactMethod.split('+').map((s) => s.trim());
+
+    contactMethods.forEach((cm) => {
+      const matchingCheckbox = termsWrapper.querySelector(`input[value="${cm}"]`);
+      if (matchingCheckbox) matchingCheckbox.setAttribute('checked', '');
+    });
   }
 
   submit.disabled = false;
