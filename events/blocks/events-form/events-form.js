@@ -419,14 +419,21 @@ function decorateSuccessScreen(screen) {
             }
 
             const { data } = resp;
-            const espStatus = data?.espProvider?.status;
+            const result = data?.espProvider || data;
+
+            if (!result) {
+              buildErrorMsg(screen, 500);
+              return;
+            }
+
+            const espStatus = result.status;
 
             if ((espStatus && espStatus !== 204)) {
               buildErrorMsg(screen, espStatus);
               return;
             }
 
-            if (data?.espProvider?.attendeeDeleted) BlockMediator.set('rsvpData', null);
+            if (result.attendeeDeleted) BlockMediator.set('rsvpData', null);
 
             firstScreen.classList.add('hidden');
             secondScreen.classList.remove('hidden');

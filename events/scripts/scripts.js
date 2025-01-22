@@ -84,6 +84,10 @@ const CONFIG = {
     kr: { ietf: 'ko-KR', tk: 'zfo3ouc' },
   },
   adobeid: {
+    enableGuestAccounts: true,
+    enableGuestTokenForceRefresh: true,
+    enableGuestBotDetection: false,
+    api_parameters: { check_token: { guest_allowed: true } },
     onTokenExpired: () => {
       window.locaton.reload();
     },
