@@ -222,10 +222,11 @@ function createCheckItem(item, type, id, def) {
   const itemKebab = item.toLowerCase().replaceAll(' ', '-');
   const defList = def.split(';').map((defItem) => defItem.trim());
   const pseudoEl = createTag('span', { class: `check-item-button ${type}-button` });
-  const label = createTag('label', { class: `check-item-label ${type}-label`, for: `${id}-${itemKebab}` }, item);
+  const [customLabel, customVal] = item.split('::');
+  const label = createTag('label', { class: `check-item-label ${type}-label`, for: `${id}-${itemKebab}` }, customLabel || item);
   const input = createTag(
     'input',
-    { type, name: id, value: item, class: `check-item-input ${type}-input`, id: `${id}-${itemKebab}` },
+    { type, name: id, value: customVal || item, class: `check-item-input ${type}-input`, id: `${id}-${itemKebab}` },
   );
   if (item && defList.includes(item)) input.setAttribute('checked', '');
   return createTag('div', { class: `check-item-wrap ${type}-input-wrap` }, [input, pseudoEl, label]);
@@ -339,7 +340,7 @@ async function loadConsent(form, path) {
   }
 
   const lis = ul.querySelectorAll('li');
-  const options = Array.from(lis).map((li) => li.textContent.trim().toLowerCase()).join(';');
+  const options = Array.from(lis).map((li) => li.textContent.trim()).join(';');
   ul.remove();
 
   if (!options) {
@@ -482,7 +483,7 @@ async function addConsentSuite(form) {
 
   fieldWrapper.append(label, countrySelect);
 
-  const consentStringsIndex = await fetch('/events/consent-string-index.json').then((r) => r.json());
+  const consentStringsIndex = await fetch('/events/consent-query-index.json').then((r) => r.json());
 
   if (consentStringsIndex) {
     const { data } = consentStringsIndex;
