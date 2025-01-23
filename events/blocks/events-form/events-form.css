@@ -149,7 +149,7 @@
   border: 1px solid #ccc;
   background: white;
   z-index: 10;
-  max-height: 150px;
+  max-height: 256px;
   overflow-y: auto;
 }
 
