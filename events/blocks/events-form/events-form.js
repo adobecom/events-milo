@@ -41,6 +41,22 @@ function createSelect({ field, placeholder, options, defval, required }) {
   return select;
 }
 
+function createMultiSelect({ field, placeholder, options, defval, required }) {
+  // build multi-select with spectrum web components picker
+  const select = createTag('sp-picker', { id: field, placeholder });
+  const optionsArray = options.split(';').map((o) => o.trim());
+  const selected = defval.split(';').map((o) => o.trim());
+  select.setAttribute('multiple', '');
+  select.setAttribute('quiet', '');
+  select.setAttribute('size', '5');
+  select.setAttribute('placeholder', placeholder);
+  select.setAttribute('label', field);
+  select.setAttribute('value', selected);
+  select.setAttribute('options', JSON.stringify(optionsArray));
+  if (required === 'x') select.setAttribute('required', 'required');
+  return select;
+}
+
 function constructPayload(form) {
   const exceptions = (el) => el.tagName !== 'BUTTON' && el.id !== 'terms-and-conditions';
   const payload = {};
@@ -471,7 +487,8 @@ async function createForm(bp, formData) {
   let json = formData;
   /* c8 ignore next 4 */
   if (!formData) {
-    const resp = await fetch(pathname);
+    // const resp = await fetch(pathname);
+    const resp = await fetch('/drafts/qiyundai/rsvp-form-config.json');
     json = await resp.json();
   }
 
@@ -499,6 +516,7 @@ async function createForm(bp, formData) {
   formEl.dataset.action = action;
 
   const typeToElement = {
+    'multi-select': { fn: createMultiSelect, params: [], label: true, classes: [] },
     select: { fn: createSelect, params: [], label: true, classes: [] },
     heading: { fn: createHeading, params: ['h3'], label: false, classes: [] },
     legal: { fn: createHeading, params: ['p'], label: false, classes: [] },
