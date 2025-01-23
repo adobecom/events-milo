@@ -103,12 +103,58 @@
   outline-offset: 4px;
 }
 
-.events-form select {
+.events-form .multi-select-wrapper {
+  width: 100%;
+  max-width: 100%;
+  position: relative;
+}
+
+.events-form .multi-select-wrapper select.hidden {
+  display: block;
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.events-form select,
+.events-form .custom-select {
   appearance: none;
   background: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9Ii01OCAyOSAzMiAzNCIgc3R5bGU9ImVuYWJsZS1iYWNrZ3JvdW5kOm5ldyAtNTggMjkgMzIgMzQiIHhtbDpzcGFjZT0icHJlc2VydmUiPjxwYXRoIGQ9Im0tNTYgNDMgNi0xMiA2IDEyaC0xMnpNLTQ0IDQ5bC02IDEyLTYtMTJoMTJ6IiBmaWxsPSIjNTM1MzUzIi8+PC9zdmc+') no-repeat 128% 54%;
   background-color: var(--color-white);
   background-position: 98% 50%;
   background-size: 1em 1em;
+}
+
+.events-form .custom-select {
+  position: relative;
+  display: block;
+  border: solid 1px var(--color-gray-500);
+  border-radius: 4px;
+  box-sizing: border-box;
+  padding: var(--spacing-xxs) var(--spacing-xs);
+  cursor: pointer;
+}
+
+.events-form .custom-select span {
+  display: block;
+  font-family: var(--body-font-family);
+  font-size: var(--type-body-xs-size);
+  line-height: var(--type-body-l-lh);
+  overflow: auto;
+}
+
+.events-form .custom-dropdown {
+  position: absolute;
+  width: 100%;
+  border: 1px solid #ccc;
+  background: white;
+  z-index: 10;
+  max-height: 150px;
+  overflow-y: auto;
+}
+
+.events-form .custom-dropdown.hidden {
+  display: none;
 }
 
 .events-form label {
@@ -118,6 +164,29 @@
   font-size: var(--type-body-s-size);
   line-height: var(--type-body-s-lh);
   font-weight: 600;
+}
+
+.events-form .custom-dropdown label {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  flex-direction: row-reverse;
+  padding: 8px;
+  width: 100%;
+  font-size: var(--type-body-xs-size);
+  line-height: var(--type-body-l-lh);
+  font-weight: 400;
+  cursor: pointer;
+}
+
+.events-form .custom-dropdown label:hover {
+  background: #f0f0f0;
+}
+
+.events-form .custom-dropdown input {
+  margin-right: 8px;
+  width: 12px;
+  height: 12px;
 }
 
 .events-form label.required::after {
