@@ -65,6 +65,11 @@ function createSelect(params) {
       Array.from(select.options).forEach((opt) => {
         opt.selected = selectedValues.has(opt.value);
       });
+
+      const customSelectBoxes = customDropdown.querySelectorAll('input[type="checkbox"]');
+      customSelectBoxes.forEach((cb) => {
+        cb.checked = selectedValues.has(cb.value);
+      });
     };
 
     options.split(';').forEach((o) => {
@@ -81,11 +86,22 @@ function createSelect(params) {
       const input = e.target;
       const { value } = input;
 
+      if (!value || input.disabled) return;
+
       if (input.checked) {
         selectedValues.add(value);
       } else {
         selectedValues.delete(value);
       }
+
+      updateSelectUI();
+    });
+
+    select.addEventListener('change', () => {
+      selectedValues.clear();
+      Array.from(select.selectedOptions).forEach((opt) => {
+        selectedValues.add(opt.value);
+      });
 
       updateSelectUI();
     });
@@ -640,8 +656,17 @@ function personalizeForm(form, data) {
     Object.entries(value).forEach(([k, v]) => {
       const matchedInput = form.querySelector(`#${snakeToCamel(k)}`);
       if (matchedInput && v && !matchedInput.v) {
-        matchedInput.value = v;
-        if (key === 'profile') matchedInput.disabled = true;
+        if (Array.isArray(v)) {
+          v.forEach((val) => {
+            const option = matchedInput.querySelector(`option[value="${val}"]`);
+            if (option) option.selected = true;
+          });
+
+          matchedInput.dispatchEvent(new Event('change'));
+        } else {
+          matchedInput.value = v;
+          if (key === 'profile') matchedInput.disabled = true;
+        }
       }
     });
   });
