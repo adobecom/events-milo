@@ -86,8 +86,6 @@ function createSelect(params) {
       const input = e.target;
       const { value } = input;
 
-      if (!value || input.disabled) return;
-
       if (input.checked) {
         selectedValues.add(value);
       } else {
@@ -100,6 +98,7 @@ function createSelect(params) {
     select.addEventListener('change', () => {
       selectedValues.clear();
       Array.from(select.selectedOptions).forEach((opt) => {
+        if (opt.disabled) return;
         selectedValues.add(opt.value);
       });
 
