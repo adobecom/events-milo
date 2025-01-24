@@ -70,7 +70,7 @@ function createSelect(params) {
     options.split(';').forEach((o) => {
       const text = o.trim();
       const label = createTag('label', {}, text, { parent: customDropdown });
-      createTag('input', { type: 'checkbox', value: text }, '', { parent: label });
+      createTag('input', { type: 'checkbox', value: text, class: 'no-submit' }, '', { parent: label });
     });
 
     customSelect.addEventListener('click', () => {
@@ -102,7 +102,7 @@ function constructPayload(form) {
   const exceptions = (el) => el.tagName !== 'BUTTON' && el.id !== 'terms-and-conditions';
   const payload = {};
   [...form.elements].filter(exceptions).forEach((fe) => {
-    if (!fe.id) return;
+    if (fe.classList.contains('no-submit')) return;
 
     if (fe.type.match(/(?:checkbox|radio)/)) {
       if (fe.checked) {
