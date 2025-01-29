@@ -407,14 +407,15 @@ async function loadConsent(form, path) {
 
   termsWrapper.classList.remove('transparent');
   const ul = termsWrapper.querySelector('ul');
-
-  if (!ul) {
-    submit.disabled = false;
-    return;
+  let pseudoCheckboxes;
+  if (ul) {
+    pseudoCheckboxes = Array.from(termsWrapper.querySelectorAll('li'));
+  } else {
+    // if no ul found then 
+    pseudoCheckboxes = Array.from(termsWrapper.querySelectorAll('li'));
   }
 
-  const lis = ul.querySelectorAll('li');
-  const options = Array.from(lis).map((li) => li.textContent.trim()).join(';');
+  const options = Array.from(pseudoCheckboxes).map((li) => li.textContent.trim()).join(';');
   ul.remove();
 
   if (!options) {
