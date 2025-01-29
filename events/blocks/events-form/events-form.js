@@ -28,7 +28,10 @@ function snakeToCamel(str) {
     .join('');
 }
 
-function createSelect({ field, placeholder, options, defval, required }) {
+function createSelect(params) {
+  const {
+    field, placeholder, options, defval, required, type,
+  } = params;
   const select = createTag('select', { id: field });
   if (placeholder) select.append(createTag('option', { selected: '', disabled: '', value: '' }, placeholder));
   options.split(';').forEach((o) => {
@@ -38,6 +41,75 @@ function createSelect({ field, placeholder, options, defval, required }) {
     if (defval === text) select.value = text;
   });
   if (required === 'x') select.setAttribute('required', 'required');
+
+  if (type === 'multi-select') {
+    select.classList.add('hidden');
+    select.setAttribute('multiple', '');
+    select.setAttribute('name', field);
+
+    const selectWrapper = createTag('div', { class: 'multi-select-wrapper' });
+    const customSelect = createTag('div', { class: 'custom-select' });
+    const selectedOptions = createTag('span', { class: 'selected-options' }, 'Select an option', { parent: customSelect });
+    const customDropdown = createTag('div', { class: 'custom-dropdown hidden' }, '', { parent: customSelect });
+
+    const selectedValues = new Set();
+
+    const updateSelectUI = () => {
+      if (selectedValues.size === 0) {
+        selectedOptions.textContent = '-';
+      } else {
+        const valuesArr = Array.from(selectedValues);
+        selectedOptions.textContent = valuesArr.join(', ');
+      }
+
+      Array.from(select.options).forEach((opt) => {
+        opt.selected = selectedValues.has(opt.value);
+      });
+
+      const customSelectBoxes = customDropdown.querySelectorAll('input[type="checkbox"]');
+      customSelectBoxes.forEach((cb) => {
+        cb.checked = selectedValues.has(cb.value);
+      });
+    };
+
+    options.split(';').forEach((o) => {
+      const text = o.trim();
+      const label = createTag('label', {}, text, { parent: customDropdown });
+      createTag('input', { type: 'checkbox', value: text, class: 'no-submit' }, '', { parent: label });
+    });
+
+    customSelect.addEventListener('click', () => {
+      customDropdown.classList.toggle('hidden');
+    });
+
+    customDropdown.addEventListener('change', (e) => {
+      const input = e.target;
+      const { value } = input;
+
+      if (input.checked) {
+        selectedValues.add(value);
+      } else {
+        selectedValues.delete(value);
+      }
+
+      updateSelectUI();
+    });
+
+    select.addEventListener('change', () => {
+      selectedValues.clear();
+      Array.from(select.selectedOptions).forEach((opt) => {
+        if (opt.disabled) return;
+        selectedValues.add(opt.value);
+      });
+
+      updateSelectUI();
+    });
+
+    selectWrapper.append(select, customSelect, customDropdown);
+
+    return selectWrapper;
+  }
+
   return select;
 }
 
@@ -45,17 +117,25 @@ function constructPayload(form) {
   const exceptions = (el) => el.tagName !== 'BUTTON' && el.id !== 'terms-and-conditions';
   const payload = {};
   [...form.elements].filter(exceptions).forEach((fe) => {
+    if (fe.classList.contains('no-submit')) return;
+
     if (fe.type.match(/(?:checkbox|radio)/)) {
       if (fe.checked) {
-        payload[fe.name] = payload[fe.name] ? `${fe.value}, ${payload[fe.name]}` : fe.value;
+        payload[fe.name] = payload[fe.name] ? [...payload[fe.name], fe.value] : [fe.value];
       } else {
-        payload[fe.name] = payload[fe.name] || '';
+        payload[fe.name] = payload[fe.name] || [];
       }
+      return;
+    }
+
+    if (fe.type === 'select-multiple') {
+      payload[fe.id] = Array.from(fe.selectedOptions).map((opt) => opt.value);
       return;
     }
 
     if (fe.value) payload[fe.id] = fe.value;
   });
+
   return payload;
 }
 
@@ -499,6 +579,7 @@ async function createForm(bp, formData) {
   formEl.dataset.action = action;
 
   const typeToElement = {
+    'multi-select': { fn: createSelect, params: [], label: true, classes: [] },
     select: { fn: createSelect, params: [], label: true, classes: [] },
     heading: { fn: createHeading, params: ['h3'], label: false, classes: [] },
     legal: { fn: createHeading, params: ['p'], label: false, classes: [] },
@@ -545,6 +626,22 @@ async function createForm(bp, formData) {
   formEl.addEventListener('input', () => applyRules(formEl, rules));
   applyRules(formEl, rules);
 
+  // close all custom-dropdown on click outside
+  formEl.addEventListener('click', (e) => {
+    const multiSelects = formEl.querySelectorAll('.multi-select-wrapper');
+
+    if (multiSelects.length === 0) return;
+
+    multiSelects.forEach((ms) => {
+      const customDropdown = ms.querySelector('.custom-dropdown');
+      const customSelect = ms.querySelector('.custom-select');
+
+      if (!customDropdown.classList.contains('hidden') && !customSelect.contains(e.target) && !customDropdown.contains(e.target)) {
+        customDropdown.classList.add('hidden');
+      }
+    });
+  });
+
   return {
     formEl,
     sanitizeList,
@@ -558,8 +655,17 @@ function personalizeForm(form, data) {
     Object.entries(value).forEach(([k, v]) => {
       const matchedInput = form.querySelector(`#${snakeToCamel(k)}`);
       if (matchedInput && v && !matchedInput.v) {
-        matchedInput.value = v;
-        if (key === 'profile') matchedInput.disabled = true;
+        if (Array.isArray(v)) {
+          v.forEach((val) => {
+            const option = matchedInput.querySelector(`option[value="${val}"]`);
+            if (option) option.selected = true;
+          });
+
+          matchedInput.dispatchEvent(new Event('change'));
+        } else {
+          matchedInput.value = v;
+          if (key === 'profile') matchedInput.disabled = true;
+        }
       }
     });
   });
@@ -652,11 +758,10 @@ async function onProfile(bp, formData) {
 }
 
 async function decorateToastArea() {
-  const miloLibs = LIBS;
   await Promise.all([
-    import(`${miloLibs}/deps/lit-all.min.js`),
-    import(`${miloLibs}/features/spectrum-web-components/dist/theme.js`),
-    import(`${miloLibs}/features/spectrum-web-components/dist/toast.js`),
+    import(`${LIBS}/deps/lit-all.min.js`),
+    import(`${LIBS}/features/spectrum-web-components/dist/theme.js`),
+    import(`${LIBS}/features/spectrum-web-components/dist/toast.js`),
   ]);
   const toastArea = createTag('sp-theme', { color: 'light', scale: 'medium', class: 'toast-area' });
   document.body.append(toastArea);
