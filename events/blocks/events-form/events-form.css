@@ -208,6 +208,10 @@
   padding-bottom: 0;
 }
 
+.events-form .field-wrapper.event-terms-wrapper .submit-blocker {
+  display: inline-block;
+}
+
 .events-form .field-group-wrapper {
   flex-direction: column;
 }
@@ -373,9 +377,11 @@
 }
 
 .events-form .terms-and-conditions-wrapper .check-item-wrap {
-  display: flex;
-  width: max-content;
-  white-space: nowrap;
+  align-items: baseline;
+}
+
+.events-form .terms-and-conditions-wrapper .check-item-label {
+  max-width: 90%;
 }
 
 .events-form .field-wrapper.events-form-submit-wrapper button {

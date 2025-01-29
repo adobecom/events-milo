@@ -423,19 +423,43 @@ async function loadConsent(form, consentData) {
 
   uls.forEach((ul) => {
     const pseudoCheckboxes = ul.querySelectorAll('li');
-    const options = Array.from(pseudoCheckboxes).map((li) => li.textContent.trim()).join(';');
+    if (countryCode === 'CN') {
+      // FIXME: This is a temporary solution to handle the China case
+      Array.from(pseudoCheckboxes).forEach((o) => {
+        const valKebab = o.textContent.trim().replaceAll(' ', '-');
+        const checkWrap = createTag('div', { class: 'check-item-wrap checkbox-input-wrap' });
 
-    if (!options) {
-      submit.disabled = false;
-      return;
-    }
+        const checkbox = createTag('input', { id: valKebab, type: 'checkbox', class: 'submit-blocker no-submit check-item-input checkbox-input', value: valKebab });
+        const checkboxButton = createTag('span', { class: 'check-item-button checkbox-button' });
+        const label = createTag('label', { class: 'check-item-label checkbox-label', for: valKebab }, o.innerHTML);
 
-    if (countryCode !== 'CN') {
+        checkWrap.append(checkbox, checkboxButton, label);
+        termsWrapper.append(checkWrap);
+      });
+
+      const allCheckboxes = termsWrapper.querySelectorAll('.submit-blocker');
+
+      allCheckboxes.forEach((cb) => {
+        cb.addEventListener('change', () => {
+          const checkedCheckboxes = Array.from(allCheckboxes).filter((c) => c.checked);
+          submit.disabled = checkedCheckboxes.length !== allCheckboxes.length;
+        });
+      });
+
+      ul.remove();
+    } else {
+      const options = Array.from(pseudoCheckboxes).map((li) => li.textContent.trim()).join(';');
+
+      if (!options) {
+        submit.disabled = false;
+        return;
+      }
+
       const field = 'contactMethods';
       termsWrapper.append(createCheckGroup({ options, field, defval, required }, type));
-    }
 
-    ul.remove();
+      ul.remove();
+    }
   });
 
   submitWrapper.before(termsWrapper);
@@ -446,10 +470,23 @@ async function loadConsent(form, consentData) {
 
     if (!contactMethods) { submit.disabled = false; return; }
 
-    contactMethods.forEach((cm) => {
-      const matchingCheckbox = termsWrapper.querySelector(`input[value="${cm}"]`);
+    if (countryCode === 'DE') {
+      const matchingCheckbox = termsWrapper.querySelector(`input[value="${contactMethods.join('+')}"]`);
       if (matchingCheckbox) matchingCheckbox.setAttribute('checked', '');
-    });
+    } else {
+      contactMethods.forEach((cm) => {
+        const matchingCheckbox = termsWrapper.querySelector(`input[value="${cm}"]`);
+        if (matchingCheckbox) matchingCheckbox.setAttribute('checked', '');
+      });
+    }
+  }
+
+  if (countryCode === 'CN') {
+    const allCheckboxes = termsWrapper.querySelectorAll('.submit-blocker');
+    const checkedCheckboxes = Array.from(allCheckboxes).filter((c) => c.checked);
+    submit.disabled = checkedCheckboxes.length !== allCheckboxes.length;
+
+    return;
   }
 
   submit.disabled = false;
