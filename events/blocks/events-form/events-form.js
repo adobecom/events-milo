@@ -342,7 +342,7 @@ async function loadConsent(form, path) {
     return;
   }
 
-  const field = 'contactMethod';
+  const field = 'contactMethods';
   const defval = '';
   const required = '';
   const type = 'checkbox';
@@ -353,7 +353,9 @@ async function loadConsent(form, path) {
 
   const attendeeResp = await getAttendee();
   if (attendeeResp.ok) {
-    const contactMethods = attendeeResp.data.contactMethod.split('+').map((s) => s.trim());
+    const { contactMethods } = attendeeResp.data;
+
+    if (!contactMethods) { submit.disabled = false; return; }
 
     contactMethods.forEach((cm) => {
       const matchingCheckbox = termsWrapper.querySelector(`input[value="${cm}"]`);
