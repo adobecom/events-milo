@@ -120,7 +120,15 @@ function constructPayload(form) {
 
     if (fe.type.match(/(?:checkbox|radio)/)) {
       if (fe.checked) {
-        payload[fe.name] = payload[fe.name] ? [...payload[fe.name], fe.value] : [fe.value];
+        const valueList = fe.value.split('+').map((v) => v.trim());
+
+        if (valueList.length > 1) {
+          valueList.forEach((v) => {
+            payload[fe.name] = payload[fe.name] ? [...payload[fe.name], v] : [v];
+          });
+        } else {
+          payload[fe.name] = payload[fe.name] ? [...payload[fe.name], fe.value] : [fe.value];
+        }
       } else {
         payload[fe.name] = payload[fe.name] || [];
       }
@@ -392,7 +400,8 @@ function lowercaseKeys(obj) {
   }, {});
 }
 
-async function loadConsent(form, path) {
+async function loadConsent(form, consentData) {
+  const { path, countryCode } = consentData;
   const submitWrapper = form.querySelector('.events-form-submit-wrapper');
   const submit = submitWrapper.querySelector('button');
   const termsWrapper = form.querySelector('.terms-and-conditions-wrapper');
@@ -406,29 +415,28 @@ async function loadConsent(form, path) {
   await loadFragment(termsFragLink);
 
   termsWrapper.classList.remove('transparent');
-  const ul = termsWrapper.querySelector('ul');
-  let pseudoCheckboxes;
-  if (ul) {
-    pseudoCheckboxes = Array.from(termsWrapper.querySelectorAll('li'));
-  } else {
-    // if no ul found then 
-    pseudoCheckboxes = Array.from(termsWrapper.querySelectorAll('li'));
-  }
+  const uls = termsWrapper.querySelectorAll('ul');
 
-  const options = Array.from(pseudoCheckboxes).map((li) => li.textContent.trim()).join(';');
-  ul.remove();
-
-  if (!options) {
-    submit.disabled = false;
-    return;
-  }
-
-  const field = 'contactMethods';
   const defval = '';
   const required = '';
   const type = 'checkbox';
 
-  termsWrapper.append(createCheckGroup({ options, field, defval, required }, type));
+  uls.forEach((ul) => {
+    const pseudoCheckboxes = ul.querySelectorAll('li');
+    const options = Array.from(pseudoCheckboxes).map((li) => li.textContent.trim()).join(';');
+
+    if (!options) {
+      submit.disabled = false;
+      return;
+    }
+
+    if (countryCode !== 'CN') {
+      const field = 'contactMethods';
+      termsWrapper.append(createCheckGroup({ options, field, defval, required }, type));
+    }
+
+    ul.remove();
+  });
 
   submitWrapper.before(termsWrapper);
 
@@ -557,13 +565,13 @@ async function addConsentSuite(form) {
   const countrySelect = createTag('select', { id: 'consentStringId', required: 'required' });
   const termsWrapper = createTag('div', {
     class: 'field-wrapper events-form-full-width terms-and-conditions-wrapper transparent',
-    'data-field-id': 'contactMethod',
+    'data-field-id': 'contactMethods',
     'data-type': 'checkbox-group',
   });
 
   fieldWrapper.append(label, countrySelect);
 
-  const consentStringsIndex = await fetch('/events/consent-query-index.json').then((r) => r.json());
+  const consentStringsIndex = await fetch('/events/fragments/consents/consent-query-index.json').then((r) => r.json());
 
   if (consentStringsIndex) {
     const { data } = consentStringsIndex;
@@ -579,8 +587,7 @@ async function addConsentSuite(form) {
       const consentData = data.find((c) => c.consentId === e.target.value);
 
       if (consentData) {
-        const { path } = consentData;
-        await loadConsent(form, path);
+        await loadConsent(form, consentData);
       }
     });
   }
