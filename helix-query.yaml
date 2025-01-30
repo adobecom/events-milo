@@ -29,7 +29,7 @@ indices:
 
     include:
       - '/events/fragments/consents/*'
-    target: /events/consent-query-index.xlsx
+    target: /events/fragments/consents/consent-query-index.xlsx
     properties:
       countryCode:
         select: head > meta[name="country-code"]
