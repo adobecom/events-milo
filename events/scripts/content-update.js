@@ -219,7 +219,7 @@ async function handleRSVPBtnBasedOnProfile(rsvpBtn, miloLibs, profile) {
 }
 
 export async function validatePageAndRedirect(miloLibs) {
-  const { getConfig } = await import(`${miloLibs}/utils/utils.js`);
+  const { getConfig, loadLana } = await import(`${miloLibs}/utils/utils.js`);
   const env = getEventServiceEnv();
   const pagePublished = getMetadata('published') === 'true' || getMetadata('status') === 'live';
   const invalidStagePage = env === 'stage' && window.location.hostname === 'www.stage.adobe.com' && !getMetadata('event-id');
@@ -229,6 +229,8 @@ export async function validatePageAndRedirect(miloLibs) {
   const purposefulHitOnProdPreview = env === 'prod' && isPreviewMode;
 
   if (organicHitUnpublishedOnProd || invalidStagePage) {
+    await loadLana({ clientId: 'events-milo' });
+    await window.lana?.log(`Error: 404 page hit on ${env}: ${window.location.href}`);
     window.location.replace('/404');
   }
 

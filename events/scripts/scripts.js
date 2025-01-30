@@ -116,7 +116,9 @@ function renderWithNonProdMetadata() {
 
 async function fetchAndDecorateArea() {
   // Load non-prod data for stage and dev environments
-  const nonProdData = await getNonProdData(getEventServiceEnv());
+  let env = getEventServiceEnv();
+  if (env === 'local') env = 'dev';
+  const nonProdData = await getNonProdData(env);
   if (!nonProdData) return;
   Object.entries(nonProdData).forEach(([key, value]) => {
     setMetadata(key, value);
