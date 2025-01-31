@@ -283,7 +283,19 @@ function autoUpdateLinks(scope, miloLibs) {
       if (/#rsvp-form.*/.test(a.href)) {
         handleRegisterButton(a, miloLibs);
       } else if (a.href.endsWith('#event-template')) {
-        if (getMetadata('template-id')) {
+        let templateId;
+
+        try {
+          const series = JSON.parse(getMetadata('series'));
+          templateId = series?.templateId;
+        } catch (e) {
+          window.lana?.log('Failed to parse series metadata. Attempt to fallback on event tempate ID attribute:', e);
+          if (getMetadata('template-id')) {
+            templateId = getMetadata('template-id');
+          }
+        }
+
+        if (templateId) {
           const params = new URLSearchParams(document.location.search);
           const testTiming = params.get('timing');
           let timeSuffix = '';
@@ -296,9 +308,11 @@ function autoUpdateLinks(scope, miloLibs) {
             timeSuffix = currentTimestamp > +getMetadata('local-end-time-millis') ? '-post' : '-pre';
           }
 
-          a.href = `${getMetadata('template-id')}${timeSuffix}`;
+          a.href = `${templateId}${timeSuffix}`;
           const timingClass = `timing${timeSuffix}-event`;
           document.body.classList.add(timingClass);
+        } else {
+          window.lana?.log(`Error: Failed to find template ID for event ${getMetadata('event-id')}`);
         }
       } else if (a.href.endsWith('#host-email')) {
         if (getMetadata('host-email')) {
