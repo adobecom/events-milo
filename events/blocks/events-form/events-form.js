@@ -138,7 +138,9 @@ function constructPayload(form) {
     }
 
     if (fe.type === 'select-multiple') {
-      payload[fe.id] = Array.from(fe.selectedOptions).filter((opt) => opt.value);
+      payload[fe.id] = Array.from(fe.selectedOptions)
+        .filter((opt) => opt.value)
+        .map((opt) => opt.value);
       return;
     }
 

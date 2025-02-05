@@ -142,6 +142,7 @@
   font-size: var(--type-body-xs-size);
   line-height: var(--type-body-l-lh);
   overflow: auto;
+  padding-right: 8px;
 }
 
 .events-form .custom-dropdown {
