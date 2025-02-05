@@ -792,10 +792,10 @@ function personalizeForm(form, data) {
       const matchedInput = form.querySelector(`#${snakeToCamel(k)}`);
       if (matchedInput && v && !matchedInput.v) {
         if (Array.isArray(v)) {
-          // v.forEach((val) => {
-          //   const option = matchedInput.querySelector(`option[value="${val}"]`);
-          //   if (option) option.selected = true;
-          // });
+          v.forEach((val) => {
+            const option = matchedInput.querySelector(`option[value="${val}"]`);
+            if (option) option.selected = true;
+          });
         } else {
           matchedInput.value = v;
           if (key === 'profile') matchedInput.disabled = true;
