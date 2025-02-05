@@ -116,7 +116,7 @@ function createSelect(params) {
   return select;
 }
 
-function constructPayload(form, submissionEvent = null) {
+function constructPayload(form) {
   const exceptions = (el) => el.tagName !== 'BUTTON';
   const payload = {};
   [...form.elements].filter(exceptions).forEach((fe) => {
@@ -143,14 +143,7 @@ function constructPayload(form, submissionEvent = null) {
       const selectedValues = Array.from(fe.selectedOptions)
         .filter((opt) => opt.value)
         .map((opt) => opt.value);
-
-      // if (submissionEvent && (selectedValues.length === 0 || (selectedValues.length === 1 && selectedValues[0] === ''))) {
-      //   submissionEvent.preventDefault();
-      //   // eslint-disable-next-line no-alert
-      //   alert('Please select at least one valid option.');
-      // } else {
-        payload[fe.name] = selectedValues;
-      // }
+      payload[fe.name] = selectedValues;
       return;
     }
 
@@ -160,9 +153,9 @@ function constructPayload(form, submissionEvent = null) {
   return payload;
 }
 
-async function submitForm(bp, event) {
+async function submitForm(bp) {
   const { form, sanitizeList } = bp;
-  const payload = constructPayload(form, event);
+  const payload = constructPayload(form);
   const isValid = Object.keys(payload).reduce((valid, key) => {
     const field = form.querySelector(`[data-field-id=${key}]`);
 
@@ -257,7 +250,7 @@ function createButton({ type, label }, bp) {
         event.preventDefault();
         button.setAttribute('disabled', true);
         button.classList.add('submitting');
-        const respJson = await submitForm(bp, event);
+        const respJson = await submitForm(bp);
         button.removeAttribute('disabled');
         button.classList.remove('submitting');
         if (!respJson) return;
