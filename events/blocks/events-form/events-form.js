@@ -114,7 +114,7 @@ function createSelect(params) {
   return select;
 }
 
-function constructPayload(form) {
+function constructPayload(form, submissionEvent = null) {
   const exceptions = (el) => el.tagName !== 'BUTTON';
   const payload = {};
   [...form.elements].filter(exceptions).forEach((fe) => {
@@ -138,9 +138,17 @@ function constructPayload(form) {
     }
 
     if (fe.type === 'select-multiple') {
-      payload[fe.id] = Array.from(fe.selectedOptions)
+      const selectedValues = Array.from(fe.selectedOptions)
         .filter((opt) => opt.value)
         .map((opt) => opt.value);
+
+      // if (submissionEvent && (selectedValues.length === 0 || (selectedValues.length === 1 && selectedValues[0] === ''))) {
+      //   submissionEvent.preventDefault();
+      //   // eslint-disable-next-line no-alert
+      //   alert('Please select at least one valid option.');
+      // } else {
+        payload[fe.name] = selectedValues;
+      // }
       return;
     }
 
@@ -150,9 +158,9 @@ function constructPayload(form) {
   return payload;
 }
 
-async function submitForm(bp) {
+async function submitForm(bp, event) {
   const { form, sanitizeList } = bp;
-  const payload = constructPayload(form);
+  const payload = constructPayload(form, event);
   const isValid = Object.keys(payload).reduce((valid, key) => {
     const field = form.querySelector(`[data-field-id=${key}]`);
 
@@ -247,7 +255,7 @@ function createButton({ type, label }, bp) {
         event.preventDefault();
         button.setAttribute('disabled', true);
         button.classList.add('submitting');
-        const respJson = await submitForm(bp);
+        const respJson = await submitForm(bp, event);
         button.removeAttribute('disabled');
         button.classList.remove('submitting');
         if (!respJson) return;
@@ -789,10 +797,10 @@ function personalizeForm(form, data) {
       const matchedInput = form.querySelector(`#${snakeToCamel(k)}`);
       if (matchedInput && v && !matchedInput.v) {
         if (Array.isArray(v)) {
-          v.forEach((val) => {
-            const option = matchedInput.querySelector(`option[value="${val}"]`);
-            if (option) option.selected = true;
-          });
+          // v.forEach((val) => {
+          //   const option = matchedInput.querySelector(`option[value="${val}"]`);
+          //   if (option) option.selected = true;
+          // });
         } else {
           matchedInput.value = v;
           if (key === 'profile') matchedInput.disabled = true;
