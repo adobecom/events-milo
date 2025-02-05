@@ -32,13 +32,14 @@ function createSelect(params) {
     field, placeholder, options, defval, required, type,
   } = params;
   const select = createTag('select', { id: field });
-  if (placeholder) select.append(createTag('option', { selected: '', disabled: '', value: '' }, placeholder));
+  if (placeholder) select.append(createTag('option', { class: 'placeholder-option', selected: '', disabled: '', value: '' }, placeholder));
   options.split(';').forEach((o) => {
     const text = o.trim();
     const option = createTag('option', { value: text }, text);
     select.append(option);
     if (defval === text) select.value = text;
   });
+
   if (required === 'x') select.setAttribute('required', 'required');
 
   if (type === 'multi-select') {
@@ -46,16 +47,19 @@ function createSelect(params) {
     select.setAttribute('multiple', '');
     select.setAttribute('name', field);
 
+    const placeholderOption = select.querySelector('option.placeholder-option');
+    if (placeholderOption) placeholderOption.selected = false;
+
     const selectWrapper = createTag('div', { class: 'multi-select-wrapper' });
     const customSelect = createTag('div', { class: 'custom-select' });
-    const selectedOptions = createTag('span', { class: 'selected-options' }, 'Select an option', { parent: customSelect });
+    const selectedOptions = createTag('span', { class: 'selected-options' }, placeholder || '-', { parent: customSelect });
     const customDropdown = createTag('div', { class: 'custom-dropdown hidden' }, '', { parent: customSelect });
 
     const selectedValues = new Set();
 
     const updateSelectUI = () => {
       if (selectedValues.size === 0) {
-        selectedOptions.textContent = '-';
+        selectedOptions.textContent = placeholder || '-';
       } else {
         const valuesArr = Array.from(selectedValues);
         selectedOptions.textContent = valuesArr.join(', ');
@@ -136,7 +140,10 @@ function constructPayload(form) {
     }
 
     if (fe.type === 'select-multiple') {
-      payload[fe.id] = Array.from(fe.selectedOptions).map((opt) => opt.value);
+      const selectedValues = Array.from(fe.selectedOptions)
+        .filter((opt) => opt.value)
+        .map((opt) => opt.value);
+      payload[fe.id] = selectedValues;
       return;
     }
 
