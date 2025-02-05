@@ -219,7 +219,7 @@ async function handleRSVPBtnBasedOnProfile(rsvpBtn, miloLibs, profile) {
 }
 
 export async function validatePageAndRedirect(miloLibs) {
-  const { getConfig } = await import(`${miloLibs}/utils/utils.js`);
+  const { getConfig, loadLana } = await import(`${miloLibs}/utils/utils.js`);
   const env = getEventServiceEnv();
   const pagePublished = getMetadata('published') === 'true' || getMetadata('status') === 'live';
   const invalidStagePage = env === 'stage' && window.location.hostname === 'www.stage.adobe.com' && !getMetadata('event-id');
@@ -229,6 +229,8 @@ export async function validatePageAndRedirect(miloLibs) {
   const purposefulHitOnProdPreview = env === 'prod' && isPreviewMode;
 
   if (organicHitUnpublishedOnProd || invalidStagePage) {
+    await loadLana({ clientId: 'events-milo' });
+    await window.lana?.log(`Error: 404 page hit on ${env}: ${window.location.href}`);
     window.location.replace('/404');
   }
 
@@ -457,7 +459,9 @@ function injectFragments(parent) {
 }
 
 export async function getNonProdData(env) {
-  const isPreviewMode = new URLSearchParams(window.location.search).get('previewMode') || window.location.hostname.endsWith('.hlx.page');
+  const isPreviewMode = new URLSearchParams(window.location.search).get('previewMode')
+  || window.location.hostname.includes('.hlx.')
+  || window.location.hostname.includes('.aem.');
   const resp = await fetch(`/events/default/${env === 'prod' ? '' : `${env}/`}metadata${isPreviewMode ? '-preview' : ''}.json`, {
     headers: {
       'Content-Type': 'application/json',
