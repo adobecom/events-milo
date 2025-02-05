@@ -143,7 +143,7 @@ function constructPayload(form) {
       const selectedValues = Array.from(fe.selectedOptions)
         .filter((opt) => opt.value)
         .map((opt) => opt.value);
-      payload[fe.name] = selectedValues;
+      payload[fe.id] = selectedValues;
       return;
     }
 
