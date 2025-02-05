@@ -84,6 +84,10 @@ const CONFIG = {
     kr: { ietf: 'ko-KR', tk: 'zfo3ouc' },
   },
   adobeid: {
+    enableGuestAccounts: true,
+    enableGuestTokenForceRefresh: true,
+    enableGuestBotDetection: false,
+    api_parameters: { check_token: { guest_allowed: true } },
     onTokenExpired: () => {
       window.locaton.reload();
     },
@@ -112,7 +116,9 @@ function renderWithNonProdMetadata() {
 
 async function fetchAndDecorateArea() {
   // Load non-prod data for stage and dev environments
-  const nonProdData = await getNonProdData(getEventServiceEnv());
+  let env = getEventServiceEnv();
+  if (env === 'local') env = 'dev';
+  const nonProdData = await getNonProdData(env);
   if (!nonProdData) return;
   Object.entries(nonProdData).forEach(([key, value]) => {
     setMetadata(key, value);
