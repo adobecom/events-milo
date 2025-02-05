@@ -114,6 +114,7 @@
   position: absolute;
   opacity: 0;
   pointer-events: none;
+  height: 100%;
 }
 
 .events-form select,
@@ -141,6 +142,7 @@
   font-size: var(--type-body-xs-size);
   line-height: var(--type-body-l-lh);
   overflow: auto;
+  padding-right: 8px;
 }
 
 .events-form .custom-dropdown {
