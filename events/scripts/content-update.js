@@ -190,8 +190,8 @@ async function handleRSVPBtnBasedOnProfile(rsvpBtn, miloLibs, profile) {
   const eventInfo = resp.data;
   BlockMediator.set('eventData', eventInfo);
 
-  if (profile?.noProfile || resp.status === 401) {
-    const allowGuestCheckout = getMetadata('allow-guest-registration') === 'true';
+  if (profile?.noProfile || profile.account_type === 'guest' || resp.status === 401) {
+    const allowGuestReg = getMetadata('allow-guest-registration') === 'true';
 
     if (eventInfo && eventInfo.isFull) {
       allowWaitlisting = eventInfo.allowWaitlisting;
@@ -206,7 +206,7 @@ async function handleRSVPBtnBasedOnProfile(rsvpBtn, miloLibs, profile) {
       await setCtaState('default', rsvpBtn, miloLibs);
     }
 
-    if (!allowGuestCheckout) {
+    if (!allowGuestReg) {
       rsvpBtn.el.addEventListener('click', (e) => {
         e.preventDefault();
         signIn(getSusiOptions(getConfig()));
@@ -244,7 +244,7 @@ export async function validatePageAndRedirect(miloLibs) {
   if (purposefulHitOnProdPreview) {
     document.body.style.display = 'none';
     BlockMediator.subscribe('imsProfile', ({ newValue }) => {
-      if (newValue?.noProfile) {
+      if (newValue?.noProfile || newValue?.account_type === 'guest') {
         signIn(getSusiOptions(getConfig()));
       } else if (!newValue.email?.toLowerCase().endsWith('@adobe.com')) {
         window.location.replace('/404');

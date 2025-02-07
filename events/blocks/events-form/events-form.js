@@ -858,9 +858,11 @@ async function onProfile(bp, formData) {
   const { block, eventHero } = bp;
   const profile = BlockMediator.get('imsProfile');
   const { getConfig } = await import(`${LIBS}/utils/utils.js`);
-  const guestCheckout =  getMetadata('guest-checkout')
+  const allowGuestReg = getMetadata('allow-guest-registration') === 'true';
   if (profile) {
-    if (profile.noProfile && /#rsvp-form.*/.test(window.location.hash) && !guestCheckout) {
+    if ((profile.noProfile || profile.account_type === 'guest')
+      && /#rsvp-form.*/.test(window.location.hash)
+      && !allowGuestReg) {
       // TODO: also check for guestCheckout enablement for future iterations
       signIn(getSusiOptions(getConfig()));
     } else {
@@ -875,7 +877,9 @@ async function onProfile(bp, formData) {
     }
   } else {
     BlockMediator.subscribe('imsProfile', ({ newValue }) => {
-      if (newValue?.noProfile && /#rsvp-form.*/.test(window.location.hash)&& !guestCheckout) {
+      if ((newValue?.noProfile || newValue?.account_type === 'guest')
+        && /#rsvp-form.*/.test(window.location.hash)
+        && !allowGuestReg) {
         // TODO: also check for guestCheckout enablement for future iterations
         signIn(getSusiOptions(getConfig()));
       } else {
