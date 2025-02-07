@@ -18,12 +18,6 @@ const API_CONFIG = {
     stage02: { host: 'https://wcms-events-service-platform-deploy-ethos105-stage-9a5fdc.stage.cloud.adobe.io' },
     prod: { host: 'https://events-service-platform.adobe.io' },
   },
-  imsToken: {
-    local: { host: 'https://ims-na1-stg1.adobelogin.com/ims/check/v6/token?client_id=events-milo&scope=openid%2CAdobeID&guest_allowed=true' },
-    dev: { host: 'https://ims-na1-stg1.adobelogin.com/ims/check/v6/token?client_id=events-milo&scope=openid%2CAdobeID&guest_allowed=true' },
-    stage: { host: 'https://ims-na1-stg1.adobelogin.com/ims/check/v6/token?client_id=events-milo&scope=openid%2CAdobeID&guest_allowed=true' },
-    prod: { host: 'https://ims-na1.adobelogin.com/ims/check/v6/token?client_id=events-milo&scope=openid%2CAdobeID&guest_allowed=true' },
-  },
 };
 
 export const getCaasTags = (() => {
