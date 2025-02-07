@@ -284,9 +284,25 @@ export async function getAndCreateAndAddAttendee(eventId, attendeeData) {
   let registrationStatus = 'registered';
 
   if (!attendeeResp.ok && attendeeResp.status === 404) {
-    attendee = await createAttendee(attendeeData);
+    const payload = { ...attendeeData };
+
+    // filter out empty keys
+    const cleanPayload = Object.keys(payload).reduce((acc, key) => {
+      if (payload[key]) acc[key] = payload[key];
+      return acc;
+    }, {});
+
+    attendee = await createAttendee(cleanPayload);
   } else if (attendeeResp.data?.attendeeId) {
-    attendee = await updateAttendee({ ...attendeeResp.data, ...attendeeData });
+    const payload = { ...attendeeResp.data, ...attendeeData };
+
+    // filter out empty keys
+    const cleanPayload = Object.keys(payload).reduce((acc, key) => {
+      if (payload[key]) acc[key] = payload[key];
+      return acc;
+    }, {});
+
+    attendee = await updateAttendee(cleanPayload);
   }
 
   if (!attendee?.ok) return { ok: false, error: 'Failed to create or update attendee' };
