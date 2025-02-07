@@ -29,7 +29,7 @@ export async function miloReplaceKey(miloLibs, key) {
     return await replaceKey(key, config);
   } catch (error) {
     window.lana?.log('Error trying to replace placeholder:', error);
-    return 'RSVP';
+    return key;
   }
 }
 
@@ -189,22 +189,29 @@ async function handleRSVPBtnBasedOnProfile(rsvpBtn, miloLibs, profile) {
 
   const eventInfo = resp.data;
   BlockMediator.set('eventData', eventInfo);
-  if (profile?.noProfile || resp.status === 401) {
+
+  if (profile?.noProfile || profile.account_type === 'guest' || resp.status === 401) {
+    const allowGuestReg = getMetadata('allow-guest-registration') === 'true';
+
     if (eventInfo && eventInfo.isFull) {
       allowWaitlisting = eventInfo.allowWaitlisting;
       if (allowWaitlisting) {
         await setCtaState('toWaitlist', rsvpBtn, miloLibs);
-      } else {
+      } else if (getMetadata('cloud-type') === 'CreativeCloud') {
         await setCtaState('eventClosed', rsvpBtn, miloLibs);
+      } else {
+        await setCtaState('default', rsvpBtn, miloLibs);
       }
     } else {
       await setCtaState('default', rsvpBtn, miloLibs);
     }
-    // TODO: add condition once guest checkout is available
-    rsvpBtn.el.addEventListener('click', (e) => {
-      e.preventDefault();
-      signIn(getSusiOptions(getConfig()));
-    });
+
+    if (!allowGuestReg) {
+      rsvpBtn.el.addEventListener('click', (e) => {
+        e.preventDefault();
+        signIn(getSusiOptions(getConfig()));
+      });
+    }
   } else if (profile) {
     await updateRSVPButtonState(rsvpBtn, miloLibs);
 
@@ -237,7 +244,7 @@ export async function validatePageAndRedirect(miloLibs) {
   if (purposefulHitOnProdPreview) {
     document.body.style.display = 'none';
     BlockMediator.subscribe('imsProfile', ({ newValue }) => {
-      if (newValue?.noProfile) {
+      if (newValue?.noProfile || newValue?.account_type === 'guest') {
         signIn(getSusiOptions(getConfig()));
       } else if (!newValue.email?.toLowerCase().endsWith('@adobe.com')) {
         window.location.replace('/404');
