@@ -26,3 +26,28 @@ indices:
         select: head > meta[name="robots"]
         value: |
           attribute(el, 'content')
+
+    include:
+      - '/events/fragments/consents/*'
+    target: /events/fragments/consents/consent-query-index.xlsx
+    properties:
+      countryCode:
+        select: head > meta[name="country-code"]
+        value: |
+          attribute(el, 'content')
+      countryName:
+        select: head > meta[name="country-name"]
+        value: |
+          attribute(el, 'content')
+      consentId:
+        select: head > meta[name="consent-id"]
+        value: |
+          attribute(el, 'content')
+      lastModified:
+        select: none
+        value: |
+          parseTimestamp(headers['last-modified'], 'ddd, DD MMM YYYY hh:mm:ss GMT')
+      robots:
+        select: head > meta[name="robots"]
+        value: |
+          attribute(el, 'content')

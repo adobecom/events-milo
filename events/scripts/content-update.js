@@ -29,7 +29,7 @@ export async function miloReplaceKey(miloLibs, key) {
     return await replaceKey(key, config);
   } catch (error) {
     window.lana?.log('Error trying to replace placeholder:', error);
-    return 'RSVP';
+    return key;
   }
 }
 
@@ -189,22 +189,29 @@ async function handleRSVPBtnBasedOnProfile(rsvpBtn, miloLibs, profile) {
 
   const eventInfo = resp.data;
   BlockMediator.set('eventData', eventInfo);
-  if (profile?.noProfile || resp.status === 401) {
+
+  if (profile?.noProfile || profile.account_type === 'guest' || resp.status === 401) {
+    const allowGuestReg = getMetadata('allow-guest-registration') === 'true';
+
     if (eventInfo && eventInfo.isFull) {
       allowWaitlisting = eventInfo.allowWaitlisting;
       if (allowWaitlisting) {
         await setCtaState('toWaitlist', rsvpBtn, miloLibs);
-      } else {
+      } else if (getMetadata('cloud-type') === 'CreativeCloud') {
         await setCtaState('eventClosed', rsvpBtn, miloLibs);
+      } else {
+        await setCtaState('default', rsvpBtn, miloLibs);
       }
     } else {
       await setCtaState('default', rsvpBtn, miloLibs);
     }
-    // TODO: add condition once guest checkout is available
-    rsvpBtn.el.addEventListener('click', (e) => {
-      e.preventDefault();
-      signIn(getSusiOptions(getConfig()));
-    });
+
+    if (!allowGuestReg) {
+      rsvpBtn.el.addEventListener('click', (e) => {
+        e.preventDefault();
+        signIn(getSusiOptions(getConfig()));
+      });
+    }
   } else if (profile) {
     await updateRSVPButtonState(rsvpBtn, miloLibs);
 
@@ -219,7 +226,7 @@ async function handleRSVPBtnBasedOnProfile(rsvpBtn, miloLibs, profile) {
 }
 
 export async function validatePageAndRedirect(miloLibs) {
-  const { getConfig } = await import(`${miloLibs}/utils/utils.js`);
+  const { getConfig, loadLana } = await import(`${miloLibs}/utils/utils.js`);
   const env = getEventServiceEnv();
   const pagePublished = getMetadata('published') === 'true' || getMetadata('status') === 'live';
   const invalidStagePage = env === 'stage' && window.location.hostname === 'www.stage.adobe.com' && !getMetadata('event-id');
@@ -229,13 +236,15 @@ export async function validatePageAndRedirect(miloLibs) {
   const purposefulHitOnProdPreview = env === 'prod' && isPreviewMode;
 
   if (organicHitUnpublishedOnProd || invalidStagePage) {
+    await loadLana({ clientId: 'events-milo' });
+    await window.lana?.log(`Error: 404 page hit on ${env}: ${window.location.href}`);
     window.location.replace('/404');
   }
 
   if (purposefulHitOnProdPreview) {
     document.body.style.display = 'none';
     BlockMediator.subscribe('imsProfile', ({ newValue }) => {
-      if (newValue?.noProfile) {
+      if (newValue?.noProfile || newValue?.account_type === 'guest') {
         signIn(getSusiOptions(getConfig()));
       } else if (!newValue.email?.toLowerCase().endsWith('@adobe.com')) {
         window.location.replace('/404');
@@ -281,7 +290,19 @@ function autoUpdateLinks(scope, miloLibs) {
       if (/#rsvp-form.*/.test(a.href)) {
         handleRegisterButton(a, miloLibs);
       } else if (a.href.endsWith('#event-template')) {
-        if (getMetadata('template-id')) {
+        let templateId;
+
+        try {
+          const series = JSON.parse(getMetadata('series'));
+          templateId = series?.templateId;
+        } catch (e) {
+          window.lana?.log('Failed to parse series metadata. Attempt to fallback on event tempate ID attribute:', e);
+          if (getMetadata('template-id')) {
+            templateId = getMetadata('template-id');
+          }
+        }
+
+        if (templateId) {
           const params = new URLSearchParams(document.location.search);
           const testTiming = params.get('timing');
           let timeSuffix = '';
@@ -294,9 +315,11 @@ function autoUpdateLinks(scope, miloLibs) {
             timeSuffix = currentTimestamp > +getMetadata('local-end-time-millis') ? '-post' : '-pre';
           }
 
-          a.href = `${getMetadata('template-id')}${timeSuffix}`;
+          a.href = `${templateId}${timeSuffix}`;
           const timingClass = `timing${timeSuffix}-event`;
           document.body.classList.add(timingClass);
+        } else {
+          window.lana?.log(`Error: Failed to find template ID for event ${getMetadata('event-id')}`);
         }
       } else if (a.href.endsWith('#host-email')) {
         if (getMetadata('host-email')) {
@@ -457,7 +480,9 @@ function injectFragments(parent) {
 }
 
 export async function getNonProdData(env) {
-  const isPreviewMode = new URLSearchParams(window.location.search).get('previewMode') || window.location.hostname.endsWith('.hlx.page');
+  const isPreviewMode = new URLSearchParams(window.location.search).get('previewMode')
+  || window.location.hostname.includes('.hlx.')
+  || window.location.hostname.includes('.aem.');
   const resp = await fetch(`/events/default/${env === 'prod' ? '' : `${env}/`}metadata${isPreviewMode ? '-preview' : ''}.json`, {
     headers: {
       'Content-Type': 'application/json',
@@ -469,7 +494,17 @@ export async function getNonProdData(env) {
     const json = await resp.json();
     let { pathname } = window.location;
     if (pathname.endsWith('.html')) pathname = pathname.slice(0, -5);
-    const pageData = json.data.find((d) => d.url === pathname);
+    const pageData = json.data.find((d) => {
+      let pageUrl = '';
+
+      try {
+        pageUrl = new URL(d.url).pathname;
+      } catch (e) {
+        pageUrl = d.url;
+      }
+
+      return pageUrl === pathname;
+    });
 
     if (pageData) return pageData;
 

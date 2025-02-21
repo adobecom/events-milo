@@ -1,14 +1,13 @@
 import { LIBS, getMetadata, getSusiOptions } from '../../scripts/utils.js';
-import HtmlSanitizer from '../../scripts/deps/html-sanitizer.js';
-import { deleteAttendeeFromEvent, getAndCreateAndAddAttendee, getEvent } from '../../scripts/esp-controller.js';
+import { deleteAttendeeFromEvent, getAndCreateAndAddAttendee, getAttendee, getEvent } from '../../scripts/esp-controller.js';
 import BlockMediator from '../../scripts/deps/block-mediator.min.js';
 import { miloReplaceKey, signIn } from '../../scripts/content-update.js';
-import decorateArea from '../../scripts/scripts.js';
 
 const { createTag } = await import(`${LIBS}/utils/utils.js`);
 const { closeModal, sendAnalytics } = await import(`${LIBS}/blocks/modal/modal.js`);
 const { default: sanitizeComment } = await import(`${LIBS}/utils/sanitizeComment.js`);
 const { decorateDefaultLinkAnalytics } = await import(`${LIBS}/martech/attributes.js`);
+const { default: loadFragment } = await import(`${LIBS}/blocks/fragment/fragment.js`);
 
 const RULE_OPERATORS = {
   equal: '=',
@@ -28,34 +27,129 @@ function snakeToCamel(str) {
     .join('');
 }
 
-function createSelect({ field, placeholder, options, defval, required }) {
+function createSelect(params) {
+  const {
+    field, placeholder, options, defval, required, type,
+  } = params;
   const select = createTag('select', { id: field });
-  if (placeholder) select.append(createTag('option', { selected: '', disabled: '', value: '' }, placeholder));
+  if (placeholder) select.append(createTag('option', { class: 'placeholder-option', selected: '', disabled: '', value: '' }, placeholder));
   options.split(';').forEach((o) => {
     const text = o.trim();
     const option = createTag('option', { value: text }, text);
     select.append(option);
     if (defval === text) select.value = text;
   });
+
   if (required === 'x') select.setAttribute('required', 'required');
+
+  if (type === 'multi-select') {
+    select.classList.add('hidden');
+    select.setAttribute('multiple', '');
+    select.setAttribute('name', field);
+
+    const placeholderOption = select.querySelector('option.placeholder-option');
+    if (placeholderOption) placeholderOption.selected = false;
+
+    const selectWrapper = createTag('div', { class: 'multi-select-wrapper' });
+    const customSelect = createTag('div', { class: 'custom-select' });
+    const selectedOptions = createTag('span', { class: 'selected-options' }, placeholder || '-', { parent: customSelect });
+    const customDropdown = createTag('div', { class: 'custom-dropdown hidden' }, '', { parent: customSelect });
+
+    const selectedValues = new Set();
+
+    const updateSelectUI = () => {
+      if (selectedValues.size === 0) {
+        selectedOptions.textContent = placeholder || '-';
+      } else {
+        const valuesArr = Array.from(selectedValues);
+        selectedOptions.textContent = valuesArr.join(', ');
+      }
+
+      Array.from(select.options).forEach((opt) => {
+        opt.selected = selectedValues.has(opt.value);
+      });
+
+      const customSelectBoxes = customDropdown.querySelectorAll('input[type="checkbox"]');
+      customSelectBoxes.forEach((cb) => {
+        cb.checked = selectedValues.has(cb.value);
+      });
+    };
+
+    options.split(';').forEach((o) => {
+      const text = o.trim();
+      const label = createTag('label', {}, text, { parent: customDropdown });
+      createTag('input', { type: 'checkbox', value: text, class: 'no-submit' }, '', { parent: label });
+    });
+
+    customSelect.addEventListener('click', () => {
+      customDropdown.classList.toggle('hidden');
+    });
+
+    customDropdown.addEventListener('change', (e) => {
+      const input = e.target;
+      const { value } = input;
+
+      if (input.checked) {
+        selectedValues.add(value);
+      } else {
+        selectedValues.delete(value);
+      }
+
+      updateSelectUI();
+    });
+
+    select.addEventListener('change', () => {
+      selectedValues.clear();
+      Array.from(select.selectedOptions).forEach((opt) => {
+        if (opt.disabled) return;
+        selectedValues.add(opt.value);
+      });
+
+      updateSelectUI();
+    });
+
+    selectWrapper.append(select, customSelect, customDropdown);
+
+    return selectWrapper;
+  }
+
   return select;
 }
 
 function constructPayload(form) {
-  const exceptions = (el) => el.tagName !== 'BUTTON' && el.id !== 'terms-and-conditions';
+  const exceptions = (el) => el.tagName !== 'BUTTON';
   const payload = {};
   [...form.elements].filter(exceptions).forEach((fe) => {
+    if (fe.classList.contains('no-submit')) return;
+
     if (fe.type.match(/(?:checkbox|radio)/)) {
       if (fe.checked) {
-        payload[fe.name] = payload[fe.name] ? `${fe.value}, ${payload[fe.name]}` : fe.value;
+        const valueList = fe.value.split('+').map((v) => v.trim());
+
+        if (valueList.length > 1) {
+          valueList.forEach((v) => {
+            payload[fe.name] = payload[fe.name] ? [...payload[fe.name], v] : [v];
+          });
+        } else {
+          payload[fe.name] = payload[fe.name] ? [...payload[fe.name], fe.value] : [fe.value];
+        }
       } else {
-        payload[fe.name] = payload[fe.name] || '';
+        payload[fe.name] = payload[fe.name] || [];
       }
+      return;
+    }
+
+    if (fe.type === 'select-multiple') {
+      const selectedValues = Array.from(fe.selectedOptions)
+        .filter((opt) => opt.value)
+        .map((opt) => opt.value);
+      payload[fe.id] = selectedValues;
       return;
     }
 
     if (fe.value) payload[fe.id] = fe.value;
   });
+
   return payload;
 }
 
@@ -87,13 +181,7 @@ async function submitForm(bp) {
 
   if (!isValid) return false;
 
-  // filter out empty keys
-  const cleanPayload = Object.keys(payload).reduce((acc, key) => {
-    if (payload[key]) acc[key] = payload[key];
-    return acc;
-  }, {});
-
-  return getAndCreateAndAddAttendee(getMetadata('event-id'), cleanPayload);
+  return getAndCreateAndAddAttendee(getMetadata('event-id'), payload);
 }
 
 function clearForm(form) {
@@ -223,10 +311,11 @@ function createCheckItem(item, type, id, def) {
   const itemKebab = item.toLowerCase().replaceAll(' ', '-');
   const defList = def.split(';').map((defItem) => defItem.trim());
   const pseudoEl = createTag('span', { class: `check-item-button ${type}-button` });
-  const label = createTag('label', { class: `check-item-label ${type}-label`, for: `${id}-${itemKebab}` }, item);
+  const [customLabel, customVal] = item.split('::');
+  const label = createTag('label', { class: `check-item-label ${type}-label`, for: `${id}-${itemKebab}` }, customLabel || item);
   const input = createTag(
     'input',
-    { type, name: id, value: item, class: `check-item-input ${type}-input`, id: `${id}-${itemKebab}` },
+    { type, name: id, value: customVal || item, class: `check-item-input ${type}-input`, id: `${id}-${itemKebab}` },
   );
   if (item && defList.includes(item)) input.setAttribute('checked', '');
   return createTag('div', { class: `check-item-wrap ${type}-input-wrap` }, [input, pseudoEl, label]);
@@ -318,40 +407,96 @@ function lowercaseKeys(obj) {
   }, {});
 }
 
-function addTerms(form, terms) {
-  const none = (arr, callback) => !arr.some(callback);
+async function loadConsent(form, consentData) {
+  const { path, countryCode } = consentData;
   const submitWrapper = form.querySelector('.events-form-submit-wrapper');
   const submit = submitWrapper.querySelector('button');
-  const termsWrapper = createTag('div', { class: 'field-wrapper events-form-full-width terms-and-conditions-wrapper' });
-  const termsTexts = terms.querySelectorAll('p');
-  const lis = terms.querySelectorAll('li');
-  const checkboxes = [];
+  const termsWrapper = form.querySelector('.terms-and-conditions-wrapper');
 
-  termsTexts.forEach((t) => {
-    termsWrapper.append(t);
+  submit.disabled = true;
+  termsWrapper.innerHTML = '';
+  termsWrapper.classList.add('transparent');
+
+  const termsFragLink = createTag('a', { href: path, target: '_blank' }, path, { parent: termsWrapper });
+
+  await loadFragment(termsFragLink);
+
+  termsWrapper.classList.remove('transparent');
+  const uls = termsWrapper.querySelectorAll('ul');
+
+  const defval = '';
+  const required = '';
+  const type = 'checkbox';
+
+  uls.forEach((ul) => {
+    const pseudoCheckboxes = ul.querySelectorAll('li');
+    if (countryCode === 'CN') {
+      // FIXME: This is a temporary solution to handle the China case
+      Array.from(pseudoCheckboxes).forEach((o) => {
+        const valKebab = o.textContent.trim().replaceAll(' ', '-');
+        const checkWrap = createTag('div', { class: 'check-item-wrap checkbox-input-wrap' });
+
+        const checkbox = createTag('input', { id: valKebab, type: 'checkbox', class: 'submit-blocker no-submit check-item-input checkbox-input', value: valKebab });
+        const checkboxButton = createTag('span', { class: 'check-item-button checkbox-button' });
+        const label = createTag('label', { class: 'check-item-label checkbox-label', for: valKebab }, o.innerHTML);
+
+        checkWrap.append(checkbox, checkboxButton, label);
+        termsWrapper.append(checkWrap);
+      });
+
+      const allCheckboxes = termsWrapper.querySelectorAll('.submit-blocker');
+
+      allCheckboxes.forEach((cb) => {
+        cb.addEventListener('change', () => {
+          const checkedCheckboxes = Array.from(allCheckboxes).filter((c) => c.checked);
+          submit.disabled = checkedCheckboxes.length !== allCheckboxes.length;
+        });
+      });
+
+      ul.remove();
+    } else {
+      const options = Array.from(pseudoCheckboxes).map((li) => li.textContent.trim()).join(';');
+
+      if (!options) {
+        submit.disabled = false;
+        return;
+      }
+
+      const field = 'contactMethods';
+      termsWrapper.append(createCheckGroup({ options, field, defval, required }, type));
+
+      ul.remove();
+    }
   });
-
-  lis.forEach((li, i) => {
-    const checkboxWrapper = createTag('div', { class: 'checkbox-wrapper' });
-    const checkbox = createTag('input', { id: 'terms-and-conditions', type: 'checkbox', class: 'checkbox', 'data-field-id': `terms-and-condition-check-${i + 1}` });
-    const label = createTag('label', { class: 'checkbox-label', for: 'terms-and-conditions' }, HtmlSanitizer.SanitizeHtml(li.innerHTML));
-
-    checkboxWrapper.append(checkbox, label);
-    termsWrapper.append(checkboxWrapper);
-    checkboxes.push(checkbox);
-  });
-
-  terms.remove();
 
   submitWrapper.before(termsWrapper);
 
-  checkboxes.forEach((cb) => {
-    cb.addEventListener('change', () => {
-      submit.disabled = none(Array.from(checkboxes), (c) => c.checked);
-    });
-  });
+  const attendeeResp = await getAttendee();
+  if (attendeeResp.ok) {
+    const { contactMethods } = attendeeResp.data;
 
-  submit.disabled = none(Array.from(checkboxes), (c) => c.checked);
+    if (!contactMethods) { submit.disabled = false; return; }
+
+    if (countryCode === 'DE') {
+      const matchingCheckbox = termsWrapper.querySelector(`input[value="${contactMethods.join('+')}"]`);
+      if (matchingCheckbox) matchingCheckbox.setAttribute('checked', '');
+    } else {
+      contactMethods.forEach((cm) => {
+        const matchingCheckbox = termsWrapper.querySelector(`input[value="${cm}"]`);
+        if (matchingCheckbox) matchingCheckbox.setAttribute('checked', '');
+      });
+    }
+  }
+
+  if (countryCode === 'CN') {
+    const allCheckboxes = termsWrapper.querySelectorAll('.submit-blocker');
+    const checkedCheckboxes = Array.from(allCheckboxes).filter((c) => c.checked);
+    submit.disabled = checkedCheckboxes.length !== allCheckboxes.length;
+
+    return;
+  }
+
+  submit.disabled = false;
 }
 
 function decorateSuccessScreen(screen) {
@@ -407,14 +552,21 @@ function decorateSuccessScreen(screen) {
             }
 
             const { data } = resp;
-            const espStatus = data?.espProvider?.status;
+            const result = data?.espProvider || data;
+
+            if (!result) {
+              buildErrorMsg(screen, 500);
+              return;
+            }
+
+            const espStatus = result.status;
 
             if ((espStatus && espStatus !== 204)) {
               buildErrorMsg(screen, espStatus);
               return;
             }
 
-            if (data?.espProvider?.attendeeDeleted) BlockMediator.set('rsvpData', null);
+            if (result.attendeeDeleted) BlockMediator.set('rsvpData', null);
 
             firstScreen.classList.add('hidden');
             secondScreen.classList.remove('hidden');
@@ -450,8 +602,78 @@ function decorateSuccessScreen(screen) {
   screen.classList.add('hidden');
 }
 
+async function addConsentSuite(form) {
+  const countryText = await miloReplaceKey(LIBS, 'country');
+  const fieldWrapper = createTag('div', { class: 'field-wrapper events-form-select-wrapper', 'data-field-id': 'country', 'data-type': 'select' });
+  const label = createTag('label', { for: 'consentStringId', class: 'required' }, countryText);
+  const countrySelect = createTag('select', { id: 'consentStringId', required: 'required' });
+  const termsWrapper = createTag('div', {
+    class: 'field-wrapper events-form-full-width terms-and-conditions-wrapper transparent',
+    'data-field-id': 'contactMethods',
+    'data-type': 'checkbox-group',
+  });
+
+  fieldWrapper.append(label, countrySelect);
+
+  const consentStringsIndex = await fetch('/events/fragments/consents/consent-query-index.json').then((r) => r.json());
+
+  if (consentStringsIndex) {
+    const { data } = consentStringsIndex;
+    const defaultOption = createTag('option', { selected: '', disabled: '', value: '' }, countryText);
+    countrySelect.append(defaultOption);
+
+    data.forEach((c) => {
+      const option = createTag('option', { value: c.consentId }, c.countryName);
+      countrySelect.append(option);
+    });
+
+    countrySelect.addEventListener('change', async (e) => {
+      const consentData = data.find((c) => c.consentId === e.target.value);
+
+      if (consentData) {
+        await loadConsent(form, consentData);
+      }
+    });
+  }
+
+  const submitWrapper = form.querySelector('.events-form-submit-wrapper');
+  const eventTermsWrapper = form.querySelector('.event-terms-wrapper');
+
+  if (eventTermsWrapper) {
+    eventTermsWrapper.before(fieldWrapper);
+    submitWrapper.before(termsWrapper);
+  } else {
+    submitWrapper.before(fieldWrapper, termsWrapper);
+  }
+}
+
+function addTerms(form, terms) {
+  if (!terms || terms.textContent === '') return;
+  const submitWrapper = form.querySelector('.events-form-submit-wrapper');
+  const termsWrapper = createTag('div', { class: 'field-wrapper events-form-full-width event-terms-wrapper' });
+  const termsTexts = terms.querySelectorAll('p');
+  const lis = terms.querySelectorAll('li');
+
+  termsTexts.forEach((t, i) => {
+    termsWrapper.append(t);
+
+    if (i === 1) {
+      t.remove();
+    }
+  });
+
+  lis.forEach((li) => {
+    li.remove();
+  });
+
+  terms.remove();
+
+  submitWrapper.before(termsWrapper);
+}
+
 async function createForm(bp, formData) {
   const { form, terms } = bp;
+
   let rsvpFieldsData;
 
   try {
@@ -492,6 +714,7 @@ async function createForm(bp, formData) {
   formEl.dataset.action = action;
 
   const typeToElement = {
+    'multi-select': { fn: createSelect, params: [], label: true, classes: [] },
     select: { fn: createSelect, params: [], label: true, classes: [] },
     heading: { fn: createHeading, params: ['h3'], label: false, classes: [] },
     legal: { fn: createHeading, params: ['p'], label: false, classes: [] },
@@ -534,9 +757,26 @@ async function createForm(bp, formData) {
   });
 
   addTerms(formEl, terms);
+  if (!getMetadata('login-required')) await addConsentSuite(formEl);
 
   formEl.addEventListener('input', () => applyRules(formEl, rules));
   applyRules(formEl, rules);
+
+  // close all custom-dropdown on click outside
+  formEl.addEventListener('click', (e) => {
+    const multiSelects = formEl.querySelectorAll('.multi-select-wrapper');
+
+    if (multiSelects.length === 0) return;
+
+    multiSelects.forEach((ms) => {
+      const customDropdown = ms.querySelector('.custom-dropdown');
+      const customSelect = ms.querySelector('.custom-select');
+
+      if (!customDropdown.classList.contains('hidden') && !customSelect.contains(e.target) && !customDropdown.contains(e.target)) {
+        customDropdown.classList.add('hidden');
+      }
+    });
+  });
 
   return {
     formEl,
@@ -548,11 +788,21 @@ function personalizeForm(form, data) {
   if (!data || !form) return;
 
   Object.entries(data).forEach(([key, value]) => {
-    const matchedInput = form.querySelector(`#${snakeToCamel(key)}`);
-    if (matchedInput && value && !matchedInput.value) {
-      matchedInput.value = value;
-      matchedInput.disabled = true;
-    }
+    Object.entries(value).forEach(([k, v]) => {
+      const matchedInput = form.querySelector(`#${snakeToCamel(k)}`);
+      if (matchedInput && v && !matchedInput.v) {
+        if (Array.isArray(v)) {
+          v.forEach((val) => {
+            const option = matchedInput.querySelector(`option[value="${val}"]`);
+            if (option) option.selected = true;
+          });
+        } else {
+          matchedInput.value = v;
+          if (key === 'profile') matchedInput.disabled = true;
+        }
+        matchedInput.dispatchEvent(new Event('change'));
+      }
+    });
   });
 }
 
@@ -576,7 +826,7 @@ async function buildEventform(bp, formData) {
   }
 }
 
-function initFormBasedOnRSVPData(bp) {
+async function initFormBasedOnRSVPData(bp) {
   const validRegistrationStatus = ['registered', 'waitlisted'];
   const { block } = bp;
   const profile = BlockMediator.get('imsProfile');
@@ -586,7 +836,10 @@ function initFormBasedOnRSVPData(bp) {
     showSuccessMsgFirstScreen(bp);
     eventFormSendAnalytics(bp, 'Confirmation Modal View');
   } else {
-    personalizeForm(block, profile);
+    let existingAttendeeData = {};
+    const attendeeResp = await getAttendee();
+    if (attendeeResp.ok) existingAttendeeData = attendeeResp.data;
+    personalizeForm(block, { profile, existingAttendeeData });
   }
 
   BlockMediator.subscribe('rsvpData', ({ newValue }) => {
@@ -605,9 +858,11 @@ async function onProfile(bp, formData) {
   const { block, eventHero } = bp;
   const profile = BlockMediator.get('imsProfile');
   const { getConfig } = await import(`${LIBS}/utils/utils.js`);
-
+  const allowGuestReg = getMetadata('allow-guest-registration') === 'true';
   if (profile) {
-    if (profile.noProfile && /#rsvp-form.*/.test(window.location.hash)) {
+    if ((profile.noProfile || profile.account_type === 'guest')
+      && /#rsvp-form.*/.test(window.location.hash)
+      && !allowGuestReg) {
       // TODO: also check for guestCheckout enablement for future iterations
       signIn(getSusiOptions(getConfig()));
     } else {
@@ -622,7 +877,9 @@ async function onProfile(bp, formData) {
     }
   } else {
     BlockMediator.subscribe('imsProfile', ({ newValue }) => {
-      if (newValue?.noProfile && /#rsvp-form.*/.test(window.location.hash)) {
+      if ((newValue?.noProfile || newValue?.account_type === 'guest')
+        && /#rsvp-form.*/.test(window.location.hash)
+        && !allowGuestReg) {
         // TODO: also check for guestCheckout enablement for future iterations
         signIn(getSusiOptions(getConfig()));
       } else {
@@ -640,39 +897,19 @@ async function onProfile(bp, formData) {
 }
 
 async function decorateToastArea() {
-  const miloLibs = LIBS;
   await Promise.all([
-    import(`${miloLibs}/deps/lit-all.min.js`),
-    import(`${miloLibs}/features/spectrum-web-components/dist/theme.js`),
-    import(`${miloLibs}/features/spectrum-web-components/dist/toast.js`),
+    import(`${LIBS}/deps/lit-all.min.js`),
+    import(`${LIBS}/features/spectrum-web-components/dist/theme.js`),
+    import(`${LIBS}/features/spectrum-web-components/dist/toast.js`),
   ]);
   const toastArea = createTag('sp-theme', { color: 'light', scale: 'medium', class: 'toast-area' });
   document.body.append(toastArea);
   return toastArea;
 }
 
-async function futureProofing(block) {
-  const authoredWaitlistSuccessScreen = block.querySelector(':scope > div:nth-of-type(5)');
-
-  if (!authoredWaitlistSuccessScreen) {
-    const resp = await fetch('/events/fragments/drafts/draft-rsvp-form').then((res) => res.text());
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(resp, 'text/html');
-
-    const eventsForm = doc.querySelector('.events-form');
-    if (eventsForm) {
-      decorateArea(eventsForm);
-      block.innerHTML = eventsForm.innerHTML;
-    }
-  }
-}
-
 export default async function decorate(block, formData = null) {
   block.classList.add('loading');
   const toastArea = await decorateToastArea();
-
-  // TODO: remove after authoring updates
-  await futureProofing(block);
 
   const bp = {
     block,
@@ -684,13 +921,6 @@ export default async function decorate(block, formData = null) {
     rsvpSuccessScreen: block.querySelector(':scope > div:nth-of-type(4)'),
     waitlistSuccessScreen: block.querySelector(':scope > div:nth-of-type(5)'),
   };
-
-  if (!bp.waitlistSuccessScreen) {
-    const { rsvpSuccessScreen, waitlistSuccessScreen } = await futureProofing(block);
-
-    if (rsvpSuccessScreen) bp.rsvpSuccessScreen = rsvpSuccessScreen;
-    if (waitlistSuccessScreen) bp.waitlistSuccessScreen = waitlistSuccessScreen;
-  }
 
   await onProfile(bp, formData);
 }
