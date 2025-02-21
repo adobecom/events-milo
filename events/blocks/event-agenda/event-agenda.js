@@ -72,18 +72,29 @@ export default async function init(el) {
 
     const venueImageCol = createTag('div', { class: 'venue-img-col' });
     el.classList.add('blade');
-    const h2 = el.querySelector('h2');
-    agendaItemsCol.prepend(h2);
 
     venueImageCol.append(createOptimizedPicture(imgUrl, venueImage.altText || '', false));
     container.append(venueImageCol);
   }
 
+  const h2 = el.querySelector('h2');
+  agendaItemsCol.prepend(h2);
+
   const localeString = getConfig().locale?.ietf || 'en-US';
 
-  agendaArray.forEach((a) => {
-    const agendaItemWrapper = createTag('div', { class: 'agenda-item-wrapper' }, '', { parent: agendaItemsCol });
-    createTag('span', { class: 'agenda-time' }, convertToLocaleTimeFormat(a.startTime, localeString), { parent: agendaItemWrapper });
-    createTag('span', { class: 'agenda-desciption' }, a.description, { parent: agendaItemWrapper });
+  const agendaItemContainer = createTag('div', { class: 'agenda-item-container' }, '', { parent: agendaItemsCol });
+  agendaArray.forEach((agenda) => {
+    if(agenda.title && agenda.title !== '') {
+      const agendaListItem = createTag('div', { class: 'agenda-list-item' }, '', { parent: agendaItemContainer });
+      const agaendaTimeTitle = createTag('div', { class: 'agenda-time-title' }, '', { parent: agendaListItem });
+      createTag('span', { class: 'agenda-time' }, convertToLocaleTimeFormat(agenda.startTime, localeString), { parent: agaendaTimeTitle });
+      createTag('div', { class: 'agenda-separator' }, '', { parent: agaendaTimeTitle });
+      createTag('span', { class: 'agenda-title' }, agenda.title, { parent: agaendaTimeTitle });
+      createTag('div', { class: 'agenda-details' }, agenda.description, { parent: agendaListItem });
+    } else {
+      const agendaItemWrapper = createTag('div', { class: 'agenda-item-wrapper' }, '', { parent: agendaItemContainer });
+      createTag('span', { class: 'agenda-time' }, convertToLocaleTimeFormat(agenda.startTime, localeString), { parent: agendaItemWrapper });
+      createTag('span', { class: 'agenda-desciption' }, agenda.description, { parent: agendaItemWrapper });
+    }
   });
 }
