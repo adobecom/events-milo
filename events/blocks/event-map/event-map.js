@@ -1,11 +1,13 @@
 import { LIBS, getMetadata } from '../../scripts/utils.js';
 
 const { createTag } = await import(`${LIBS}/utils/utils.js`);
+const { decorateButtons } = await import(`${LIBS}/utils/decorate.js`);
 
 function decorateTextContainer(el) {
   const wrapper = el.querySelector('.event-map-wrapper');
   const textContentWrapper = el.querySelector(':scope > div:first-of-type > div');
-
+  const additionalInfo = el.querySelector(':scope > div:first-of-type > div > p:last-of-type:has(a)');
+  
   if (!textContentWrapper) return;
 
   textContentWrapper.classList.add('text-wrapper');
@@ -32,6 +34,15 @@ function decorateTextContainer(el) {
 
     if (address) createTag('p', { class: 'venue-address-text' }, address, { parent: textContentWrapper });
     if (city && state && postalCode) createTag('p', { class: 'venue-address-text' }, `${city}, ${state} ${postalCode}`, { parent: textContentWrapper });
+  }
+
+  if (additionalInfo) {
+    const cta = additionalInfo.querySelector('a');
+    const url = new URL(cta.href);
+    cta.setAttribute('data-modal-hash', url.hash);
+    cta.setAttribute('data-modal-path', '/events/fragments/event-templates/dme/venue-additional-info');
+    decorateButtons(additionalInfo);
+    textContentWrapper.append(additionalInfo);
   }
 }
 
@@ -79,7 +90,7 @@ export default async function init(el) {
     return;
   }
 
-  const wrapper = createTag('div', { class: 'event-map-wrapper' });
+  const wrapper = createTag('div', { class: 'event-map-wrapper dark' });
   el.append(wrapper);
 
   decorateTextContainer(el);
