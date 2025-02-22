@@ -41,7 +41,7 @@ function decorateTextContainer(el) {
     const url = new URL(cta.href);
     cta.setAttribute('data-modal-hash', url.hash);
     cta.setAttribute('data-modal-path', '/events/fragments/event-templates/dme/venue-additional-info');
-    decorateButtons(additionalInfo);
+    decorateButtons(additionalInfo, 'button-l');
     textContentWrapper.append(additionalInfo);
   }
 }
