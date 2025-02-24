@@ -757,7 +757,7 @@ async function createForm(bp, formData) {
   });
 
   addTerms(formEl, terms);
-  if (!getMetadata('login-required')) await addConsentSuite(formEl);
+  if (getMetadata('allow-guest-registration') === 'true') await addConsentSuite(formEl);
 
   formEl.addEventListener('input', () => applyRules(formEl, rules));
   applyRules(formEl, rules);
