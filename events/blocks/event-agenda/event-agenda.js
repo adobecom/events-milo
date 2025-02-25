@@ -85,7 +85,7 @@ export default async function init(el) {
 
   const agendaItemContainer = createTag('div', { class: 'agenda-item-container' }, '', { parent: agendaItemsCol });
   agendaArray.forEach((agenda) => {
-    if(!agenda.title) {
+    if (!agenda.title) {
       const agendaItemWrapper = createTag('div', { class: 'agenda-item-wrapper' }, '', { parent: agendaItemContainer });
       createTag('span', { class: 'agenda-time' }, convertToLocaleTimeFormat(agenda.startTime, localeString), { parent: agendaItemWrapper });
       createTag('span', { class: 'agenda-desciption' }, agenda.description, { parent: agendaItemWrapper });
