@@ -31,7 +31,7 @@ describe('Agenda Module', () => {
       const container = el.querySelector('.agenda-container');
       expect(container).to.not.be.null;
 
-      const itemsCol = container.querySelector('.agenda-items-col');
+      const itemsCol = container.querySelector('.agenda-items');
       expect(itemsCol).to.not.be.null;
 
       const agendaItem = itemsCol.querySelector('.agenda-item-wrapper');
@@ -50,7 +50,7 @@ describe('Agenda Module', () => {
       const container = el.querySelector('.agenda-container');
       expect(container).to.not.be.null;
 
-      const itemsCol = container.querySelector('.agenda-items-col');
+      const itemsCol = container.querySelector('.agenda-items');
       expect(itemsCol).to.not.be.null;
 
       const agendaItem = itemsCol.querySelector('.agenda-item-wrapper');
@@ -69,7 +69,7 @@ describe('Agenda Module', () => {
       const container = el.querySelector('.agenda-container');
       expect(container).to.not.be.null;
 
-      const itemsCol = container.querySelector('.agenda-items-col');
+      const itemsCol = container.querySelector('.agenda-items');
       expect(itemsCol).to.not.be.null;
 
       const agendaItem = itemsCol.querySelector('.agenda-item-wrapper');
@@ -88,7 +88,7 @@ describe('Agenda Module', () => {
       const container = el.querySelector('.agenda-container');
       expect(container).to.not.be.null;
 
-      const itemsCol = container.querySelector('.agenda-items-col');
+      const itemsCol = container.querySelector('.agenda-items');
       expect(itemsCol).to.not.be.null;
 
       const agendaItem = itemsCol.querySelector('.agenda-item-wrapper');
