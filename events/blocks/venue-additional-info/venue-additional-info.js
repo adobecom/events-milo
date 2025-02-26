@@ -17,6 +17,10 @@ async function decorateTextContainer(el) {
   textContentWrapper.classList.add('text-wrapper');
   wrapper.append(textContentWrapper);
 
+  textContentWrapper.querySelectorAll('div').forEach((div) => {
+    div.remove();
+  });
+
   const venueObj = JSON.parse(getMetadata('venue'));
 
   if (!venueObj) return;
@@ -71,7 +75,7 @@ function decorateMap(el) {
 }
 
 export default async function init(el) {
-  if (getMetadata('show-venue-post-event') !== 'true' && document.body.classList.contains('timing-post-event')) {
+  if (getMetadata('show-venue-additional-post-event') !== 'true' && document.body.classList.contains('timing-post-event')) {
     el.remove();
     return;
   }
