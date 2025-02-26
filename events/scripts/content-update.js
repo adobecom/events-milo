@@ -197,10 +197,8 @@ async function handleRSVPBtnBasedOnProfile(rsvpBtn, miloLibs, profile) {
       allowWaitlisting = eventInfo.allowWaitlisting;
       if (allowWaitlisting) {
         await setCtaState('toWaitlist', rsvpBtn, miloLibs);
-      } else if (getMetadata('cloud-type') === 'CreativeCloud') {
-        await setCtaState('eventClosed', rsvpBtn, miloLibs);
       } else {
-        await setCtaState('default', rsvpBtn, miloLibs);
+        await setCtaState('eventClosed', rsvpBtn, miloLibs);
       }
     } else {
       await setCtaState('default', rsvpBtn, miloLibs);
