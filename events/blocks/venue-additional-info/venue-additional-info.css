@@ -1,6 +1,10 @@
 .venue-additional-info {
   padding: var(--spacing-m);
-  max-width: 600px;
+  max-width: 800px;
+}
+
+.venue-additional-info .additional-image-container img {
+  width: 100%;
 }
 
 .venue-additional-info .text-wrapper {
