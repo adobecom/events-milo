@@ -471,23 +471,6 @@ async function loadConsent(form, consentData) {
 
   submitWrapper.before(termsWrapper);
 
-  const attendeeResp = await getAttendee();
-  if (attendeeResp.ok) {
-    const { contactMethods } = attendeeResp.data;
-
-    if (!contactMethods) { submit.disabled = false; return; }
-
-    if (countryCode === 'DE') {
-      const matchingCheckbox = termsWrapper.querySelector(`input[value="${contactMethods.join('+')}"]`);
-      if (matchingCheckbox) matchingCheckbox.setAttribute('checked', '');
-    } else {
-      contactMethods.forEach((cm) => {
-        const matchingCheckbox = termsWrapper.querySelector(`input[value="${cm}"]`);
-        if (matchingCheckbox) matchingCheckbox.setAttribute('checked', '');
-      });
-    }
-  }
-
   if (countryCode === 'CN') {
     const allCheckboxes = termsWrapper.querySelectorAll('.submit-blocker');
     const checkedCheckboxes = Array.from(allCheckboxes).filter((c) => c.checked);
