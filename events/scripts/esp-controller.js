@@ -271,13 +271,13 @@ export async function deleteAttendeeFromEvent(eventId) {
 
 // compound helper functions
 export async function getAndCreateAndAddAttendee(eventId, attendeeData) {
-  const attendeeResp = await getAttendee();
+  const profile = BlockMediator.get('imsProfile');
   const eventData = BlockMediator.get('eventData');
 
   let attendee;
   let registrationStatus = 'registered';
 
-  if (!attendeeResp.ok && attendeeResp.status === 404) {
+  if (profile.account_type === 'guest') {
     const payload = { ...attendeeData };
 
     // filter out empty keys
@@ -287,16 +287,30 @@ export async function getAndCreateAndAddAttendee(eventId, attendeeData) {
     }, {});
 
     attendee = await createAttendee(cleanPayload);
-  } else if (attendeeResp.data?.attendeeId) {
-    const payload = { ...attendeeResp.data, ...attendeeData };
+  } else {
+    const attendeeResp = await getAttendee();
 
-    // filter out empty keys
-    const cleanPayload = Object.keys(payload).reduce((acc, key) => {
-      if (payload[key]) acc[key] = payload[key];
-      return acc;
-    }, {});
+    if (!attendeeResp.ok && attendeeResp.status === 404) {
+      const payload = { ...attendeeData };
 
-    attendee = await updateAttendee(cleanPayload);
+      // filter out empty keys
+      const cleanPayload = Object.keys(payload).reduce((acc, key) => {
+        if (payload[key]) acc[key] = payload[key];
+        return acc;
+      }, {});
+
+      attendee = await createAttendee(cleanPayload);
+    } else if (attendeeResp.data?.attendeeId) {
+      const payload = { ...attendeeResp.data, ...attendeeData };
+
+      // filter out empty keys
+      const cleanPayload = Object.keys(payload).reduce((acc, key) => {
+        if (payload[key]) acc[key] = payload[key];
+        return acc;
+      }, {});
+
+      attendee = await updateAttendee(cleanPayload);
+    }
   }
 
   if (!attendee?.ok) return { ok: false, error: 'Failed to create or update attendee' };
