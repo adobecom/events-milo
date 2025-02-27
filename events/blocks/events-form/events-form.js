@@ -606,12 +606,12 @@ async function addConsentSuite(form) {
     countrySelect.append(defaultOption);
 
     data.forEach((c) => {
-      const option = createTag('option', { value: c.consentId }, c.countryName);
+      const option = createTag('option', { value: c.countryCode }, c.countryName);
       countrySelect.append(option);
     });
 
     countrySelect.addEventListener('change', async (e) => {
-      const consentData = data.find((c) => c.consentId === e.target.value);
+      const consentData = data.find((c) => c.countryCode === e.target.value);
 
       if (consentData) {
         await loadConsent(form, consentData);
@@ -818,7 +818,7 @@ async function initFormBasedOnRSVPData(bp) {
   if (validRegistrationStatus.includes(rsvpData?.registrationStatus)) {
     showSuccessMsgFirstScreen(bp);
     eventFormSendAnalytics(bp, 'Confirmation Modal View');
-  } else {
+  } else if (profile.account_type !== 'guest') {
     let existingAttendeeData = {};
     const attendeeResp = await getAttendee();
     if (attendeeResp.ok) existingAttendeeData = attendeeResp.data;
