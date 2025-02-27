@@ -7,7 +7,7 @@ function decorateTextContainer(el) {
   const wrapper = el.querySelector('.event-map-wrapper');
   const textContentWrapper = el.querySelector(':scope > div:first-of-type > div');
   const additionalInfo = el.querySelector(':scope > div:first-of-type > div > p:last-of-type:has(a)');
-  
+
   if (!textContentWrapper) return;
 
   textContentWrapper.classList.add('text-wrapper');
@@ -37,8 +37,6 @@ function decorateTextContainer(el) {
   }
 
   if (additionalInfo) {
-    const cta = additionalInfo.querySelector('a');
-    const url = new URL(cta.href);
     decorateButtons(additionalInfo, 'button-l');
     textContentWrapper.append(additionalInfo);
   }
