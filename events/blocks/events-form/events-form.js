@@ -740,7 +740,9 @@ async function createForm(bp, formData) {
   });
 
   addTerms(formEl, terms);
-  if (getMetadata('allow-guest-registration') === 'true') await addConsentSuite(formEl);
+
+  const profile = BlockMediator.get('imsProfile');
+  if (getMetadata('allow-guest-registration') === 'true' && profile.account_type === 'guest') await addConsentSuite(formEl);
 
   formEl.addEventListener('input', () => applyRules(formEl, rules));
   applyRules(formEl, rules);
