@@ -90,7 +90,6 @@ export default async function init(el) {
       createTag('span', { class: 'agenda-time' }, convertToLocaleTimeFormat(agenda.startTime, localeString), { parent: agaendaTimeTitle });
 
       if (agenda.title) {
-        createTag('div', { class: 'agenda-separator' }, '', { parent: agaendaTimeTitle });
         createTag('span', { class: 'agenda-title' }, agenda.title, { parent: agaendaTimeTitle });
       }
 
