@@ -606,12 +606,13 @@ async function addConsentSuite(form) {
     countrySelect.append(defaultOption);
 
     data.forEach((c) => {
-      const option = createTag('option', { value: c.countryCode }, c.countryName);
+      const option = createTag('option', { value: c.consentId, 'data-country-code': c.countryCode }, c.countryName);
       countrySelect.append(option);
     });
 
     countrySelect.addEventListener('change', async (e) => {
-      const consentData = data.find((c) => c.countryCode === e.target.value);
+      const selectedOption = e.target.options[e.target.selectedIndex];
+      const consentData = data.find((c) => c.countryCode === selectedOption.dataset.countryCode);
 
       if (consentData) {
         await loadConsent(form, consentData);
