@@ -38,6 +38,7 @@ describe('Agenda Module', () => {
       expect(agendaItem).to.not.be.null;
       expect(agendaItem.querySelector('.agenda-time').textContent).to.equal('9:00 AM');
       expect(agendaItem.querySelector('.agenda-details').textContent).to.equal('Opening');
+      expect(agendaItem.querySelector('.agenda-title').textContent).to.equal('Title');
     });
 
     it('should use relative sharepoint URL directly', async () => {
@@ -57,6 +58,7 @@ describe('Agenda Module', () => {
       expect(agendaItem).to.not.be.null;
       expect(agendaItem.querySelector('.agenda-time').textContent).to.equal('9:00 AM');
       expect(agendaItem.querySelector('.agenda-details').textContent).to.equal('Opening');
+      expect(agendaItem.querySelector('.agenda-title').textContent).to.equal('Title');
     });
 
     it('should fallback on imageUrl when given invalid absolute sharepoint URL', async () => {
@@ -75,6 +77,7 @@ describe('Agenda Module', () => {
       const agendaItem = itemsCol.querySelector('.agenda-list-item');
       expect(agendaItem).to.not.be.null;
       expect(agendaItem.querySelector('.agenda-time').textContent).to.equal('9:00 AM');
+      expect(agendaItem.querySelector('.agenda-title').textContent).to.equal('Title');
       expect(agendaItem.querySelector('.agenda-details').textContent).to.equal('Opening');
     });
 
@@ -94,7 +97,66 @@ describe('Agenda Module', () => {
       const agendaItem = itemsCol.querySelector('.agenda-list-item');
       expect(agendaItem).to.not.be.null;
       expect(agendaItem.querySelector('.agenda-time').textContent).to.equal('9:00 AM');
+      expect(agendaItem.querySelector('.agenda-title').textContent).to.equal('Title');
       expect(agendaItem.querySelector('.agenda-details').textContent).to.equal('Opening');
+    });
+
+    it('should not show title when title is empty', async () => {
+      setMetadata('agenda', JSON.stringify([{ startTime: '09:00:00', title: '', description: 'Opening' }]));
+      setMetadata('photos', JSON.stringify([{ imageKind: 'venue-image', imageUrl: 'http://example.com/image.jpg' }]));
+
+      const el = document.querySelector('.event-agenda');
+      await init(el);
+
+      const container = el.querySelector('.agenda-container');
+      expect(container).to.not.be.null;
+
+      const itemsCol = container.querySelector('.agenda-items');
+      expect(itemsCol).to.not.be.null;
+
+      const agendaItem = itemsCol.querySelector('.agenda-list-item');
+      expect(agendaItem).to.not.be.null;
+      expect(agendaItem.querySelector('.agenda-time').textContent).to.equal('9:00 AM');
+      expect(agendaItem.querySelector('.agenda-details').textContent).to.equal('Opening');
+      expect(agendaItem.querySelector('.agenda-title')).to.be.null;
+    });
+
+    it('should not show description when description is empty', async () => {
+      setMetadata('agenda', JSON.stringify([{ startTime: '09:00:00', title: 'Title' }]));
+      setMetadata('photos', JSON.stringify([{ imageKind: 'venue-image', imageUrl: 'http://example.com/image.jpg' }]));
+
+      const el = document.querySelector('.event-agenda');
+      await init(el);
+
+      const container = el.querySelector('.agenda-container');
+      expect(container).to.not.be.null;
+
+      const itemsCol = container.querySelector('.agenda-items');
+      expect(itemsCol).to.not.be.null;
+
+      const agendaItem = itemsCol.querySelector('.agenda-list-item');
+      expect(agendaItem).to.not.be.null;
+      expect(agendaItem.querySelector('.agenda-time').textContent).to.equal('9:00 AM');
+      expect(agendaItem.querySelector('.agenda-title').textContent).to.equal('Title');
+      expect(agendaItem.querySelector('.agenda-details')).to.be.null;
+    });
+
+    it('should show multiple agenda items', async () => {
+      setMetadata('agenda', JSON.stringify([{ startTime: '09:00:00', title: 'Title', description: 'Opening' }, { startTime: '10:00:00', title: 'Title', description: 'Opening' }]));
+      setMetadata('photos', JSON.stringify([{ imageKind: 'venue-image', imageUrl: 'http://example.com/image.jpg' }]));
+
+      const el = document.querySelector('.event-agenda');
+      await init(el);
+
+      const container = el.querySelector('.agenda-container');
+      expect(container).to.not.be.null;
+
+      const itemsCol = container.querySelector('.agenda-items');
+      expect(itemsCol).to.not.be.null;
+
+      const agendaItem = itemsCol.querySelectorAll('.agenda-list-item');
+      expect(agendaItem).to.not.be.null;
+      expect(agendaItem.length).to.equal(2);
     });
 
     it('should handle invalid agenda metadata gracefully', async () => {
