@@ -93,6 +93,8 @@ export default async function init(el) {
         createTag('span', { class: 'agenda-title' }, agenda.title, { parent: agaendaTimeTitle });
       }
 
-      createTag('div', { class: 'agenda-details' }, agenda.description, { parent: agendaListItem });
+      if (agenda.description) {
+        createTag('div', { class: 'agenda-details' }, agenda.description, { parent: agendaListItem });
+      }
   });
 }
