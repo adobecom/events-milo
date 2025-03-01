@@ -85,16 +85,16 @@ export default async function init(el) {
 
   const agendaItemContainer = createTag('div', { class: 'agenda-item-container' }, '', { parent: agendaItemsCol });
   agendaArray.forEach((agenda) => {
-      const agendaListItem = createTag('div', { class: 'agenda-list-item' }, '', { parent: agendaItemContainer });
-      const agaendaTimeTitle = createTag('div', { class: 'agenda-time-title' }, '', { parent: agendaListItem });
-      createTag('span', { class: 'agenda-time' }, convertToLocaleTimeFormat(agenda.startTime, localeString), { parent: agaendaTimeTitle });
+    const agendaListItem = createTag('div', { class: 'agenda-list-item' }, '', { parent: agendaItemContainer });
+    const agaendaTimeTitle = createTag('div', { class: 'agenda-time-title' }, '', { parent: agendaListItem });
+    createTag('span', { class: 'agenda-time' }, convertToLocaleTimeFormat(agenda.startTime, localeString), { parent: agaendaTimeTitle });
 
-      if (agenda.title) {
-        createTag('span', { class: 'agenda-title' }, agenda.title, { parent: agaendaTimeTitle });
-      }
+    if (agenda.title) {
+      createTag('span', { class: 'agenda-title' }, agenda.title, { parent: agaendaTimeTitle });
+    }
 
-      if (agenda.description) {
-        createTag('div', { class: 'agenda-details' }, agenda.description, { parent: agendaListItem });
-      }
+    if (agenda.description) {
+      createTag('div', { class: 'agenda-details' }, agenda.description, { parent: agendaListItem });
+    }
   });
 }
