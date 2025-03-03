@@ -146,7 +146,7 @@ function createTag(tag, attributes, html, options = {}) {
 
 export async function updateRSVPButtonState(rsvpBtn, miloLibs) {
   const rsvpData = BlockMediator.get('rsvpData');
-  const eventInfo = BlockMediator.get('eventData');
+  const eventInfo = await getEvent(getMetadata('event-id'));
   let eventFull = false;
   let allowWaitlisting = getMetadata('allow-wait-listing') === 'true';
 
@@ -187,16 +187,9 @@ async function handleRSVPBtnBasedOnProfile(rsvpBtn, miloLibs, profile) {
   const resp = await getEvent(getMetadata('event-id'));
   if (!resp) return;
 
-  const eventInfo = resp.data;
-  BlockMediator.set('eventData', eventInfo);
-
   await updateRSVPButtonState(rsvpBtn, miloLibs);
 
   BlockMediator.subscribe('rsvpData', () => {
-    updateRSVPButtonState(rsvpBtn, miloLibs);
-  });
-
-  BlockMediator.subscribe('eventData', () => {
     updateRSVPButtonState(rsvpBtn, miloLibs);
   });
 
