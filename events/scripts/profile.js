@@ -39,7 +39,7 @@ export function lazyCaptureProfile() {
       const profile = await getProfile();
       BlockMediator.set('imsProfile', profile);
 
-      if (!profile.noProfile) {
+      if (!profile.noProfile && profile.account_type !== 'guest') {
         const resp = await getEventAttendee(getMetadata('event-id'));
         BlockMediator.set('rsvpData', resp.data);
       }

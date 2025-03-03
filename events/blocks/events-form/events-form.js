@@ -195,7 +195,8 @@ function clearForm(form) {
 }
 
 async function buildErrorMsg(parent, status) {
-  const errorKeyMap = { 400: 'event-full-error-msg' };
+  const eventInfo = BlockMediator.get('eventData');
+  const errorKeyMap = { 400: eventInfo?.allowWaitlisting === 'true' ? 'event-full-error-msg' : 'event-full-no-waitlist-error-msg' };
 
   const existingErrors = parent.querySelectorAll('.error');
   if (existingErrors.length) {
@@ -255,18 +256,29 @@ function createButton({ type, label }, bp) {
         button.classList.remove('submitting');
         if (!respJson) return;
 
-        BlockMediator.set('rsvpData', respJson.data);
-
         if (respJson.ok) {
+          BlockMediator.set('rsvpData', respJson.data);
           eventFormSendAnalytics(bp, 'Form Submit');
         } else {
           const { status } = respJson;
 
           if (status === 400 && respJson.error?.message === 'Request to ESP failed: Event is full') {
+            BlockMediator.set('rsvpData', null);
             const eventResp = await getEvent(getMetadata('event-id'));
-            if (eventResp.ok && eventResp.data?.isFull) {
-              button.textContent = await miloReplaceKey(LIBS, 'waitlist-cta-text');
-              BlockMediator.set('eventData', eventResp.data);
+            if (eventResp.ok) {
+              const { isFull, allowWaitlisting, attendeeCount, attendeeLimit } = eventResp.data;
+              const eventFull = isFull
+              || (!allowWaitlisting && +attendeeCount >= +attendeeLimit);
+
+              if (eventFull) {
+                if (allowWaitlisting) {
+                  button.textContent = await miloReplaceKey(LIBS, 'waitlist-cta-text');
+                  button.disabled = false;
+                } else {
+                  button.textContent = await miloReplaceKey(LIBS, 'event-full-cta-text');
+                  button.disabled = true;
+                }
+              }
             }
           }
 
@@ -471,23 +483,6 @@ async function loadConsent(form, consentData) {
 
   submitWrapper.before(termsWrapper);
 
-  const attendeeResp = await getAttendee();
-  if (attendeeResp.ok) {
-    const { contactMethods } = attendeeResp.data;
-
-    if (!contactMethods) { submit.disabled = false; return; }
-
-    if (countryCode === 'DE') {
-      const matchingCheckbox = termsWrapper.querySelector(`input[value="${contactMethods.join('+')}"]`);
-      if (matchingCheckbox) matchingCheckbox.setAttribute('checked', '');
-    } else {
-      contactMethods.forEach((cm) => {
-        const matchingCheckbox = termsWrapper.querySelector(`input[value="${cm}"]`);
-        if (matchingCheckbox) matchingCheckbox.setAttribute('checked', '');
-      });
-    }
-  }
-
   if (countryCode === 'CN') {
     const allCheckboxes = termsWrapper.querySelectorAll('.submit-blocker');
     const checkedCheckboxes = Array.from(allCheckboxes).filter((c) => c.checked);
@@ -543,15 +538,21 @@ function decorateSuccessScreen(screen) {
           cta.classList.add('loading');
 
           if (cta.classList.contains('cancel-button')) {
-            const resp = await deleteAttendeeFromEvent(getMetadata('event-id'));
+            const profile = BlockMediator.get('imsProfile');
+            const rsvpData = BlockMediator.get('rsvpData');
+
+            const rsvpResp = profile.account_type === 'guest'
+              ? await deleteAttendeeFromEvent(getMetadata('event-id'), rsvpData.attendeeId)
+              : await deleteAttendeeFromEvent(getMetadata('event-id'));
+
             cta.classList.remove('loading');
 
-            if (!resp.ok) {
-              buildErrorMsg(screen, resp.status);
+            if (!rsvpResp.ok) {
+              buildErrorMsg(screen, rsvpResp.status);
               return;
             }
 
-            const { data } = resp;
+            const { data } = rsvpResp;
             const result = data?.espProvider || data;
 
             if (!result) {
@@ -566,7 +567,7 @@ function decorateSuccessScreen(screen) {
               return;
             }
 
-            if (result.attendeeDeleted) BlockMediator.set('rsvpData', null);
+            BlockMediator.set('rsvpData', null);
 
             firstScreen.classList.add('hidden');
             secondScreen.classList.remove('hidden');
@@ -623,12 +624,13 @@ async function addConsentSuite(form) {
     countrySelect.append(defaultOption);
 
     data.forEach((c) => {
-      const option = createTag('option', { value: c.consentId }, c.countryName);
+      const option = createTag('option', { value: c.consentId, 'data-country-code': c.countryCode }, c.countryName);
       countrySelect.append(option);
     });
 
     countrySelect.addEventListener('change', async (e) => {
-      const consentData = data.find((c) => c.consentId === e.target.value);
+      const selectedOption = e.target.options[e.target.selectedIndex];
+      const consentData = data.find((c) => c.countryCode === selectedOption.dataset.countryCode);
 
       if (consentData) {
         await loadConsent(form, consentData);
@@ -757,7 +759,9 @@ async function createForm(bp, formData) {
   });
 
   addTerms(formEl, terms);
-  if (!getMetadata('login-required')) await addConsentSuite(formEl);
+
+  const profile = BlockMediator.get('imsProfile');
+  if (getMetadata('allow-guest-registration') === 'true' && profile.account_type === 'guest') await addConsentSuite(formEl);
 
   formEl.addEventListener('input', () => applyRules(formEl, rules));
   applyRules(formEl, rules);
@@ -835,7 +839,7 @@ async function initFormBasedOnRSVPData(bp) {
   if (validRegistrationStatus.includes(rsvpData?.registrationStatus)) {
     showSuccessMsgFirstScreen(bp);
     eventFormSendAnalytics(bp, 'Confirmation Modal View');
-  } else {
+  } else if (profile.account_type !== 'guest') {
     let existingAttendeeData = {};
     const attendeeResp = await getAttendee();
     if (attendeeResp.ok) existingAttendeeData = attendeeResp.data;
@@ -858,9 +862,11 @@ async function onProfile(bp, formData) {
   const { block, eventHero } = bp;
   const profile = BlockMediator.get('imsProfile');
   const { getConfig } = await import(`${LIBS}/utils/utils.js`);
-
+  const allowGuestReg = getMetadata('allow-guest-registration') === 'true';
   if (profile) {
-    if (profile.noProfile && /#rsvp-form.*/.test(window.location.hash)) {
+    if ((profile.noProfile || profile.account_type === 'guest')
+      && /#rsvp-form.*/.test(window.location.hash)
+      && !allowGuestReg) {
       // TODO: also check for guestCheckout enablement for future iterations
       signIn(getSusiOptions(getConfig()));
     } else {
@@ -875,7 +881,9 @@ async function onProfile(bp, formData) {
     }
   } else {
     BlockMediator.subscribe('imsProfile', ({ newValue }) => {
-      if (newValue?.noProfile && /#rsvp-form.*/.test(window.location.hash)) {
+      if ((newValue?.noProfile || newValue?.account_type === 'guest')
+        && /#rsvp-form.*/.test(window.location.hash)
+        && !allowGuestReg) {
         // TODO: also check for guestCheckout enablement for future iterations
         signIn(getSusiOptions(getConfig()));
       } else {

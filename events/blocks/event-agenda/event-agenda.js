@@ -24,7 +24,7 @@ export default async function init(el) {
   }
 
   const container = createTag('div', { class: 'agenda-container' }, '', { parent: el });
-  const agendaItemsCol = createTag('div', { class: 'agenda-items-col' }, '', { parent: container });
+  const agendaItemsCol = createTag('div', { class: 'agenda-items' }, '', { parent: container });
 
   const agendaMeta = getMetadata('agenda');
   let venueImage;
@@ -55,6 +55,9 @@ export default async function init(el) {
     return;
   }
 
+  const h2 = el.querySelector('h2');
+  agendaItemsCol.prepend(h2);
+
   if (venueImage) {
     let spUrlObj;
     let imgUrl = venueImage.imageUrl;
@@ -70,20 +73,28 @@ export default async function init(el) {
       imgUrl = venueImage.sharepointUrl || venueImage.imageUrl;
     }
 
-    const venueImageCol = createTag('div', { class: 'venue-img-col' });
     el.classList.add('blade');
-    const h2 = el.querySelector('h2');
-    agendaItemsCol.prepend(h2);
+    agendaItemsCol.classList.add('agenda-items-with-image');
 
+    const venueImageCol = createTag('div', { class: 'venue-img-col' });
     venueImageCol.append(createOptimizedPicture(imgUrl, venueImage.altText || '', false));
     container.append(venueImageCol);
   }
 
   const localeString = getConfig().locale?.ietf || 'en-US';
 
-  agendaArray.forEach((a) => {
-    const agendaItemWrapper = createTag('div', { class: 'agenda-item-wrapper' }, '', { parent: agendaItemsCol });
-    createTag('span', { class: 'agenda-time' }, convertToLocaleTimeFormat(a.startTime, localeString), { parent: agendaItemWrapper });
-    createTag('span', { class: 'agenda-desciption' }, a.description, { parent: agendaItemWrapper });
+  const agendaItemContainer = createTag('div', { class: 'agenda-item-container' }, '', { parent: agendaItemsCol });
+  agendaArray.forEach((agenda) => {
+    const agendaListItem = createTag('div', { class: 'agenda-list-item' }, '', { parent: agendaItemContainer });
+    const agaendaTimeTitle = createTag('div', { class: 'agenda-time-title' }, '', { parent: agendaListItem });
+    createTag('span', { class: 'agenda-time' }, convertToLocaleTimeFormat(agenda.startTime, localeString), { parent: agaendaTimeTitle });
+
+    if (agenda.title) {
+      createTag('span', { class: 'agenda-title' }, agenda.title, { parent: agaendaTimeTitle });
+    }
+
+    if (agenda.description) {
+      createTag('div', { class: 'agenda-details' }, agenda.description, { parent: agendaListItem });
+    }
   });
 }
