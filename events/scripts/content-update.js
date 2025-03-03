@@ -151,7 +151,8 @@ export async function updateRSVPButtonState(rsvpBtn, miloLibs) {
   let allowWaitlisting = getMetadata('allow-wait-listing') === 'true';
 
   if (eventInfo) {
-    eventFull = eventInfo.isFull;
+    eventFull = eventInfo.isFull
+      || (!eventInfo.allowWaitlisting && +eventInfo.attendeeCount >= +eventInfo.attendeeLimit);
     allowWaitlisting = eventInfo.allowWaitlisting;
   }
 
@@ -184,27 +185,23 @@ export function signIn(options) {
 async function handleRSVPBtnBasedOnProfile(rsvpBtn, miloLibs, profile) {
   const { getConfig } = await import(`${miloLibs}/utils/utils.js`);
   const resp = await getEvent(getMetadata('event-id'));
-  let allowWaitlisting = getMetadata('allow-wait-listing') === 'true';
   if (!resp) return;
 
   const eventInfo = resp.data;
   BlockMediator.set('eventData', eventInfo);
 
+  await updateRSVPButtonState(rsvpBtn, miloLibs);
+
+  BlockMediator.subscribe('rsvpData', () => {
+    updateRSVPButtonState(rsvpBtn, miloLibs);
+  });
+
+  BlockMediator.subscribe('eventData', () => {
+    updateRSVPButtonState(rsvpBtn, miloLibs);
+  });
+
   if (profile?.noProfile || profile.account_type === 'guest' || resp.status === 401) {
     const allowGuestReg = getMetadata('allow-guest-registration') === 'true';
-
-    if (eventInfo && eventInfo.isFull) {
-      allowWaitlisting = eventInfo.allowWaitlisting;
-      if (allowWaitlisting) {
-        await setCtaState('toWaitlist', rsvpBtn, miloLibs);
-      } else if (getMetadata('cloud-type') === 'CreativeCloud') {
-        await setCtaState('eventClosed', rsvpBtn, miloLibs);
-      } else {
-        await setCtaState('default', rsvpBtn, miloLibs);
-      }
-    } else {
-      await setCtaState('default', rsvpBtn, miloLibs);
-    }
 
     if (!allowGuestReg) {
       rsvpBtn.el.addEventListener('click', (e) => {
@@ -212,16 +209,6 @@ async function handleRSVPBtnBasedOnProfile(rsvpBtn, miloLibs, profile) {
         signIn(getSusiOptions(getConfig()));
       });
     }
-  } else if (profile) {
-    await updateRSVPButtonState(rsvpBtn, miloLibs);
-
-    BlockMediator.subscribe('rsvpData', () => {
-      updateRSVPButtonState(rsvpBtn, miloLibs);
-    });
-
-    BlockMediator.subscribe('eventData', () => {
-      updateRSVPButtonState(rsvpBtn, miloLibs);
-    });
   }
 }
 
