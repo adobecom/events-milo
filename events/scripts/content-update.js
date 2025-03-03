@@ -185,7 +185,6 @@ export function signIn(options) {
 async function handleRSVPBtnBasedOnProfile(rsvpBtn, miloLibs, profile) {
   const { getConfig } = await import(`${miloLibs}/utils/utils.js`);
   const resp = await getEvent(getMetadata('event-id'));
-  let allowWaitlisting = getMetadata('allow-wait-listing') === 'true';
   if (!resp) return;
 
   const eventInfo = resp.data;
@@ -193,8 +192,16 @@ async function handleRSVPBtnBasedOnProfile(rsvpBtn, miloLibs, profile) {
 
   if (profile?.noProfile || profile.account_type === 'guest' || resp.status === 401) {
     const allowGuestReg = getMetadata('allow-guest-registration') === 'true';
+    let eventFull = false;
+    let allowWaitlisting = getMetadata('allow-wait-listing') === 'true';
 
-    if (eventInfo && eventInfo.isFull) {
+    if (eventInfo) {
+      eventFull = eventInfo.isFull
+        || (!eventInfo.allowWaitlisting && +eventInfo.attendeeCount >= +eventInfo.attendeeLimit);
+      allowWaitlisting = eventInfo.allowWaitlisting;
+    }
+
+    if (eventInfo && eventFull) {
       allowWaitlisting = eventInfo.allowWaitlisting;
       if (allowWaitlisting) {
         await setCtaState('toWaitlist', rsvpBtn, miloLibs);
