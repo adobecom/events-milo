@@ -151,7 +151,8 @@ export async function updateRSVPButtonState(rsvpBtn, miloLibs) {
   let allowWaitlisting = getMetadata('allow-wait-listing') === 'true';
 
   if (eventInfo) {
-    eventFull = eventInfo.isFull;
+    eventFull = eventInfo.isFull
+      || (!eventInfo.allowWaitlisting && +eventInfo.attendeeCount >= +eventInfo.attendeeLimit);
     allowWaitlisting = eventInfo.allowWaitlisting;
   }
 
