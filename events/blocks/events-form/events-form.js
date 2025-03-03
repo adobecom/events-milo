@@ -264,8 +264,21 @@ function createButton({ type, label }, bp) {
 
           if (status === 400 && respJson.error?.message === 'Request to ESP failed: Event is full') {
             const eventResp = await getEvent(getMetadata('event-id'));
-            if (eventResp.ok && eventResp.data?.isFull) {
-              button.textContent = await miloReplaceKey(LIBS, 'waitlist-cta-text');
+            if (eventResp.ok) {
+              const { isFull, allowWaitlisting, attendeeCount, attendeeLimit } = eventResp.data;
+              const eventFull = isFull
+              || (!allowWaitlisting && +attendeeCount >= +attendeeLimit);
+
+              if (eventFull) {
+                if (allowWaitlisting) {
+                  button.textContent = await miloReplaceKey(LIBS, 'waitlist-cta-text');
+                  button.disabled = false;
+                } else {
+                  button.textContent = await miloReplaceKey(LIBS, 'event-full-cta-text');
+                  button.disabled = true;
+                }
+              }
+
               BlockMediator.set('eventData', eventResp.data);
             }
           }
