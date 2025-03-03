@@ -195,7 +195,8 @@ function clearForm(form) {
 }
 
 async function buildErrorMsg(parent, status) {
-  const errorKeyMap = { 400: 'event-full-error-msg' };
+  const eventInfo = BlockMediator.get('eventData');
+  const errorKeyMap = { 400: eventInfo?.allowWaitlisting ? 'event-full-error-msg' : 'event-full-no-waitlist-error-msg' };
 
   const existingErrors = parent.querySelectorAll('.error');
   if (existingErrors.length) {
