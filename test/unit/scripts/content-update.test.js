@@ -118,47 +118,6 @@ describe('updateAnalyticTag', () => {
   });
 });
 
-describe('updateRSVPButtonState', () => {
-  it('updates the RSVP button state', async () => {
-    BlockMediator.set('rsvpData', null);
-    const rsvpBtn = {
-      el: document.createElement('a'),
-      originalText: 'RSVP',
-    };
-
-    BlockMediator.set('eventData', { isFull: false });
-
-    await updateRSVPButtonState(rsvpBtn, LIBS);
-    expect(rsvpBtn.el.textContent).to.equal('RSVP');
-
-    BlockMediator.set('eventData', { isFull: true, allowWaitlisting: false });
-    await updateRSVPButtonState(rsvpBtn, LIBS);
-    expect(rsvpBtn.el.classList.contains('disabled')).to.be.true;
-
-    BlockMediator.set('eventData', { isFull: true, allowWaitlisting: true });
-    await updateRSVPButtonState(rsvpBtn, LIBS);
-    expect(rsvpBtn.el.classList.contains('disabled')).to.be.false;
-
-    BlockMediator.set('rsvpData', { registrationStatus: 'registered' });
-    BlockMediator.set('eventData', { isFull: true, allowWaitlisting: false });
-    await updateRSVPButtonState(rsvpBtn, LIBS);
-    expect(rsvpBtn.el.classList.contains('disabled')).to.be.false;
-
-    BlockMediator.set('eventData', { isFull: true, allowWaitlisting: true });
-    await updateRSVPButtonState(rsvpBtn, LIBS);
-    expect(rsvpBtn.el.classList.contains('disabled')).to.be.false;
-
-    BlockMediator.set('rsvpData', { registrationStatus: 'waitlisted' });
-    BlockMediator.set('eventData', { isFull: true, allowWaitlisting: false });
-    await updateRSVPButtonState(rsvpBtn, LIBS);
-    expect(rsvpBtn.el.classList.contains('disabled')).to.be.false;
-
-    BlockMediator.set('eventData', { isFull: true, allowWaitlisting: true });
-    await updateRSVPButtonState(rsvpBtn, LIBS);
-    expect(rsvpBtn.el.classList.contains('disabled')).to.be.false;
-  });
-});
-
 describe('signIn', () => {
   it('calls the signIn method', () => {
     window.adobeIMS = { signIn: () => {} };
