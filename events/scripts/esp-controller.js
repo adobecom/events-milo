@@ -236,14 +236,19 @@ export async function updateAttendee(attendeeData) {
   }
 }
 
-export async function deleteAttendeeFromEvent(eventId) {
+export async function deleteAttendeeFromEvent(eventId, email = null) {
   if (!eventId) return false;
 
   const { host } = API_CONFIG.esl[getEventServiceEnv()];
   const options = await constructRequestOptions('DELETE');
 
   try {
-    const response = await fetch(`${host}/v1/events/${eventId}/attendees/me`, options);
+    let response;
+    if (email) {
+      response = await fetch(`${host}/v1/events/${eventId}/attendees/${email}`, options);
+    } else {
+      response = await fetch(`${host}/v1/events/${eventId}/attendees/me`, options);
+    }
 
     if (!response.ok) {
       window.lana?.log(`Error: Failed to delete attendee for event ${eventId}. Status:`, response.status);

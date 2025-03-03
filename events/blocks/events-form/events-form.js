@@ -540,7 +540,13 @@ function decorateSuccessScreen(screen) {
           cta.classList.add('loading');
 
           if (cta.classList.contains('cancel-button')) {
-            const resp = await deleteAttendeeFromEvent(getMetadata('event-id'));
+            const profile = BlockMediator.get('imsProfile');
+            const rsvpData = BlockMediator.get('rsvpData');
+
+            const resp = profile.account_type === 'guest'
+              ? await deleteAttendeeFromEvent(getMetadata('event-id'), rsvpData.email)
+              : await deleteAttendeeFromEvent(getMetadata('event-id'));
+
             cta.classList.remove('loading');
 
             if (!resp.ok) {
