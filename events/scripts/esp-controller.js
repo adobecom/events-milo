@@ -236,7 +236,7 @@ export async function updateAttendee(attendeeData) {
   }
 }
 
-export async function deleteAttendeeFromEvent(eventId, email = null) {
+export async function deleteAttendeeFromEvent(eventId, attendeeId = null) {
   if (!eventId) return false;
 
   const { host } = API_CONFIG.esl[getEventServiceEnv()];
@@ -244,8 +244,8 @@ export async function deleteAttendeeFromEvent(eventId, email = null) {
 
   try {
     let response;
-    if (email) {
-      response = await fetch(`${host}/v1/events/${eventId}/attendees/${email}`, options);
+    if (attendeeId) {
+      response = await fetch(`${host}/v1/events/${eventId}/attendees/${attendeeId}`, options);
     } else {
       response = await fetch(`${host}/v1/events/${eventId}/attendees/me`, options);
     }

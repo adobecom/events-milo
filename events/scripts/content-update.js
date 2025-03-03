@@ -190,27 +190,18 @@ async function handleRSVPBtnBasedOnProfile(rsvpBtn, miloLibs, profile) {
   const eventInfo = resp.data;
   BlockMediator.set('eventData', eventInfo);
 
+  await updateRSVPButtonState(rsvpBtn, miloLibs);
+
+  BlockMediator.subscribe('rsvpData', () => {
+    updateRSVPButtonState(rsvpBtn, miloLibs);
+  });
+
+  BlockMediator.subscribe('eventData', () => {
+    updateRSVPButtonState(rsvpBtn, miloLibs);
+  });
+
   if (profile?.noProfile || profile.account_type === 'guest' || resp.status === 401) {
     const allowGuestReg = getMetadata('allow-guest-registration') === 'true';
-    let eventFull = false;
-    let allowWaitlisting = getMetadata('allow-wait-listing') === 'true';
-
-    if (eventInfo) {
-      eventFull = eventInfo.isFull
-        || (!eventInfo.allowWaitlisting && +eventInfo.attendeeCount >= +eventInfo.attendeeLimit);
-      allowWaitlisting = eventInfo.allowWaitlisting;
-    }
-
-    if (eventInfo && eventFull) {
-      allowWaitlisting = eventInfo.allowWaitlisting;
-      if (allowWaitlisting) {
-        await setCtaState('toWaitlist', rsvpBtn, miloLibs);
-      } else {
-        await setCtaState('eventClosed', rsvpBtn, miloLibs);
-      }
-    } else {
-      await setCtaState('default', rsvpBtn, miloLibs);
-    }
 
     if (!allowGuestReg) {
       rsvpBtn.el.addEventListener('click', (e) => {
@@ -218,16 +209,6 @@ async function handleRSVPBtnBasedOnProfile(rsvpBtn, miloLibs, profile) {
         signIn(getSusiOptions(getConfig()));
       });
     }
-  } else if (profile) {
-    await updateRSVPButtonState(rsvpBtn, miloLibs);
-
-    BlockMediator.subscribe('rsvpData', () => {
-      updateRSVPButtonState(rsvpBtn, miloLibs);
-    });
-
-    BlockMediator.subscribe('eventData', () => {
-      updateRSVPButtonState(rsvpBtn, miloLibs);
-    });
   }
 }
 
