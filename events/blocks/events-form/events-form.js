@@ -256,9 +256,8 @@ function createButton({ type, label }, bp) {
         button.classList.remove('submitting');
         if (!respJson) return;
 
-        BlockMediator.set('rsvpData', respJson.data);
-
         if (respJson.ok) {
+          BlockMediator.set('rsvpData', respJson.data);
           eventFormSendAnalytics(bp, 'Form Submit');
         } else {
           const { status } = respJson;
@@ -540,15 +539,24 @@ function decorateSuccessScreen(screen) {
           cta.classList.add('loading');
 
           if (cta.classList.contains('cancel-button')) {
-            const resp = await deleteAttendeeFromEvent(getMetadata('event-id'));
+            const profile = BlockMediator.get('imsProfile');
+            const rsvpData = BlockMediator.get('rsvpData');
+
+            const [rsvpResp, eventResp] = await Promise.all([profile.account_type === 'guest'
+              ? deleteAttendeeFromEvent(getMetadata('event-id'), rsvpData.attendeeId)
+              : deleteAttendeeFromEvent(getMetadata('event-id')), getEvent(getMetadata('event-id'))]);
+
+            const eventInfo = eventResp.data;
+            BlockMediator.set('eventData', eventInfo);
+
             cta.classList.remove('loading');
 
-            if (!resp.ok) {
-              buildErrorMsg(screen, resp.status);
+            if (!rsvpResp.ok) {
+              buildErrorMsg(screen, rsvpResp.status);
               return;
             }
 
-            const { data } = resp;
+            const { data } = rsvpResp;
             const result = data?.espProvider || data;
 
             if (!result) {
@@ -563,7 +571,7 @@ function decorateSuccessScreen(screen) {
               return;
             }
 
-            if (result.attendeeDeleted) BlockMediator.set('rsvpData', null);
+            BlockMediator.set('rsvpData', null);
 
             firstScreen.classList.add('hidden');
             secondScreen.classList.remove('hidden');
