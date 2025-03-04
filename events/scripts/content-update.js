@@ -148,17 +148,18 @@ export async function updateRSVPButtonState(rsvpBtn, miloLibs) {
   const rsvpData = BlockMediator.get('rsvpData');
   const eventInfo = await getEvent(getMetadata('event-id'));
   let eventFull = false;
-  let allowWaitlisting = getMetadata('allow-wait-listing') === 'true';
+  let waitlistEnabled = getMetadata('allow-wait-listing') === 'true';
 
-  if (eventInfo) {
-    eventFull = eventInfo.isFull
-      || (!eventInfo.allowWaitlisting && +eventInfo.attendeeCount >= +eventInfo.attendeeLimit);
-    allowWaitlisting = eventInfo.allowWaitlisting;
+  if (eventInfo.ok) {
+    const { isFull, allowWaitlisting, attendeeCount, attendeeLimit } = eventInfo.data;
+    eventFull = isFull
+      || (!allowWaitlisting && attendeeCount >= attendeeLimit);
+    waitlistEnabled = allowWaitlisting;
   }
 
   if (!rsvpData) {
     if (eventFull) {
-      if (allowWaitlisting) {
+      if (waitlistEnabled) {
         await setCtaState('toWaitlist', rsvpBtn, miloLibs);
       } else {
         await setCtaState('eventClosed', rsvpBtn, miloLibs);
