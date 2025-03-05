@@ -277,7 +277,9 @@ export async function deleteAttendeeFromEvent(eventId, attendeeId = null) {
 // compound helper functions
 export async function getAndCreateAndAddAttendee(eventId, attendeeData) {
   const profile = BlockMediator.get('imsProfile');
-  const eventData = BlockMediator.get('eventData');
+  const eventObj = await getEvent(eventId);
+
+  if (!eventObj.ok) return { ok: false, error: 'Failed to get event' };
 
   let attendee;
   let registrationStatus = 'registered';
@@ -322,6 +324,6 @@ export async function getAndCreateAndAddAttendee(eventId, attendeeData) {
 
   const newAttendeeData = attendee.data;
 
-  if (eventData?.isFull) registrationStatus = 'waitlisted';
+  if (eventObj.data.isFull) registrationStatus = 'waitlisted';
   return addAttendeeToEvent(eventId, { ...newAttendeeData, registrationStatus });
 }
