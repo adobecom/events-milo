@@ -185,16 +185,14 @@ export function signIn(options) {
 
 async function handleRSVPBtnBasedOnProfile(rsvpBtn, miloLibs, profile) {
   const { getConfig } = await import(`${miloLibs}/utils/utils.js`);
-  const resp = await getEvent(getMetadata('event-id'));
-  if (!resp) return;
 
-  await updateRSVPButtonState(rsvpBtn, miloLibs);
+  updateRSVPButtonState(rsvpBtn, miloLibs);
 
   BlockMediator.subscribe('rsvpData', () => {
     updateRSVPButtonState(rsvpBtn, miloLibs);
   });
 
-  if (profile?.noProfile || profile.account_type === 'guest' || resp.status === 401) {
+  if (profile?.noProfile || profile.account_type === 'guest') {
     const allowGuestReg = getMetadata('allow-guest-registration') === 'true';
 
     if (!allowGuestReg) {
