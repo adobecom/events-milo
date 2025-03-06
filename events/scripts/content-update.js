@@ -235,10 +235,6 @@ export async function validatePageAndRedirect(miloLibs) {
 }
 
 async function handleRegisterButton(a, miloLibs) {
-  const urlParams = new URLSearchParams(window.location.search);
-  const devMode = urlParams.get('devMode');
-  if (devMode) return;
-
   const rsvpBtn = {
     el: a,
     originalText: a.textContent,
