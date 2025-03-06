@@ -29,7 +29,7 @@ export async function miloReplaceKey(miloLibs, key) {
     return await replaceKey(key, config);
   } catch (error) {
     window.lana?.log('Error trying to replace placeholder:', error);
-    return 'RSVP';
+    return key;
   }
 }
 
@@ -146,18 +146,20 @@ function createTag(tag, attributes, html, options = {}) {
 
 export async function updateRSVPButtonState(rsvpBtn, miloLibs) {
   const rsvpData = BlockMediator.get('rsvpData');
-  const eventInfo = BlockMediator.get('eventData');
+  const eventInfo = await getEvent(getMetadata('event-id'));
   let eventFull = false;
-  let allowWaitlisting = getMetadata('allow-wait-listing') === 'true';
+  let waitlistEnabled = getMetadata('allow-wait-listing') === 'true';
 
-  if (eventInfo) {
-    eventFull = eventInfo.isFull;
-    allowWaitlisting = eventInfo.allowWaitlisting;
+  if (eventInfo.ok) {
+    const { isFull, allowWaitlisting, attendeeCount, attendeeLimit } = eventInfo.data;
+    eventFull = isFull
+      || (!allowWaitlisting && attendeeCount >= attendeeLimit);
+    waitlistEnabled = allowWaitlisting;
   }
 
   if (!rsvpData) {
     if (eventFull) {
-      if (allowWaitlisting) {
+      if (waitlistEnabled) {
         await setCtaState('toWaitlist', rsvpBtn, miloLibs);
       } else {
         await setCtaState('eventClosed', rsvpBtn, miloLibs);
@@ -183,38 +185,22 @@ export function signIn(options) {
 
 async function handleRSVPBtnBasedOnProfile(rsvpBtn, miloLibs, profile) {
   const { getConfig } = await import(`${miloLibs}/utils/utils.js`);
-  const resp = await getEvent(getMetadata('event-id'));
-  let allowWaitlisting = getMetadata('allow-wait-listing') === 'true';
-  if (!resp) return;
 
-  const eventInfo = resp.data;
-  BlockMediator.set('eventData', eventInfo);
-  if (profile?.noProfile || resp.status === 401) {
-    if (eventInfo && eventInfo.isFull) {
-      allowWaitlisting = eventInfo.allowWaitlisting;
-      if (allowWaitlisting) {
-        await setCtaState('toWaitlist', rsvpBtn, miloLibs);
-      } else {
-        await setCtaState('eventClosed', rsvpBtn, miloLibs);
-      }
-    } else {
-      await setCtaState('default', rsvpBtn, miloLibs);
+  updateRSVPButtonState(rsvpBtn, miloLibs);
+
+  BlockMediator.subscribe('rsvpData', () => {
+    updateRSVPButtonState(rsvpBtn, miloLibs);
+  });
+
+  if (profile?.noProfile || profile.account_type === 'guest') {
+    const allowGuestReg = getMetadata('allow-guest-registration') === 'true';
+
+    if (!allowGuestReg) {
+      rsvpBtn.el.addEventListener('click', (e) => {
+        e.preventDefault();
+        signIn(getSusiOptions(getConfig()));
+      });
     }
-    // TODO: add condition once guest checkout is available
-    rsvpBtn.el.addEventListener('click', (e) => {
-      e.preventDefault();
-      signIn(getSusiOptions(getConfig()));
-    });
-  } else if (profile) {
-    await updateRSVPButtonState(rsvpBtn, miloLibs);
-
-    BlockMediator.subscribe('rsvpData', () => {
-      updateRSVPButtonState(rsvpBtn, miloLibs);
-    });
-
-    BlockMediator.subscribe('eventData', () => {
-      updateRSVPButtonState(rsvpBtn, miloLibs);
-    });
   }
 }
 
@@ -237,7 +223,7 @@ export async function validatePageAndRedirect(miloLibs) {
   if (purposefulHitOnProdPreview) {
     document.body.style.display = 'none';
     BlockMediator.subscribe('imsProfile', ({ newValue }) => {
-      if (newValue?.noProfile) {
+      if (newValue?.noProfile || newValue?.account_type === 'guest') {
         signIn(getSusiOptions(getConfig()));
       } else if (!newValue.email?.toLowerCase().endsWith('@adobe.com')) {
         window.location.replace('/404');
@@ -283,7 +269,19 @@ function autoUpdateLinks(scope, miloLibs) {
       if (/#rsvp-form.*/.test(a.href)) {
         handleRegisterButton(a, miloLibs);
       } else if (a.href.endsWith('#event-template')) {
-        if (getMetadata('template-id')) {
+        let templateId;
+
+        try {
+          const series = JSON.parse(getMetadata('series'));
+          templateId = series?.templateId;
+        } catch (e) {
+          window.lana?.log('Failed to parse series metadata. Attempt to fallback on event tempate ID attribute:', e);
+          if (getMetadata('template-id')) {
+            templateId = getMetadata('template-id');
+          }
+        }
+
+        if (templateId) {
           const params = new URLSearchParams(document.location.search);
           const testTiming = params.get('timing');
           let timeSuffix = '';
@@ -296,9 +294,11 @@ function autoUpdateLinks(scope, miloLibs) {
             timeSuffix = currentTimestamp > +getMetadata('local-end-time-millis') ? '-post' : '-pre';
           }
 
-          a.href = `${getMetadata('template-id')}${timeSuffix}`;
+          a.href = `${templateId}${timeSuffix}`;
           const timingClass = `timing${timeSuffix}-event`;
           document.body.classList.add(timingClass);
+        } else {
+          window.lana?.log(`Error: Failed to find template ID for event ${getMetadata('event-id')}`);
         }
       } else if (a.href.endsWith('#host-email')) {
         if (getMetadata('host-email')) {

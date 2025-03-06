@@ -236,14 +236,19 @@ export async function updateAttendee(attendeeData) {
   }
 }
 
-export async function deleteAttendeeFromEvent(eventId) {
+export async function deleteAttendeeFromEvent(eventId, attendeeId = null) {
   if (!eventId) return false;
 
   const { host } = API_CONFIG.esl[getEventServiceEnv()];
   const options = await constructRequestOptions('DELETE');
 
   try {
-    const response = await fetch(`${host}/v1/events/${eventId}/attendees/me`, options);
+    let response;
+    if (attendeeId) {
+      response = await fetch(`${host}/v1/events/${eventId}/attendees/${attendeeId}`, options);
+    } else {
+      response = await fetch(`${host}/v1/events/${eventId}/attendees/me`, options);
+    }
 
     if (!response.ok) {
       window.lana?.log(`Error: Failed to delete attendee for event ${eventId}. Status:`, response.status);
@@ -271,13 +276,15 @@ export async function deleteAttendeeFromEvent(eventId) {
 
 // compound helper functions
 export async function getAndCreateAndAddAttendee(eventId, attendeeData) {
-  const attendeeResp = await getAttendee();
-  const eventData = BlockMediator.get('eventData');
+  const profile = BlockMediator.get('imsProfile');
+  const eventObj = await getEvent(eventId);
+
+  if (!eventObj.ok) return { ok: false, error: 'Failed to get event' };
 
   let attendee;
   let registrationStatus = 'registered';
 
-  if (!attendeeResp.ok && attendeeResp.status === 404) {
+  if (profile.account_type === 'guest') {
     const payload = { ...attendeeData };
 
     // filter out empty keys
@@ -287,22 +294,36 @@ export async function getAndCreateAndAddAttendee(eventId, attendeeData) {
     }, {});
 
     attendee = await createAttendee(cleanPayload);
-  } else if (attendeeResp.data?.attendeeId) {
-    const payload = { ...attendeeResp.data, ...attendeeData };
+  } else {
+    const attendeeResp = await getAttendee();
 
-    // filter out empty keys
-    const cleanPayload = Object.keys(payload).reduce((acc, key) => {
-      if (payload[key]) acc[key] = payload[key];
-      return acc;
-    }, {});
+    if (!attendeeResp.ok && attendeeResp.status === 404) {
+      const payload = { ...attendeeData };
 
-    attendee = await updateAttendee(cleanPayload);
+      // filter out empty keys
+      const cleanPayload = Object.keys(payload).reduce((acc, key) => {
+        if (payload[key]) acc[key] = payload[key];
+        return acc;
+      }, {});
+
+      attendee = await createAttendee(cleanPayload);
+    } else if (attendeeResp.data?.attendeeId) {
+      const payload = { ...attendeeResp.data, ...attendeeData };
+
+      // filter out empty keys
+      const cleanPayload = Object.keys(payload).reduce((acc, key) => {
+        if (payload[key]) acc[key] = payload[key];
+        return acc;
+      }, {});
+
+      attendee = await updateAttendee(cleanPayload);
+    }
   }
 
   if (!attendee?.ok) return { ok: false, error: 'Failed to create or update attendee' };
 
   const newAttendeeData = attendee.data;
 
-  if (eventData?.isFull) registrationStatus = 'waitlisted';
+  if (eventObj.data.isFull) registrationStatus = 'waitlisted';
   return addAttendeeToEvent(eventId, { ...newAttendeeData, registrationStatus });
 }
