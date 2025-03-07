@@ -305,8 +305,6 @@ function autoUpdateLinks(scope, miloLibs) {
         }
       } else if (getMetadata(url.hash.replace('#', ''))) {
         a.href = getMetadata(url.hash.replace('#', ''));
-      } else if (url.pathname.startsWith('/events') && url.hash) {
-        a.remove();
       }
     } catch (e) {
       window.lana?.log(`Error while attempting to replace link ${a.href}: ${e}`);
