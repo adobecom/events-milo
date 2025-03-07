@@ -167,4 +167,8 @@
   .event-agenda .venue-img-col {
     height: 560px;
   }
+    gap: 32px; /* Adjust spacing */
+    width: 100%;
+    grid-auto-flow: column; /* Fill down first */
+  }
 }

@@ -79,6 +79,8 @@ export default async function init(el) {
     const venueImageCol = createTag('div', { class: 'venue-img-col' });
     venueImageCol.append(createOptimizedPicture(imgUrl, venueImage.altText || '', false));
     container.append(venueImageCol);
+  } else if(agendaArray.length > 6){
+    container.classList.add('more-than-six');
   }
 
   const localeString = getConfig().locale?.ietf || 'en-US';
