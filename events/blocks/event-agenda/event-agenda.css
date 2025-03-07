@@ -167,7 +167,16 @@
   .event-agenda .venue-img-col {
     height: 560px;
   }
-    gap: 32px; /* Adjust spacing */
+
+  .event-agenda .agenda-container.more-than-six {
+    max-width: 1200px;
+  }
+
+  .event-agenda .agenda-container.more-than-six .agenda-item-container {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr); /* 2 columns */
+    grid-template-rows: repeat(6, auto);/* 6 rows*/
+    gap: 32px 40px;
     width: 100%;
     grid-auto-flow: column; /* Fill down first */
   }
