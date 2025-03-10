@@ -86,8 +86,17 @@ export default async function init(el) {
   const localeString = getConfig().locale?.ietf || 'en-US';
 
   const agendaItemContainer = createTag('div', { class: 'agenda-item-container' }, '', { parent: agendaItemsCol });
-  agendaArray.forEach((agenda) => {
-    const agendaListItem = createTag('div', { class: 'agenda-list-item' }, '', { parent: agendaItemContainer });
+  const column1 = createTag('div', { class: 'column' }, '', { parent: agendaItemContainer });
+
+  // Default to column1 if there is a venue image or agenda items are less than 6
+  let column2 = column1;
+  if (!venueImage && agendaArray.length > 6) {
+    column2 = createTag('div', { class: 'column' }, '', { parent: agendaItemContainer });
+  }
+
+  const splitIndex = Math.ceil(agendaArray.length / 2);
+  agendaArray.forEach((agenda, index) => {
+    const agendaListItem = createTag('div', { class: 'agenda-list-item' }, '', { parent: (index >= splitIndex ? column2 : column1) });
     createTag('span', { class: 'agenda-time' }, convertToLocaleTimeFormat(agenda.startTime, localeString), { parent: agendaListItem });
 
     const agendaTitleDetailContainer = createTag('div', { class: 'agenda-title-detail-container' }, '', { parent: agendaListItem });
