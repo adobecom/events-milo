@@ -36,6 +36,8 @@ function decorateTextContainer(el) {
     if (city && state && postalCode) createTag('p', { class: 'venue-address-text' }, `${city}, ${state} ${postalCode}`, { parent: textContentWrapper });
   }
 
+  if (getMetadata('show-venue-additional-info-post-event') !== 'true' && document.body.classList.contains('timing-post-event')) return;
+  
   if (additionalInfo) {
     decorateButtons(additionalInfo, 'button-l');
     textContentWrapper.append(additionalInfo);
