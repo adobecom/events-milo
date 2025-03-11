@@ -195,7 +195,10 @@ function clearForm(form) {
 }
 
 async function buildErrorMsg(parent, status) {
-  const eventInfo = BlockMediator.get('eventData');
+  const eventObj = await getEvent(getMetadata('event-id'));
+
+  if (!eventObj.ok) return;
+  const eventInfo = eventObj.data;
   const errorKeyMap = { 400: eventInfo?.allowWaitlisting === 'true' ? 'event-full-error-msg' : 'event-full-no-waitlist-error-msg' };
 
   const existingErrors = parent.querySelectorAll('.error');
@@ -263,6 +266,7 @@ function createButton({ type, label }, bp) {
           const { status } = respJson;
 
           if (status === 400 && respJson.error?.message === 'Request to ESP failed: Event is full') {
+            BlockMediator.set('rsvpData', null);
             const eventResp = await getEvent(getMetadata('event-id'));
             if (eventResp.ok) {
               const { isFull, allowWaitlisting, attendeeCount, attendeeLimit } = eventResp.data;
@@ -278,8 +282,6 @@ function createButton({ type, label }, bp) {
                   button.disabled = true;
                 }
               }
-
-              BlockMediator.set('eventData', eventResp.data);
             }
           }
 
@@ -542,12 +544,9 @@ function decorateSuccessScreen(screen) {
             const profile = BlockMediator.get('imsProfile');
             const rsvpData = BlockMediator.get('rsvpData');
 
-            const [rsvpResp, eventResp] = await Promise.all([profile.account_type === 'guest'
-              ? deleteAttendeeFromEvent(getMetadata('event-id'), rsvpData.attendeeId)
-              : deleteAttendeeFromEvent(getMetadata('event-id')), getEvent(getMetadata('event-id'))]);
-
-            const eventInfo = eventResp.data;
-            BlockMediator.set('eventData', eventInfo);
+            const rsvpResp = profile.account_type === 'guest'
+              ? await deleteAttendeeFromEvent(getMetadata('event-id'), rsvpData.attendeeId)
+              : await deleteAttendeeFromEvent(getMetadata('event-id'));
 
             cta.classList.remove('loading');
 

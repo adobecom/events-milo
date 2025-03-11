@@ -146,19 +146,20 @@ function createTag(tag, attributes, html, options = {}) {
 
 export async function updateRSVPButtonState(rsvpBtn, miloLibs) {
   const rsvpData = BlockMediator.get('rsvpData');
-  const eventInfo = BlockMediator.get('eventData');
+  const eventInfo = await getEvent(getMetadata('event-id'));
   let eventFull = false;
-  let allowWaitlisting = getMetadata('allow-wait-listing') === 'true';
+  let waitlistEnabled = getMetadata('allow-wait-listing') === 'true';
 
-  if (eventInfo) {
-    eventFull = eventInfo.isFull
-      || (!eventInfo.allowWaitlisting && +eventInfo.attendeeCount >= +eventInfo.attendeeLimit);
-    allowWaitlisting = eventInfo.allowWaitlisting;
+  if (eventInfo.ok) {
+    const { isFull, allowWaitlisting, attendeeCount, attendeeLimit } = eventInfo.data;
+    eventFull = isFull
+      || (!allowWaitlisting && attendeeCount >= attendeeLimit);
+    waitlistEnabled = allowWaitlisting;
   }
 
   if (!rsvpData) {
     if (eventFull) {
-      if (allowWaitlisting) {
+      if (waitlistEnabled) {
         await setCtaState('toWaitlist', rsvpBtn, miloLibs);
       } else {
         await setCtaState('eventClosed', rsvpBtn, miloLibs);
@@ -184,23 +185,14 @@ export function signIn(options) {
 
 async function handleRSVPBtnBasedOnProfile(rsvpBtn, miloLibs, profile) {
   const { getConfig } = await import(`${miloLibs}/utils/utils.js`);
-  const resp = await getEvent(getMetadata('event-id'));
-  if (!resp) return;
 
-  const eventInfo = resp.data;
-  BlockMediator.set('eventData', eventInfo);
-
-  await updateRSVPButtonState(rsvpBtn, miloLibs);
+  updateRSVPButtonState(rsvpBtn, miloLibs);
 
   BlockMediator.subscribe('rsvpData', () => {
     updateRSVPButtonState(rsvpBtn, miloLibs);
   });
 
-  BlockMediator.subscribe('eventData', () => {
-    updateRSVPButtonState(rsvpBtn, miloLibs);
-  });
-
-  if (profile?.noProfile || profile.account_type === 'guest' || resp.status === 401) {
+  if (profile?.noProfile || profile.account_type === 'guest') {
     const allowGuestReg = getMetadata('allow-guest-registration') === 'true';
 
     if (!allowGuestReg) {
@@ -243,10 +235,6 @@ export async function validatePageAndRedirect(miloLibs) {
 }
 
 async function handleRegisterButton(a, miloLibs) {
-  const urlParams = new URLSearchParams(window.location.search);
-  const devMode = urlParams.get('devMode');
-  if (devMode) return;
-
   const rsvpBtn = {
     el: a,
     originalText: a.textContent,

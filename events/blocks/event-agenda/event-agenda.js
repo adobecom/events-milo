@@ -79,22 +79,34 @@ export default async function init(el) {
     const venueImageCol = createTag('div', { class: 'venue-img-col' });
     venueImageCol.append(createOptimizedPicture(imgUrl, venueImage.altText || '', false));
     container.append(venueImageCol);
+  } else if (agendaArray.length > 6) {
+    container.classList.add('more-than-six');
   }
 
   const localeString = getConfig().locale?.ietf || 'en-US';
 
   const agendaItemContainer = createTag('div', { class: 'agenda-item-container' }, '', { parent: agendaItemsCol });
-  agendaArray.forEach((agenda) => {
-    const agendaListItem = createTag('div', { class: 'agenda-list-item' }, '', { parent: agendaItemContainer });
-    const agaendaTimeTitle = createTag('div', { class: 'agenda-time-title' }, '', { parent: agendaListItem });
-    createTag('span', { class: 'agenda-time' }, convertToLocaleTimeFormat(agenda.startTime, localeString), { parent: agaendaTimeTitle });
+  const column1 = createTag('div', { class: 'column' }, '', { parent: agendaItemContainer });
 
+  // Default to column1 if there is a venue image or agenda items are less than 6
+  let column2 = column1;
+  if (!venueImage && agendaArray.length > 6) {
+    column2 = createTag('div', { class: 'column' }, '', { parent: agendaItemContainer });
+  }
+
+  const splitIndex = Math.ceil(agendaArray.length / 2);
+  agendaArray.forEach((agenda, index) => {
+    const agendaListItem = createTag('div', { class: 'agenda-list-item' }, '', { parent: (index >= splitIndex ? column2 : column1) });
+    createTag('span', { class: 'agenda-time' }, convertToLocaleTimeFormat(agenda.startTime, localeString), { parent: agendaListItem });
+
+    const agendaTitleDetailContainer = createTag('div', { class: 'agenda-title-detail-container' }, '', { parent: agendaListItem });
+    const agendaTitleDetails = createTag('div', { class: 'agenda-title-detail' }, '', { parent: agendaTitleDetailContainer });
     if (agenda.title) {
-      createTag('span', { class: 'agenda-title' }, agenda.title, { parent: agaendaTimeTitle });
+      createTag('div', { class: 'agenda-title' }, agenda.title, { parent: agendaTitleDetails });
     }
 
     if (agenda.description) {
-      createTag('div', { class: 'agenda-details' }, agenda.description, { parent: agendaListItem });
+      createTag('div', { class: 'agenda-details' }, agenda.description, { parent: agendaTitleDetails });
     }
   });
 }
