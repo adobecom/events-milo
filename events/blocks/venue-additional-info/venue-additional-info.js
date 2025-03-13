@@ -1,14 +1,6 @@
 import { LIBS, getMetadata } from '../../scripts/utils.js';
 
-const { createTag, loadScript } = await import(`${LIBS}/utils/utils.js`);
-
-
-function decorateModal(el) {
-  decorateMap(el);
-  decorateTextContainer(el)
-}
-
-async function decorateTextContainer(el) {
+async function decorateTextContainer(el, createTag, loadScript) {
   await loadScript('https://unpkg.com/showdown/dist/showdown.min.js');
   const wrapper = el.querySelector('.venue-additional-info-wrapper');
   const textContentWrapper = el.querySelector(':scope > div');
@@ -31,12 +23,13 @@ async function decorateTextContainer(el) {
 
   if (!additionalInformation) return;
 
+  // eslint-disable-next-line no-undef
   const showdownService = new showdown.Converter();
   const content = showdownService.makeHtml(additionalInformation);
   textContentWrapper.insertAdjacentHTML('beforeend', content);
 }
 
-function decorateMap(el) {
+function decorateMap(el, createTag) {
   let venueMapImageObj;
   try {
     venueMapImageObj = JSON.parse(getMetadata('photos')).find((photo) => photo.imageKind === 'venue-additional-image');
@@ -74,7 +67,14 @@ function decorateMap(el) {
   wrapper.append(mapContainer);
 }
 
+function decorateModal(el, createTag, loadScript) {
+  decorateMap(el, createTag);
+  decorateTextContainer(el, createTag, loadScript);
+}
+
 export default async function init(el) {
+  const { createTag, loadScript } = await import(`${LIBS}/utils/utils.js`);
+
   if (getMetadata('show-venue-additional-post-event') !== 'true' && document.body.classList.contains('timing-post-event')) {
     el.remove();
     return;
@@ -83,5 +83,5 @@ export default async function init(el) {
   const wrapper = createTag('div', { class: 'venue-additional-info-wrapper' });
   el.append(wrapper);
 
-  decorateModal(el);
+  decorateModal(el, createTag, loadScript);
 }

@@ -1,9 +1,6 @@
 import { LIBS, getMetadata } from '../../scripts/utils.js';
 
-const { createTag } = await import(`${LIBS}/utils/utils.js`);
-const { decorateButtons } = await import(`${LIBS}/utils/decorate.js`);
-
-function decorateTextContainer(el) {
+function decorateTextContainer(el, createTag, decorateButtons) {
   const wrapper = el.querySelector('.event-map-wrapper');
   const textContentWrapper = el.querySelector(':scope > div:first-of-type > div');
   const additionalInfo = el.querySelector(':scope > div:first-of-type > div > p:last-of-type:has(a)');
@@ -37,14 +34,14 @@ function decorateTextContainer(el) {
   }
 
   if (getMetadata('show-venue-additional-info-post-event') !== 'true' && document.body.classList.contains('timing-post-event')) return;
-  
+
   if (additionalInfo) {
     decorateButtons(additionalInfo, 'button-l');
     textContentWrapper.append(additionalInfo);
   }
 }
 
-function decorateMap(el) {
+function decorateMap(el, createTag) {
   let venueMapImageObj;
   try {
     venueMapImageObj = JSON.parse(getMetadata('photos')).find((photo) => photo.imageKind === 'venue-map-image');
@@ -83,6 +80,10 @@ function decorateMap(el) {
 }
 
 export default async function init(el) {
+  const [{ createTag }, { decorateButtons }] = await Promise.all([
+    import(`${LIBS}/utils/utils.js`),
+    import(`${LIBS}/utils/decorate.js`),
+  ]);
   if (getMetadata('show-venue-post-event') !== 'true' && document.body.classList.contains('timing-post-event')) {
     el.remove();
     return;
@@ -91,6 +92,6 @@ export default async function init(el) {
   const wrapper = createTag('div', { class: 'event-map-wrapper dark' });
   el.append(wrapper);
 
-  decorateTextContainer(el);
-  decorateMap(el);
+  decorateTextContainer(el, createTag, decorateButtons);
+  decorateMap(el, createTag);
 }
