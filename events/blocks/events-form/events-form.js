@@ -833,6 +833,13 @@ async function buildEventform(bp, formData) {
   }
 }
 
+function getCookie(name) {
+  const value = `; ${document.cookie}`;
+  const parts = value.split(`; ${name}=`);
+  if (parts.length === 2) return parts.pop().split(';').shift();
+  return null;
+}
+
 async function initFormBasedOnRSVPData(bp) {
   const validRegistrationStatus = ['registered', 'waitlisted'];
   const { block } = bp;
@@ -847,6 +854,41 @@ async function initFormBasedOnRSVPData(bp) {
     const attendeeResp = await getAttendee();
     if (attendeeResp.ok) existingAttendeeData = attendeeResp.data;
     personalizeForm(block, { profile, existingAttendeeData });
+  } else {
+    const countryInput = block.querySelector('select#consentStringId');
+    if (!countryInput) return;
+
+    const options = Array.from(countryInput.options);
+    const internationalCookie = getCookie('international_cookie');
+
+    if (internationalCookie) {
+      const option = options.find((o) => {
+        const countryCode = o.dataset.countryCode?.toLowerCase();
+
+        if (!countryCode) return false;
+
+        return countryCode === internationalCookie.toLowerCase();
+      });
+      if (option) {
+        option.selected = true;
+        countryInput.value = option.value;
+        countryInput.dispatchEvent(new Event('change'));
+      }
+    } else {
+      const countryInNavigator = window.navigator.language.toLowerCase().split('-')[1];
+      const option = options.find((o) => {
+        const countryCode = o.dataset.countryCode?.toLowerCase();
+
+        if (!countryCode) return false;
+
+        return countryCode === countryInNavigator;
+      });
+      if (option) {
+        option.selected = true;
+        countryInput.value = option.value;
+        countryInput.dispatchEvent(new Event('change'));
+      }
+    }
   }
 
   BlockMediator.subscribe('rsvpData', ({ newValue }) => {
