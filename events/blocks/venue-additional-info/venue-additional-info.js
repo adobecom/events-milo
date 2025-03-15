@@ -1,7 +1,7 @@
 import { LIBS, getMetadata } from '../../scripts/utils.js';
 
 async function decorateTextContainer(el, createTag, loadScript) {
-  await loadScript('https://unpkg.com/showdown/dist/showdown.min.js');
+  await loadScript('https://unpkg.com/showdown@2.1.0/dist/showdown.min.js');
   const wrapper = el.querySelector('.venue-additional-info-wrapper');
   const textContentWrapper = el.querySelector(':scope > div');
   if (!textContentWrapper) return;
