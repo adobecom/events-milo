@@ -1,7 +1,6 @@
 import { LIBS, getMetadata } from '../../scripts/utils.js';
 
-async function decorateTextContainer(el, createTag, loadScript) {
-  await loadScript('https://unpkg.com/showdown@2.1.0/dist/showdown.min.js');
+async function decorateTextContainer(el, createTag) {
   const wrapper = el.querySelector('.venue-additional-info-wrapper');
   const textContentWrapper = el.querySelector(':scope > div');
   if (!textContentWrapper) return;
@@ -23,10 +22,7 @@ async function decorateTextContainer(el, createTag, loadScript) {
 
   if (!additionalInformation) return;
 
-  // eslint-disable-next-line no-undef
-  const showdownService = new showdown.Converter();
-  const content = showdownService.makeHtml(additionalInformation);
-  textContentWrapper.insertAdjacentHTML('beforeend', content);
+  textContentWrapper.insertAdjacentHTML('beforeend', additionalInformation);
 }
 
 function decorateMap(el, createTag) {
@@ -67,13 +63,13 @@ function decorateMap(el, createTag) {
   wrapper.append(mapContainer);
 }
 
-function decorateModal(el, createTag, loadScript) {
+function decorateModal(el, createTag) {
   decorateMap(el, createTag);
-  decorateTextContainer(el, createTag, loadScript);
+  decorateTextContainer(el, createTag);
 }
 
 export default async function init(el) {
-  const { createTag, loadScript } = await import(`${LIBS}/utils/utils.js`);
+  const { createTag } = await import(`${LIBS}/utils/utils.js`);
 
   if (getMetadata('show-venue-additional-info-post-event') !== 'true' && document.body.classList.contains('timing-post-event')) {
     el.remove();
@@ -83,5 +79,5 @@ export default async function init(el) {
   const wrapper = createTag('div', { class: 'venue-additional-info-wrapper' });
   el.append(wrapper);
 
-  decorateModal(el, createTag, loadScript);
+  decorateModal(el, createTag);
 }
