@@ -3,7 +3,7 @@ import { LIBS, getMetadata } from '../../scripts/utils.js';
 function decorateTextContainer(el, createTag, decorateButtons) {
   const wrapper = el.querySelector('.event-map-wrapper');
   const textContentWrapper = el.querySelector(':scope > div:first-of-type > div');
-  const additionalInfo = el.querySelector(':scope > div:first-of-type > div > p:last-of-type:has(a)');
+  const additionalInfoBtn = el.querySelector(':scope > div:first-of-type > div > p:last-of-type:has(a)');
 
   if (!textContentWrapper) return;
 
@@ -20,7 +20,15 @@ function decorateTextContainer(el, createTag, decorateButtons) {
 
   if (!venueObj) return;
 
-  const { formattedAddress, venueName } = venueObj;
+  const { formattedAddress, venueName, additionalInformation } = venueObj;
+
+  let venueAdditionalImageObj;
+
+  try {
+    venueAdditionalImageObj = JSON.parse(getMetadata('photos')).find((photo) => photo.imageKind === 'venue-additional-image');
+  } catch (e) {
+    window.lana?.log('Error while parsing venue additional image metadata:', e);
+  }
 
   createTag('p', { class: 'venue-name-text' }, createTag('strong', {}, venueName), { parent: textContentWrapper });
 
@@ -35,9 +43,9 @@ function decorateTextContainer(el, createTag, decorateButtons) {
 
   if (getMetadata('show-venue-additional-info-post-event') !== 'true' && document.body.classList.contains('timing-post-event')) return;
 
-  if (additionalInfo) {
-    decorateButtons(additionalInfo, 'button-l');
-    textContentWrapper.append(additionalInfo);
+  if (additionalInfoBtn && (additionalInformation || venueAdditionalImageObj)) {
+    decorateButtons(additionalInfoBtn, 'button-l');
+    textContentWrapper.append(additionalInfoBtn);
   }
 }
 

@@ -18,6 +18,7 @@ describe('Event Map', () => {
       city: 'Chicago',
       state: 'IL',
       postalCode: '60642',
+      additionalInformation: 'Additional information',
     }));
   });
 
@@ -31,6 +32,11 @@ describe('Event Map', () => {
         imageKind: 'venue-map-image',
         sharepointUrl: 'https://via.placeholder.com/150',
         altText: 'Venue Map Image',
+      },
+      {
+        imageKind: 'venue-additional-image',
+        sharepointUrl: 'https://via.placeholder.com/150',
+        altText: 'Venue Additional Image',
       },
     ]));
     document.body.innerHTML = body;
