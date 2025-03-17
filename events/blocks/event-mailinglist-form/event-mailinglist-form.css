@@ -1,0 +1,29 @@
+.event-form-mailinglist {
+  margin-top: 20px;
+}
+
+.mailinglist-title {
+  font-size: 44px;
+  color: rgb(44, 44, 44);
+  padding-bottom: 2rem;
+  font-family: adobe-clean, Source Sans Pro, -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif;
+  font-weight: 400;
+  line-height: 1.5;
+  margin : 0px;
+}
+
+.mailinglist-description {
+  padding-bottom: 32px;
+  color: #2C2C2C;
+  margin: 0px;
+  font-size: 16px;
+}
+
+
+#mailinglist-form {
+  display: table;
+  border-collapse: separate;
+  border-spacing: 0 24px;
+  margin: -20px 0;
+}
+    
