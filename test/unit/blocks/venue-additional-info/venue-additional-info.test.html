@@ -1,0 +1,104 @@
+<html>
+  <head>
+    <script type="importmap">
+      {
+        "imports": {
+          "https://main--milo--adobecom.aem.live/libs/utils/utils.js": "./mocks/utils.js"
+        }
+      }
+    </script>
+  </head>
+  <body>
+    <main>
+      <div>
+        <div class="venue-additional-info">
+          <div></div>
+        </div>
+      </div>
+    </main>
+  </body>
+  <script type="module">
+    import { runTests } from '@web/test-runner-mocha';
+    import { expect } from '@esm-bundle/chai';
+    import { setMetadata } from '../../../../events/scripts/utils.js';
+    import init from "../../../../events/blocks/venue-additional-info/venue-additional-info.js";
+
+    runTests(() => {
+      describe('venue additional info', () => {
+        beforeEach(() => {
+          document.body.innerHTML = `
+            <main>
+              <div>
+                <div class="venue-additional-info">
+                  <div></div>
+                </div>
+              </div>
+            </main>
+          `;
+          document.body.classList.remove('timing-post-event');
+          document.head.innerHTML = '';
+          window.isTestEnv = true;
+        });
+
+        it('venue additional info exists', async () => {
+          const block = document.querySelector('.venue-additional-info');
+          await init(block);
+          expect(block).to.exist;
+        });
+
+        it('venue additional image does not exists if there is no additional image', async () => {
+          const block = document.querySelector('.venue-additional-info');
+          await init(block);
+          expect(document.querySelector('.venue-additional-info .venue-additional-info-wrapper #additional-image-container > img')).to.not.exist;
+        });
+
+        it('venue additional image exists if there is additional image', async () => {
+          setMetadata('photos', JSON.stringify([
+            {
+              imageKind: 'venue-additional-image',
+              sharepointUrl: 'https://via.placeholder.com/150',
+              altText: 'Venue Additional Image',
+            },
+          ]));
+          const block = document.querySelector('.venue-additional-info');
+          await init(block);
+          expect(document.querySelector('.venue-additional-info .venue-additional-info-wrapper #additional-image-container > img')).to.exist;
+        });
+
+        it('venue additional information exists if there is additional information', async () => {
+          setMetadata('venue', JSON.stringify({
+            venueName: 'Morgan MF',
+            additionalInformation: 'Additional information',
+          }));
+          const block = document.querySelector('.venue-additional-info');
+          await init(block);
+          expect(document.querySelector('.venue-additional-info .venue-additional-info-wrapper .text-wrapper')).to.exist;
+        });
+
+        it('triggers error handling for malformatted sharepoint URL', async () => {
+          setMetadata('photos', JSON.stringify([
+            {
+              imageKind: 'venue-additional-image',
+              sharepointUrl: 'https/via.placeholder.com/150',
+            },
+          ]));
+          const block = document.querySelector('.venue-additional-info');
+          await init(block);
+          expect(document.querySelector('.venue-additional-info .venue-additional-info-wrapper #additional-image-container > img[src="https/via.placeholder.com/150"]')).to.exist;
+        });
+
+        it('fallback from sharepoint URL to image URL', async () => {
+          setMetadata('photos', JSON.stringify([
+            {
+              imageKind: 'venue-additional-image',
+              imageUrl: 'https://via.placeholder.com/150',
+            },
+          ]));
+          const block = document.querySelector('.venue-additional-info');
+          await init(block);
+          expect(document.querySelector('.venue-additional-info .venue-additional-info-wrapper #additional-image-container > img[src="https://via.placeholder.com/150"]')).to.exist;
+        });
+      });
+    });
+  </script>
+</html>
