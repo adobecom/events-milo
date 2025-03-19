@@ -25,25 +25,25 @@ async function decorateTextContainer(el, createTag) {
   textContentWrapper.insertAdjacentHTML('beforeend', additionalInformation);
 }
 
-function decorateMap(el, createTag) {
-  let venueMapImageObj;
+function decorateImage(el, createTag) {
+  let venueAdditionalImageObj;
   try {
-    venueMapImageObj = JSON.parse(getMetadata('photos')).find((photo) => photo.imageKind === 'venue-additional-image');
+    venueAdditionalImageObj = JSON.parse(getMetadata('photos')).find((photo) => photo.imageKind === 'venue-additional-image');
   } catch (e) {
-    window.lana?.log('Error while parsing venue map image metadata:', e);
+    window.lana?.log('Error while parsing venue additional image metadata:', e);
   }
 
-  if (!venueMapImageObj) return;
+  if (!venueAdditionalImageObj) return;
 
   const wrapper = el.querySelector('.venue-additional-info-wrapper');
-  const mapContainer = createTag('div', { id: 'additional-image-container', class: 'additional-image-container' });
-  wrapper.append(mapContainer);
+  const imageContainer = createTag('div', { id: 'additional-image-container', class: 'additional-image-container' });
+  wrapper.append(imageContainer);
 
   let spUrlObj;
 
-  if (venueMapImageObj.sharepointUrl?.startsWith('https')) {
+  if (venueAdditionalImageObj.sharepointUrl?.startsWith('https')) {
     try {
-      spUrlObj = new URL(venueMapImageObj.sharepointUrl);
+      spUrlObj = new URL(venueAdditionalImageObj.sharepointUrl);
     } catch (e) {
       window.lana?.log('Error while parsing SharePoint URL:', e);
     }
@@ -51,20 +51,20 @@ function decorateMap(el, createTag) {
 
   if (spUrlObj) {
     const spUrl = spUrlObj.pathname;
-    const img = createTag('img', { src: `${spUrl}`, alt: venueMapImageObj.altText || '' });
-    mapContainer.append(img);
-    wrapper.append(mapContainer);
+    const img = createTag('img', { src: `${spUrl}`, alt: venueAdditionalImageObj.altText || '' });
+    imageContainer.append(img);
+    wrapper.append(imageContainer);
 
     return;
   }
 
-  const img = createTag('img', { src: `${venueMapImageObj.sharepointUrl || venueMapImageObj.imageUrl}`, alt: venueMapImageObj.altText || '' });
-  mapContainer.append(img);
-  wrapper.append(mapContainer);
+  const img = createTag('img', { src: `${venueAdditionalImageObj.sharepointUrl || venueAdditionalImageObj.imageUrl}`, alt: venueAdditionalImageObj.altText || '' });
+  imageContainer.append(img);
+  wrapper.append(imageContainer);
 }
 
 function decorateModal(el, createTag) {
-  decorateMap(el, createTag);
+  decorateImage(el, createTag);
   decorateTextContainer(el, createTag);
 }
 
