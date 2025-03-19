@@ -45,7 +45,7 @@ describe('Venue Additional Info', () => {
     document.body.innerHTML = body;
     const block = document.querySelector('.venue-additional-info');
     await init(block);
-    expect(document.querySelector('.venue-additional-info .venue-additional-info-wrapper .text-wrapper')).to.not.exist;
+    expect(document.querySelector('.venue-additional-info .venue-additional-info-wrapper .text-wrapper').textContent).to.not.include('Additional information');
   });
 
   it('venue additional information exists if there is additional information', async () => {
@@ -56,11 +56,7 @@ describe('Venue Additional Info', () => {
     document.body.innerHTML = body;
     const block = document.querySelector('.venue-additional-info');
     await init(block);
-    // Wait for showdown script to load and process
-    await new Promise((resolve) => {
-      setTimeout(resolve, 1000);
-    });
-    expect(document.querySelector('.venue-additional-info .venue-additional-info-wrapper .text-wrapper')).to.exist;
+    expect(document.querySelector('.venue-additional-info .venue-additional-info-wrapper .text-wrapper').textContent).to.include('Additional information');
   });
 
   it('triggers error handling for malformatted sharepoint URL', async () => {
