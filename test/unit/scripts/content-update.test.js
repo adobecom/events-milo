@@ -7,7 +7,6 @@ import BlockMediator from '../../../events/scripts/deps/block-mediator.min.js';
 const {
   default: autoUpdateContent,
   updateAnalyticTag,
-  updateRSVPButtonState,
   signIn,
   validatePageAndRedirect,
   updatePictureElement,
