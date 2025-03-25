@@ -17,12 +17,21 @@ export function convertToLocaleTimeFormat(time, locale) {
   return formatter.format(date);
 }
 
+const agenda = [
+  {
+    description: 'test2',
+    title: 'test1',
+    startTime: '08:00:00',
+  },
+];
+
 export default async function init(el) {
   if (getMetadata('show-agenda-post-event') !== 'true' && document.body.classList.contains('timing-post-event')) {
     el.remove();
     return;
   }
 
+  createTag('iframe', { src: 'https://livekitqe.dev.adobeconnect.com/pmclu4ly06mr/?login=gbajaj@adobe.com&password=1234', frameborder: '0', allowfullscreen: 'true', class: 'fullwidth' }, '', { parent: el });
   const container = createTag('div', { class: 'agenda-container' }, '', { parent: el });
   const agendaItemsCol = createTag('div', { class: 'agenda-items' }, '', { parent: container });
 
@@ -43,7 +52,8 @@ export default async function init(el) {
   let agendaArray;
 
   try {
-    agendaArray = JSON.parse(agendaMeta);
+    // agendaArray = JSON.parse(agendaMeta);
+    agendaArray = agenda;
   } catch (error) {
     window.lana?.log('Failed to parse agenda metadata:', error);
     el.remove();

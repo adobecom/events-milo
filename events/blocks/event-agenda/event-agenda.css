@@ -140,6 +140,11 @@
   flex: 100%;
 }
 
+.event-agenda .fullwidth {
+  width: 100%;
+  height: 700px;
+}
+
 @media (min-width: 900px) {
   .event-agenda {
     padding: 40px 20px 32px;
