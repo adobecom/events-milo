@@ -153,7 +153,6 @@ function decorateFormView(block) {
   addForm(blockElem);
 }
 
-// function init(block){
 export default function init(el) {
   // decide which view to load depending on the modal url
   const modalUrl = window.location.href.split('#')[1];
