@@ -2,9 +2,8 @@ import { createTag } from "../../scripts/utils.js";
 
 
 function validateInput(input) {
-  const email = input.value;
-  const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  return emailPattern.test(email);
+  const emailPattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+  return emailPattern.test(input);
 }
 
 function decorateError(error, inputElement) {
@@ -14,11 +13,11 @@ function decorateError(error, inputElement) {
   errorSpan.innerHTML = error;
 
 }
-function handleSubmit(event) {
-  console.log("Email submitted");
+function handleSubmit(event, bp) {
+
   event.preventDefault();
 
-  const inputElement = event.target.parentElement.parentElement.parentElement.querySelector(":scope > div:nth-of-type(2) > input");
+  const inputElement = bp.block.querySelector(":scope > form > div > div:nth-of-type(2) > input");
   const email = inputElement.value;
   if(email.length === 0){
     console.log("Email is empty");
@@ -31,13 +30,12 @@ function handleSubmit(event) {
   }
 
   //hide form view
-  const formView = event.target.parentElement.parentElement.parentElement.parentElement
-  console.log("formView",formView);
+  const formView = bp.block.querySelector(":scope > form");
+
   formView.classList.add("hide");
 
   //show thankyou view
-  const thankyouView = event.target.parentElement.parentElement.parentElement.parentElement.parentElement.querySelector(":scope > div:nth-of-type(1)"); //TODO
-  console.log("thankyouView",thankyouView);
+  const thankyouView = bp.block.querySelector(":scope > div:nth-of-type(1)");
   thankyouView.classList.remove("hide");
   decorateThankYouView(thankyouView);
   
@@ -47,14 +45,16 @@ function handleSubmit(event) {
   //sendEmail();
 }
 
-function decorateButton(submitP) {
+function decorateButton(bp) {
   const button = createTag("button", { class: "mailinglist-submit" });
-  button.innerHTML = submitP.innerHTML;
-  button.addEventListener("click", handleSubmit);
+  button.innerHTML = bp.submitP.innerHTML;
+  button.addEventListener("click", (event) => {
+    handleSubmit(event, bp);
+  });
   const div = createTag("div", { class: "mailinglist-submit-container" });
-  submitP.parentElement.appendChild(div);
+  bp.submitP.parentElement.appendChild(div);
   div.appendChild(button);
-  submitP.remove();
+  bp.submitP.remove();
 }
 
 function addElementtoForm(form, inputP, labelP) {
@@ -104,7 +104,7 @@ function addForm(bp) {
   const main = form.querySelector("div:nth-of-type(2)");
   main.classList.add("mailinglist-textBox");
   addElementtoForm(main,bp.inputP,bp.labelP);
-  decorateButton(bp.submitP);
+  decorateButton(bp);
 }
 
 function decorateFormView(block) {
@@ -138,8 +138,6 @@ function decorateThankYouView(thanksView) {
     thankyouDescription: thanksView.querySelector(':scope > div:nth-of-type(2) > p'),
     };
 
-    console.log("thankyouTitle",bp.thankyouTitle);
-    console.log("thankyouDescription",bp.thankyouDescription);
     bp.thankyouTitle.classList.add("thankyou-title");
     bp.thankyouDescription.classList.add("thankyou-description");
 
@@ -153,8 +151,6 @@ function decorateFooter(footer) {
   export default function init(el) {
   //decide which view to load depending on the modal url
   const modalUrl = window.location.href.split("#")[1];
-  console.log("link : ",window.location.href," modalUrl", modalUrl);
-
 
   decorateFooter(el.querySelector(":scope > div:nth-of-type(3) > div > picture"));
   if(modalUrl === "subscribe"){
