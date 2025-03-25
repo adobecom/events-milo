@@ -13,11 +13,24 @@ function decorateError(error, inputElement) {
   errorSpan.innerHTML = error;
 
 }
-function handleSubmit(event, bp) {
+
+async function subscribe(email) {
+  const response = await fetch("https://www.adobe.com/api2/subscribe_v1", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ email }),
+  });
+  return response.json();
+}
+async function handleSubmit(event, bp) {
 
   event.preventDefault();
 
   const inputElement = bp.block.querySelector(":scope > form > div > div:nth-of-type(2) > input");
+
+  //Validate the input
   const email = inputElement.value;
   if(email.length === 0){
     console.log("Email is empty");
@@ -29,20 +42,29 @@ function handleSubmit(event, bp) {
     return;
   }
 
-  //hide form view
-  const formView = bp.block.querySelector(":scope > form");
+  try {
 
-  formView.classList.add("hide");
+    //Disable the multiple clicks.
+    event.target.disabled = true;
 
-  //show thankyou view
-  const thankyouView = bp.block.querySelector(":scope > div:nth-of-type(1)");
-  thankyouView.classList.remove("hide");
-  decorateThankYouView(thankyouView);
-  
+    await subscribe(email);
 
-  
-  //TODO send email to backend
-  //sendEmail();
+    //hide form view
+    const formView = bp.block.querySelector(":scope > form");
+
+    formView.classList.add("hide");
+
+    //show thankyou view
+    const thankyouView = bp.block.querySelector(":scope > div:nth-of-type(1)");
+    thankyouView.classList.remove("hide");
+    decorateThankYouView(thankyouView);
+
+  } catch(err) {
+    event.target.disabled = false;
+    console.error(err);
+    decorateError("Error subscribing",inputElement);
+  };
+
 }
 
 function decorateButton(bp) {
