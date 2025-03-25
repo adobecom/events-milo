@@ -1,22 +1,44 @@
-.event-form-mailinglist {
+@media (min-width: 600px) and (max-width: 1200px) {
+  .event-mailinglist-form {
+      width: 675px;
+  }
+}
+
+@media (min-width: 1200px) {
+  .event-mailinglist-form {
+      width: 580px;
+  }
+}
+
+@media (max-width: 599px) {
+  .event-mailinglist-form {
+      width: 91%;
+  }
+}
+
+.mailinglist-form {
   margin-top: 20px;
+  padding: 72px 36px 0px 36px;
 }
 
 .mailinglist-title {
-  font-size: 44px;
+  padding-bottom: .5rem;
+  font-size: 2.625rem;
   color: rgb(44, 44, 44);
-  padding-bottom: 2rem;
+  box-sizing: border-box;
   font-family: adobe-clean, Source Sans Pro, -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif;
   font-weight: 400;
-  line-height: 1.5;
+  line-height: 1.25;
   margin : 0px;
 }
 
 .mailinglist-description {
-  padding-bottom: 32px;
-  color: #2C2C2C;
   margin: 0px;
-  font-size: 16px;
+  padding-bottom: 2rem;
+  font-size: 1rem;
+  font-weight: 400;
+  line-height: 1.5;
+  color: rgb(44, 44, 44);
 }
 
 
@@ -26,4 +48,104 @@
   border-spacing: 0 24px;
   margin: -20px 0;
 }
-    
+
+.mailinglist-consent-notice {
+  margin-bottom: 8px;
+  margin-top: 0px;
+  padding: 0px;
+  color : #505050;
+  font-size: .75rem;
+  line-height: .875rem;
+  font-weight: 300;
+  margin: 1rem 0 -.5rem;
+
+}
+
+.mailinglist-consent-notice a {
+  color: #2c2c2c;
+  font-weight: 400;
+  text-decoration: underline;
+}
+
+.hide {
+  display: none !important;
+}
+   
+.mailinglist-label {
+  box-sizing: border-box;
+  padding: 4px 0 5px;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.3;
+  vertical-align: top;
+}
+
+.mailinglist-input {
+  border-top: none;
+  border-left: none;
+  border-right: none;
+  border-bottom: 2px solid #cfcfcf;
+  margin-bottom: 15px;
+  height: 32px;
+}
+
+.mailinglist-textBox {
+  display: flex;
+  flex-direction: column;
+}
+
+.mailinglist-submit {
+  background-color: #3b63fb;
+  color: #ffffff !important;
+  border-radius: 16px;
+  border: 2px solid #1473e6;
+  font-size: 15px;
+  font-style: normal;
+  font-weight: 700;
+  line-height: 16px;
+  padding: 5px 14px;
+  text-decoration: none !important;
+}
+
+.mailinglist-submit-container {
+  height: 5rem;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+
+}
+
+.thankyou-title {
+  font-size: 2.625rem;
+  line-height: 2rem;
+  padding: 1.5625rem 1.875rem 0;
+  text-align: left;
+  max-height: 4.375rem;
+  color: rgb(44, 44, 44);
+  margin: 0;
+  font-weight: 400;
+}
+
+.thankyou-description {
+  padding: 1.25rem 1.875rem 0;
+  color: rgb(44, 44, 44);
+  flex-grow: 1;
+  margin: 0;
+  font-size: 1rem;
+  box-sizing: border-box;
+  font-weight: 400;
+  line-height: 1.5;
+  height : 180px;
+
+}
+
+.error-message {
+  display: none;
+  transition: .28s;
+  overflow: hidden;
+  color: red;
+  font-size: .75rem;
+  margin-top: -.75rem;
+  font-weight: 400;
+  line-height: 1.3;
+}
