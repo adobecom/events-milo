@@ -235,10 +235,6 @@ export async function validatePageAndRedirect(miloLibs) {
 }
 
 async function handleRegisterButton(a, miloLibs) {
-  const urlParams = new URLSearchParams(window.location.search);
-  const devMode = urlParams.get('devMode');
-  if (devMode) return;
-
   const rsvpBtn = {
     el: a,
     originalText: a.textContent,
@@ -309,7 +305,7 @@ function autoUpdateLinks(scope, miloLibs) {
         }
       } else if (getMetadata(url.hash.replace('#', ''))) {
         a.href = getMetadata(url.hash.replace('#', ''));
-      } else if (url.pathname.startsWith('/events') && url.hash) {
+      } else if (url.pathname.startsWith('/events-placeholder') && url.hash) {
         a.remove();
       }
     } catch (e) {
