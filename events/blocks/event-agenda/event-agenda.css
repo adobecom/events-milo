@@ -1,8 +1,7 @@
 .event-agenda {
-  max-width: 1750px;
   margin: auto;
   box-sizing: content-box;
-  padding: 32px 20px 0;
+  padding: 32px 0px 0;
 }
 
 .event-agenda h2 {
@@ -142,12 +141,12 @@
 
 .event-agenda .fullwidth {
   width: 100%;
-  height: 700px;
+  height: 900px;
 }
 
 @media (min-width: 900px) {
   .event-agenda {
-    padding: 40px 20px 32px;
+    padding: 40px 0px 32px;
   }
 
   .event-agenda.blade h2 {
