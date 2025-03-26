@@ -75,24 +75,23 @@ async function handleSubmit(event, bp) {
 }
 
 function decorateButton(bp) {
-  const button = createTag('button', { class: 'mailinglist-submit' });
-  button.innerHTML = bp.submitP.innerHTML;
+  const button = createTag('button', { class: 'subscription-submit' }, bp.submitP.innerHTML);
   button.addEventListener('click', (event) => {
     handleSubmit(event, bp);
   });
-  const div = createTag('div', { class: 'mailinglist-submit-container' });
-  bp.submitP.parentElement.appendChild(div);
-  div.appendChild(button);
+
+  createTag('div', { class: 'subscription-submit-container' }, button, { parent: bp.submitP.parentElement });
+
   bp.submitP.remove();
 }
 
-function addElementtoForm(form, inputP, labelP) {
+function addElementToForm(form, inputP, labelP) {
   const placeholder = inputP.innerHTML;
   const labelText = labelP.innerHTML;
   const labelAttr = {
     for: 'email',
     textContent: labelText,
-    class: 'mailinglist-label',
+    class: 'subscription-label',
   };
 
   const inputAttr = {
@@ -100,34 +99,26 @@ function addElementtoForm(form, inputP, labelP) {
     name: 'email',
     placeholder,
     required: 'true',
-    class: 'mailinglist-input',
+    class: 'subscription-input',
   };
 
-  const label = createTag('label', labelAttr);
-  label.innerHTML = labelText;
-  form.appendChild(label);
+  createTag('label', labelAttr, labelText, { parent: form });
 
-  const input = createTag('input', inputAttr);
-  form.appendChild(input);
+  createTag('input', inputAttr, undefined, { parent: form });
 
-  const errorSpan = createTag('span', { class: 'error-message' });
-  errorSpan.innerHTML = 'Please enter a valid email address';
-  form.appendChild(errorSpan);
+  createTag('span', { class: 'error-message' }, '', { parent: form });
 
   inputP.remove();
   labelP.remove();
 }
 function addForm(bp) {
-  const { formDiv } = bp;
-  const parent = formDiv.parentElement;
-  const formAttr = { id: 'mailinglist-form' };
-  const form = createTag('form', formAttr);
-  form.appendChild(formDiv);
+  const parent = bp.formDiv.parentElement;
+  const form = createTag('form', { id: 'subscription-form' }, bp.formDiv);
   parent.insertBefore(form, parent.firstChild);
 
   const main = form.querySelector('div:nth-of-type(2)');
-  main.classList.add('mailinglist-textBox');
-  addElementtoForm(main, bp.inputP, bp.labelP);
+  main.classList.add('subscription-textbox-container');
+  addElementToForm(main, bp.inputP, bp.labelP);
   decorateButton(bp);
 }
 
@@ -144,10 +135,10 @@ function decorateFormView(block) {
     thankyouView: block.querySelector(':scope > div:nth-of-type(2)'),
   };
 
-  blockElem.formDiv.classList.add('mailinglist-form');
-  blockElem.modalTitle.classList.add('mailinglist-title');
-  blockElem.modalDescription.classList.add('mailinglist-description');
-  blockElem.consentNotice.classList.add('mailinglist-consent-notice');
+  blockElem.formDiv.classList.add('subscription-form');
+  blockElem.modalTitle.classList.add('subscription-title');
+  blockElem.modalDescription.classList.add('subscription-description');
+  blockElem.consentNotice.classList.add('subscription-consent-notice');
   blockElem.thankyouView.classList.add('hide');
 
   addForm(blockElem);

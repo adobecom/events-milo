@@ -1,31 +1,13 @@
-@media (min-width: 600px) and (max-width: 1200px) {
-  .event-mailinglist-form {
-      width: 675px;
-  }
-}
-
-@media (min-width: 1200px) {
-  .event-mailinglist-form {
-      width: 580px;
-  }
-}
-
-@media (max-width: 599px) {
-  .event-mailinglist-form {
-      width: 91%;
-  }
-}
-
-picture {
+.event-subscription-form picture {
   display: flex;
 }
 
-.mailinglist-form {
+.subscription-form {
   margin-top: 20px;
   padding: 72px 36px 0px 36px;
 }
 
-.mailinglist-title {
+.subscription-form .subscription-title {
   padding-bottom: .5rem;
   font-size: 2.625rem;
   color: rgb(44, 44, 44);
@@ -36,7 +18,7 @@ picture {
   margin : 0px;
 }
 
-.mailinglist-description {
+.subscription-form .subscription-description {
   margin: 0px;
   padding-bottom: 2rem;
   font-size: 1rem;
@@ -46,14 +28,14 @@ picture {
 }
 
 
-#mailinglist-form {
+.subscription-form #subscription-form {
   display: table;
   border-collapse: separate;
   border-spacing: 0 24px;
   margin: -20px 0;
 }
 
-.mailinglist-consent-notice {
+.subscription-form .subscription-consent-notice {
   margin-bottom: 8px;
   margin-top: 0px;
   padding: 0px;
@@ -65,17 +47,13 @@ picture {
 
 }
 
-.mailinglist-consent-notice a {
+.subscription-form .subscription-consent-notice a {
   color: #2c2c2c;
   font-weight: 400;
   text-decoration: underline;
 }
-
-.hide {
-  display: none !important;
-}
    
-.mailinglist-label {
+.subscription-form .subscription-label {
   box-sizing: border-box;
   padding: 4px 0 5px;
   font-size: 12px;
@@ -84,7 +62,7 @@ picture {
   vertical-align: top;
 }
 
-.mailinglist-input {
+.subscription-form .subscription-input {
   border-top: none;
   border-left: none;
   border-right: none;
@@ -93,18 +71,26 @@ picture {
   height: 32px;
 }
 
-.error {
+.subscription-form .error {
   border-color: red;
 }
 
-.mailinglist-textBox {
+.subscription-form .subscription-textbox-container {
   display: flex;
   flex-direction: column;
 }
 
-.mailinglist-submit {
+.subscription-form .subscription-submit-container {
+  height: 5rem;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+
+}
+
+.subscription-submit-container .subscription-submit {
   background-color: #3b63fb;
-  color: #ffffff !important;
+  color: #ffffff;
   border-radius: 16px;
   border: 2px solid #1473e6;
   font-size: 15px;
@@ -112,16 +98,23 @@ picture {
   font-weight: 700;
   line-height: 16px;
   padding: 5px 14px;
-  text-decoration: none !important;
+  text-decoration: none;
 }
 
-.mailinglist-submit-container {
-  height: 5rem;
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-
+.subscription-form .error-message {
+  display: none;
+  transition: .28s;
+  overflow: hidden;
+  color: red;
+  font-size: .75rem;
+  margin-top: -.75rem;
+  font-weight: 400;
+  line-height: 1.3;
 }
+
+.subscription-form .show {
+  display: block;
+} 
 
 .thankyou-title {
   font-size: 2.625rem;
@@ -147,17 +140,26 @@ picture {
 
 }
 
-.error-message {
+.hide {
   display: none;
-  transition: .28s;
-  overflow: hidden;
-  color: red;
-  font-size: .75rem;
-  margin-top: -.75rem;
-  font-weight: 400;
-  line-height: 1.3;
 }
 
-.show {
-  display: block;
+
+@media (max-width: 599px) {
+  .event-subscription-form {
+      width: 91%;
+  }
 }
+
+@media (min-width: 600px) {
+  .event-subscription-form {
+      width: 675px;
+  }
+}
+
+@media (min-width: 1200px) {
+  .event-subscription-form {
+      width: 580px;
+  }
+}
+
