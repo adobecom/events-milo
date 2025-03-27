@@ -31,7 +31,7 @@ export default async function init(el) {
     return;
   }
 
-  createTag('iframe', { src: 'https://livekitqe.dev.adobeconnect.com/pmclu4ly06mr/?login=gbajaj@adobe.com&password=1234', frameborder: '0', allowfullscreen: 'true', class: 'fullwidth' }, '', { parent: el });
+  createTag('iframe', { src: 'https://livekitqe.dev.adobeconnect.com/paxlkm0gwsj4/', frameborder: '0', allowfullscreen: 'true', class: 'fullwidth' }, '', { parent: el });
   const container = createTag('div', { class: 'agenda-container' }, '', { parent: el });
   const agendaItemsCol = createTag('div', { class: 'agenda-items' }, '', { parent: container });
 
