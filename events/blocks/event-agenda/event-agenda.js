@@ -17,13 +17,13 @@ export function convertToLocaleTimeFormat(time, locale) {
   return formatter.format(date);
 }
 
-const agenda = [
-  {
-    description: 'test2',
-    title: 'test1',
-    startTime: '08:00:00',
-  },
-];
+// const agenda = [
+//   {
+//     description: 'test2',
+//     title: 'test1',
+//     startTime: '08:00:00',
+//   },
+// ];
 
 export default async function init(el) {
   if (getMetadata('show-agenda-post-event') !== 'true' && document.body.classList.contains('timing-post-event')) {
@@ -52,8 +52,8 @@ export default async function init(el) {
   let agendaArray;
 
   try {
-    // agendaArray = JSON.parse(agendaMeta);
-    agendaArray = agenda;
+    agendaArray = JSON.parse(agendaMeta);
+    // agendaArray = agenda;
   } catch (error) {
     window.lana?.log('Failed to parse agenda metadata:', error);
     el.remove();
@@ -61,7 +61,10 @@ export default async function init(el) {
   }
 
   if (agendaArray.length <= 0) {
-    el.remove();
+    const h2 = el.querySelector('h2');
+    h2.remove();
+    agendaItemsCol.remove();
+    // el.remove();
     return;
   }
 
