@@ -1,41 +1,43 @@
-.event-subscription-form picture {
+.event-subscription-form {
+  
+  picture {
   display: flex;
 }
 
-.subscription-form {
-  margin-top: 20px;
-  padding: 72px 36px 0px 36px;
-}
+  .subscription-form {
+    margin-top: 20px;
+    padding: 72px 36px 0px 36px;
+    width: 91%;
+  
+    .subscription-title {
+    padding-bottom: .5rem;
+    font-size: 2.625rem;
+    color: rgb(44, 44, 44);
+    box-sizing: border-box;
+    font-family: adobe-clean, Source Sans Pro, -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif;
+    font-weight: 400;
+    line-height: 1.25;
+    margin : 0px;
+  }
 
-.subscription-form .subscription-title {
-  padding-bottom: .5rem;
-  font-size: 2.625rem;
-  color: rgb(44, 44, 44);
-  box-sizing: border-box;
-  font-family: adobe-clean, Source Sans Pro, -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif;
-  font-weight: 400;
-  line-height: 1.25;
-  margin : 0px;
-}
-
-.subscription-form .subscription-description {
+  .subscription-description {
   margin: 0px;
   padding-bottom: 2rem;
   font-size: 1rem;
   font-weight: 400;
   line-height: 1.5;
   color: rgb(44, 44, 44);
-}
+  }
 
 
-.subscription-form #subscription-form {
+  #subscription-form {
   display: table;
   border-collapse: separate;
   border-spacing: 0 24px;
   margin: -20px 0;
-}
+  }
 
-.subscription-form .subscription-consent-notice {
+  .subscription-consent-notice {
   margin-bottom: 8px;
   margin-top: 0px;
   padding: 0px;
@@ -47,13 +49,13 @@
 
 }
 
-.subscription-form .subscription-consent-notice a {
+  .subscription-consent-notice a {
   color: #2c2c2c;
   font-weight: 400;
   text-decoration: underline;
 }
    
-.subscription-form .subscription-label {
+  .subscription-label {
   box-sizing: border-box;
   padding: 4px 0 5px;
   font-size: 12px;
@@ -62,7 +64,7 @@
   vertical-align: top;
 }
 
-.subscription-form .subscription-input {
+  .subscription-input {
   border-top: none;
   border-left: none;
   border-right: none;
@@ -71,16 +73,16 @@
   height: 32px;
 }
 
-.subscription-form .error {
+  .error {
   border-color: red;
 }
 
-.subscription-form .subscription-textbox-container {
+  .subscription-textbox-container {
   display: flex;
   flex-direction: column;
 }
 
-.subscription-form .subscription-submit-container {
+  .subscription-submit-container {
   height: 5rem;
   display: flex;
   align-items: center;
@@ -101,8 +103,9 @@
   text-decoration: none;
 }
 
-.subscription-form .error-message {
-  display: none;
+  .error-message {
+  display: block;
+  visibility: hidden;
   transition: .28s;
   overflow: hidden;
   color: red;
@@ -110,11 +113,12 @@
   margin-top: -.75rem;
   font-weight: 400;
   line-height: 1.3;
-}
+  }
 
-.subscription-form .show {
-  display: block;
-} 
+  .show {
+    visibility: visible;
+  } 
+}
 
 .thankyou-title {
   font-size: 2.625rem;
@@ -143,13 +147,8 @@
 .hide {
   display: none;
 }
-
-
-@media (max-width: 599px) {
-  .event-subscription-form {
-      width: 91%;
-  }
 }
+
 
 @media (min-width: 600px) {
   .event-subscription-form {

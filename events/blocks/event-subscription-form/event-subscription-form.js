@@ -23,16 +23,19 @@ function decorateThankYouView(thanksView) {
   bp.thankyouDescription.classList.add('thankyou-description');
 }
 
-async function subscribe(email) {
+/**
+ * @description : Subscribes the user to the mailing list
+ * @param {*} payload : {email: string, sname:string, consent_notice: string, current_url:string}
+ * @response : {"successful": true,"reason": null}
+ */
+async function subscribe(payload) {
   // If you have an API key, you can use it here.
-  return { email };
-  /* const response = await fetch('https://www.adobe.com/api2/subscribe_v1', {
+  const response = await fetch('https://www.adobe.com/api2/subscribe_v1', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email }),
+    body: JSON.stringify(payload),
   });
   return response.json();
-  */
 }
 
 async function handleSubmit(event, bp) {
@@ -56,7 +59,20 @@ async function handleSubmit(event, bp) {
     // Disable the multiple clicks.
     event.target.disabled = true;
 
-    await subscribe(email);
+    const payload = {
+      email,
+      sname: bp.sname.textContent.slice(2, -2),
+      consent_notice: bp.consentNotice.textContent,
+      current_url: window.location.href,
+    };
+    const resp = await subscribe(payload);
+
+    if (!resp.successful) {
+      event.target.disabled = false;
+      console.error(resp.reason);
+      decorateError('Something went wrong', inputElement);
+      return;
+    }
 
     // hide form view
     const formView = bp.block.querySelector(':scope > form');
@@ -70,7 +86,7 @@ async function handleSubmit(event, bp) {
   } catch (err) {
     event.target.disabled = false;
     console.error(err);
-    decorateError('Error subscribing', inputElement);
+    decorateError('Internal error', inputElement);
   }
 }
 
@@ -109,6 +125,7 @@ function addElementToForm(form, inputP, labelP) {
   createTag('span', { class: 'error-message' }, '', { parent: form });
 
   inputP.remove();
+
   labelP.remove();
 }
 function addForm(bp) {
@@ -127,7 +144,8 @@ function decorateFormView(block) {
     block,
     formDiv: block.querySelector(':scope > div:nth-of-type(1)'),
     modalTitle: block.querySelector(':scope > div:nth-of-type(1) > div > h2'),
-    modalDescription: block.querySelector(':scope > div:nth-of-type(1) > div > p'),
+    sname: block.querySelector(':scope > div:nth-of-type(1) > div > p:nth-of-type(1)'),
+    modalDescription: block.querySelector(':scope > div:nth-of-type(1) > div > p:nth-of-type(2)'),
     labelP: block.querySelector(':scope > div:nth-of-type(1) > div:nth-of-type(2) > p:nth-of-type(1)'),
     inputP: block.querySelector(':scope > div:nth-of-type(1) > div:nth-of-type(2) > p:nth-of-type(2)'),
     consentNotice: block.querySelector(':scope > div:nth-of-type(1) > div:nth-of-type(3) > p'),
@@ -140,6 +158,7 @@ function decorateFormView(block) {
   blockElem.modalDescription.classList.add('subscription-description');
   blockElem.consentNotice.classList.add('subscription-consent-notice');
   blockElem.thankyouView.classList.add('hide');
+  blockElem.sname.classList.add('hide');
 
   addForm(blockElem);
 }
