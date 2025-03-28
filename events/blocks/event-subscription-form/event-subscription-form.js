@@ -128,6 +128,7 @@ function addElementToForm(form, inputP, labelP) {
 
   labelP.remove();
 }
+
 function addForm(bp) {
   const parent = bp.formDiv.parentElement;
   const form = createTag('form', { id: 'subscription-form' }, bp.formDiv);

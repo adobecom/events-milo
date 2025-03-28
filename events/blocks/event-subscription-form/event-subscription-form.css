@@ -1,8 +1,7 @@
 .event-subscription-form {
-  
   picture {
-  display: flex;
-}
+    display: flex;
+  }
 
   .subscription-form {
     margin-top: 20px;
