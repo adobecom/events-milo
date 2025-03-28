@@ -31,7 +31,7 @@ export default async function init(el) {
     return;
   }
 
-  createTag('iframe', { src: 'https://livekitqe.dev.adobeconnect.com/event-demo?guestname=Participant', frameborder: '0', allowfullscreen: 'true', class: 'fullwidth' }, '', { parent: el });
+  // createTag('iframe', { src: 'https://livekitqe.dev.adobeconnect.com/event-demo?guestname=Participant', frameborder: '0', allowfullscreen: 'true', class: 'fullwidth' }, '', { parent: el });
   const container = createTag('div', { class: 'agenda-container' }, '', { parent: el });
   const agendaItemsCol = createTag('div', { class: 'agenda-items' }, '', { parent: container });
 
