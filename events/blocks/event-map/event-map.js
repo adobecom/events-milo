@@ -16,9 +16,18 @@ function decorateTextContainer(el, createTag, decorateButtons) {
     p.remove();
   });
 
-  const venueObj = JSON.parse(getMetadata('venue'));
+  let venueObj;
 
-  if (!venueObj) return;
+  try {
+    venueObj = JSON.parse(getMetadata('venue'));
+  } catch (e) {
+    window.lana?.log('Error while parsing venue metadata:', e);
+  }
+
+  if (!venueObj) {
+    el.remove();
+    return;
+  }
 
   const { formattedAddress, venueName, additionalInformation } = venueObj;
 
