@@ -107,7 +107,9 @@ function addElementToForm(form, inputP, labelP) {
   if (profile === undefined) {
     console.log('No profile found');
     BlockMediator.subscribe('imsProfile', (data) => {
-      document.querySelector('.subscription-input').value = data.email;
+      if (data && data.email) {
+        document.querySelector('.subscription-input').value = data.email;
+      }
     });
   }
   const placeholder = inputP.innerHTML;
