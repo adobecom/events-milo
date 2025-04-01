@@ -104,6 +104,12 @@ function decorateButton(bp) {
 
 function addElementToForm(form, inputP, labelP) {
   const profile = BlockMediator.get('imsProfile');
+  if (profile === undefined) {
+    console.log('No profile found');
+    BlockMediator.subscribe('imsProfile', (data) => {
+      document.querySelector('.subscription-input').value = data.email;
+    });
+  }
   const placeholder = inputP.innerHTML;
   const labelText = labelP.innerHTML;
   const labelAttr = {
