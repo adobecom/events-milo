@@ -31,8 +31,45 @@ function getRandomInterval() {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
+/**
+ * @param {Object} scheduleItem
+ * @returns {boolean}
+ */
+function determineScheduleAction(scheduleItem, BlockMediator) {
+  // TODO: perform action based on scheduleItem. Return true if nextScheduleItem should be posted
+
+  const { conditions, toggleTime } = scheduleItem;
+
+  if (conditions) {
+    return conditions.every((condition) => {
+      const { key, value } = condition;
+      const currentValue = BlockMediator.get(key);
+      return currentValue === value;
+    });
+  }
+
+  if (toggleTime) {
+    const currentTime = new Date().getTime();
+    return currentTime > toggleTime;
+  }
+
+  return false;
+}
+
+async function validateTime(currentTime) {
+  const apiCurrentTime = await getCurrentTimeFromAPI();
+  const diff = apiCurrentTime - currentTime;
+
+  if (diff > 10000) {
+    window.alert('Sorry. Your local time is off by more than 10 seconds. Please check your system clock.');
+    return false;
+  }
+
+  return true;
+}
+
 onmessage = async (event) => {
-  const scheduleLinkedList = event.data;
+  const { scheduleLinkedList, BlockMediator } = event.data;
 
   let nextScheduleItem = getStartScheduleItem(scheduleLinkedList);
 
@@ -46,14 +83,12 @@ onmessage = async (event) => {
       return;
     }
 
-    if (currentTime > nextScheduleItem.toggleTime) {
-      const apiCurrentTime = await getCurrentTimeFromAPI();
-      const diff = apiCurrentTime - currentTime;
+    const triggered = determineScheduleAction(nextScheduleItem, BlockMediator);
 
-      if (diff > 10000) {
-        window.alert('Sorry. Your local time is off by more than 10 seconds. Please check your system clock.');
-        return;
-      }
+    if (triggered) {
+      const timeValid = await validateTime(currentTime);
+
+      if (!timeValid) return;
 
       postMessage(nextScheduleItem);
       nextScheduleItem = nextScheduleItem.next;

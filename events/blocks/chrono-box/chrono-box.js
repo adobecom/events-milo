@@ -27,7 +27,16 @@ function getMockSchedule() {
       pathToFragment: '/drafts/qiyundai/fragments/dx-hero-pre',
     },
     {
-      toggleTime: addMinutes(now, 0.5).getTime(),
+      conditions: [
+        {
+          bmKey: 'videoReady',
+          value: true,
+        },
+        {
+          bmKey: 'registered',
+          value: true,
+        },
+      ],
       pathToFragment: '/drafts/qiyundai/fragments/dx-hero-post',
     },
   ]);
@@ -35,15 +44,16 @@ function getMockSchedule() {
   return mockSchedule;
 }
 
-function setScheduleToScheduleWorker(schedule) {
+function setScheduleToScheduleWorker(schedule, BlockMediator) {
   const worker = new Worker('/events/features/timing-framework/worker.js');
-  worker.postMessage(schedule);
+  worker.postMessage({ schedule, BlockMediator });
 
   return worker;
 }
 
 export default async function init(el) {
-  const [{ default: loadFragment }, { createTag }] = await Promise.all([
+  const [BlockMediator, { default: loadFragment }, { createTag }] = await Promise.all([
+    import(`${LIBS}/blocks/block-mediator/block-mediator.js`),
     import(`${LIBS}/blocks/fragment/fragment.js`),
     import(`${LIBS}/utils/utils.js`),
   ]);
@@ -55,7 +65,7 @@ export default async function init(el) {
 
   el.innerHTML = '';
 
-  const worker = setScheduleToScheduleWorker(mockSchedules);
+  const worker = setScheduleToScheduleWorker(mockSchedules, BlockMediator);
 
   worker.onmessage = (event) => {
     const { pathToFragment } = event.data;
