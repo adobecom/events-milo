@@ -166,6 +166,7 @@ export default function init(el) {
     data = JSON.parse(getMetadata('speakers'));
   } catch (error) {
     window.lana?.log('Failed to parse speakers metadata:', error);
+    el.remove();
     return;
   }
 
