@@ -1,4 +1,5 @@
 import { createTag } from '../../scripts/utils.js';
+import BlockMediator from '../../scripts/deps/block-mediator.min.js';
 
 function validateInput(input) {
   const emailPattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
@@ -102,6 +103,7 @@ function decorateButton(bp) {
 }
 
 function addElementToForm(form, inputP, labelP) {
+  const profile = BlockMediator.get('imsProfile');
   const placeholder = inputP.innerHTML;
   const labelText = labelP.innerHTML;
   const labelAttr = {
@@ -114,6 +116,7 @@ function addElementToForm(form, inputP, labelP) {
     type: 'email',
     name: 'email',
     placeholder,
+    ...(profile && !profile.noProfile && { value: profile.email }),
     required: 'true',
     class: 'subscription-input',
   };
