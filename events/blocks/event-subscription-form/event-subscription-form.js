@@ -47,11 +47,11 @@ async function handleSubmit(event, bp) {
   // Validate the input
   const email = inputElement.value;
   if (email.length === 0) {
-    console.log('Email is a required Field');
+    window.lana?.log('Email is a required Field');
     decorateError('Required Field', inputElement);
     return;
   } if (!validateInput(email)) {
-    console.log('Input email must be a valid Email address');
+    window.lana?.log('Input email must be a valid Email address');
     decorateError('Must be a valid Email address', inputElement);
     return;
   }
@@ -71,6 +71,7 @@ async function handleSubmit(event, bp) {
     if (!resp.successful) {
       event.target.disabled = false;
       console.error(resp.reason);
+      window.lana?.log('Error in subscribing the user', resp.reason);
       decorateError('Something went wrong', inputElement);
       return;
     }
@@ -87,6 +88,7 @@ async function handleSubmit(event, bp) {
   } catch (err) {
     event.target.disabled = false;
     console.error(err);
+    window.lana?.log('Error in subscribing the user', err);
     decorateError('Internal error', inputElement);
   }
 }
@@ -105,10 +107,10 @@ function decorateButton(bp) {
 function addElementToForm(form, inputP, labelP) {
   const profile = BlockMediator.get('imsProfile');
   if (profile === undefined) {
-    console.log('No profile found');
+    window.lana?.log('No profile found');
     BlockMediator.subscribe('imsProfile', (data) => {
       if (data && data.email) {
-        document.querySelector('.subscription-input').value = data.email;
+        form.querySelector('.subscription-input').value = data.email;
       }
     });
   }
