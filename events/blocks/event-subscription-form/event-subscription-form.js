@@ -47,11 +47,11 @@ async function handleSubmit(event, bp) {
   // Validate the input
   const email = inputElement.value;
   if (email.length === 0) {
-    console.log('Email is a required Field');
+    window.lana?.log('Email is a required Field');
     decorateError('Required Field', inputElement);
     return;
   } if (!validateInput(email)) {
-    console.log('Input email must be a valid Email address');
+    window.lana?.log('Input email must be a valid Email address');
     decorateError('Must be a valid Email address', inputElement);
     return;
   }
@@ -105,10 +105,10 @@ function decorateButton(bp) {
 function addElementToForm(form, inputP, labelP) {
   const profile = BlockMediator.get('imsProfile');
   if (profile === undefined) {
-    console.log('No profile found');
+    window.lana?.log('No profile found');
     BlockMediator.subscribe('imsProfile', (data) => {
       if (data && data.email) {
-        document.querySelector('.subscription-input').value = data.email;
+        form.querySelector('.subscription-input').value = data.email;
       }
     });
   }
