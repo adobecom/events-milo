@@ -1,3 +1,7 @@
+let scheduleCache = null;
+let conditionsCache = null;
+let stopPreviousTimer = false;
+
 async function getCurrentTimeFromAPI() {
   try {
     const response = await fetch('https://worldtimeapi.org/api/ip');
@@ -9,14 +13,33 @@ async function getCurrentTimeFromAPI() {
   }
 }
 
-function getStartScheduleItem(scheduleLinkedList) {
-  const currentTime = new Date().getTime();
-
-  let currentScheduleItem = scheduleLinkedList;
+function getStartScheduleItem() {
+  let currentScheduleItem = scheduleCache;
 
   while (currentScheduleItem.next) {
-    if (currentScheduleItem.toggleTime > currentTime) {
-      return currentScheduleItem;
+    const { conditions, toggleTime } = currentScheduleItem;
+
+    if (conditions) {
+      // eslint-disable-next-line no-loop-func
+      const triggered = conditions.every((condition) => {
+        const { key, value } = condition;
+        const currentValue = conditionsCache[key];
+        return currentValue === value;
+      });
+
+      if (!triggered) {
+        currentScheduleItem = currentScheduleItem.next;
+        // eslint-disable-next-line no-continue
+        continue;
+      }
+    }
+
+    if (toggleTime) {
+      const currentTime = new Date().getTime();
+
+      if (currentTime > toggleTime) {
+        return currentScheduleItem;
+      }
     }
 
     currentScheduleItem = currentScheduleItem.next;
@@ -33,26 +56,36 @@ function getRandomInterval() {
 
 /**
  * @param {Object} scheduleItem
+ * @param {Object} conditionsCache
  * @returns {boolean}
  */
-function determineScheduleAction(scheduleItem, BlockMediator) {
-  // TODO: perform action based on scheduleItem. Return true if nextScheduleItem should be posted
+function determineScheduleAction(scheduleItem, conditionStore) {
+  console.log('Determining schedule action for item:', scheduleItem);
+  console.log('Current condition store:', conditionStore);
 
   const { conditions, toggleTime } = scheduleItem;
 
   if (conditions) {
-    return conditions.every((condition) => {
-      const { key, value } = condition;
-      const currentValue = BlockMediator.get(key);
-      return currentValue === value;
+    console.log('Checking conditions:', conditions);
+    const result = conditions.every((condition) => {
+      const { bmKey, expectedValue } = condition;
+      const currentValue = conditionStore[bmKey];
+      console.log(`Condition check - key: ${bmKey}, expected: ${expectedValue}, current: ${currentValue}`);
+      return currentValue === expectedValue;
     });
+    console.log('All conditions met:', result);
+    return result;
   }
 
   if (toggleTime) {
     const currentTime = new Date().getTime();
-    return currentTime > toggleTime;
+    console.log(`Checking toggleTime - current: ${currentTime}, toggle: ${toggleTime}`);
+    const result = currentTime > toggleTime;
+    console.log('Toggle time check result:', result);
+    return result;
   }
 
+  console.log('No conditions or toggle time found, returning false');
   return false;
 }
 
@@ -69,21 +102,34 @@ async function validateTime(currentTime) {
 }
 
 onmessage = async (event) => {
-  const { scheduleLinkedList, BlockMediator } = event.data;
+  const { message, schedule, conditions } = event.data;
 
-  let nextScheduleItem = getStartScheduleItem(scheduleLinkedList);
+  if (message === 'schedule') {
+    scheduleCache = schedule;
+  }
+
+  if (message === 'conditions') {
+    conditionsCache = conditions;
+  }
+
+  let nextScheduleItem = getStartScheduleItem();
 
   if (!nextScheduleItem) return;
 
-  async function checkTime() {
-    const currentTime = new Date().getTime();
-
-    if (currentTime === null) {
-      setTimeout(checkTime, getRandomInterval());
+  const runTimer = async () => {
+    if (stopPreviousTimer) {
+      stopPreviousTimer = false;
       return;
     }
 
-    const triggered = determineScheduleAction(nextScheduleItem, BlockMediator);
+    const currentTime = new Date().getTime();
+
+    if (currentTime === null) {
+      setTimeout(runTimer, getRandomInterval());
+      return;
+    }
+
+    const triggered = determineScheduleAction(nextScheduleItem, conditionsCache);
 
     if (triggered) {
       const timeValid = await validateTime(currentTime);
@@ -96,8 +142,8 @@ onmessage = async (event) => {
 
     if (!nextScheduleItem) return;
 
-    setTimeout(checkTime, getRandomInterval());
-  }
+    setTimeout(runTimer, getRandomInterval());
+  };
 
-  checkTime();
+  runTimer();
 };

@@ -1,4 +1,5 @@
 import { readBlockConfig, LIBS } from '../../scripts/utils.js';
+import BlockMediator from '../../scripts/deps/block-mediator.min.js';
 
 function addMinutes(date, minutes) {
   return new Date(date.getTime() + minutes * 60 * 1000);
@@ -30,11 +31,11 @@ function getMockSchedule() {
       conditions: [
         {
           bmKey: 'videoReady',
-          value: true,
+          expectedValue: true,
         },
         {
           bmKey: 'registered',
-          value: true,
+          expectedValue: true,
         },
       ],
       pathToFragment: '/drafts/qiyundai/fragments/dx-hero-post',
@@ -44,16 +45,42 @@ function getMockSchedule() {
   return mockSchedule;
 }
 
-function setScheduleToScheduleWorker(schedule, BlockMediator) {
+function setScheduleToScheduleWorker(schedule) {
   const worker = new Worker('/events/features/timing-framework/worker.js');
-  worker.postMessage({ schedule, BlockMediator });
+  worker.postMessage({
+    message: 'schedule',
+    schedule,
+  });
+
+  const conditions = BlockMediator.get('scheduleConditions');
+
+  if (conditions) {
+    worker.postMessage({
+      message: 'conditions',
+      conditions,
+    });
+  }
+
+  BlockMediator.subscribe('scheduleConditions', ({ newValue }) => {
+    worker.postMessage({
+      message: 'conditions',
+      conditions: newValue,
+    });
+  });
+
+  // TODO: remove this BM mock
+  setTimeout(() => {
+    BlockMediator.set('scheduleConditions', {
+      videoReady: true,
+      registered: true,
+    });
+  }, 30 * 1000);
 
   return worker;
 }
 
 export default async function init(el) {
-  const [BlockMediator, { default: loadFragment }, { createTag }] = await Promise.all([
-    import(`${LIBS}/blocks/block-mediator/block-mediator.js`),
+  const [{ default: loadFragment }, { createTag }] = await Promise.all([
     import(`${LIBS}/blocks/fragment/fragment.js`),
     import(`${LIBS}/utils/utils.js`),
   ]);
@@ -65,7 +92,7 @@ export default async function init(el) {
 
   el.innerHTML = '';
 
-  const worker = setScheduleToScheduleWorker(mockSchedules, BlockMediator);
+  const worker = setScheduleToScheduleWorker(mockSchedules);
 
   worker.onmessage = (event) => {
     const { pathToFragment } = event.data;
