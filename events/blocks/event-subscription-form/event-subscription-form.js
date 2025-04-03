@@ -1,5 +1,14 @@
-import { createTag } from '../../scripts/utils.js';
+import { createTag, getEventServiceEnv } from '../../scripts/utils.js';
 import BlockMediator from '../../scripts/deps/block-mediator.min.js';
+
+const campaignEndpoint = {
+  local: { host: 'https://www.stage.adobe.com/api2/subscribe_v1' },
+  dev: { host: 'https://www.stage.adobe.com/api2/subscribe_v1' },
+  dev02: { host: 'https://www.stage.adobe.com/api2/subscribe_v1' },
+  stage: { host: 'https://www.stage.adobe.com/api2/subscribe_v1' },
+  stage02: { host: 'https://www.stage.adobe.com/api2/subscribe_v1' },
+  prod: { host: 'https://www.adobe.com/api2/subscribe_v1' },
+};
 
 function validateInput(input) {
   const emailPattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
@@ -31,7 +40,8 @@ function decorateThankYouView(thanksView) {
  */
 async function subscribe(payload) {
   // If you have an API key, you can use it here.
-  const response = await fetch('https://www.adobe.com/api2/subscribe_v1', {
+  const campaignUrl = campaignEndpoint[getEventServiceEnv()].host;
+  const response = await fetch(campaignUrl, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
