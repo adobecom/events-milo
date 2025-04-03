@@ -47,11 +47,9 @@ async function handleSubmit(event, bp) {
   // Validate the input
   const email = inputElement.value;
   if (email.length === 0) {
-    window.lana?.log('Email is a required Field');
     decorateError('Required Field', inputElement);
     return;
   } if (!validateInput(email)) {
-    window.lana?.log('Input email must be a valid Email address');
     decorateError('Must be a valid Email address', inputElement);
     return;
   }
@@ -70,6 +68,7 @@ async function handleSubmit(event, bp) {
 
     if (!resp.successful) {
       event.target.disabled = false;
+      window.lana?.log('event-subscription-form', 'error', resp.reason);
       console.error(resp.reason);
       decorateError('Something went wrong', inputElement);
       return;
@@ -86,6 +85,7 @@ async function handleSubmit(event, bp) {
     decorateThankYouView(thankyouView);
   } catch (err) {
     event.target.disabled = false;
+    window.lana?.log('event-subscription-form', 'exception error', err);
     console.error(err);
     decorateError('Internal error', inputElement);
   }
@@ -105,10 +105,12 @@ function decorateButton(bp) {
 function addElementToForm(form, inputP, labelP) {
   const profile = BlockMediator.get('imsProfile');
   if (profile === undefined) {
-    window.lana?.log('No profile found');
     BlockMediator.subscribe('imsProfile', (data) => {
       if (data && data.email) {
-        form.querySelector('.subscription-input').value = data.email;
+        const subscriptionInput = form.querySelector('.subscription-input');
+        if (subscriptionInput) {
+          subscriptionInput.value = data.email;
+        }
       }
     });
   }
@@ -185,7 +187,5 @@ export default function init(el) {
   } else if (modalUrl === 'thankyou') {
     // call a function to show thank you message.
     decorateThankYouView(el);
-  } else {
-    console.error('Invalid modal url');
   }
 }
