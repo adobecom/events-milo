@@ -1,17 +1,9 @@
 import { createTag, getEventServiceEnv } from '../../scripts/utils.js';
 import BlockMediator from '../../scripts/deps/block-mediator.min.js';
-
-const campaignEndpoint = {
-  local: { host: 'https://www.stage.adobe.com/api2/subscribe_v1' },
-  dev: { host: 'https://www.stage.adobe.com/api2/subscribe_v1' },
-  dev02: { host: 'https://www.stage.adobe.com/api2/subscribe_v1' },
-  stage: { host: 'https://www.stage.adobe.com/api2/subscribe_v1' },
-  stage02: { host: 'https://www.stage.adobe.com/api2/subscribe_v1' },
-  prod: { host: 'https://www.adobe.com/api2/subscribe_v1' },
-};
+import CONFIG from './config.js';
 
 function validateInput(input) {
-  const emailPattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+  const emailPattern = CONFIG.VALIDATION.EMAIL_REGEX;
   return emailPattern.test(input);
 }
 
@@ -40,7 +32,7 @@ function decorateThankYouView(thanksView) {
  */
 async function subscribe(payload) {
   // If you have an API key, you can use it here.
-  const campaignUrl = campaignEndpoint[getEventServiceEnv()].host;
+  const campaignUrl = CONFIG.ENDPOINTS[getEventServiceEnv()].host;
   const response = await fetch(campaignUrl, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -57,10 +49,10 @@ async function handleSubmit(event, bp) {
   // Validate the input
   const email = inputElement.value;
   if (email.length === 0) {
-    decorateError('Required Field', inputElement);
+    decorateError(CONFIG.VALIDATION.ERROR_MESSAGES.REQUIRED, inputElement);
     return;
   } if (!validateInput(email)) {
-    decorateError('Must be a valid Email address', inputElement);
+    decorateError(CONFIG.VALIDATION.ERROR_MESSAGES.INVALID_EMAIL, inputElement);
     return;
   }
 
