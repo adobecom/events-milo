@@ -124,7 +124,7 @@
 }
 
 .event-agenda .agenda-items {
-  padding: 16px 0px;
+  padding: 16px 0;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
