@@ -21,7 +21,7 @@ function decorateTextContainer(el, createTag, decorateButtons) {
   try {
     venueObj = JSON.parse(getMetadata('venue'));
   } catch (e) {
-    window.lana?.log('Error while parsing venue metadata:', e);
+    window.lana?.log(`Error while parsing venue metadata:\n${JSON.stringify(e, null, 2)}`);
   }
 
   if (!venueObj) {
@@ -36,7 +36,7 @@ function decorateTextContainer(el, createTag, decorateButtons) {
   try {
     venueAdditionalImageObj = JSON.parse(getMetadata('photos')).find((photo) => photo.imageKind === 'venue-additional-image');
   } catch (e) {
-    window.lana?.log('Error while parsing venue additional image metadata:', e);
+    window.lana?.log(`Error while parsing venue additional image metadata:\n${JSON.stringify(e, null, 2)}`);
   }
 
   createTag('p', { class: 'venue-name-text' }, createTag('strong', {}, venueName), { parent: textContentWrapper });
@@ -63,7 +63,7 @@ function decorateMap(el, createTag) {
   try {
     venueMapImageObj = JSON.parse(getMetadata('photos')).find((photo) => photo.imageKind === 'venue-map-image');
   } catch (e) {
-    window.lana?.log('Error while parsing venue map image metadata:', e);
+    window.lana?.log(`Error while parsing venue map image metadata:\n${JSON.stringify(e, null, 2)}`);
   }
 
   if (!venueMapImageObj) return;
@@ -78,7 +78,7 @@ function decorateMap(el, createTag) {
     try {
       spUrlObj = new URL(venueMapImageObj.sharepointUrl);
     } catch (e) {
-      window.lana?.log('Error while parsing SharePoint URL:', e);
+      window.lana?.log(`Error while parsing SharePoint URL:\n${JSON.stringify(e, null, 2)}`);
     }
   }
 

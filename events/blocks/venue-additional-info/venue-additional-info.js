@@ -30,7 +30,7 @@ function decorateImage(el, createTag) {
   try {
     venueAdditionalImageObj = JSON.parse(getMetadata('photos')).find((photo) => photo.imageKind === 'venue-additional-image');
   } catch (e) {
-    window.lana?.log('Error while parsing venue additional image metadata:', e);
+    window.lana?.log(`Error while parsing venue additional image metadata:\n${JSON.stringify(e, null, 2)}`);
   }
 
   if (!venueAdditionalImageObj) return;
@@ -45,7 +45,7 @@ function decorateImage(el, createTag) {
     try {
       spUrlObj = new URL(venueAdditionalImageObj.sharepointUrl);
     } catch (e) {
-      window.lana?.log('Error while parsing SharePoint URL:', e);
+      window.lana?.log(`Error while parsing SharePoint URL:\n${JSON.stringify(e, null, 2)}`);
     }
   }
 

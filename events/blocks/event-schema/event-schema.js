@@ -8,7 +8,7 @@ export function injectEventSchema() {
     venueObject = JSON.parse(getMetadata('venue'));
     photos = JSON.parse(getMetadata('photos'));
   } catch (error) {
-    window.lana?.log('Failed to parse venue or photos metadata:', error);
+    window.lana?.log(`Failed to parse venue or photos metadata:\n${JSON.stringify(error, null, 2)}`);
   }
 
   if (!venueObject || !photos) return;
