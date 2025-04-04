@@ -32,7 +32,7 @@ export default async function init(el) {
   try {
     venueImage = JSON.parse(getMetadata('photos')).find((p) => p.imageKind === 'venue-image');
   } catch (error) {
-    window.lana?.log('Failed to parse venue image metadata:', error);
+    window.lana?.log(`Failed to parse venue image metadata:\n${JSON.stringify(error, null, 2)}`);
   }
 
   if (!agendaMeta) {
@@ -45,7 +45,7 @@ export default async function init(el) {
   try {
     agendaArray = JSON.parse(agendaMeta);
   } catch (error) {
-    window.lana?.log('Failed to parse agenda metadata:', error);
+    window.lana?.log(`Failed to parse agenda metadata:\n${JSON.stringify(error, null, 2)}`);
     el.remove();
     return;
   }
@@ -67,7 +67,7 @@ export default async function init(el) {
         spUrlObj = new URL(venueImage.sharepointUrl);
         imgUrl = spUrlObj.pathname;
       } catch (e) {
-        window.lana?.log('Error while parsing SharePoint URL:', e);
+        window.lana?.log(`Error while parsing SharePoint URL:\n${JSON.stringify(e, null, 2)}`);
       }
     } else {
       imgUrl = venueImage.sharepointUrl || venueImage.imageUrl;
