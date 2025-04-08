@@ -1,6 +1,23 @@
 import { createTag, getEventServiceEnv } from '../../scripts/utils.js';
 import BlockMediator from '../../scripts/deps/block-mediator.min.js';
-import CONFIG from './config.js';
+
+const CONFIG = {
+  ENDPOINTS: {
+    local: { host: 'https://www.stage.adobe.com/api2/subscribe_v1' },
+    dev: { host: 'https://www.stage.adobe.com/api2/subscribe_v1' },
+    dev02: { host: 'https://www.stage.adobe.com/api2/subscribe_v1' },
+    stage: { host: 'https://www.stage.adobe.com/api2/subscribe_v1' },
+    stage02: { host: 'https://www.stage.adobe.com/api2/subscribe_v1' },
+    prod: { host: 'https://www.adobe.com/api2/subscribe_v1' },
+  },
+  VALIDATION: {
+    EMAIL_REGEX: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
+    ERROR_MESSAGES: {
+      REQUIRED: 'Required Field',
+      INVALID_EMAIL: 'Must be a valid Email address',
+    },
+  },
+};
 
 function validateInput(input) {
   const emailPattern = CONFIG.VALIDATION.EMAIL_REGEX;
@@ -70,7 +87,7 @@ async function handleSubmit(event, bp) {
 
     if (!resp.successful) {
       event.target.disabled = false;
-      window.lana?.log('event-subscription-form', 'error', resp.reason);
+      window.lana?.log(`Error while subscribing email :\n${JSON.stringify(resp.reason, null, 2)}`);
       console.error(resp.reason);
       decorateError('Something went wrong', inputElement);
       return;
@@ -87,7 +104,7 @@ async function handleSubmit(event, bp) {
     decorateThankYouView(thankyouView);
   } catch (err) {
     event.target.disabled = false;
-    window.lana?.log('event-subscription-form', 'exception error', err);
+    window.lana?.log(`Exception in email subscription :\n "${err}"`);
     console.error(err);
     decorateError('Internal error', inputElement);
   }
