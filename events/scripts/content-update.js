@@ -272,9 +272,10 @@ function autoUpdateLinks(scope, miloLibs) {
           templateId = series?.templateId;
         } catch (e) {
           window.lana?.log('Failed to parse series metadata. Attempt to fallback on event tempate ID attribute:', e);
-          if (getMetadata('template-id')) {
-            templateId = getMetadata('template-id');
-          }
+        }
+
+        if (!templateId && getMetadata('template-id')) {
+          templateId = getMetadata('template-id');
         }
 
         if (templateId) {
