@@ -1,7 +1,26 @@
-import { createTag } from '../../scripts/utils.js';
+import { createTag, getEventServiceEnv } from '../../scripts/utils.js';
+import BlockMediator from '../../scripts/deps/block-mediator.min.js';
+
+const CONFIG = {
+  ENDPOINTS: {
+    local: { host: 'https://www.stage.adobe.com/api2/subscribe_v1' },
+    dev: { host: 'https://www.stage.adobe.com/api2/subscribe_v1' },
+    dev02: { host: 'https://www.stage.adobe.com/api2/subscribe_v1' },
+    stage: { host: 'https://www.stage.adobe.com/api2/subscribe_v1' },
+    stage02: { host: 'https://www.stage.adobe.com/api2/subscribe_v1' },
+    prod: { host: 'https://www.adobe.com/api2/subscribe_v1' },
+  },
+  VALIDATION: {
+    EMAIL_REGEX: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
+    ERROR_MESSAGES: {
+      REQUIRED: 'Required Field',
+      INVALID_EMAIL: 'Must be a valid Email address',
+    },
+  },
+};
 
 function validateInput(input) {
-  const emailPattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+  const emailPattern = CONFIG.VALIDATION.EMAIL_REGEX;
   return emailPattern.test(input);
 }
 
@@ -30,7 +49,8 @@ function decorateThankYouView(thanksView) {
  */
 async function subscribe(payload) {
   // If you have an API key, you can use it here.
-  const response = await fetch('https://www.adobe.com/api2/subscribe_v1', {
+  const campaignUrl = CONFIG.ENDPOINTS[getEventServiceEnv()].host;
+  const response = await fetch(campaignUrl, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
@@ -46,12 +66,10 @@ async function handleSubmit(event, bp) {
   // Validate the input
   const email = inputElement.value;
   if (email.length === 0) {
-    console.log('Email is a required Field');
-    decorateError('Required Field', inputElement);
+    decorateError(CONFIG.VALIDATION.ERROR_MESSAGES.REQUIRED, inputElement);
     return;
   } if (!validateInput(email)) {
-    console.log('Input email must be a valid Email address');
-    decorateError('Must be a valid Email address', inputElement);
+    decorateError(CONFIG.VALIDATION.ERROR_MESSAGES.INVALID_EMAIL, inputElement);
     return;
   }
 
@@ -69,6 +87,7 @@ async function handleSubmit(event, bp) {
 
     if (!resp.successful) {
       event.target.disabled = false;
+      window.lana?.log(`Error while subscribing email :\n${JSON.stringify(resp.reason, null, 2)}`);
       console.error(resp.reason);
       decorateError('Something went wrong', inputElement);
       return;
@@ -85,6 +104,7 @@ async function handleSubmit(event, bp) {
     decorateThankYouView(thankyouView);
   } catch (err) {
     event.target.disabled = false;
+    window.lana?.log(`Exception in email subscription :\n "${err}"`);
     console.error(err);
     decorateError('Internal error', inputElement);
   }
@@ -102,6 +122,17 @@ function decorateButton(bp) {
 }
 
 function addElementToForm(form, inputP, labelP) {
+  const profile = BlockMediator.get('imsProfile');
+  if (profile === undefined) {
+    BlockMediator.subscribe('imsProfile', (data) => {
+      if (data && data.email) {
+        const subscriptionInput = form.querySelector('.subscription-input');
+        if (subscriptionInput) {
+          subscriptionInput.value = data.email;
+        }
+      }
+    });
+  }
   const placeholder = inputP.innerHTML;
   const labelText = labelP.innerHTML;
   const labelAttr = {
@@ -114,6 +145,7 @@ function addElementToForm(form, inputP, labelP) {
     type: 'email',
     name: 'email',
     placeholder,
+    ...(profile && !profile.noProfile && { value: profile.email }),
     required: 'true',
     class: 'subscription-input',
   };
@@ -174,7 +206,5 @@ export default function init(el) {
   } else if (modalUrl === 'thankyou') {
     // call a function to show thank you message.
     decorateThankYouView(el);
-  } else {
-    console.error('Invalid modal url');
   }
 }
