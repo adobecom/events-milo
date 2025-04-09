@@ -5,14 +5,14 @@ function addMinutes(date, minutes) {
   return new Date(date.getTime() + minutes * 60 * 1000);
 }
 
-function buildScheduleLinkedList(entries) {
+function buildScheduleDoubleLinkedList(entries) {
   if (!entries.length) return null;
 
-  const head = { ...entries[0], next: null };
+  const head = { ...entries[0], next: null, prev: null };
   let current = head;
 
   for (let i = 1; i < entries.length; i += 1) {
-    current.next = { ...entries[i], next: null };
+    current.next = { ...entries[i], next: null, prev: current };
     current = current.next;
   }
 
@@ -24,9 +24,8 @@ function getMockSchedule() {
 
   const now = new Date();
 
-  const mockSchedule = buildScheduleLinkedList([
+  const mockSchedule = buildScheduleDoubleLinkedList([
     {
-      toggleTime: addMinutes(now, 0.25).getTime(),
       pathToFragment: '/drafts/qiyundai/fragments/dx-hero-base',
     },
     {
@@ -95,6 +94,8 @@ export default async function init(el) {
   const [{ default: loadFragment }, { createTag }] = await Promise.all([
     import(`${LIBS}/blocks/fragment/fragment.js`),
     import(`${LIBS}/utils/utils.js`),
+    import(`${LIBS}/features/spectrum-web-components/dist/theme.js`),
+    import(`${LIBS}/features/spectrum-web-components/dist/progress-circle.js`),
   ]);
 
   const blockConfig = readBlockConfig(el);
@@ -109,10 +110,22 @@ export default async function init(el) {
   worker.onmessage = (event) => {
     const { pathToFragment } = event.data;
 
+    el.style.height = `${el.clientHeight}px`;
+
+    // load sp progress circle
+    const spTheme = createTag('sp-theme', { color: 'light', scale: 'medium', class: 'loading-screen'  });
+    createTag('sp-progress-circle', { size: 'l', indeterminate: true }, '', { parent: spTheme });
     el.innerHTML = '';
+    el.classList.add('loading');
+    el.append(spTheme);
 
     const a = createTag('a', { href: pathToFragment }, '', { parent: el });
 
-    loadFragment(a);
+    loadFragment(a).then(() => {
+      // set el height to current height
+      spTheme.remove();
+      el.removeAttribute('style');
+      el.classList.remove('loading');
+    });
   };
 }
