@@ -71,6 +71,8 @@ function convertEccIcon(n) {
 
 async function setCtaState(targetState, rsvpBtn, miloLibs) {
   const checkRed = getIcon('check-circle-red');
+  const btnHref = rsvpBtn.el.href;
+
   const enableBtn = () => {
     rsvpBtn.el.classList.remove('disabled');
     rsvpBtn.el.setAttribute('tabindex', 0);
@@ -78,7 +80,7 @@ async function setCtaState(targetState, rsvpBtn, miloLibs) {
 
   const disableBtn = () => {
     rsvpBtn.el.setAttribute('tabindex', -1);
-    rsvpBtn.el.href = '';
+    rsvpBtn.el.href = btnHref;
     rsvpBtn.el.classList.add('disabled');
   };
 
