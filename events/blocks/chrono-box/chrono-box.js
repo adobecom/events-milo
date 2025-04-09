@@ -20,12 +20,14 @@ function buildScheduleLinkedList(entries) {
 }
 
 function getMockSchedule() {
+  BlockMediator.set('scheduleConditions', { 'chrono-box-mock': {} });
+
   const now = new Date();
 
   const mockSchedule = buildScheduleLinkedList([
     {
       toggleTime: addMinutes(now, 0.25).getTime(),
-      pathToFragment: '/drafts/qiyundai/fragments/dx-hero-pre',
+      pathToFragment: '/drafts/qiyundai/fragments/dx-hero-base',
     },
     {
       conditions: [
@@ -33,11 +35,17 @@ function getMockSchedule() {
           bmKey: 'videoReady',
           expectedValue: true,
         },
+      ],
+      pathToFragment: '/drafts/qiyundai/fragments/dx-hero-pre',
+    },
+    {
+      conditions: [
         {
-          bmKey: 'registered',
+          bmKey: 'streamEnded',
           expectedValue: true,
         },
       ],
+      toggleTime: addMinutes(now, 1).getTime(),
       pathToFragment: '/drafts/qiyundai/fragments/dx-hero-post',
     },
   ]);
@@ -45,7 +53,7 @@ function getMockSchedule() {
   return mockSchedule;
 }
 
-function setScheduleToScheduleWorker(schedule) {
+function setScheduleToScheduleWorker(schedule, scheduleId) {
   const worker = new Worker('/events/features/timing-framework/worker.js');
   worker.postMessage({
     message: 'schedule',
@@ -53,28 +61,32 @@ function setScheduleToScheduleWorker(schedule) {
   });
 
   const conditions = BlockMediator.get('scheduleConditions');
+  const thisConditions = conditions[scheduleId];
 
-  if (conditions) {
+  if (thisConditions) {
     worker.postMessage({
       message: 'conditions',
-      conditions,
+      conditions: thisConditions,
     });
   }
 
   BlockMediator.subscribe('scheduleConditions', ({ newValue }) => {
-    worker.postMessage({
-      message: 'conditions',
-      conditions: newValue,
-    });
+    const tc = newValue[scheduleId];
+
+    if (tc) {
+      worker.postMessage({
+        message: 'conditions',
+        conditions: tc,
+      });
+    }
   });
 
   // TODO: remove this BM mock
   setTimeout(() => {
-    BlockMediator.set('scheduleConditions', {
-      videoReady: true,
-      registered: true,
-    });
-  }, 30 * 1000);
+    const con = BlockMediator.get('scheduleConditions');
+    con[scheduleId] = { ...con[scheduleId], videoReady: true, streamEnded: true };
+    BlockMediator.set('scheduleConditions', con);
+  }, 20 * 1000);
 
   return worker;
 }
@@ -92,7 +104,7 @@ export default async function init(el) {
 
   el.innerHTML = '';
 
-  const worker = setScheduleToScheduleWorker(mockSchedules);
+  const worker = setScheduleToScheduleWorker(mockSchedules, 'chrono-box-mock');
 
   worker.onmessage = (event) => {
     const { pathToFragment } = event.data;

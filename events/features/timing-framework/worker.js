@@ -4,9 +4,12 @@ let stopPreviousTimer = false;
 
 async function getCurrentTimeFromAPI() {
   try {
+    console.log('Fetching current time from API...');
     const response = await fetch('https://worldtimeapi.org/api/ip');
     const data = await response.json();
-    return new Date(data.datetime).getTime();
+    const time = new Date(data.datetime).getTime();
+    console.log('API time fetched:', new Date(time).toISOString());
+    return time;
   } catch (error) {
     console.error('Error fetching time from API:', error);
     return null;
@@ -14,44 +17,33 @@ async function getCurrentTimeFromAPI() {
 }
 
 function getStartScheduleItem() {
+  console.log('Getting start schedule item...');
   let currentScheduleItem = scheduleCache;
+  const currentTime = new Date().getTime();
+  console.log('Current time:', new Date(currentTime).toISOString());
 
   while (currentScheduleItem.next) {
-    const { conditions, toggleTime } = currentScheduleItem;
+    const { toggleTime: nextToggleTime } = currentScheduleItem.next;
+    console.log('Checking next toggle time:', nextToggleTime ? new Date(nextToggleTime).toISOString() : 'none');
 
-    if (conditions) {
-      // eslint-disable-next-line no-loop-func
-      const triggered = conditions.every((condition) => {
-        const { key, value } = condition;
-        const currentValue = conditionsCache[key];
-        return currentValue === value;
-      });
-
-      if (!triggered) {
-        currentScheduleItem = currentScheduleItem.next;
-        // eslint-disable-next-line no-continue
-        continue;
-      }
-    }
-
-    if (toggleTime) {
-      const currentTime = new Date().getTime();
-
-      if (currentTime > toggleTime) {
-        return currentScheduleItem;
-      }
+    if (nextToggleTime && currentTime > nextToggleTime) {
+      console.log('Found start schedule item:', currentScheduleItem);
+      return currentScheduleItem;
     }
 
     currentScheduleItem = currentScheduleItem.next;
   }
 
-  return null;
+  console.log('No valid start schedule item found, using last item:', currentScheduleItem);
+  return currentScheduleItem;
 }
 
 function getRandomInterval() {
   const min = 10000;
   const max = 15000;
-  return Math.floor(Math.random() * (max - min + 1)) + min;
+  const interval = Math.floor(Math.random() * (max - min + 1)) + min;
+  console.log('Generated random interval:', interval, 'ms');
+  return interval;
 }
 
 /**
@@ -59,91 +51,116 @@ function getRandomInterval() {
  * @param {Object} conditionsCache
  * @returns {boolean}
  */
-function determineScheduleAction(scheduleItem, conditionStore) {
-  console.log('Determining schedule action for item:', scheduleItem);
-  console.log('Current condition store:', conditionStore);
-
+function isScheduleTriggered(scheduleItem, conditionStore) {
+  console.log('Checking if schedule is triggered for item:', scheduleItem);
   const { conditions, toggleTime } = scheduleItem;
+  const currentTime = new Date().getTime();
+  console.log('Current time:', new Date(currentTime).toISOString());
+  console.log('Toggle time:', toggleTime ? new Date(toggleTime).toISOString() : 'none');
+
+  let toggleTimePassed = true;
+  let conditionsMet = true;
+
+  if (toggleTime) {
+    toggleTimePassed = currentTime > toggleTime;
+    console.log('Toggle time passed:', toggleTimePassed);
+  }
 
   if (conditions) {
     console.log('Checking conditions:', conditions);
-    const result = conditions.every((condition) => {
+    conditionsMet = conditions.every((condition) => {
       const { bmKey, expectedValue } = condition;
-      const currentValue = conditionStore[bmKey];
-      console.log(`Condition check - key: ${bmKey}, expected: ${expectedValue}, current: ${currentValue}`);
+      const currentValue = conditionStore?.[bmKey];
+      console.log(`Condition check - Key: ${bmKey}, Expected: ${expectedValue}, Current: ${currentValue}`);
       return currentValue === expectedValue;
     });
-    console.log('All conditions met:', result);
-    return result;
+    console.log('All conditions met:', conditionsMet);
   }
 
-  if (toggleTime) {
-    const currentTime = new Date().getTime();
-    console.log(`Checking toggleTime - current: ${currentTime}, toggle: ${toggleTime}`);
-    const result = currentTime > toggleTime;
-    console.log('Toggle time check result:', result);
-    return result;
-  }
-
-  console.log('No conditions or toggle time found, returning false');
-  return false;
+  const triggered = toggleTimePassed && conditionsMet;
+  console.log('Schedule triggered:', triggered);
+  return triggered;
 }
 
 async function validateTime(currentTime) {
+  console.log('Validating local time...');
   const apiCurrentTime = await getCurrentTimeFromAPI();
   const diff = apiCurrentTime - currentTime;
+  console.log('Time difference:', diff, 'ms');
 
   if (diff > 10000) {
+    console.error('Time validation failed: Local time is off by more than 10 seconds');
     window.alert('Sorry. Your local time is off by more than 10 seconds. Please check your system clock.');
     return false;
   }
 
+  console.log('Time validation passed');
   return true;
 }
 
 onmessage = async (event) => {
+  console.log('Worker received message:', event.data);
   const { message, schedule, conditions } = event.data;
 
   if (message === 'schedule') {
+    console.log('Updating schedule cache');
     scheduleCache = schedule;
   }
 
   if (message === 'conditions') {
+    console.log('Updating conditions cache');
     conditionsCache = conditions;
   }
 
   let nextScheduleItem = getStartScheduleItem();
 
-  if (!nextScheduleItem) return;
+  if (!nextScheduleItem) {
+    console.log('No schedule items available');
+    return;
+  }
 
   const runTimer = async () => {
     if (stopPreviousTimer) {
+      console.log('Stopping previous timer');
       stopPreviousTimer = false;
       return;
     }
 
     const currentTime = new Date().getTime();
+    console.log('Timer tick at:', new Date(currentTime).toISOString());
 
     if (currentTime === null) {
+      console.log('Current time is null, retrying...');
       setTimeout(runTimer, getRandomInterval());
       return;
     }
 
-    const triggered = determineScheduleAction(nextScheduleItem, conditionsCache);
+    const triggered = isScheduleTriggered(nextScheduleItem, conditionsCache);
 
     if (triggered) {
+      console.log('Schedule triggered, validating time...');
       const timeValid = await validateTime(currentTime);
 
-      if (!timeValid) return;
+      if (!timeValid) {
+        console.log('Time validation failed, skipping trigger');
+        return;
+      }
 
+      console.log('Posting message for triggered schedule item:', nextScheduleItem);
       postMessage(nextScheduleItem);
       nextScheduleItem = nextScheduleItem.next;
     }
 
-    if (!nextScheduleItem) return;
+    if (!nextScheduleItem) {
+      console.log('No more schedule items');
+      return;
+    }
 
-    setTimeout(runTimer, getRandomInterval());
+    const nextInterval = getRandomInterval();
+    console.log('Setting next timer interval:', nextInterval, 'ms');
+    setTimeout(runTimer, nextInterval);
   };
 
+  console.log('Starting timer loop');
   runTimer();
 };
