@@ -71,8 +71,11 @@ function convertEccIcon(n) {
 
 async function setCtaState(targetState, rsvpBtn, miloLibs) {
   const checkRed = getIcon('check-circle-red');
+  const btnHref = rsvpBtn.el.href;
+
   const enableBtn = () => {
     rsvpBtn.el.classList.remove('disabled');
+    rsvpBtn.el.href = btnHref;
     rsvpBtn.el.setAttribute('tabindex', 0);
   };
 
@@ -346,6 +349,7 @@ export function updatePictureElement(imageUrl, parentPic, altText) {
     } catch (e) {
       window.lana?.log(`Failed to convert optimized img from ${el} with dynamic data:\n${JSON.stringify(e, null, 2)}`);
     }
+    el.addEventListener('load', onImgLoad);
   });
 }
 
