@@ -3,6 +3,10 @@ let currentScheduleItem = null;
 let nextScheduleItem = null;
 let timerId = null;
 
+/**
+ * @returns {number}
+ * @description Returns the current time from the API
+ */
 async function getCurrentTimeFromAPI() {
   try {
     const response = await fetch('https://worldtimeapi.org/api/ip');
@@ -14,6 +18,11 @@ async function getCurrentTimeFromAPI() {
   }
 }
 
+/**
+ * @param {Object} scheduleRoot
+ * @returns {Object}
+ * @description Returns the first schedule item that should be shown
+ */
 function getStartScheduleItem(scheduleRoot) {
   console.log('scheduleRoot', scheduleRoot);
   const currentTime = new Date().getTime();
@@ -39,25 +48,39 @@ function getStartScheduleItem(scheduleRoot) {
   return pointer;
 }
 
+/**
+ * @returns {number}
+ * @description Returns a random interval between 1 and 1.5 seconds
+ */
 function getRandomInterval() {
   const min = 1000;
   const max = 1500;
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
-function isNextScheduleTriggered(scheduleItem, conditionStore) {
-  const { conditions, toggleTime } = scheduleItem;
+/**
+ * @param {Object} scheduleItem
+ * @param {Object} cs (conditionStore)
+ * @returns {boolean}
+ * @description Returns true if the next schedule item is triggered
+ */
+function isNextScheduleTriggered(scheduleItem, cs) {
+  const { conditions: c, toggleTime: t } = scheduleItem;
   const currentTime = new Date().getTime();
 
-  const toggleTimePassed = !toggleTime || currentTime > toggleTime;
+  const toggleTimePassed = !t || currentTime > t;
 
-  const conditionsMet = !conditions || conditions.every(({ bmKey, expectedValue }) => {
-    return conditionStore?.[bmKey] === expectedValue;
-  });
+  const conditionsMet = !c || c.every(({ bmKey: k, expectedValue: v }) => cs?.[k] === v);
 
   return toggleTimePassed && conditionsMet;
 }
 
+/**
+ * @param {number} currentTime
+ * @returns {boolean}
+ * @description Returns true if the current time is valid
+ */
+// eslint-disable-next-line no-unused-vars
 async function validateTime(currentTime) {
   const apiCurrentTime = await getCurrentTimeFromAPI();
   const diff = apiCurrentTime - currentTime;
@@ -70,6 +93,10 @@ async function validateTime(currentTime) {
   return true;
 }
 
+/**
+ * @param {Object} event
+ * @description Handles messages from the main thread
+ */
 onmessage = async (event) => {
   const { message, schedule, conditions } = event.data;
 
@@ -93,7 +120,10 @@ onmessage = async (event) => {
   const runTimer = async () => {
     const triggered = isNextScheduleTriggered(nextScheduleItem, currentConditions);
 
-    if (triggered && (nextScheduleItem.pathToFragment !== currentScheduleItem.pathToFragment || nextScheduleItem.prev === null)) {
+    const { pathToFragment: currentPath } = currentScheduleItem;
+    const { pathToFragment: nextPath, prev: nextPrev } = nextScheduleItem;
+
+    if (triggered && (nextPath !== currentPath || nextPrev === null)) {
       // const timeValid = await validateTime(currentTime);
       // if (!timeValid) return;
 
