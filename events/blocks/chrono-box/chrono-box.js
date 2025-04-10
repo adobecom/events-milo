@@ -25,9 +25,7 @@ function getMockSchedule() {
   const now = new Date();
 
   const mockSchedule = buildScheduleDoubleLinkedList([
-    {
-      pathToFragment: '/drafts/qiyundai/fragments/dx-hero-base',
-    },
+    { pathToFragment: '/drafts/qiyundai/fragments/dx-hero-base' },
     {
       conditions: [
         {
@@ -113,7 +111,7 @@ export default async function init(el) {
     el.style.height = `${el.clientHeight}px`;
 
     // load sp progress circle
-    const spTheme = createTag('sp-theme', { color: 'light', scale: 'medium', class: 'loading-screen'  });
+    const spTheme = createTag('sp-theme', { color: 'light', scale: 'medium', class: 'loading-screen' });
     createTag('sp-progress-circle', { size: 'l', indeterminate: true }, '', { parent: spTheme });
     el.innerHTML = '';
     el.classList.add('loading');
