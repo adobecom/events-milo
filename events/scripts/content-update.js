@@ -74,7 +74,7 @@ async function setCtaState(targetState, rsvpBtn, miloLibs) {
 
   const enableBtn = () => {
     rsvpBtn.el.classList.remove('disabled');
-    rsvpBtn.el.href = rsvpBtn.originalHref;
+    rsvpBtn.el.href = rsvpBtn.el.dataset.modalHash;
     rsvpBtn.el.setAttribute('tabindex', 0);
   };
 
@@ -240,7 +240,6 @@ async function handleRegisterButton(a, miloLibs) {
   const rsvpBtn = {
     el: a,
     originalText: a.textContent,
-    originalHref: a.href,
   };
 
   a.classList.add('rsvp-btn', 'disabled');
