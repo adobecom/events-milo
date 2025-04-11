@@ -8,3 +8,4 @@ mountpoints:
 
 folders:
   /events: /events/default
+  /de/events: /de/events/default
