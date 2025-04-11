@@ -684,7 +684,7 @@ async function createForm(bp, formData) {
   try {
     rsvpFieldsData = JSON.parse(getMetadata('rsvp-form-fields'));
   } catch (error) {
-    window.lana?.log('Failed to parse partners metadata:', error);
+    window.lana?.log(`Failed to parse partners metadata:\n${JSON.stringify(error, null, 2)}`);
   }
 
   const { pathname } = new URL(form.href);

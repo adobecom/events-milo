@@ -29,7 +29,7 @@ export default function decorateArea(area = document) {
         output[photo.imageKind] = photo;
       });
     } catch (e) {
-      window.lana?.log('Failed to parse photos metadata:', e);
+      window.lana?.log(`Failed to parse photos metadata:\n${JSON.stringify(e, null, 2)}`);
     }
 
     return output;
