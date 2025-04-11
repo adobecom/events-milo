@@ -28,7 +28,7 @@ export async function miloReplaceKey(miloLibs, key) {
 
     return await replaceKey(key, config);
   } catch (error) {
-    window.lana?.log('Error trying to replace placeholder:', error);
+    window.lana?.log(`Error trying to replace placeholder:\n${JSON.stringify(error, null, 2)}`);
     return key;
   }
 }
@@ -71,8 +71,10 @@ function convertEccIcon(n) {
 
 async function setCtaState(targetState, rsvpBtn, miloLibs) {
   const checkRed = getIcon('check-circle-red');
+
   const enableBtn = () => {
     rsvpBtn.el.classList.remove('disabled');
+    rsvpBtn.el.href = rsvpBtn.el.dataset.modalHash;
     rsvpBtn.el.setAttribute('tabindex', 0);
   };
 
@@ -176,7 +178,7 @@ export async function updateRSVPButtonState(rsvpBtn, miloLibs) {
 
 export function signIn(options) {
   if (typeof window.adobeIMS?.signIn !== 'function') {
-    window?.lana.log({ message: 'IMS signIn method not available', tags: 'errorType=warn,module=gnav' });
+    window.lana?.log('IMS signIn method not available', { tags: 'errorType=warn,module=gnav' });
     return;
   }
 
@@ -268,12 +270,12 @@ function autoUpdateLinks(scope, miloLibs) {
         let templateId;
 
         try {
-          const series = JSON.parse(getMetadata('series'));
-          templateId = series?.templateId;
+          const seriesMetadata = JSON.parse(getMetadata('series'));
+          templateId = seriesMetadata?.templateId;
         } catch (e) {
-          window.lana?.log('Failed to parse series metadata. Attempt to fallback on event tempate ID attribute:', e);
+          window.lana?.log(`Failed to parse series metadata. Attempt to fallback on event tempate ID attribute:\n${JSON.stringify(e, null, 2)}`);
         }
-
+        
         if (!templateId && getMetadata('template-id')) {
           templateId = getMetadata('template-id');
         }
@@ -310,7 +312,7 @@ function autoUpdateLinks(scope, miloLibs) {
         a.remove();
       }
     } catch (e) {
-      window.lana?.log(`Error while attempting to replace link ${a.href}: ${e}`);
+      window.lana?.log(`Error while attempting to replace link ${a.href}:\n${JSON.stringify(e, null, 2)}`);
     }
   });
 }
@@ -322,7 +324,7 @@ export function updatePictureElement(imageUrl, parentPic, altText) {
     try {
       imgUrlObj = new URL(imageUrl);
     } catch (e) {
-      window.lana?.log('Error while parsing absolute sharepoint URL:', e);
+      window.lana?.log(`Error while parsing absolute sharepoint URL:\n${JSON.stringify(e, null, 2)}`);
     }
   }
 
@@ -332,7 +334,7 @@ export function updatePictureElement(imageUrl, parentPic, altText) {
     try {
       el.srcset = el.srcset.replace(/.*\?/, `${imgUrl}?`);
     } catch (e) {
-      window.lana?.log(`failed to convert optimized picture source from ${el} with dynamic data: ${e}`);
+      window.lana?.log(`Failed to convert optimized picture source from ${el} with dynamic data:\n${JSON.stringify(e, null, 2)}`);
     }
   });
 
@@ -345,9 +347,8 @@ export function updatePictureElement(imageUrl, parentPic, altText) {
       el.src = el.src.replace(/.*\?/, `${imgUrl}?`);
       el.alt = altText || '';
     } catch (e) {
-      window.lana?.log(`failed to convert optimized img from ${el} with dynamic data: ${e}`);
+      window.lana?.log(`Failed to convert optimized img from ${el} with dynamic data:\n${JSON.stringify(e, null, 2)}`);
     }
-
     el.addEventListener('load', onImgLoad);
   });
 }
@@ -371,7 +372,7 @@ function updateImgTag(child, matchCallback, parentElement) {
       parentElement.remove();
     }
   } catch (e) {
-    window.lana?.log(`Error while attempting to update image: ${e}`);
+    window.lana?.log(`Error while attempting to update image:\n${JSON.stringify(e, null, 2)}`);
   }
 }
 
@@ -488,7 +489,7 @@ export async function getNonProdData(env) {
     return null;
   }
 
-  window.lana?.log('Failed to fetch non-prod metadata:', resp);
+  window.lana?.log(`Failed to fetch non-prod metadata:\n${JSON.stringify(resp, null, 2)}`);
   return null;
 }
 
@@ -499,7 +500,7 @@ function decorateProfileCardsZPattern(parent) {
   try {
     speakerData = JSON.parse(getMetadata('speakers'));
   } catch (e) {
-    window.lana?.log('Failed to parse speakers metadata:', e);
+    window.lana?.log(`Failed to parse speakers metadata:\n${JSON.stringify(e, null, 2)}`);
     return;
   }
 
@@ -551,7 +552,7 @@ function updateExtraMetaTags(parent) {
   try {
     photos = JSON.parse(getMetadata('photos'));
   } catch (e) {
-    window.lana?.log('Failed to parse photos metadata for extra metadata tags generation:', e);
+    window.lana?.log(`Failed to parse photos metadata for extra metadata tags generation:\n${JSON.stringify(e, null, 2)}`);
   }
 
   if (title) {
@@ -574,7 +575,7 @@ function updateExtraMetaTags(parent) {
         try {
           sharepointUrl = new URL(sharepointUrl).pathname;
         } catch (e) {
-          window.lana?.log('Error while parsing SharePoint URL for extra metadata tags generation:', e);
+          window.lana?.log(`Error while parsing SharePoint URL for extra metadata tags generation:\n${JSON.stringify(e, null, 2)}`);
         }
       }
 
@@ -603,14 +604,14 @@ export default function autoUpdateContent(parent, miloDeps, extraData) {
         const nestedData = JSON.parse(getMetadata(key));
         data = nestedData[subKey] || extraData?.[p1] || '';
       } catch (e) {
-        window.lana?.log(`Error while attempting to replace ${p1}: ${e}`);
+        window.lana?.log(`Error while attempting to replace ${p1}:\n${JSON.stringify(e, null, 2)}`);
         return '';
       }
     } else {
       try {
         data = JSON.parse(getMetadata(p1)) || extraData?.[p1] || {};
       } catch (e) {
-        window.lana?.log(`Error while attempting to parse ${p1}: ${e}`);
+        window.lana?.log(`Error while attempting to parse ${p1}:\n${JSON.stringify(e, null, 2)}`);
         return '';
       }
     }
@@ -629,7 +630,7 @@ export default function autoUpdateContent(parent, miloDeps, extraData) {
         const nestedData = JSON.parse(getMetadata(key));
         content = nestedData[subKey] || extraData?.[p1] || '';
       } catch (e) {
-        window.lana?.log(`Error while attempting to replace ${p1}: ${e}`);
+        window.lana?.log(`Error while attempting to replace ${p1}:\n${JSON.stringify(e, null, 2)}`);
       }
     } else {
       content = getMetadata(p1) || extraData?.[p1] || '';
