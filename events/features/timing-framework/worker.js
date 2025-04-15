@@ -70,7 +70,7 @@ function isNextScheduleTriggered(scheduleItem, cs) {
 
   const toggleTimePassed = !t || currentTime > t;
 
-  const conditionsMet = !c || c.every(({ bmKey: k, expectedValue: v }) => cs?.[k] === v);
+  const conditionsMet = !c || c.every(({ key: k, expectedValue: v }) => cs?.[k] === v);
 
   return toggleTimePassed && conditionsMet;
 }

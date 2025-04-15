@@ -234,36 +234,57 @@ export async function validatePageAndRedirect(miloLibs) {
   }
 }
 
-async function handleRegisterButton(a, miloLibs) {
-  const rsvpBtn = {
-    el: a,
-    originalText: a.textContent,
+function autoUpdateLinks(scope, miloLibs) {
+  const regHashCallbacks = {
+    '#rsvp-form': async (a) => {
+      const rsvpBtn = {
+        el: a,
+        originalText: a.textContent,
+      };
+
+      a.classList.add('rsvp-btn', 'disabled');
+
+      const loadingText = await miloReplaceKey(miloLibs, 'rsvp-loading-cta-text');
+      updateAnalyticTag(rsvpBtn.el, loadingText);
+      a.textContent = loadingText;
+      a.setAttribute('tabindex', -1);
+
+      const profile = BlockMediator.get('imsProfile');
+      if (profile) {
+        handleRSVPBtnBasedOnProfile(rsvpBtn, miloLibs, profile);
+      } else {
+        BlockMediator.subscribe('imsProfile', ({ newValue }) => {
+          handleRSVPBtnBasedOnProfile(rsvpBtn, miloLibs, newValue);
+        });
+      }
+    },
+    '#webinar-marketo-form': async (a) => {
+      const rsvpBtn = {
+        el: a,
+        originalText: a.textContent,
+      };
+
+      a.href = `${window.location.pathname}#webinar-marketo-form`;
+
+      const rsvpData = BlockMediator.get('rsvpData');
+      if (rsvpData && rsvpData.registrationStatus === 'registered') {
+        await setCtaState('registered', rsvpBtn, miloLibs);
+      } else {
+        BlockMediator.subscribe('rsvpData', async ({ newValue }) => {
+          if (newValue.registrationStatus === 'registered') {
+            await setCtaState('registered', rsvpBtn, miloLibs);
+          }
+        });
+      }
+    },
   };
 
-  a.classList.add('rsvp-btn', 'disabled');
-
-  const loadingText = await miloReplaceKey(miloLibs, 'rsvp-loading-cta-text');
-  updateAnalyticTag(rsvpBtn.el, loadingText);
-  a.textContent = loadingText;
-  a.setAttribute('tabindex', -1);
-
-  const profile = BlockMediator.get('imsProfile');
-  if (profile) {
-    handleRSVPBtnBasedOnProfile(rsvpBtn, miloLibs, profile);
-  } else {
-    BlockMediator.subscribe('imsProfile', ({ newValue }) => {
-      handleRSVPBtnBasedOnProfile(rsvpBtn, miloLibs, newValue);
-    });
-  }
-}
-
-function autoUpdateLinks(scope, miloLibs) {
   scope.querySelectorAll('a[href*="#"]').forEach(async (a) => {
     try {
       const url = new URL(a.href);
 
-      if (/#rsvp-form.*/.test(a.href)) {
-        handleRegisterButton(a, miloLibs);
+      if (regHashCallbacks[url.hash]) {
+        await regHashCallbacks[url.hash](a, miloLibs);
       } else if (a.href.endsWith('#event-template')) {
         let templateId;
 
@@ -508,7 +529,7 @@ function decorateProfileCardsZPattern(parent) {
   let flippedIndex = -1;
   let visibleIndex = 0;
 
-  const allBlocks = parent.querySelectorAll('body > div > div:not(.section-metadata)');
+  const allBlocks = parent.querySelectorAll('body > div > div:not(.section-metadata):not(.daa-injection)');
   allBlocks.forEach((block) => {
     visibleIndex += 1;
     if (!block.classList.contains('profile-cards')) return;

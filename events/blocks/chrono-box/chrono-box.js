@@ -1,9 +1,4 @@
-import { readBlockConfig, LIBS } from '../../scripts/utils.js';
-import BlockMediator from '../../scripts/deps/block-mediator.min.js';
-
-function addMinutes(date, minutes) {
-  return new Date(date.getTime() + minutes * 60 * 1000);
-}
+import { readBlockConfig, LIBS, getMetadata } from '../../scripts/utils.js';
 
 function buildScheduleDoubleLinkedList(entries) {
   if (!entries.length) return null;
@@ -19,33 +14,37 @@ function buildScheduleDoubleLinkedList(entries) {
   return head;
 }
 
-function getMockSchedule() {
-  BlockMediator.set('scheduleConditions', { 'chrono-box-mock': {} });
+function getSchedule(scheduleId) {
+  sessionStorage.setItem('scheduleConditions', JSON.stringify({ [scheduleId]: {} }));
 
-  const now = new Date();
+  const scheduleJSONString = getMetadata('schedule');
+  let thisSchedule;
 
-  const mockSchedule = buildScheduleDoubleLinkedList([
-    { pathToFragment: '/drafts/qiyundai/fragments/dx-hero-base' },
-    {
-      conditions: [
-        {
-          bmKey: 'videoReady',
-          expectedValue: true,
-        },
-      ],
-      pathToFragment: '/drafts/qiyundai/fragments/dx-hero-pre',
-    },
-    {
-      conditions: [
-        {
-          bmKey: 'streamEnded',
-          expectedValue: true,
-        },
-      ],
-      toggleTime: addMinutes(now, 1).getTime(),
-      pathToFragment: '/drafts/qiyundai/fragments/dx-hero-post',
-    },
-  ]);
+  try {
+    thisSchedule = JSON.parse(scheduleJSONString).find((schedule) => schedule.id === scheduleId);
+  } catch (e) {
+    window.lana?.log(`Error parsing schedule: ${JSON.stringify(e)}`);
+  }
+
+  if (!thisSchedule) {
+    window.lana?.log(`Schedule not found: ${scheduleId}`);
+    return null;
+  }
+
+  const mockSchedule = buildScheduleDoubleLinkedList({
+    'webinar-t3': [
+      { pathToFragment: '/drafts/qiyundai/fragments/dx-hero-base' },
+      {
+        conditions: [
+          {
+            key: 'videoReady',
+            expectedValue: true,
+          },
+        ],
+        pathToFragment: '/drafts/qiyundai/fragments/dx-hero-pre',
+      },
+    ],
+  });
 
   return mockSchedule;
 }
@@ -57,32 +56,16 @@ function setScheduleToScheduleWorker(schedule, scheduleId) {
     schedule,
   });
 
-  const conditions = BlockMediator.get('scheduleConditions');
-  const thisConditions = conditions[scheduleId];
+  // TODO: remove this mock
+  setTimeout(() => {
+    const con = JSON.parse(sessionStorage.getItem('scheduleConditions'));
+    con[scheduleId] = { ...con[scheduleId], videoReady: true };
+    sessionStorage.setItem('scheduleConditions', JSON.stringify(con));
 
-  if (thisConditions) {
     worker.postMessage({
       message: 'conditions',
-      conditions: thisConditions,
+      conditions: con[scheduleId],
     });
-  }
-
-  BlockMediator.subscribe('scheduleConditions', ({ newValue }) => {
-    const tc = newValue[scheduleId];
-
-    if (tc) {
-      worker.postMessage({
-        message: 'conditions',
-        conditions: tc,
-      });
-    }
-  });
-
-  // TODO: remove this BM mock
-  setTimeout(() => {
-    const con = BlockMediator.get('scheduleConditions');
-    con[scheduleId] = { ...con[scheduleId], videoReady: true, streamEnded: true };
-    BlockMediator.set('scheduleConditions', con);
   }, 20 * 1000);
 
   return worker;
@@ -97,13 +80,40 @@ export default async function init(el) {
   ]);
 
   const blockConfig = readBlockConfig(el);
-  console.log('blockConfig', blockConfig);
+  const { scheduleId } = blockConfig;
   // TODO: use blockConfig to fetch schedule from metadata instead of mockSchedule
-  const mockSchedules = getMockSchedule();
+  const thisSchedule = getSchedule(scheduleId);
+
+  if (!thisSchedule) {
+    el.remove();
+    return;
+  }
 
   el.innerHTML = '';
 
-  const worker = setScheduleToScheduleWorker(mockSchedules, 'chrono-box-mock');
+  const worker = setScheduleToScheduleWorker(thisSchedule, scheduleId);
+
+  el.addEventListener('worker-message', (e) => {
+    const { message } = e.detail;
+
+    if (message === 'schedule') {
+      const { schedule } = e.detail.data;
+
+      worker.postMessage({
+        message: 'schedule',
+        schedule,
+      });
+    }
+
+    if (message === 'conditions') {
+      const { conditions } = e.detail.data;
+
+      worker.postMessage({
+        message: 'conditions',
+        conditions,
+      });
+    }
+  });
 
   worker.onmessage = (event) => {
     const { pathToFragment } = event.data;
