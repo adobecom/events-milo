@@ -264,7 +264,8 @@ function autoUpdateLinks(scope, miloLibs) {
         originalText: a.textContent,
       };
 
-      a.href = `${window.location.pathname}#webinar-marketo-form`;
+      const hrefWithoutHash = window.location.href.split('#')[0];
+      a.href = `${hrefWithoutHash}#webinar-marketo-form`;
 
       const rsvpData = BlockMediator.get('rsvpData');
       if (rsvpData && rsvpData.registrationStatus === 'registered') {
