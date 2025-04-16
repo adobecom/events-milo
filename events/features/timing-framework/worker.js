@@ -24,7 +24,6 @@ async function getCurrentTimeFromAPI() {
  * @description Returns the first schedule item that should be shown
  */
 function getStartScheduleItem(scheduleRoot) {
-  console.log('scheduleRoot', scheduleRoot);
   const currentTime = new Date().getTime();
   let pointer = scheduleRoot;
   let lastPassed = scheduleRoot;
@@ -108,7 +107,6 @@ onmessage = async (event) => {
   if (message === 'schedule') {
     currentScheduleItem = schedule;
     nextScheduleItem = getStartScheduleItem(schedule);
-    console.log('nextScheduleItem', nextScheduleItem);
   }
 
   if (message === 'conditions') {
