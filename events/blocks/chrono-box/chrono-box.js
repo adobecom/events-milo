@@ -15,13 +15,11 @@ function buildScheduleDoubleLinkedList(entries) {
 }
 
 function getSchedule(scheduleId) {
-  sessionStorage.setItem('scheduleConditions', JSON.stringify({ [scheduleId]: {} }));
-
-  const scheduleJSONString = getMetadata('schedule');
+  const scheduleJSONString = getMetadata('schedules');
   let thisSchedule;
 
   try {
-    thisSchedule = JSON.parse(scheduleJSONString).find((schedule) => schedule.id === scheduleId);
+    thisSchedule = JSON.parse(scheduleJSONString)[scheduleId];
   } catch (e) {
     window.lana?.log(`Error parsing schedule: ${JSON.stringify(e)}`);
   }
@@ -31,42 +29,15 @@ function getSchedule(scheduleId) {
     return null;
   }
 
-  const mockSchedule = buildScheduleDoubleLinkedList({
-    'webinar-t3': [
-      { pathToFragment: '/drafts/qiyundai/fragments/dx-hero-base' },
-      {
-        conditions: [
-          {
-            key: 'videoReady',
-            expectedValue: true,
-          },
-        ],
-        pathToFragment: '/drafts/qiyundai/fragments/dx-hero-pre',
-      },
-    ],
-  });
-
-  return mockSchedule;
+  return buildScheduleDoubleLinkedList(thisSchedule);
 }
 
-function setScheduleToScheduleWorker(schedule, scheduleId) {
+function setScheduleToScheduleWorker(schedule) {
   const worker = new Worker('/events/features/timing-framework/worker.js');
   worker.postMessage({
     message: 'schedule',
     schedule,
   });
-
-  // TODO: remove this mock
-  setTimeout(() => {
-    const con = JSON.parse(sessionStorage.getItem('scheduleConditions'));
-    con[scheduleId] = { ...con[scheduleId], videoReady: true };
-    sessionStorage.setItem('scheduleConditions', JSON.stringify(con));
-
-    worker.postMessage({
-      message: 'conditions',
-      conditions: con[scheduleId],
-    });
-  }, 20 * 1000);
 
   return worker;
 }
@@ -80,8 +51,7 @@ export default async function init(el) {
   ]);
 
   const blockConfig = readBlockConfig(el);
-  const { scheduleId } = blockConfig;
-  // TODO: use blockConfig to fetch schedule from metadata instead of mockSchedule
+  const scheduleId = blockConfig?.['schedule-id'];
   const thisSchedule = getSchedule(scheduleId);
 
   if (!thisSchedule) {
@@ -136,4 +106,14 @@ export default async function init(el) {
       el.classList.remove('loading');
     });
   };
+
+  // TODO: remove this mock
+  setTimeout(() => {
+    el.dispatchEvent(new CustomEvent('worker-message', {
+      detail: {
+        message: 'conditions',
+        data: { conditions: { videoReady: true } },
+      },
+    }));
+  }, 20 * 1000);
 }
