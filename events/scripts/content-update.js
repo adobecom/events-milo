@@ -460,7 +460,10 @@ export async function getNonProdData(env) {
   const isPreviewMode = new URLSearchParams(window.location.search).get('previewMode')
   || window.location.hostname.includes('.hlx.')
   || window.location.hostname.includes('.aem.');
-  const resp = await fetch(`/events/default/${env === 'prod' ? '' : `${env}/`}metadata${isPreviewMode ? '-preview' : ''}.json`, {
+
+  const localeMatch = window.location.pathname.match(/^(\/[^/]+)?\/events\//);
+  const localePath = localeMatch?.[1] || '';
+  const resp = await fetch(`${localePath}/events/default/${env === 'prod' ? '' : `${env}/`}metadata${isPreviewMode ? '-preview' : ''}.json`, {
     headers: {
       'Content-Type': 'application/json',
       'Cache-Control': 'no-cache',
