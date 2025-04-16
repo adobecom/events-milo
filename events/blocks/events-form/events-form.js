@@ -2,9 +2,8 @@ import { LIBS, getMetadata, getSusiOptions } from '../../scripts/utils.js';
 import { deleteAttendeeFromEvent, getAndCreateAndAddAttendee, getAttendee, getEvent } from '../../scripts/esp-controller.js';
 import BlockMediator from '../../scripts/deps/block-mediator.min.js';
 import { miloReplaceKey, signIn } from '../../scripts/content-update.js';
-import { dictionaryManager } from '../../scripts/dictionary-manager.js';
 
-const { createTag, getConfig } = await import(`${LIBS}/utils/utils.js`);
+const { createTag } = await import(`${LIBS}/utils/utils.js`);
 const { closeModal, sendAnalytics } = await import(`${LIBS}/blocks/modal/modal.js`);
 const { default: sanitizeComment } = await import(`${LIBS}/utils/sanitizeComment.js`);
 const { decorateDefaultLinkAnalytics } = await import(`${LIBS}/martech/attributes.js`);
@@ -28,17 +27,15 @@ function snakeToCamel(str) {
     .join('');
 }
 
-function createSelect(fd) {
+function createSelect(params) {
   const {
     field, placeholder, options, defval, required, type,
-  } = fd;
-
+  } = params;
   const select = createTag('select', { id: field });
-  if (placeholder) select.append(createTag('option', { class: 'placeholder-option', selected: '', disabled: '', value: '' }, dictionaryManager.getValue(placeholder)));
-  options.split(';').forEach(async (o) => {
+  if (placeholder) select.append(createTag('option', { class: 'placeholder-option', selected: '', disabled: '', value: '' }, placeholder));
+  options.split(';').forEach((o) => {
     const text = o.trim();
-    const optionText = dictionaryManager.getValue(text);
-    const option = createTag('option', { value: text }, optionText);
+    const option = createTag('option', { value: text }, text);
     select.append(option);
     if (defval === text) select.value = text;
   });
@@ -80,7 +77,7 @@ function createSelect(fd) {
 
     options.split(';').forEach((o) => {
       const text = o.trim();
-      const label = createTag('label', {}, dictionaryManager.getValue(text), { parent: customDropdown });
+      const label = createTag('label', {}, text, { parent: customDropdown });
       createTag('input', { type: 'checkbox', value: text, class: 'no-submit' }, '', { parent: label });
     });
 
@@ -250,7 +247,7 @@ function eventFormSendAnalytics(bp, view) {
 }
 
 function createButton({ type, label }, bp) {
-  const button = createTag('button', { class: 'button' }, dictionaryManager.getValue(label));
+  const button = createTag('button', { class: 'button' }, label);
   if (type === 'submit') {
     button.addEventListener('click', async (event) => {
       if (bp.form.checkValidity()) {
@@ -306,7 +303,7 @@ function createButton({ type, label }, bp) {
 }
 
 function createHeading({ label }, el) {
-  return createTag(el, {}, dictionaryManager.getValue(label));
+  return createTag(el, {}, label);
 }
 
 function createInput({ type, field, placeholder, required, defval }) {
@@ -322,7 +319,7 @@ function createTextArea({ field, placeholder, required, defval }) {
 }
 
 function createlabel({ field, label, required }) {
-  return createTag('label', { for: field, class: required ? 'required' : '' }, dictionaryManager.getValue(label));
+  return createTag('label', { for: field, class: required ? 'required' : '' }, label);
 }
 
 function createCheckItem(item, type, id, def) {
@@ -330,7 +327,7 @@ function createCheckItem(item, type, id, def) {
   const defList = def.split(';').map((defItem) => defItem.trim());
   const pseudoEl = createTag('span', { class: `check-item-button ${type}-button` });
   const [customLabel, customVal] = item.split('::');
-  const label = createTag('label', { class: `check-item-label ${type}-label`, for: `${id}-${itemKebab}` }, dictionaryManager.getValue(customLabel) || item);
+  const label = createTag('label', { class: `check-item-label ${type}-label`, for: `${id}-${itemKebab}` }, customLabel || item);
   const input = createTag(
     'input',
     { type, name: id, value: customVal || item, class: `check-item-input ${type}-input`, id: `${id}-${itemKebab}` },
@@ -698,12 +695,6 @@ async function createForm(bp, formData) {
     json = await resp.json();
   }
 
-  const config = getConfig();
-  await dictionaryManager.fetchDictionary({
-    config,
-    sheet: 'rsvp-fields',
-  });
-
   if (rsvpFieldsData) {
     const { required, visible } = rsvpFieldsData;
     json.data = json.data
@@ -729,7 +720,7 @@ async function createForm(bp, formData) {
 
   const typeToElement = {
     'multi-select': { fn: createSelect, params: [], label: true, classes: [] },
-    select: { fn: createSelect, params: ['something'], label: true, classes: [] },
+    select: { fn: createSelect, params: [], label: true, classes: [] },
     heading: { fn: createHeading, params: ['h3'], label: false, classes: [] },
     legal: { fn: createHeading, params: ['p'], label: false, classes: [] },
     checkbox: { fn: createCheckGroup, params: ['checkbox'], label: true, classes: ['field-group-wrapper'] },
@@ -744,7 +735,7 @@ async function createForm(bp, formData) {
 
   const sanitizeList = [];
 
-  json.data.forEach(async (fd) => {
+  json.data.forEach((fd) => {
     fd.type = fd.type || 'text';
     if (fd.type === 'text') sanitizeList.push(fd.field);
     const style = fd.extra ? ` events-form-${fd.extra}` : '';
@@ -885,7 +876,7 @@ async function initFormBasedOnRSVPData(bp) {
       }
     } else {
       const countryInNavigator = window.navigator.language.toLowerCase().split('-')[1];
-      const option = options.find(async (o) => {
+      const option = options.find((o) => {
         const countryCode = o.dataset.countryCode?.toLowerCase();
 
         if (!countryCode) return false;
@@ -915,6 +906,7 @@ async function initFormBasedOnRSVPData(bp) {
 async function onProfile(bp, formData) {
   const { block, eventHero } = bp;
   const profile = BlockMediator.get('imsProfile');
+  const { getConfig } = await import(`${LIBS}/utils/utils.js`);
   const allowGuestReg = getMetadata('allow-guest-registration') === 'true';
   if (profile) {
     if ((profile.noProfile || profile.account_type === 'guest')

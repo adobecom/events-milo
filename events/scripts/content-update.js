@@ -15,7 +15,7 @@ const preserveFormatKeys = [
   'description',
 ];
 
-export async function miloReplaceKey(miloLibs, key, sheetName) {
+export async function miloReplaceKey(miloLibs, key) {
   try {
     const [utils, placeholders] = await Promise.all([
       import(`${miloLibs}/utils/utils.js`),
@@ -26,7 +26,7 @@ export async function miloReplaceKey(miloLibs, key, sheetName) {
     const { replaceKey } = placeholders;
     const config = getConfig();
 
-    return await replaceKey(key, config, sheetName);
+    return await replaceKey(key, config);
   } catch (error) {
     window.lana?.log(`Error trying to replace placeholder:\n${JSON.stringify(error, null, 2)}`);
     return key;
