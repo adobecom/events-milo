@@ -18,7 +18,7 @@ export default function init(el) {
     // FIXME: sponsors !== partners
     partnersData = JSON.parse(getMetadata('sponsors'));
   } catch (error) {
-    window.lana?.log('Failed to parse partners metadata:', error);
+    window.lana?.log(`Failed to parse partners metadata:\n${JSON.stringify(error, null, 2)}`);
     el.remove();
     return;
   }
