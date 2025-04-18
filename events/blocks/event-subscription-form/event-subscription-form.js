@@ -145,7 +145,7 @@ function addElementToForm(form, inputP, labelP) {
     type: 'email',
     name: 'email',
     placeholder,
-    ...(profile && !profile.noProfile && { value: profile.email }),
+    ...(profile && !profile.noProfile && !profile.account_type === 'guest' && profile.email !== undefined && { value: profile.email }),
     required: 'true',
     class: 'subscription-input',
   };
