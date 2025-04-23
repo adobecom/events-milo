@@ -111,7 +111,7 @@ async function handleSubmit(event, bp) {
 }
 
 function decorateButton(bp) {
-  const button = createTag('button', { class: 'subscription-submit' }, bp.submitP.innerHTML);
+  const button = createTag('button', { class: 'subscription-submit' }, bp.submitP.textContent);
   button.addEventListener('click', (event) => {
     handleSubmit(event, bp);
   });
@@ -133,8 +133,8 @@ function addElementToForm(form, inputP, labelP) {
       }
     });
   }
-  const placeholder = inputP.innerHTML;
-  const labelText = labelP.innerHTML;
+  const placeholder = inputP.textContent;
+  const labelText = labelP.textContent;
   const labelAttr = {
     for: 'email',
     textContent: labelText,
@@ -145,7 +145,7 @@ function addElementToForm(form, inputP, labelP) {
     type: 'email',
     name: 'email',
     placeholder,
-    ...(profile && !profile.noProfile && { value: profile.email }),
+    ...(profile && !profile.noProfile && !profile.account_type === 'guest' && profile.email !== undefined && { value: profile.email }),
     required: 'true',
     class: 'subscription-input',
   };
@@ -200,11 +200,11 @@ export default function init(el) {
   // decide which view to load depending on the modal url
   const modalUrl = window.location.href.split('#')[1];
 
-  if (modalUrl === 'subscribe') {
-    // call a function to init event mailing list form.
-    decorateFormView(el);
-  } else if (modalUrl === 'thankyou') {
+  if (modalUrl === 'thankyou') {
     // call a function to show thank you message.
     decorateThankYouView(el);
+  } else {
+    // call a function to init event mailing list form.
+    decorateFormView(el);
   }
 }
