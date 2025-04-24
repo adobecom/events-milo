@@ -125,9 +125,5 @@ export default async function init(el) {
       el.removeAttribute('style');
       el.classList.remove('loading');
     });
-
-    setTimeout(() => {
-      worker.postMessage({ conditions: { test: 'true' } });
-    }, 10000);
   };
 }
