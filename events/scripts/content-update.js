@@ -241,6 +241,18 @@ function isHTMLString(str) {
   return Array.from(doc.body.childNodes).some((node) => node.nodeType === 1);
 }
 
+function getNestedData(keyPath) {
+  const [topKey, ...subKeys] = keyPath.split('.');
+
+  try {
+    const root = JSON.parse(getMetadata(topKey));
+    return subKeys.reduce((acc, key) => (acc && typeof acc === 'object' && key in acc ? acc[key] : ''), root) ?? '';
+  } catch (e) {
+    window.lana?.log(`Error while attempting to get nested data for ${keyPath}:\n${JSON.stringify(e, null, 2)}`);
+    return '';
+  }
+}
+
 function autoUpdateLinks(scope, miloLibs) {
   const regHashCallbacks = {
     '#rsvp-form': async (a) => {
@@ -287,6 +299,29 @@ function autoUpdateLinks(scope, miloLibs) {
     },
   };
 
+  const templateLoadCallbacks = {
+    online: (a, templateId) => {
+      a.href = templateId;
+    },
+    inperson: (a, templateId) => {
+      const params = new URLSearchParams(document.location.search);
+      const testTiming = params.get('timing');
+      let timeSuffix = '';
+
+      if (testTiming) {
+        timeSuffix = +testTiming > +getMetadata('local-end-time-millis') ? '-post' : '-pre';
+      } else {
+        const currentDate = new Date();
+        const currentTimestamp = currentDate.getTime();
+        timeSuffix = currentTimestamp > +getMetadata('local-end-time-millis') ? '-post' : '-pre';
+      }
+
+      a.href = `${templateId}${timeSuffix}`;
+      const timingClass = `timing${timeSuffix}-event`;
+      document.body.classList.add(timingClass);
+    },
+  };
+
   scope.querySelectorAll('a[href*="#"]').forEach(async (a) => {
     try {
       const url = new URL(a.href);
@@ -308,21 +343,12 @@ function autoUpdateLinks(scope, miloLibs) {
         }
 
         if (templateId) {
-          const params = new URLSearchParams(document.location.search);
-          const testTiming = params.get('timing');
-          let timeSuffix = '';
-
-          if (testTiming) {
-            timeSuffix = +testTiming > +getMetadata('local-end-time-millis') ? '-post' : '-pre';
+          const eventType = getMetadata('event-type');
+          if (eventType && templateLoadCallbacks[eventType]) {
+            templateLoadCallbacks[eventType](a, templateId);
           } else {
-            const currentDate = new Date();
-            const currentTimestamp = currentDate.getTime();
-            timeSuffix = currentTimestamp > +getMetadata('local-end-time-millis') ? '-post' : '-pre';
+            window.lana?.log(`Error: Failed to find template ID for event ${getMetadata('event-id')} due to missing event type`);
           }
-
-          a.href = `${templateId}${timeSuffix}`;
-          const timingClass = `timing${timeSuffix}-event`;
-          document.body.classList.add(timingClass);
         } else {
           window.lana?.log(`Error: Failed to find template ID for event ${getMetadata('event-id')}`);
         }
@@ -334,7 +360,12 @@ function autoUpdateLinks(scope, miloLibs) {
           a.remove();
         }
       } else if (getMetadata(url.hash.replace('#', ''))) {
-        a.href = getMetadata(url.hash.replace('#', ''));
+        const hash = url.hash.replace('#', '');
+        if (hash.includes('.')) {
+          a.href = getNestedData(hash);
+        } else {
+          a.href = getMetadata(hash.replace('#', ''));
+        }
       } else if (url.pathname.startsWith('/events-placeholder') && url.hash) {
         a.remove();
       }
@@ -637,14 +668,7 @@ export default function autoUpdateContent(parent, miloDeps, extraData) {
     let data;
 
     if (p1.includes('.')) {
-      const [key, subKey] = p1.split('.');
-      try {
-        const nestedData = JSON.parse(getMetadata(key));
-        data = nestedData[subKey] || extraData?.[p1] || '';
-      } catch (e) {
-        window.lana?.log(`Error while attempting to replace ${p1}:\n${JSON.stringify(e, null, 2)}`);
-        return '';
-      }
+      data = getNestedData(p1);
     } else {
       try {
         data = JSON.parse(getMetadata(p1)) || extraData?.[p1] || {};
@@ -663,13 +687,7 @@ export default function autoUpdateContent(parent, miloDeps, extraData) {
   const getContent = (_match, p1, n) => {
     let content;
     if (p1.includes('.')) {
-      const [key, subKey] = p1.split('.');
-      try {
-        const nestedData = JSON.parse(getMetadata(key));
-        content = nestedData[subKey] || extraData?.[p1] || '';
-      } catch (e) {
-        window.lana?.log(`Error while attempting to replace ${p1}:\n${JSON.stringify(e, null, 2)}`);
-      }
+      content = getNestedData(p1);
     } else {
       content = getMetadata(p1) || extraData?.[p1] || '';
     }
