@@ -29,14 +29,36 @@ function getSchedule(scheduleId) {
     return null;
   }
 
-  return buildScheduleDoubleLinkedList(thisSchedule);
+  return thisSchedule;
+}
+
+function conditionsPreCheck(schedule) {
+  const conditions = {};
+  const allMetadataConditionSchedules = schedule.filter((entry) => entry.conditions?.some((condition) => condition.source === 'metadata'));
+  allMetadataConditionSchedules.forEach((s) => {
+    s.conditions.forEach((condition) => {
+      const { key } = condition;
+
+      const metadata = getMetadata(key);
+
+      if (metadata) {
+        conditions[key] = metadata;
+      }
+    });
+  });
+
+  return conditions;
 }
 
 function setScheduleToScheduleWorker(schedule) {
+  const scheduleLinkedList = buildScheduleDoubleLinkedList(schedule);
   const worker = new Worker('/events/features/timing-framework/worker.js');
+  const conditions = conditionsPreCheck(schedule);
+
   worker.postMessage({
     message: 'schedule',
-    schedule,
+    schedule: scheduleLinkedList,
+    conditions,
   });
 
   return worker;
@@ -52,7 +74,17 @@ export default async function init(el) {
 
   const blockConfig = readBlockConfig(el);
   const scheduleId = blockConfig?.['schedule-id'];
-  const thisSchedule = getSchedule(scheduleId);
+  let staticSchedule;
+
+  if (blockConfig?.schedule) {
+    try {
+      staticSchedule = JSON.parse((blockConfig?.schedule));
+    } catch (e) {
+      window.lana?.log(`Error parsing static schedule: ${JSON.stringify(e)}`);
+    }
+  }
+  const scheduleById = getSchedule(scheduleId);
+  const thisSchedule = staticSchedule || scheduleById;
 
   if (!thisSchedule) {
     el.remove();
@@ -61,28 +93,16 @@ export default async function init(el) {
 
   el.innerHTML = '';
 
-  const worker = setScheduleToScheduleWorker(thisSchedule, scheduleId);
+  const worker = setScheduleToScheduleWorker(thisSchedule);
 
   el.addEventListener('worker-message', (e) => {
-    const { message } = e.detail;
+    const { schedule, conditions } = e.detail.data;
 
-    if (message === 'schedule') {
-      const { schedule } = e.detail.data;
-
-      worker.postMessage({
-        message: 'schedule',
-        schedule,
-      });
-    }
-
-    if (message === 'conditions') {
-      const { conditions } = e.detail.data;
-
-      worker.postMessage({
-        message: 'conditions',
-        conditions,
-      });
-    }
+    worker.postMessage({
+      message: 'conditions',
+      schedule,
+      conditions,
+    });
   });
 
   worker.onmessage = (event) => {
@@ -105,15 +125,9 @@ export default async function init(el) {
       el.removeAttribute('style');
       el.classList.remove('loading');
     });
-  };
 
-  // TODO: remove this mock
-  setTimeout(() => {
-    el.dispatchEvent(new CustomEvent('worker-message', {
-      detail: {
-        message: 'conditions',
-        data: { conditions: { videoReady: true } },
-      },
-    }));
-  }, 20 * 1000);
+    setTimeout(() => {
+      worker.postMessage({ conditions: { test: 'true' } });
+    }, 10000);
+  };
 }

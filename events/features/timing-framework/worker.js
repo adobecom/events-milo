@@ -1,4 +1,4 @@
-let currentConditions = null;
+let conditionStore = null;
 let currentScheduleItem = null;
 let nextScheduleItem = null;
 let timerId = null;
@@ -20,31 +20,44 @@ async function getCurrentTimeFromAPI() {
 
 /**
  * @param {Object} scheduleRoot
+ * @param {Object} cs: conditionStore
  * @returns {Object}
  * @description Returns the first schedule item that should be shown
  */
-function getStartScheduleItem(scheduleRoot) {
+function getStartScheduleItem(scheduleRoot, cs) {
   const currentTime = new Date().getTime();
   let pointer = scheduleRoot;
-  let lastPassed = scheduleRoot;
+  let start = null;
 
-  while (pointer && pointer.next) {
-    const { toggleTime: currentToggleTime } = pointer;
-    const { toggleTime: nextToggleTime } = pointer.next;
+  // Scan phase 1: Fast forward through toggleTime-only
+  while (pointer) {
+    const { toggleTime: t } = pointer;
+    const toggleTimePassed = typeof t !== 'number' || currentTime > t;
 
-    if ((currentToggleTime && currentTime < currentToggleTime) || !currentToggleTime) {
-      return lastPassed;
-    }
+    if (!toggleTimePassed) break;
 
-    if (nextToggleTime && currentTime < nextToggleTime) {
-      return pointer;
-    }
-
-    lastPassed = pointer;
+    start = pointer;
     pointer = pointer.next;
   }
 
-  return pointer;
+  // Scan Phase 2: Scan from last toggleTime match forward with condition checks
+  pointer = start || scheduleRoot;
+
+  while (pointer) {
+    const { toggleTime: t, conditions: c } = pointer;
+    const toggleTimePassed = !t || currentTime > t;
+    const conditionsMet = !c || c.every(({ key: k, expectedValue: v }) => {
+      const val = cs?.[k];
+      const isAny = v.trim().toLowerCase() === 'any' && !!val;
+      return isAny || val === v;
+    });
+
+    if (toggleTimePassed && conditionsMet) return pointer;
+
+    pointer = pointer.next;
+  }
+
+  return null;
 }
 
 /**
@@ -52,24 +65,28 @@ function getStartScheduleItem(scheduleRoot) {
  * @description Returns a random interval between 1 and 1.5 seconds
  */
 function getRandomInterval() {
-  const min = 1000;
+  const min = 500;
   const max = 1500;
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
 /**
  * @param {Object} scheduleItem
- * @param {Object} cs (conditionStore)
  * @returns {boolean}
  * @description Returns true if the next schedule item is triggered
  */
-function isNextScheduleTriggered(scheduleItem, cs) {
+function isNextScheduleTriggered(scheduleItem) {
+  if (!scheduleItem) return false;
   const { conditions: c, toggleTime: t } = scheduleItem;
   const currentTime = new Date().getTime();
 
   const toggleTimePassed = !t || currentTime > t;
 
-  const conditionsMet = !c || c.every(({ key: k, expectedValue: v }) => cs?.[k] === v);
+  const conditionsMet = !c || c.every(({ key: k, expectedValue: v }) => {
+    const conditionValue = conditionStore?.[k];
+    const isAnyVal = v.trim().toLowerCase() === 'any' && !!conditionValue;
+    return isAnyVal || conditionValue === v;
+  });
 
   return toggleTimePassed && conditionsMet;
 }
@@ -97,26 +114,26 @@ async function validateTime(currentTime) {
  * @description Handles messages from the main thread
  */
 onmessage = async (event) => {
-  const { message, schedule, conditions } = event.data;
+  const { schedule, conditions } = event.data;
 
   if (timerId) {
     clearTimeout(timerId);
     timerId = null;
   }
 
-  if (message === 'schedule') {
-    currentScheduleItem = schedule;
-    nextScheduleItem = getStartScheduleItem(schedule);
+  if (conditions) {
+    conditionStore = { ...conditionStore, ...conditions };
   }
 
-  if (message === 'conditions') {
-    currentConditions = conditions;
+  if (schedule) {
+    nextScheduleItem = getStartScheduleItem(schedule, conditionStore);
+    currentScheduleItem = nextScheduleItem?.prev || schedule;
   }
 
   if (!nextScheduleItem) return;
 
   const runTimer = async () => {
-    const triggered = isNextScheduleTriggered(nextScheduleItem, currentConditions);
+    const triggered = isNextScheduleTriggered(nextScheduleItem);
 
     const { pathToFragment: currentPath } = currentScheduleItem;
     const { pathToFragment: nextPath, prev: nextPrev } = nextScheduleItem;
