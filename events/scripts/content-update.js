@@ -259,11 +259,6 @@ async function handleRegisterButton(a, miloLibs) {
   }
 }
 
-function isHTMLString(str) {
-  const doc = new DOMParser().parseFromString(str, 'text/html');
-  return Array.from(doc.body.childNodes).some((node) => node.nodeType === 1);
-}
-
 function autoUpdateLinks(scope, miloLibs) {
   scope.querySelectorAll('a[href*="#"]').forEach(async (a) => {
     try {
@@ -389,19 +384,15 @@ function updateTextNode(child, matchCallback) {
   );
 
   if (replacedText !== originalText) {
-    if (isHTMLString(replacedText)) {
-      child.parentElement.innerHTML = replacedText;
-    } else {
-      const lines = replacedText.split('\\n');
-      lines.forEach((line, index) => {
-        const textNode = document.createTextNode(line);
-        child.parentElement.appendChild(textNode);
-        if (index < lines.length - 1) {
-          child.parentElement.appendChild(document.createElement('br'));
-        }
-      });
-      child.remove();
-    }
+    const lines = replacedText.split('\\n');
+    lines.forEach((line, index) => {
+      const textNode = document.createTextNode(line);
+      child.parentElement.appendChild(textNode);
+      if (index < lines.length - 1) {
+        child.parentElement.appendChild(document.createElement('br'));
+      }
+    });
+    child.remove();
   }
 }
 
@@ -413,11 +404,7 @@ function updateTextContent(child, matchCallback) {
   );
 
   if (replacedText !== originalText) {
-    if (isHTMLString(replacedText)) {
-      child.parentElement.innerHTML = replacedText;
-    } else {
-      child.textContent = replacedText;
-    }
+    child.textContent = replacedText;
   }
 }
 
