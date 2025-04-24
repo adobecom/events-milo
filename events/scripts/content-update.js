@@ -236,6 +236,11 @@ export async function validatePageAndRedirect(miloLibs) {
   }
 }
 
+function isHTMLString(str) {
+  const doc = new DOMParser().parseFromString(str, 'text/html');
+  return Array.from(doc.body.childNodes).some((node) => node.nodeType === 1);
+}
+
 function autoUpdateLinks(scope, miloLibs) {
   const regHashCallbacks = {
     '#rsvp-form': async (a) => {
@@ -274,7 +279,7 @@ function autoUpdateLinks(scope, miloLibs) {
         await setCtaState('registered', rsvpBtn, miloLibs);
       } else {
         BlockMediator.subscribe('rsvpData', async ({ newValue }) => {
-          if (newValue.registrationStatus === 'registered') {
+          if (newValue?.registrationStatus === 'registered') {
             await setCtaState('registered', rsvpBtn, miloLibs);
           }
         });
@@ -405,15 +410,19 @@ function updateTextNode(child, matchCallback) {
   );
 
   if (replacedText !== originalText) {
-    const lines = replacedText.split('\\n');
-    lines.forEach((line, index) => {
-      const textNode = document.createTextNode(line);
-      child.parentElement.appendChild(textNode);
-      if (index < lines.length - 1) {
-        child.parentElement.appendChild(document.createElement('br'));
-      }
-    });
-    child.remove();
+    if (isHTMLString(replacedText)) {
+      child.parentElement.innerHTML = replacedText;
+    } else {
+      const lines = replacedText.split('\\n');
+      lines.forEach((line, index) => {
+        const textNode = document.createTextNode(line);
+        child.parentElement.appendChild(textNode);
+        if (index < lines.length - 1) {
+          child.parentElement.appendChild(document.createElement('br'));
+        }
+      });
+      child.remove();
+    }
   }
 }
 
@@ -425,7 +434,11 @@ function updateTextContent(child, matchCallback) {
   );
 
   if (replacedText !== originalText) {
-    child.textContent = replacedText;
+    if (isHTMLString(replacedText)) {
+      child.parentElement.innerHTML = replacedText;
+    } else {
+      child.textContent = replacedText;
+    }
   }
 }
 
