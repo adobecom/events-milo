@@ -253,6 +253,29 @@ function getNestedData(keyPath) {
   }
 }
 
+async function handleRegisterButton(a, miloLibs) {
+  const rsvpBtn = {
+    el: a,
+    originalText: a.textContent,
+  };
+
+  a.classList.add('rsvp-btn', 'disabled');
+
+  const loadingText = await miloReplaceKey(miloLibs, 'rsvp-loading-cta-text');
+  updateAnalyticTag(rsvpBtn.el, loadingText);
+  a.textContent = loadingText;
+  a.setAttribute('tabindex', -1);
+
+  const profile = BlockMediator.get('imsProfile');
+  if (profile) {
+    handleRSVPBtnBasedOnProfile(rsvpBtn, miloLibs, profile);
+  } else {
+    BlockMediator.subscribe('imsProfile', ({ newValue }) => {
+      handleRSVPBtnBasedOnProfile(rsvpBtn, miloLibs, newValue);
+    });
+  }
+}
+
 function autoUpdateLinks(scope, miloLibs) {
   const regHashCallbacks = {
     '#rsvp-form': async (a) => {
@@ -442,19 +465,15 @@ function updateTextNode(child, matchCallback) {
   );
 
   if (replacedText !== originalText) {
-    if (isHTMLString(replacedText)) {
-      child.parentElement.innerHTML = replacedText;
-    } else {
-      const lines = replacedText.split('\\n');
-      lines.forEach((line, index) => {
-        const textNode = document.createTextNode(line);
-        child.parentElement.appendChild(textNode);
-        if (index < lines.length - 1) {
-          child.parentElement.appendChild(document.createElement('br'));
-        }
-      });
-      child.remove();
-    }
+    const lines = replacedText.split('\\n');
+    lines.forEach((line, index) => {
+      const textNode = document.createTextNode(line);
+      child.parentElement.appendChild(textNode);
+      if (index < lines.length - 1) {
+        child.parentElement.appendChild(document.createElement('br'));
+      }
+    });
+    child.remove();
   }
 }
 
@@ -466,11 +485,7 @@ function updateTextContent(child, matchCallback) {
   );
 
   if (replacedText !== originalText) {
-    if (isHTMLString(replacedText)) {
-      child.parentElement.innerHTML = replacedText;
-    } else {
-      child.textContent = replacedText;
-    }
+    child.textContent = replacedText;
   }
 }
 
