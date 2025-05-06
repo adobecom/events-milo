@@ -236,11 +236,6 @@ export async function validatePageAndRedirect(miloLibs) {
   }
 }
 
-function isHTMLString(str) {
-  const doc = new DOMParser().parseFromString(str, 'text/html');
-  return Array.from(doc.body.childNodes).some((node) => node.nodeType === 1);
-}
-
 function getNestedData(keyPath) {
   const [topKey, ...subKeys] = keyPath.split('.');
 
@@ -250,29 +245,6 @@ function getNestedData(keyPath) {
   } catch (e) {
     window.lana?.log(`Error while attempting to get nested data for ${keyPath}:\n${JSON.stringify(e, null, 2)}`);
     return '';
-  }
-}
-
-async function handleRegisterButton(a, miloLibs) {
-  const rsvpBtn = {
-    el: a,
-    originalText: a.textContent,
-  };
-
-  a.classList.add('rsvp-btn', 'disabled');
-
-  const loadingText = await miloReplaceKey(miloLibs, 'rsvp-loading-cta-text');
-  updateAnalyticTag(rsvpBtn.el, loadingText);
-  a.textContent = loadingText;
-  a.setAttribute('tabindex', -1);
-
-  const profile = BlockMediator.get('imsProfile');
-  if (profile) {
-    handleRSVPBtnBasedOnProfile(rsvpBtn, miloLibs, profile);
-  } else {
-    BlockMediator.subscribe('imsProfile', ({ newValue }) => {
-      handleRSVPBtnBasedOnProfile(rsvpBtn, miloLibs, newValue);
-    });
   }
 }
 
@@ -348,9 +320,10 @@ function autoUpdateLinks(scope, miloLibs) {
   scope.querySelectorAll('a[href*="#"]').forEach(async (a) => {
     try {
       const url = new URL(a.href);
+      const regCallbackKey = Object.keys(regHashCallbacks).find((key) => url.hash.startsWith(key));
 
-      if (regHashCallbacks[url.hash]) {
-        await regHashCallbacks[url.hash](a, miloLibs);
+      if (regCallbackKey) {
+        await regHashCallbacks[regCallbackKey](a);
       } else if (a.href.endsWith('#event-template')) {
         let templateId;
 
@@ -673,7 +646,7 @@ function updateExtraMetaTags(parent) {
 export default function autoUpdateContent(parent, miloDeps, extraData) {
   const { getConfig, miloLibs } = miloDeps;
   if (!parent) {
-    window.lana?.log('page server block cannot find its parent element');
+    window.lana?.log('Error:page server block cannot find its parent element');
     return;
   }
 
