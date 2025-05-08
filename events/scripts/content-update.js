@@ -450,6 +450,7 @@ function updateTextNode(child, matchCallback) {
         parent.appendChild(document.createElement('br'));
       }
     });
+    child.remove();
   }
 }
 
