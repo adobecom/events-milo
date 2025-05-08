@@ -177,9 +177,8 @@ describe('getNonProdData', () => {
       }),
       ok: true,
     });
-    console.log(window.location);
-    const data = await getNonProdData('stage');
 
+    const data = await getNonProdData('stage');
     expect(data).to.not.be.null;
     expect(data).to.have.property('url', '/');
     fetchStub.restore();

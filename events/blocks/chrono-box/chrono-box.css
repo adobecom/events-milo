@@ -1,0 +1,10 @@
+.chrono-box {
+  display: block;
+  position: relative;
+}
+
+.chrono-box.loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}

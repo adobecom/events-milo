@@ -9,6 +9,7 @@ import {
   readBlockConfig,
   getSusiOptions,
   getEventServiceEnv,
+  parseMetadataPath,
 } from './utils.js';
 
 const preserveFormatKeys = [
@@ -236,36 +237,96 @@ export async function validatePageAndRedirect(miloLibs) {
   }
 }
 
-async function handleRegisterButton(a, miloLibs) {
-  const rsvpBtn = {
-    el: a,
-    originalText: a.textContent,
+function autoUpdateLinks(scope, miloLibs) {
+  const regHashCallbacks = {
+    '#rsvp-form': async (a) => {
+      const originalText = a.textContent.includes('|') ? a.textContent.split('|')[0] : a.textContent;
+      const rsvpBtn = {
+        el: a,
+        originalText,
+      };
+
+      a.classList.add('rsvp-btn', 'disabled');
+
+      const loadingText = await miloReplaceKey(miloLibs, 'rsvp-loading-cta-text');
+      updateAnalyticTag(rsvpBtn.el, loadingText);
+      a.textContent = loadingText;
+      a.setAttribute('tabindex', -1);
+
+      const profile = BlockMediator.get('imsProfile');
+      if (profile) {
+        handleRSVPBtnBasedOnProfile(rsvpBtn, miloLibs, profile);
+      } else {
+        BlockMediator.subscribe('imsProfile', ({ newValue }) => {
+          handleRSVPBtnBasedOnProfile(rsvpBtn, miloLibs, newValue);
+        });
+      }
+    },
+    '#webinar-marketo-form': async (a) => {
+      const rsvpBtn = {
+        el: a,
+        originalText: a.textContent,
+      };
+
+      const hrefWithoutHash = window.location.href.split('#')[0];
+      a.href = `${hrefWithoutHash}#webinar-marketo-form`;
+
+      const rsvpData = BlockMediator.get('rsvpData');
+      if (rsvpData && rsvpData.registrationStatus === 'registered') {
+        await setCtaState('registered', rsvpBtn, miloLibs);
+      } else {
+        BlockMediator.subscribe('rsvpData', async ({ newValue }) => {
+          if (newValue?.registrationStatus === 'registered') {
+            await setCtaState('registered', rsvpBtn, miloLibs);
+          }
+        });
+      }
+    },
   };
 
-  a.classList.add('rsvp-btn', 'disabled');
+  const templateLoadCallbacks = {
+    online: (a, templateId) => {
+      a.href = templateId;
+    },
+    inperson: (a, templateId) => {
+      const params = new URLSearchParams(document.location.search);
+      const testTiming = params.get('timing');
+      let timeSuffix = '';
 
-  const loadingText = await miloReplaceKey(miloLibs, 'rsvp-loading-cta-text');
-  updateAnalyticTag(rsvpBtn.el, loadingText);
-  a.textContent = loadingText;
-  a.setAttribute('tabindex', -1);
+      if (testTiming) {
+        timeSuffix = +testTiming > +getMetadata('local-end-time-millis') ? '-post' : '-pre';
+      } else {
+        const currentDate = new Date();
+        const currentTimestamp = currentDate.getTime();
+        timeSuffix = currentTimestamp > +getMetadata('local-end-time-millis') ? '-post' : '-pre';
+      }
 
-  const profile = BlockMediator.get('imsProfile');
-  if (profile) {
-    handleRSVPBtnBasedOnProfile(rsvpBtn, miloLibs, profile);
-  } else {
-    BlockMediator.subscribe('imsProfile', ({ newValue }) => {
-      handleRSVPBtnBasedOnProfile(rsvpBtn, miloLibs, newValue);
-    });
-  }
-}
+      a.href = `${templateId}${timeSuffix}`;
+      const timingClass = `timing${timeSuffix}-event`;
+      document.body.classList.add(timingClass);
+    },
+  };
 
-function autoUpdateLinks(scope, miloLibs) {
   scope.querySelectorAll('a[href*="#"]').forEach(async (a) => {
     try {
       const url = new URL(a.href);
+      const regCallbackKey = Object.keys(regHashCallbacks).find((key) => url.hash.startsWith(key));
+      let linkText = a.textContent;
+      let match = META_REG.exec(linkText);
 
-      if (/#rsvp-form.*/.test(a.href)) {
-        handleRegisterButton(a, miloLibs);
+      while (match !== null) {
+        const innerMetadataPath = match[1];
+        const innerMetadataValue = parseMetadataPath(innerMetadataPath) || '';
+        linkText = linkText.replace(`[[${innerMetadataPath}]]`, innerMetadataValue);
+        match = META_REG.exec(linkText);
+      }
+
+      if (linkText !== a.textContent) {
+        a.textContent = linkText;
+      }
+
+      if (regCallbackKey) {
+        await regHashCallbacks[regCallbackKey](a);
       } else if (a.href.endsWith('#event-template')) {
         let templateId;
 
@@ -281,21 +342,12 @@ function autoUpdateLinks(scope, miloLibs) {
         }
 
         if (templateId) {
-          const params = new URLSearchParams(document.location.search);
-          const testTiming = params.get('timing');
-          let timeSuffix = '';
-
-          if (testTiming) {
-            timeSuffix = +testTiming > +getMetadata('local-end-time-millis') ? '-post' : '-pre';
+          const eventType = getMetadata('event-type');
+          if (eventType && templateLoadCallbacks[eventType]) {
+            templateLoadCallbacks[eventType](a, templateId);
           } else {
-            const currentDate = new Date();
-            const currentTimestamp = currentDate.getTime();
-            timeSuffix = currentTimestamp > +getMetadata('local-end-time-millis') ? '-post' : '-pre';
+            window.lana?.log(`Error: Failed to find template ID for event ${getMetadata('event-id')} due to missing event type`);
           }
-
-          a.href = `${templateId}${timeSuffix}`;
-          const timingClass = `timing${timeSuffix}-event`;
-          document.body.classList.add(timingClass);
         } else {
           window.lana?.log(`Error: Failed to find template ID for event ${getMetadata('event-id')}`);
         }
@@ -306,10 +358,14 @@ function autoUpdateLinks(scope, miloLibs) {
         } else {
           a.remove();
         }
-      } else if (getMetadata(url.hash.replace('#', ''))) {
-        a.href = getMetadata(url.hash.replace('#', ''));
-      } else if (url.pathname.startsWith('/events-placeholder') && url.hash) {
-        a.remove();
+      } else if (url.hash) {
+        const metadataPath = url.hash.replace('#', '');
+        const metadataValue = parseMetadataPath(metadataPath);
+        if (metadataValue) {
+          a.href = metadataValue;
+        } else if (url.pathname.startsWith('/events-placeholder')) {
+          a.remove();
+        }
       }
     } catch (e) {
       window.lana?.log(`Error while attempting to replace link ${a.href}:\n${JSON.stringify(e, null, 2)}`);
@@ -384,12 +440,14 @@ function updateTextNode(child, matchCallback) {
   );
 
   if (replacedText !== originalText) {
+    const parent = child.parentElement;
+
     const lines = replacedText.split('\\n');
     lines.forEach((line, index) => {
       const textNode = document.createTextNode(line);
-      child.parentElement.appendChild(textNode);
+      parent.appendChild(textNode);
       if (index < lines.length - 1) {
-        child.parentElement.appendChild(document.createElement('br'));
+        parent.appendChild(document.createElement('br'));
       }
     });
     child.remove();
@@ -397,7 +455,11 @@ function updateTextNode(child, matchCallback) {
 }
 
 function updateTextContent(child, matchCallback) {
-  const originalText = child.textContent;
+  const directText = Array.from(child.childNodes)
+    .filter((node) => node.nodeType === Node.TEXT_NODE)
+    .map((node) => node.textContent)
+    .join('');
+  const originalText = directText;
   const replacedText = originalText.replace(
     META_REG,
     (_match, p1) => matchCallback(_match, p1, child),
@@ -513,7 +575,7 @@ function decorateProfileCardsZPattern(parent) {
   let flippedIndex = -1;
   let visibleIndex = 0;
 
-  const allBlocks = parent.querySelectorAll('body > div > div:not(.section-metadata)');
+  const allBlocks = parent.querySelectorAll('body > div > div:not(.section-metadata):not(.daa-injection)');
   allBlocks.forEach((block) => {
     visibleIndex += 1;
     if (!block.classList.contains('profile-cards')) return;
@@ -592,32 +654,14 @@ function updateExtraMetaTags(parent) {
 export default function autoUpdateContent(parent, miloDeps, extraData) {
   const { getConfig, miloLibs } = miloDeps;
   if (!parent) {
-    window.lana?.log('page server block cannot find its parent element');
+    window.lana?.log('Error:page server block cannot find its parent element');
     return;
   }
 
   if (!getMetadata('event-id')) return;
 
   const getImgData = (_match, p1, n) => {
-    let data;
-
-    if (p1.includes('.')) {
-      const [key, subKey] = p1.split('.');
-      try {
-        const nestedData = JSON.parse(getMetadata(key));
-        data = nestedData[subKey] || extraData?.[p1] || '';
-      } catch (e) {
-        window.lana?.log(`Error while attempting to replace ${p1}:\n${JSON.stringify(e, null, 2)}`);
-        return '';
-      }
-    } else {
-      try {
-        data = JSON.parse(getMetadata(p1)) || extraData?.[p1] || {};
-      } catch (e) {
-        window.lana?.log(`Error while attempting to parse ${p1}:\n${JSON.stringify(e, null, 2)}`);
-        return '';
-      }
-    }
+    const data = parseMetadataPath(p1, extraData);
 
     if (preserveFormatKeys.includes(p1)) {
       n.parentNode?.classList.add('preserve-format');
@@ -626,18 +670,7 @@ export default function autoUpdateContent(parent, miloDeps, extraData) {
   };
 
   const getContent = (_match, p1, n) => {
-    let content;
-    if (p1.includes('.')) {
-      const [key, subKey] = p1.split('.');
-      try {
-        const nestedData = JSON.parse(getMetadata(key));
-        content = nestedData[subKey] || extraData?.[p1] || '';
-      } catch (e) {
-        window.lana?.log(`Error while attempting to replace ${p1}:\n${JSON.stringify(e, null, 2)}`);
-      }
-    } else {
-      content = getMetadata(p1) || extraData?.[p1] || '';
-    }
+    let content = parseMetadataPath(p1, extraData);
 
     if (preserveFormatKeys.includes(p1)) {
       n.parentNode?.classList.add('preserve-format');
@@ -653,7 +686,7 @@ export default function autoUpdateContent(parent, miloDeps, extraData) {
   };
 
   const isImage = (n) => n.tagName === 'IMG' && n.nodeType === 1;
-  const isTextNode = (n) => n.nodeType === 3;
+  const isPlainTextNode = (n) => n.nodeType === 3;
   const isStyledTextTag = (n) => n.tagName === 'STRONG' || n.tagName === 'EM';
   const mightContainIcon = (n) => n.tagName === 'P' || n.tagName === 'A';
 
@@ -665,7 +698,7 @@ export default function autoUpdateContent(parent, miloDeps, extraData) {
           updateImgTag(n, getImgData, element);
         }
 
-        if (isTextNode(n)) {
+        if (isPlainTextNode(n)) {
           updateTextNode(n, getContent);
         }
 
