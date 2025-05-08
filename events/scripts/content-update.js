@@ -440,20 +440,25 @@ function updateTextNode(child, matchCallback) {
   );
 
   if (replacedText !== originalText) {
+    const parent = child.parentElement;
+
     const lines = replacedText.split('\\n');
     lines.forEach((line, index) => {
       const textNode = document.createTextNode(line);
-      child.parentElement.appendChild(textNode);
+      parent.appendChild(textNode);
       if (index < lines.length - 1) {
-        child.parentElement.appendChild(document.createElement('br'));
+        parent.appendChild(document.createElement('br'));
       }
     });
-    child.remove();
   }
 }
 
 function updateTextContent(child, matchCallback) {
-  const originalText = child.textContent;
+  const directText = Array.from(child.childNodes)
+    .filter((node) => node.nodeType === Node.TEXT_NODE)
+    .map((node) => node.textContent)
+    .join('');
+  const originalText = directText;
   const replacedText = originalText.replace(
     META_REG,
     (_match, p1) => matchCallback(_match, p1, child),
@@ -692,11 +697,11 @@ export default function autoUpdateContent(parent, miloDeps, extraData) {
           updateImgTag(n, getImgData, element);
         }
 
-        if (isPlainTextNode(n) && !n.parentNode?.tagName === 'A') {
+        if (isPlainTextNode(n)) {
           updateTextNode(n, getContent);
         }
 
-        if (isStyledTextTag(n) && !n.parentNode?.tagName === 'A') {
+        if (isStyledTextTag(n)) {
           updateTextContent(n, getContent);
         }
 
