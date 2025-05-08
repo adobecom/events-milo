@@ -343,8 +343,8 @@ function autoUpdateLinks(scope, miloLibs) {
 
         if (templateId) {
           const eventType = getMetadata('event-type');
-          if (eventType && templateLoadCallbacks[eventType]) {
-            templateLoadCallbacks[eventType](a, templateId);
+          if (eventType && templateLoadCallbacks[eventType.toLowerCase()]) {
+            templateLoadCallbacks[eventType.toLowerCase()](a, templateId);
           } else {
             window.lana?.log(`Error: Failed to find template ID for event ${getMetadata('event-id')} due to missing event type`);
           }
