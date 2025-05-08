@@ -9,6 +9,7 @@ import {
   readBlockConfig,
   getSusiOptions,
   getEventServiceEnv,
+  parseMetadataPath,
 } from './utils.js';
 
 const preserveFormatKeys = [
@@ -236,24 +237,13 @@ export async function validatePageAndRedirect(miloLibs) {
   }
 }
 
-function getNestedData(keyPath) {
-  const [topKey, ...subKeys] = keyPath.split('.');
-
-  try {
-    const root = JSON.parse(getMetadata(topKey));
-    return subKeys.reduce((acc, key) => (acc && typeof acc === 'object' && key in acc ? acc[key] : ''), root) ?? '';
-  } catch (e) {
-    window.lana?.log(`Error while attempting to get nested data for ${keyPath}:\n${JSON.stringify(e, null, 2)}`);
-    return '';
-  }
-}
-
 function autoUpdateLinks(scope, miloLibs) {
   const regHashCallbacks = {
     '#rsvp-form': async (a) => {
+      const originalText = a.textContent.includes('|') ? a.textContent.split('|')[0] : a.textContent;
       const rsvpBtn = {
         el: a,
-        originalText: a.textContent,
+        originalText,
       };
 
       a.classList.add('rsvp-btn', 'disabled');
@@ -321,6 +311,19 @@ function autoUpdateLinks(scope, miloLibs) {
     try {
       const url = new URL(a.href);
       const regCallbackKey = Object.keys(regHashCallbacks).find((key) => url.hash.startsWith(key));
+      let linkText = a.textContent;
+      let match = META_REG.exec(linkText);
+
+      while (match !== null) {
+        const innerMetadataPath = match[1];
+        const innerMetadataValue = parseMetadataPath(innerMetadataPath) || '';
+        linkText = linkText.replace(`[[${innerMetadataPath}]]`, innerMetadataValue);
+        match = META_REG.exec(linkText);
+      }
+
+      if (linkText !== a.textContent) {
+        a.textContent = linkText;
+      }
 
       if (regCallbackKey) {
         await regHashCallbacks[regCallbackKey](a);
@@ -355,15 +358,14 @@ function autoUpdateLinks(scope, miloLibs) {
         } else {
           a.remove();
         }
-      } else if (getMetadata(url.hash.replace('#', ''))) {
-        const hash = url.hash.replace('#', '');
-        if (hash.includes('.')) {
-          a.href = getNestedData(hash);
-        } else {
-          a.href = getMetadata(hash.replace('#', ''));
+      } else if (url.hash) {
+        const metadataPath = url.hash.replace('#', '');
+        const metadataValue = parseMetadataPath(metadataPath);
+        if (metadataValue) {
+          a.href = metadataValue;
+        } else if (url.pathname.startsWith('/events-placeholder')) {
+          a.remove();
         }
-      } else if (url.pathname.startsWith('/events-placeholder') && url.hash) {
-        a.remove();
       }
     } catch (e) {
       window.lana?.log(`Error while attempting to replace link ${a.href}:\n${JSON.stringify(e, null, 2)}`);
@@ -653,18 +655,7 @@ export default function autoUpdateContent(parent, miloDeps, extraData) {
   if (!getMetadata('event-id')) return;
 
   const getImgData = (_match, p1, n) => {
-    let data;
-
-    if (p1.includes('.')) {
-      data = getNestedData(p1);
-    } else {
-      try {
-        data = JSON.parse(getMetadata(p1)) || extraData?.[p1] || {};
-      } catch (e) {
-        window.lana?.log(`Error while attempting to parse ${p1}:\n${JSON.stringify(e, null, 2)}`);
-        return '';
-      }
-    }
+    const data = parseMetadataPath(p1, extraData);
 
     if (preserveFormatKeys.includes(p1)) {
       n.parentNode?.classList.add('preserve-format');
@@ -673,12 +664,7 @@ export default function autoUpdateContent(parent, miloDeps, extraData) {
   };
 
   const getContent = (_match, p1, n) => {
-    let content;
-    if (p1.includes('.')) {
-      content = getNestedData(p1);
-    } else {
-      content = getMetadata(p1) || extraData?.[p1] || '';
-    }
+    let content = parseMetadataPath(p1, extraData);
 
     if (preserveFormatKeys.includes(p1)) {
       n.parentNode?.classList.add('preserve-format');
@@ -694,7 +680,7 @@ export default function autoUpdateContent(parent, miloDeps, extraData) {
   };
 
   const isImage = (n) => n.tagName === 'IMG' && n.nodeType === 1;
-  const isTextNode = (n) => n.nodeType === 3;
+  const isPlainTextNode = (n) => n.nodeType === 3;
   const isStyledTextTag = (n) => n.tagName === 'STRONG' || n.tagName === 'EM';
   const mightContainIcon = (n) => n.tagName === 'P' || n.tagName === 'A';
 
@@ -706,11 +692,11 @@ export default function autoUpdateContent(parent, miloDeps, extraData) {
           updateImgTag(n, getImgData, element);
         }
 
-        if (isTextNode(n)) {
+        if (isPlainTextNode(n) && !n.parentNode?.tagName === 'A') {
           updateTextNode(n, getContent);
         }
 
-        if (isStyledTextTag(n)) {
+        if (isStyledTextTag(n) && !n.parentNode?.tagName === 'A') {
           updateTextContent(n, getContent);
         }
 
