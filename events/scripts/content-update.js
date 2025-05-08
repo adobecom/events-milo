@@ -9,6 +9,7 @@ import {
   readBlockConfig,
   getSusiOptions,
   getEventServiceEnv,
+  parseMetadataPath,
 } from './utils.js';
 
 const preserveFormatKeys = [
@@ -237,9 +238,10 @@ export async function validatePageAndRedirect(miloLibs) {
 }
 
 async function handleRegisterButton(a, miloLibs) {
+  const originalText = a.textContent.includes('|') ? a.textContent.split('|')[0] : a.textContent;
   const rsvpBtn = {
     el: a,
-    originalText: a.textContent,
+    originalText,
   };
 
   a.classList.add('rsvp-btn', 'disabled');
@@ -263,6 +265,20 @@ function autoUpdateLinks(scope, miloLibs) {
   scope.querySelectorAll('a[href*="#"]').forEach(async (a) => {
     try {
       const url = new URL(a.href);
+
+      let linkText = a.textContent;
+      let match = META_REG.exec(linkText);
+
+      while (match !== null) {
+        const innerMetadataPath = match[1];
+        const innerMetadataValue = parseMetadataPath(innerMetadataPath) || '';
+        linkText = linkText.replace(`[[${innerMetadataPath}]]`, innerMetadataValue);
+        match = META_REG.exec(linkText);
+      }
+
+      if (linkText !== a.textContent) {
+        a.textContent = linkText;
+      }
 
       if (/#rsvp-form.*/.test(a.href)) {
         handleRegisterButton(a, miloLibs);
@@ -306,10 +322,14 @@ function autoUpdateLinks(scope, miloLibs) {
         } else {
           a.remove();
         }
-      } else if (getMetadata(url.hash.replace('#', ''))) {
-        a.href = getMetadata(url.hash.replace('#', ''));
-      } else if (url.pathname.startsWith('/events-placeholder') && url.hash) {
-        a.remove();
+      } else if (url.hash) {
+        const metadataPath = url.hash.replace('#', '');
+        const metadataValue = parseMetadataPath(metadataPath);
+        if (metadataValue) {
+          a.href = metadataValue;
+        } else if (url.pathname.startsWith('/events-placeholder')) {
+          a.remove();
+        }
       }
     } catch (e) {
       window.lana?.log(`Error while attempting to replace link ${a.href}:\n${JSON.stringify(e, null, 2)}`);
@@ -599,25 +619,7 @@ export default function autoUpdateContent(parent, miloDeps, extraData) {
   if (!getMetadata('event-id')) return;
 
   const getImgData = (_match, p1, n) => {
-    let data;
-
-    if (p1.includes('.')) {
-      const [key, subKey] = p1.split('.');
-      try {
-        const nestedData = JSON.parse(getMetadata(key));
-        data = nestedData[subKey] || extraData?.[p1] || '';
-      } catch (e) {
-        window.lana?.log(`Error while attempting to replace ${p1}:\n${JSON.stringify(e, null, 2)}`);
-        return '';
-      }
-    } else {
-      try {
-        data = JSON.parse(getMetadata(p1)) || extraData?.[p1] || {};
-      } catch (e) {
-        window.lana?.log(`Error while attempting to parse ${p1}:\n${JSON.stringify(e, null, 2)}`);
-        return '';
-      }
-    }
+    const data = parseMetadataPath(p1, extraData);
 
     if (preserveFormatKeys.includes(p1)) {
       n.parentNode?.classList.add('preserve-format');
@@ -626,18 +628,7 @@ export default function autoUpdateContent(parent, miloDeps, extraData) {
   };
 
   const getContent = (_match, p1, n) => {
-    let content;
-    if (p1.includes('.')) {
-      const [key, subKey] = p1.split('.');
-      try {
-        const nestedData = JSON.parse(getMetadata(key));
-        content = nestedData[subKey] || extraData?.[p1] || '';
-      } catch (e) {
-        window.lana?.log(`Error while attempting to replace ${p1}:\n${JSON.stringify(e, null, 2)}`);
-      }
-    } else {
-      content = getMetadata(p1) || extraData?.[p1] || '';
-    }
+    let content = parseMetadataPath(p1, extraData);
 
     if (preserveFormatKeys.includes(p1)) {
       n.parentNode?.classList.add('preserve-format');
@@ -653,7 +644,7 @@ export default function autoUpdateContent(parent, miloDeps, extraData) {
   };
 
   const isImage = (n) => n.tagName === 'IMG' && n.nodeType === 1;
-  const isTextNode = (n) => n.nodeType === 3;
+  const isPlainTextNode = (n) => n.nodeType === 3;
   const isStyledTextTag = (n) => n.tagName === 'STRONG' || n.tagName === 'EM';
   const mightContainIcon = (n) => n.tagName === 'P' || n.tagName === 'A';
 
@@ -665,11 +656,11 @@ export default function autoUpdateContent(parent, miloDeps, extraData) {
           updateImgTag(n, getImgData, element);
         }
 
-        if (isTextNode(n)) {
+        if (isPlainTextNode(n) && !n.parentNode?.tagName === 'A') {
           updateTextNode(n, getContent);
         }
 
-        if (isStyledTextTag(n)) {
+        if (isStyledTextTag(n) && !n.parentNode?.tagName === 'A') {
           updateTextContent(n, getContent);
         }
 
