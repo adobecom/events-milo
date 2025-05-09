@@ -1,0 +1,158 @@
+.event-subscription-form {
+  width: 91%;
+  
+  picture {
+    display: flex;
+  }
+
+  .subscription-form {
+    margin-top: 20px;
+    padding: 72px 36px 0;
+  
+    .subscription-title {
+      padding-bottom: .5rem;
+      font-size: 2.625rem;
+      color: rgb(44 44 44);
+      box-sizing: border-box;
+      font-family: adobe-clean, "Source Sans Pro", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      font-weight: 400;
+      line-height: 1.25;
+      margin : 0;
+    }
+
+    .subscription-description {
+      margin: 0;
+      padding-bottom: 2rem;
+      font-size: 1rem;
+      font-weight: 400;
+      line-height: 1.5;
+      color: rgb(44 44 44);
+    }
+
+
+    #subscription-form {
+      display: table;
+      border-collapse: separate;
+      border-spacing: 0 24px;
+      margin: -20px 0;
+    }
+
+    .subscription-consent-notice {
+      padding: 0;
+      color : #505050;
+      font-size: .75rem;
+      line-height: .875rem;
+      font-weight: 300;
+      margin: 1rem 0 -.5rem;
+    }
+
+    .subscription-consent-notice a {
+      color: #2c2c2c;
+      font-weight: 400;
+      text-decoration: underline;
+    }
+    
+    .subscription-label {
+      box-sizing: border-box;
+      padding: 4px 0 5px;
+      font-size: 12px;
+      font-weight: 400;
+      line-height: 1.3;
+      vertical-align: top;
+    }
+
+    .subscription-input {
+      border-top: none;
+      border-left: none;
+      border-right: none;
+      border-bottom: 2px solid #cfcfcf;
+      margin-bottom: 15px;
+      height: 32px;
+    }
+
+    .error {
+      border-color: red;
+    }
+
+    .subscription-textbox-container {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .subscription-submit-container {
+      height: 5rem;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+    }
+
+    .subscription-submit-container .subscription-submit {
+      background-color: #3b63fb;
+      color: #fff;
+      border-radius: 16px;
+      border: 2px solid #1473e6;
+      font-size: 15px;
+      font-style: normal;
+      font-weight: 700;
+      line-height: 16px;
+      padding: 5px 14px;
+      text-decoration: none;
+    }
+
+    .error-message {
+      display: block;
+      visibility: hidden;
+      transition: .28s;
+      overflow: hidden;
+      color: red;
+      font-size: .75rem;
+      margin-top: -.75rem;
+      font-weight: 400;
+      line-height: 1.3;
+    }
+
+    .show {
+      visibility: visible;
+    } 
+  }
+
+  .thankyou-title {
+    font-size: 2.625rem;
+    line-height: 2rem;
+    padding: 1.5625rem 1.875rem 0;
+    text-align: left;
+    max-height: 4.375rem;
+    color: rgb(44 44 44);
+    margin: 0;
+    font-weight: 400;
+  }
+
+  .thankyou-description {
+    padding: 1.25rem 1.875rem 0;
+    color: rgb(44 44 44);
+    flex-grow: 1;
+    margin: 0;
+    font-size: 1rem;
+    box-sizing: border-box;
+    font-weight: 400;
+    line-height: 1.5;
+    height : 180px;
+  }
+
+  .hide {
+    display: none;
+  }
+}
+
+@media (min-width: 600px) {
+  .event-subscription-form {
+      width: 675px;
+  }
+}
+
+@media (min-width: 1200px) {
+  .event-subscription-form {
+      width: 580px;
+  }
+}
+

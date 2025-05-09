@@ -9,13 +9,14 @@ import {
   readBlockConfig,
   getSusiOptions,
   getEventServiceEnv,
+  parseMetadataPath,
 } from './utils.js';
 
 const preserveFormatKeys = [
   'description',
 ];
 
-export async function miloReplaceKey(miloLibs, key) {
+export async function miloReplaceKey(miloLibs, key, sheetName) {
   try {
     const [utils, placeholders] = await Promise.all([
       import(`${miloLibs}/utils/utils.js`),
@@ -26,9 +27,9 @@ export async function miloReplaceKey(miloLibs, key) {
     const { replaceKey } = placeholders;
     const config = getConfig();
 
-    return await replaceKey(key, config);
+    return await replaceKey(key, config, sheetName);
   } catch (error) {
-    window.lana?.log('Error trying to replace placeholder:', error);
+    window.lana?.log(`Error trying to replace placeholder:\n${JSON.stringify(error, null, 2)}`);
     return key;
   }
 }
@@ -71,8 +72,10 @@ function convertEccIcon(n) {
 
 async function setCtaState(targetState, rsvpBtn, miloLibs) {
   const checkRed = getIcon('check-circle-red');
+
   const enableBtn = () => {
     rsvpBtn.el.classList.remove('disabled');
+    rsvpBtn.el.href = rsvpBtn.el.dataset.modalHash;
     rsvpBtn.el.setAttribute('tabindex', 0);
   };
 
@@ -176,7 +179,7 @@ export async function updateRSVPButtonState(rsvpBtn, miloLibs) {
 
 export function signIn(options) {
   if (typeof window.adobeIMS?.signIn !== 'function') {
-    window?.lana.log({ message: 'IMS signIn method not available', tags: 'errorType=warn,module=gnav' });
+    window.lana?.log('IMS signIn method not available', { tags: 'errorType=warn,module=gnav' });
     return;
   }
 
@@ -234,65 +237,117 @@ export async function validatePageAndRedirect(miloLibs) {
   }
 }
 
-async function handleRegisterButton(a, miloLibs) {
-  const rsvpBtn = {
-    el: a,
-    originalText: a.textContent,
+function autoUpdateLinks(scope, miloLibs) {
+  const regHashCallbacks = {
+    '#rsvp-form': async (a) => {
+      const originalText = a.textContent.includes('|') ? a.textContent.split('|')[0] : a.textContent;
+      const rsvpBtn = {
+        el: a,
+        originalText,
+      };
+
+      a.classList.add('rsvp-btn', 'disabled');
+
+      const loadingText = await miloReplaceKey(miloLibs, 'rsvp-loading-cta-text');
+      updateAnalyticTag(rsvpBtn.el, loadingText);
+      a.textContent = loadingText;
+      a.setAttribute('tabindex', -1);
+
+      const profile = BlockMediator.get('imsProfile');
+      if (profile) {
+        handleRSVPBtnBasedOnProfile(rsvpBtn, miloLibs, profile);
+      } else {
+        BlockMediator.subscribe('imsProfile', ({ newValue }) => {
+          handleRSVPBtnBasedOnProfile(rsvpBtn, miloLibs, newValue);
+        });
+      }
+    },
+    '#webinar-marketo-form': async (a) => {
+      const rsvpBtn = {
+        el: a,
+        originalText: a.textContent,
+      };
+
+      const hrefWithoutHash = window.location.href.split('#')[0];
+      a.href = `${hrefWithoutHash}#webinar-marketo-form`;
+
+      const rsvpData = BlockMediator.get('rsvpData');
+      if (rsvpData && rsvpData.registrationStatus === 'registered') {
+        await setCtaState('registered', rsvpBtn, miloLibs);
+      } else {
+        BlockMediator.subscribe('rsvpData', async ({ newValue }) => {
+          if (newValue?.registrationStatus === 'registered') {
+            await setCtaState('registered', rsvpBtn, miloLibs);
+          }
+        });
+      }
+    },
   };
 
-  a.classList.add('rsvp-btn', 'disabled');
+  const templateLoadCallbacks = {
+    online: (a, templateId) => {
+      a.href = templateId;
+    },
+    inperson: (a, templateId) => {
+      const params = new URLSearchParams(document.location.search);
+      const testTiming = params.get('timing');
+      let timeSuffix = '';
 
-  const loadingText = await miloReplaceKey(miloLibs, 'rsvp-loading-cta-text');
-  updateAnalyticTag(rsvpBtn.el, loadingText);
-  a.textContent = loadingText;
-  a.setAttribute('tabindex', -1);
+      if (testTiming) {
+        timeSuffix = +testTiming > +getMetadata('local-end-time-millis') ? '-post' : '-pre';
+      } else {
+        const currentDate = new Date();
+        const currentTimestamp = currentDate.getTime();
+        timeSuffix = currentTimestamp > +getMetadata('local-end-time-millis') ? '-post' : '-pre';
+      }
 
-  const profile = BlockMediator.get('imsProfile');
-  if (profile) {
-    handleRSVPBtnBasedOnProfile(rsvpBtn, miloLibs, profile);
-  } else {
-    BlockMediator.subscribe('imsProfile', ({ newValue }) => {
-      handleRSVPBtnBasedOnProfile(rsvpBtn, miloLibs, newValue);
-    });
-  }
-}
+      a.href = `${templateId}${timeSuffix}`;
+      const timingClass = `timing${timeSuffix}-event`;
+      document.body.classList.add(timingClass);
+    },
+  };
 
-function autoUpdateLinks(scope, miloLibs) {
   scope.querySelectorAll('a[href*="#"]').forEach(async (a) => {
     try {
       const url = new URL(a.href);
+      const regCallbackKey = Object.keys(regHashCallbacks).find((key) => url.hash.startsWith(key));
+      let linkText = a.textContent;
+      let match = META_REG.exec(linkText);
 
-      if (/#rsvp-form.*/.test(a.href)) {
-        handleRegisterButton(a, miloLibs);
+      while (match !== null) {
+        const innerMetadataPath = match[1];
+        const innerMetadataValue = parseMetadataPath(innerMetadataPath) || '';
+        linkText = linkText.replace(`[[${innerMetadataPath}]]`, innerMetadataValue);
+        match = META_REG.exec(linkText);
+      }
+
+      if (linkText !== a.textContent) {
+        a.textContent = linkText;
+      }
+
+      if (regCallbackKey) {
+        await regHashCallbacks[regCallbackKey](a);
       } else if (a.href.endsWith('#event-template')) {
         let templateId;
 
         try {
-          const series = JSON.parse(getMetadata('series'));
-          templateId = series?.templateId;
+          const seriesMetadata = JSON.parse(getMetadata('series'));
+          templateId = seriesMetadata?.templateId;
         } catch (e) {
-          window.lana?.log('Failed to parse series metadata. Attempt to fallback on event tempate ID attribute:', e);
-          if (getMetadata('template-id')) {
-            templateId = getMetadata('template-id');
-          }
+          window.lana?.log(`Failed to parse series metadata. Attempt to fallback on event tempate ID attribute:\n${JSON.stringify(e, null, 2)}`);
+        }
+
+        if (!templateId && getMetadata('template-id')) {
+          templateId = getMetadata('template-id');
         }
 
         if (templateId) {
-          const params = new URLSearchParams(document.location.search);
-          const testTiming = params.get('timing');
-          let timeSuffix = '';
-
-          if (testTiming) {
-            timeSuffix = +testTiming > +getMetadata('local-end-time-millis') ? '-post' : '-pre';
+          const eventType = getMetadata('event-type');
+          if (eventType && templateLoadCallbacks[eventType.toLowerCase()]) {
+            templateLoadCallbacks[eventType.toLowerCase()](a, templateId);
           } else {
-            const currentDate = new Date();
-            const currentTimestamp = currentDate.getTime();
-            timeSuffix = currentTimestamp > +getMetadata('local-end-time-millis') ? '-post' : '-pre';
+            window.lana?.log(`Error: Failed to find template ID for event ${getMetadata('event-id')} due to missing event type`);
           }
-
-          a.href = `${templateId}${timeSuffix}`;
-          const timingClass = `timing${timeSuffix}-event`;
-          document.body.classList.add(timingClass);
         } else {
           window.lana?.log(`Error: Failed to find template ID for event ${getMetadata('event-id')}`);
         }
@@ -303,13 +358,17 @@ function autoUpdateLinks(scope, miloLibs) {
         } else {
           a.remove();
         }
-      } else if (getMetadata(url.hash.replace('#', ''))) {
-        a.href = getMetadata(url.hash.replace('#', ''));
-      } else if (url.pathname.startsWith('/events-placeholder') && url.hash) {
-        a.remove();
+      } else if (url.hash) {
+        const metadataPath = url.hash.replace('#', '');
+        const metadataValue = parseMetadataPath(metadataPath);
+        if (metadataValue) {
+          a.href = metadataValue;
+        } else if (url.pathname.startsWith('/events-placeholder')) {
+          a.remove();
+        }
       }
     } catch (e) {
-      window.lana?.log(`Error while attempting to replace link ${a.href}: ${e}`);
+      window.lana?.log(`Error while attempting to replace link ${a.href}:\n${JSON.stringify(e, null, 2)}`);
     }
   });
 }
@@ -321,7 +380,7 @@ export function updatePictureElement(imageUrl, parentPic, altText) {
     try {
       imgUrlObj = new URL(imageUrl);
     } catch (e) {
-      window.lana?.log('Error while parsing absolute sharepoint URL:', e);
+      window.lana?.log(`Error while parsing absolute sharepoint URL:\n${JSON.stringify(e, null, 2)}`);
     }
   }
 
@@ -331,7 +390,7 @@ export function updatePictureElement(imageUrl, parentPic, altText) {
     try {
       el.srcset = el.srcset.replace(/.*\?/, `${imgUrl}?`);
     } catch (e) {
-      window.lana?.log(`failed to convert optimized picture source from ${el} with dynamic data: ${e}`);
+      window.lana?.log(`Failed to convert optimized picture source from ${el} with dynamic data:\n${JSON.stringify(e, null, 2)}`);
     }
   });
 
@@ -344,9 +403,8 @@ export function updatePictureElement(imageUrl, parentPic, altText) {
       el.src = el.src.replace(/.*\?/, `${imgUrl}?`);
       el.alt = altText || '';
     } catch (e) {
-      window.lana?.log(`failed to convert optimized img from ${el} with dynamic data: ${e}`);
+      window.lana?.log(`Failed to convert optimized img from ${el} with dynamic data:\n${JSON.stringify(e, null, 2)}`);
     }
-
     el.addEventListener('load', onImgLoad);
   });
 }
@@ -370,8 +428,13 @@ function updateImgTag(child, matchCallback, parentElement) {
       parentElement.remove();
     }
   } catch (e) {
-    window.lana?.log(`Error while attempting to update image: ${e}`);
+    window.lana?.log(`Error while attempting to update image:\n${JSON.stringify(e, null, 2)}`);
   }
+}
+
+function isHTMLString(str) {
+  const doc = new DOMParser().parseFromString(str, 'text/html');
+  return Array.from(doc.body.childNodes).some((node) => node.nodeType === 1);
 }
 
 function updateTextNode(child, matchCallback) {
@@ -381,7 +444,11 @@ function updateTextNode(child, matchCallback) {
     (_match, p1) => matchCallback(_match, p1, child),
   );
 
-  if (replacedText !== originalText) {
+  if (replacedText === originalText) return;
+
+  if (isHTMLString(replacedText)) {
+    child.parentElement.innerHTML = replacedText;
+  } else {
     const lines = replacedText.split('\\n');
     lines.forEach((line, index) => {
       const textNode = document.createTextNode(line);
@@ -395,13 +462,21 @@ function updateTextNode(child, matchCallback) {
 }
 
 function updateTextContent(child, matchCallback) {
-  const originalText = child.textContent;
+  const directText = Array.from(child.childNodes)
+    .filter((node) => node.nodeType === Node.TEXT_NODE)
+    .map((node) => node.textContent)
+    .join('');
+  const originalText = directText;
   const replacedText = originalText.replace(
     META_REG,
     (_match, p1) => matchCallback(_match, p1, child),
   );
 
-  if (replacedText !== originalText) {
+  if (replacedText === originalText) return;
+
+  if (isHTMLString(replacedText)) {
+    child.parentElement.innerHTML = replacedText;
+  } else {
     child.textContent = replacedText;
   }
 }
@@ -458,7 +533,10 @@ export async function getNonProdData(env) {
   const isPreviewMode = new URLSearchParams(window.location.search).get('previewMode')
   || window.location.hostname.includes('.hlx.')
   || window.location.hostname.includes('.aem.');
-  const resp = await fetch(`/events/default/${env === 'prod' ? '' : `${env}/`}metadata${isPreviewMode ? '-preview' : ''}.json`, {
+
+  const localeMatch = window.location.pathname.match(/^(\/[^/]+)?\/events\//);
+  const localePath = localeMatch?.[1] || '';
+  const resp = await fetch(`${localePath}/events/default/${env === 'prod' ? '' : `${env}/`}metadata${isPreviewMode ? '-preview' : ''}.json`, {
     headers: {
       'Content-Type': 'application/json',
       'Cache-Control': 'no-cache',
@@ -487,7 +565,7 @@ export async function getNonProdData(env) {
     return null;
   }
 
-  window.lana?.log('Failed to fetch non-prod metadata:', resp);
+  window.lana?.log(`Failed to fetch non-prod metadata:\n${JSON.stringify(resp, null, 2)}`);
   return null;
 }
 
@@ -498,7 +576,7 @@ function decorateProfileCardsZPattern(parent) {
   try {
     speakerData = JSON.parse(getMetadata('speakers'));
   } catch (e) {
-    window.lana?.log('Failed to parse speakers metadata:', e);
+    window.lana?.log(`Failed to parse speakers metadata:\n${JSON.stringify(e, null, 2)}`);
     return;
   }
 
@@ -508,7 +586,7 @@ function decorateProfileCardsZPattern(parent) {
   let flippedIndex = -1;
   let visibleIndex = 0;
 
-  const allBlocks = parent.querySelectorAll('body > div > div:not(.section-metadata)');
+  const allBlocks = parent.querySelectorAll('body > div > div:not(.section-metadata):not(.daa-injection)');
   allBlocks.forEach((block) => {
     visibleIndex += 1;
     if (!block.classList.contains('profile-cards')) return;
@@ -550,7 +628,7 @@ function updateExtraMetaTags(parent) {
   try {
     photos = JSON.parse(getMetadata('photos'));
   } catch (e) {
-    window.lana?.log('Failed to parse photos metadata for extra metadata tags generation:', e);
+    window.lana?.log(`Failed to parse photos metadata for extra metadata tags generation:\n${JSON.stringify(e, null, 2)}`);
   }
 
   if (title) {
@@ -573,7 +651,7 @@ function updateExtraMetaTags(parent) {
         try {
           sharepointUrl = new URL(sharepointUrl).pathname;
         } catch (e) {
-          window.lana?.log('Error while parsing SharePoint URL for extra metadata tags generation:', e);
+          window.lana?.log(`Error while parsing SharePoint URL for extra metadata tags generation:\n${JSON.stringify(e, null, 2)}`);
         }
       }
 
@@ -587,32 +665,14 @@ function updateExtraMetaTags(parent) {
 export default function autoUpdateContent(parent, miloDeps, extraData) {
   const { getConfig, miloLibs } = miloDeps;
   if (!parent) {
-    window.lana?.log('page server block cannot find its parent element');
+    window.lana?.log('Error:page server block cannot find its parent element');
     return;
   }
 
   if (!getMetadata('event-id')) return;
 
   const getImgData = (_match, p1, n) => {
-    let data;
-
-    if (p1.includes('.')) {
-      const [key, subKey] = p1.split('.');
-      try {
-        const nestedData = JSON.parse(getMetadata(key));
-        data = nestedData[subKey] || extraData?.[p1] || '';
-      } catch (e) {
-        window.lana?.log(`Error while attempting to replace ${p1}: ${e}`);
-        return '';
-      }
-    } else {
-      try {
-        data = JSON.parse(getMetadata(p1)) || extraData?.[p1] || {};
-      } catch (e) {
-        window.lana?.log(`Error while attempting to parse ${p1}: ${e}`);
-        return '';
-      }
-    }
+    const data = parseMetadataPath(p1, extraData);
 
     if (preserveFormatKeys.includes(p1)) {
       n.parentNode?.classList.add('preserve-format');
@@ -621,18 +681,7 @@ export default function autoUpdateContent(parent, miloDeps, extraData) {
   };
 
   const getContent = (_match, p1, n) => {
-    let content;
-    if (p1.includes('.')) {
-      const [key, subKey] = p1.split('.');
-      try {
-        const nestedData = JSON.parse(getMetadata(key));
-        content = nestedData[subKey] || extraData?.[p1] || '';
-      } catch (e) {
-        window.lana?.log(`Error while attempting to replace ${p1}: ${e}`);
-      }
-    } else {
-      content = getMetadata(p1) || extraData?.[p1] || '';
-    }
+    let content = parseMetadataPath(p1, extraData);
 
     if (preserveFormatKeys.includes(p1)) {
       n.parentNode?.classList.add('preserve-format');
@@ -648,7 +697,7 @@ export default function autoUpdateContent(parent, miloDeps, extraData) {
   };
 
   const isImage = (n) => n.tagName === 'IMG' && n.nodeType === 1;
-  const isTextNode = (n) => n.nodeType === 3;
+  const isPlainTextNode = (n) => n.nodeType === 3;
   const isStyledTextTag = (n) => n.tagName === 'STRONG' || n.tagName === 'EM';
   const mightContainIcon = (n) => n.tagName === 'P' || n.tagName === 'A';
 
@@ -660,7 +709,7 @@ export default function autoUpdateContent(parent, miloDeps, extraData) {
           updateImgTag(n, getImgData, element);
         }
 
-        if (isTextNode(n)) {
+        if (isPlainTextNode(n)) {
           updateTextNode(n, getContent);
         }
 
