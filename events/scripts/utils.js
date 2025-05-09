@@ -218,3 +218,66 @@ export function readBlockConfig(block) {
     return config;
   }, {});
 }
+
+/**
+ * Parses a metadata path string and returns the corresponding value from the metadata.
+ * Supports combinations of object property access (.) and array indexing (:).
+ * Examples:
+ * - attr (just accessing the attribute itself)
+ * - attr.subattr (one level in object)
+ * - attr:0 (attr is array after JSON.parse)
+ * - attr.subattr:0.subsubattr
+ * - attr:0.subattr
+ * - attr:1.subattr:0
+ * @param {string} path - The metadata path to parse
+ * @param {Object} extraData - Optional extra data to fall back to if metadata is not found
+ * @returns {*} The parsed value from metadata
+ */
+export function parseMetadataPath(path, extraData = {}) {
+  if (!path) return '';
+
+  // Split the path into segments using both . and : as delimiters
+  const segments = path.split(/[.:]/).filter(Boolean);
+  const delimiters = path.match(/[.:]/g) || [];
+
+  // Get the base metadata value
+  let currentValue = getMetadata(segments[0]);
+
+  // If no metadata found, try extraData
+  if (!currentValue) {
+    return extraData[path] || '';
+  }
+
+  // Try to parse as JSON if it looks like JSON
+  try {
+    if (currentValue.startsWith('{') || currentValue.startsWith('[')) {
+      currentValue = JSON.parse(currentValue);
+    }
+  } catch (e) {
+    window.lana?.log(`Error while parsing metadata for ${path}:\n${JSON.stringify(e, null, 2)}`);
+    return extraData[path] || '';
+  }
+
+  // Process remaining segments
+  for (let i = 1; i < segments.length; i += 1) {
+    const delimiter = delimiters[i - 1];
+    const segment = segments[i];
+
+    if (delimiter === ':') {
+      // Array indexing
+      const index = parseInt(segment, 10);
+      if (Array.isArray(currentValue) && index >= 0 && index < currentValue.length) {
+        currentValue = currentValue[index];
+      } else {
+        return extraData[path] || '';
+      }
+    } else if (currentValue && typeof currentValue === 'object') {
+      // Object property access
+      currentValue = currentValue[segment];
+    } else {
+      return extraData[path] || '';
+    }
+  }
+
+  return currentValue || extraData[path] || '';
+}

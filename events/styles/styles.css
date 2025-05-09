@@ -75,6 +75,11 @@ svg.ecc-icon:not(:last-child) {
   margin-right: 12px;
 }
 
+.marquee p.body-m:has(> picture) {
+  display: flex;
+  gap: 12px;
+}
+
 .preserve-format {
   white-space: pre-wrap;
 }

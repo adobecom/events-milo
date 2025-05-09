@@ -224,12 +224,12 @@ export function mobileSwipeDetect(carouselElements) {
   el.addEventListener('touchstart', (event) => {
     const touch = event.touches[0];
     swipe.xStart = touch.screenX;
-  });
+  }, { passive: true });
 
   el.addEventListener('touchmove', (event) => {
     const touch = event.touches[0];
     swipe.xEnd = touch.screenX;
-  });
+  }, { passive: true });
 
   el.addEventListener('touchend', (event) => {
     const swipeDistance = {};
