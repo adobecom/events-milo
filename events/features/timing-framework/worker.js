@@ -57,7 +57,7 @@ function getStartScheduleItem(scheduleRoot, cs) {
     pointer = pointer.next;
   }
 
-  return null;
+  return scheduleRoot;
 }
 
 /**
