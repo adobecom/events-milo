@@ -432,6 +432,11 @@ function updateImgTag(child, matchCallback, parentElement) {
   }
 }
 
+function isHTMLString(str) {
+  const doc = new DOMParser().parseFromString(str, 'text/html');
+  return Array.from(doc.body.childNodes).some((node) => node.nodeType === 1);
+}
+
 function updateTextNode(child, matchCallback) {
   const originalText = child.nodeValue;
   const replacedText = originalText.replace(
@@ -439,15 +444,17 @@ function updateTextNode(child, matchCallback) {
     (_match, p1) => matchCallback(_match, p1, child),
   );
 
-  if (replacedText !== originalText) {
-    const parent = child.parentElement;
+  if (replacedText === originalText) return;
 
+  if (isHTMLString(replacedText)) {
+    child.parentElement.innerHTML = replacedText;
+  } else {
     const lines = replacedText.split('\\n');
     lines.forEach((line, index) => {
       const textNode = document.createTextNode(line);
-      parent.appendChild(textNode);
+      child.parentElement.appendChild(textNode);
       if (index < lines.length - 1) {
-        parent.appendChild(document.createElement('br'));
+        child.parentElement.appendChild(document.createElement('br'));
       }
     });
     child.remove();
@@ -465,7 +472,11 @@ function updateTextContent(child, matchCallback) {
     (_match, p1) => matchCallback(_match, p1, child),
   );
 
-  if (replacedText !== originalText) {
+  if (replacedText === originalText) return;
+
+  if (isHTMLString(replacedText)) {
+    child.parentElement.innerHTML = replacedText;
+  } else {
     child.textContent = replacedText;
   }
 }

@@ -83,7 +83,7 @@ export default async function init(el) {
       window.lana?.log(`Error parsing static schedule: ${JSON.stringify(e)}`);
     }
   }
-  const scheduleById = getSchedule(scheduleId);
+  const scheduleById = scheduleId ? getSchedule(scheduleId) : null;
   const thisSchedule = staticSchedule || scheduleById;
 
   if (!thisSchedule) {
@@ -99,7 +99,6 @@ export default async function init(el) {
     const { schedule, conditions } = e.detail.data;
 
     worker.postMessage({
-      message: 'conditions',
       schedule,
       conditions,
     });
