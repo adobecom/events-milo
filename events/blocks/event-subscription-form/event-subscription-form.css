@@ -6,7 +6,6 @@
   }
 
   .subscription-form {
-    margin-top: 20px;
     padding: 72px 36px 0;
   
     .subscription-title {
@@ -116,27 +115,35 @@
     } 
   }
 
-  .thankyou-title {
-    font-size: 2.625rem;
-    line-height: 2rem;
-    padding: 1.5625rem 1.875rem 0;
-    text-align: left;
-    max-height: 4.375rem;
-    color: rgb(44 44 44);
-    margin: 0;
-    font-weight: 400;
-  }
+  .thankyou-view {
+    div:last-of-type {
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+      height: 100%;
+      padding: 1.25rem 1.875rem;
+    }
 
-  .thankyou-description {
-    padding: 1.25rem 1.875rem 0;
-    color: rgb(44 44 44);
-    flex-grow: 1;
-    margin: 0;
-    font-size: 1rem;
-    box-sizing: border-box;
-    font-weight: 400;
-    line-height: 1.5;
-    height : 180px;
+    .thankyou-title {
+      font-size: 2.625rem;
+      line-height: 2rem;
+      text-align: left;
+      max-height: 4.375rem;
+      color: rgb(44 44 44);
+      margin: 0;
+      font-weight: 400;
+    }
+  
+    .thankyou-description {
+      color: rgb(44 44 44);
+      flex-grow: 1;
+      margin: 0;
+      font-size: 1rem;
+      box-sizing: border-box;
+      font-weight: 400;
+      line-height: 1.5;
+      height : 180px;
+    }
   }
 
   .hide {
