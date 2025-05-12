@@ -46,6 +46,16 @@
     },
     {
       "containerId": "tools",
+      "id": "schedule-maker",
+      "title": "Schedule Maker",
+      "environments": [ "edit" ],
+      "url": "https://main--events-milo--adobecom.aem.page/tools/schedule-maker",
+      "passReferrer": true,
+      "passConfig": true,
+      "includePaths": [ "**.docx**" ]
+    },
+    {
+      "containerId": "tools",
       "title": "Check Schema",
       "id": "checkschema",
       "environments": ["prod"],
