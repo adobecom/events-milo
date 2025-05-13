@@ -317,7 +317,7 @@ function autoUpdateLinks(scope, miloLibs) {
       while (match !== null) {
         const innerMetadataPath = match[1];
         const innerMetadataValue = parseMetadataPath(innerMetadataPath) || '';
-        linkText = linkText.replace(`[[${innerMetadataPath}]]`, innerMetadataValue);
+        linkText = linkText.replaceAll(`[[${innerMetadataPath}]]`, innerMetadataValue);
         match = META_REG.exec(linkText);
       }
 
@@ -439,7 +439,7 @@ function isHTMLString(str) {
 
 function updateTextNode(child, matchCallback) {
   const originalText = child.nodeValue;
-  const replacedText = originalText.replace(
+  const replacedText = originalText.replaceAll(
     META_REG,
     (_match, p1) => matchCallback(_match, p1, child),
   );
@@ -467,7 +467,7 @@ function updateTextContent(child, matchCallback) {
     .map((node) => node.textContent)
     .join('');
   const originalText = directText;
-  const replacedText = originalText.replace(
+  const replacedText = originalText.replaceAll(
     META_REG,
     (_match, p1) => matchCallback(_match, p1, child),
   );
