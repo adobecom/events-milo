@@ -1,3 +1,4 @@
+import { getToggleTimeFromParams, getScheduleItemFromParams } from '../../features/timing-framework/testing.js';
 import { readBlockConfig, LIBS, getMetadata } from '../../scripts/utils.js';
 
 function buildScheduleDoubleLinkedList(entries) {
@@ -59,6 +60,10 @@ function setScheduleToScheduleWorker(schedule) {
     message: 'schedule',
     schedule: scheduleLinkedList,
     conditions,
+    testing: {
+      toggleTime: getToggleTimeFromParams(),
+      scheduleItemId: getScheduleItemFromParams(),
+    },
   });
 
   return worker;
@@ -101,6 +106,10 @@ export default async function init(el) {
     worker.postMessage({
       schedule,
       conditions,
+      testing: {
+        toggleTime: getToggleTimeFromParams(),
+        scheduleItemId: getScheduleItemFromParams(),
+      },
     });
   });
 
