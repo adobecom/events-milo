@@ -190,7 +190,7 @@ function decorateFormView(block) {
   blockElem.modalTitle.classList.add('subscription-title');
   blockElem.modalDescription.classList.add('subscription-description');
   blockElem.consentNotice.classList.add('subscription-consent-notice');
-  blockElem.thankyouView.classList.add('hide');
+  blockElem.thankyouView.classList.add('hide', 'thankyou-view');
   blockElem.sname.classList.add('hide');
 
   addForm(blockElem);
