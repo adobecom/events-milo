@@ -21,15 +21,21 @@ function addSearchParams(url, searchParams) {
 export default async function init(el) {
   const h2 = el.querySelector('h2');
   let url = h2?.textContent;
-  
-  const params = new URL(window.location.href).searchParams;
-  const searchParams = {};
-  addParams(searchParams, params, 'mkto_trk', 'marketo_tracker');
-  addParams(searchParams, params, 'mkt_tok', 'marketo_token');
-  addParams(searchParams, params, 'ecid', 'experience_cloud_id');
-  addParams(searchParams, params, 'mkto_event_id', 'marketo_event_id');
 
-  url = addSearchParams(url, searchParams);
   h2.remove();
-  createTag('iframe', { src: url, frameborder: '0', allowfullscreen: 'true', class: 'fullwidth' }, '', { parent: el });
+  const button = createTag('button', { class: 'button' }, 'Join the event', { parent: el });
+
+  button.addEventListener('click', () => {
+    const params = new URL(window.location.href).searchParams;
+    const searchParams = {};
+    addParams(searchParams, params, 'mkto_trk', 'marketo_tracker');
+    addParams(searchParams, params, 'mkt_tok', 'marketo_token');
+    addParams(searchParams, params, 'ecid', 'experience_cloud_id');
+    addParams(searchParams, params, 'mkto_event_id', 'marketo_event_id');
+
+    url = addSearchParams(url, searchParams);
+    createTag('iframe', { src: url, frameborder: '0', allowfullscreen: 'true', class: 'fullwidth' }, '', { parent: el });
+    button.remove();
+    document.body.querySelector('#webinar-marketo-form')?.remove();
+  });
 }
