@@ -310,13 +310,15 @@ function createHeading({ label }, el) {
 }
 
 function createInput({ type, field, placeholder, required, defval }) {
-  const input = createTag('input', { type, id: field, placeholder, value: defval });
+  const placeholderText = placeholder ? dictionaryManager.getValue(placeholder) : '';
+  const input = createTag('input', { type, id: field, placeholder: placeholderText, value: defval });
   if (required === 'x') input.setAttribute('required', 'required');
   return input;
 }
 
 function createTextArea({ field, placeholder, required, defval }) {
-  const input = createTag('textarea', { id: field, placeholder, value: defval });
+  const placeholderText = placeholder ? dictionaryManager.getValue(placeholder) : '';
+  const input = createTag('textarea', { id: field, placeholder: placeholderText, value: defval });
   if (required === 'x') input.setAttribute('required', 'required');
   return input;
 }
