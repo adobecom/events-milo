@@ -33,6 +33,9 @@ export default async function init(el) {
     addParams(searchParams, params, 'ecid', 'experience_cloud_id');
     addParams(searchParams, params, 'mkto_event_id', 'marketo_event_id');
 
+    if (window.join_url) {
+      url = window.join_url;
+    }
     url = addSearchParams(url, searchParams);
     createTag('iframe', { src: url, frameborder: '0', allowfullscreen: 'true', class: 'fullwidth' }, '', { parent: el });
     button.remove();
