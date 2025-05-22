@@ -17,7 +17,7 @@ class TimingWorker {
       const data = await response.json();
       return new Date(data.datetime).getTime();
     } catch (error) {
-      console.error('Error fetching time from API:', error);
+      window.lana?.log(`Error fetching time from API: ${JSON.stringify(error)}`);
       return null;
     }
   }
