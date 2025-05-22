@@ -77,14 +77,6 @@ export default async function init(el) {
     import(`${LIBS}/features/spectrum-web-components/dist/progress-circle.js`),
   ]);
 
-  // Check if MobileRider is enabled
-  const isMobileRiderEnabled = el.classList.contains('mobile-rider-enabled');
-
-  if (isMobileRiderEnabled) {
-    // Load MobileRider plugin
-    await import('../../features/timing-framework/mobile-rider-plugin.js');
-  }
-
   const blockConfig = readBlockConfig(el);
   const scheduleId = blockConfig?.['schedule-id'];
   let staticSchedule;
@@ -104,12 +96,19 @@ export default async function init(el) {
     return;
   }
 
-  el.innerHTML = '';
+  // Check if schedule contains any MR sessions
+  const hasMRSessions = thisSchedule.some((item) => item.mobileRiderSessionId);
 
+  // Only add the class if MR sessions are present
+  if (hasMRSessions) {
+    el.classList.add('mobile-rider-enabled');
+  }
+
+  el.innerHTML = '';
   const worker = setScheduleToScheduleWorker(thisSchedule);
 
   // Add periodic MR session status check
-  if (isMobileRiderEnabled) {
+  if (hasMRSessions) {
     setInterval(async () => {
       const sessionIds = thisSchedule
         .filter((item) => item.mobileRiderSessionId)
@@ -125,16 +124,27 @@ export default async function init(el) {
   }
 
   el.addEventListener('worker-message', (e) => {
-    const { schedule, conditions } = e.detail.data;
+    const { type, schedule, conditions, sessionId, status } = e.detail.data;
 
-    worker.postMessage({
-      schedule,
-      conditions,
-      testing: {
-        toggleTime: getToggleTimeFromParams(),
-        scheduleItemId: getScheduleItemFromParams(),
-      },
-    });
+    if (type === 'mr_session_update') {
+      // Handle MR session status update
+      worker.postMessage({
+        type: 'update_mr_status',
+        sessionId,
+        status,
+        timestamp: Date.now(),
+      });
+    } else {
+      // Handle regular schedule/condition updates
+      worker.postMessage({
+        schedule,
+        conditions,
+        testing: {
+          toggleTime: getToggleTimeFromParams(),
+          scheduleItemId: getScheduleItemFromParams(),
+        },
+      });
+    }
   });
 
   worker.onmessage = (event) => {
