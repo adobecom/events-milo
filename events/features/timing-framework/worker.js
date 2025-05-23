@@ -1,12 +1,9 @@
-import MobileRiderPlugin from './mobile-rider-plugin.js';
-
 class TimingWorker {
   constructor() {
     this.conditionStore = null;
     this.currentScheduleItem = null;
     this.nextScheduleItem = null;
     this.timerId = null;
-    this.mobileRiderPlugin = new MobileRiderPlugin();
     this.setupMessageHandler();
   }
 
@@ -35,17 +32,6 @@ class TimingWorker {
     const currentTime = testing.toggleTime || new Date().getTime();
     let pointer = scheduleRoot;
     let start = null;
-
-    // First, check if there's an active MR session that should take precedence
-    while (pointer) {
-      if (pointer.mobileRiderSessionId && cs[`mr_session_${pointer.mobileRiderSessionId}`] === 'active') {
-        return pointer;
-      }
-      pointer = pointer.next;
-    }
-
-    // Reset pointer and continue with normal schedule logic
-    pointer = scheduleRoot;
 
     // Scan phase 1: Fast forward through toggleTime-only
     while (pointer) {
@@ -95,14 +81,6 @@ class TimingWorker {
    */
   isNextScheduleTriggered(scheduleItem) {
     if (!scheduleItem) return false;
-
-    // Check if current item is an MR session
-    if (scheduleItem.mobileRiderSessionId) {
-      const sessionStatus = this.conditionStore?.[`mr_session_${scheduleItem.mobileRiderSessionId}`];
-      // If session is active, don't trigger next item
-      if (sessionStatus === 'active') return false;
-    }
-
     const { conditions: c, toggleTime: t } = scheduleItem;
     const currentTime = new Date().getTime();
 
@@ -155,7 +133,7 @@ class TimingWorker {
     this.timerId = setTimeout(() => this.runTimer(), TimingWorker.getRandomInterval());
   }
 
-  async handleMessage(event) {
+  handleMessage(event) {
     const { schedule, conditions, testing } = event.data;
 
     if (this.timerId) {
@@ -163,21 +141,17 @@ class TimingWorker {
       this.timerId = null;
     }
 
+    if (conditions) {
+      this.conditionStore = { ...this.conditionStore, ...conditions };
+    }
+
     if (schedule) {
-      // Initialize MR sessions if needed
-      await this.mobileRiderPlugin.initializeSessions(schedule);
-
-      // Update conditions with MR session statuses
-      const mrConditions = {};
-      this.mobileRiderPlugin.sessions.forEach((status, id) => {
-        mrConditions[`mr_session_${id}`] = status;
-      });
-
-      this.conditionStore = {
-        ...this.conditionStore,
-        ...conditions,
-        ...mrConditions,
-      };
+      this.nextScheduleItem = TimingWorker.getStartScheduleItem(
+        schedule,
+        this.conditionStore,
+        testing,
+      );
+      this.currentScheduleItem = this.nextScheduleItem?.prev || schedule;
     }
 
     if (testing.scheduleItemId) {

@@ -77,14 +77,6 @@ export default async function init(el) {
     import(`${LIBS}/features/spectrum-web-components/dist/progress-circle.js`),
   ]);
 
-  // Check if MobileRider is enabled
-  const isMobileRiderEnabled = el.classList.contains('mobile-rider-enabled');
-
-  if (isMobileRiderEnabled) {
-    // Load MobileRider plugin
-    await import('../../features/timing-framework/mobile-rider-plugin.js');
-  }
-
   const blockConfig = readBlockConfig(el);
   const scheduleId = blockConfig?.['schedule-id'];
   let staticSchedule;
@@ -107,22 +99,6 @@ export default async function init(el) {
   el.innerHTML = '';
 
   const worker = setScheduleToScheduleWorker(thisSchedule);
-
-  // Add periodic MR session status check
-  if (isMobileRiderEnabled) {
-    setInterval(async () => {
-      const sessionIds = thisSchedule
-        .filter((item) => item.mobileRiderSessionId)
-        .map((item) => item.mobileRiderSessionId);
-
-      if (sessionIds.length > 0) {
-        worker.postMessage({
-          type: 'update_mr_status',
-          sessionIds,
-        });
-      }
-    }, 5000); // Check every 5 seconds
-  }
 
   el.addEventListener('worker-message', (e) => {
     const { schedule, conditions } = e.detail.data;
