@@ -39,22 +39,4 @@ export default class MobileRiderPlugin {
       await this.fetchSessionStatus(sessionIds);
     }
   }
-
-  static createSessionStatusEvent(sessionId, status) {
-    return new CustomEvent('worker-message', {
-      detail: {
-        data: {
-          type: 'mr_session_update',
-          sessionId,
-          status,
-          timestamp: Date.now(),
-        },
-      },
-    });
-  }
-
-  static dispatchSessionStatusEvent(element, sessionId, status) {
-    const event = this.createSessionStatusEvent(sessionId, status);
-    element.dispatchEvent(event);
-  }
 }

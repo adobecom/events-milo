@@ -1,10 +1,12 @@
+import MobileRiderPlugin from './mobile-rider-plugin.js';
+
 class TimingWorker {
   constructor() {
     this.conditionStore = null;
     this.currentScheduleItem = null;
     this.nextScheduleItem = null;
     this.timerId = null;
-    this.mobileRiderPlugin = null;
+    this.mobileRiderPlugin = new MobileRiderPlugin();
     this.setupMessageHandler();
   }
 
@@ -94,9 +96,10 @@ class TimingWorker {
   isNextScheduleTriggered(scheduleItem) {
     if (!scheduleItem) return false;
 
-    // Only check MR conditions if plugin is initialized
-    if (this.mobileRiderPlugin && scheduleItem.mobileRiderSessionId) {
+    // Check if current item is an MR session
+    if (scheduleItem.mobileRiderSessionId) {
       const sessionStatus = this.conditionStore?.[`mr_session_${scheduleItem.mobileRiderSessionId}`];
+      // If session is active, don't trigger next item
       if (sessionStatus === 'active') return false;
     }
 
@@ -153,64 +156,28 @@ class TimingWorker {
   }
 
   async handleMessage(event) {
-    const {
-      type, schedule, conditions, sessionId, status, testing,
-    } = event.data;
+    const { schedule, conditions, testing } = event.data;
 
     if (this.timerId) {
       clearTimeout(this.timerId);
       this.timerId = null;
     }
 
-    if (type === 'update_mr_status') {
-      // Update condition store with new session status
+    if (schedule) {
+      // Initialize MR sessions if needed
+      await this.mobileRiderPlugin.initializeSessions(schedule);
+
+      // Update conditions with MR session statuses
+      const mrConditions = {};
+      this.mobileRiderPlugin.sessions.forEach((status, id) => {
+        mrConditions[`mr_session_${id}`] = status;
+      });
+
       this.conditionStore = {
         ...this.conditionStore,
-        [`mr_session_${sessionId}`]: status,
+        ...conditions,
+        ...mrConditions,
       };
-
-      // If current item is the updated session and it's now inactive,
-      // we need to re-evaluate the schedule
-      if (this.currentScheduleItem?.mobileRiderSessionId === sessionId && status === 'inactive') {
-        // Session has ended (underrun), check if we should move to next item
-        if (this.nextScheduleItem) {
-          const shouldMoveToNext = this.isNextScheduleTriggered(this.nextScheduleItem);
-          if (shouldMoveToNext) {
-            postMessage(this.nextScheduleItem);
-            this.currentScheduleItem = { ...this.nextScheduleItem };
-            this.nextScheduleItem = this.nextScheduleItem.next;
-          }
-        }
-      }
-
-      // Restart the timer to continue polling
-      if (this.nextScheduleItem) {
-        this.timerId = setTimeout(() => this.runTimer(), TimingWorker.getRandomInterval());
-      }
-      return;
-    }
-
-    if (schedule) {
-      // Only initialize MR plugin if schedule contains MR sessions
-      const hasMRSessions = schedule.some((item) => item.mobileRiderSessionId);
-      if (hasMRSessions) {
-        await this.initializeMobileRider();
-        await this.mobileRiderPlugin.initializeSessions(schedule);
-
-        // Update conditions with MR session statuses
-        const mrConditions = {};
-        this.mobileRiderPlugin.sessions.forEach((s, id) => {
-          mrConditions[`mr_session_${id}`] = s;
-        });
-
-        this.conditionStore = {
-          ...this.conditionStore,
-          ...conditions,
-          ...mrConditions,
-        };
-      } else {
-        this.conditionStore = { ...this.conditionStore, ...conditions };
-      }
     }
 
     if (testing.scheduleItemId) {
@@ -221,14 +188,6 @@ class TimingWorker {
     if (!this.nextScheduleItem) return;
 
     this.runTimer();
-  }
-
-  async initializeMobileRider() {
-    if (!this.mobileRiderPlugin) {
-      const { default: MobileRiderPlugin } = await import('./mobile-rider-plugin.js');
-      this.mobileRiderPlugin = new MobileRiderPlugin();
-    }
-    return this.mobileRiderPlugin;
   }
 
   setupMessageHandler() {
