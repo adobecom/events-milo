@@ -33,7 +33,7 @@ function getSchedule(scheduleId) {
   return thisSchedule;
 }
 
-function conditionsPreCheck(schedule) {
+function staticConditionsPreCheck(schedule) {
   const conditions = {};
   const allMetadataConditionSchedules = schedule.filter((entry) => entry.conditions?.some((condition) => condition.source === 'metadata'));
   allMetadataConditionSchedules.forEach((s) => {
@@ -54,7 +54,7 @@ function conditionsPreCheck(schedule) {
 function setScheduleToScheduleWorker(schedule) {
   const scheduleLinkedList = buildScheduleDoubleLinkedList(schedule);
   const worker = new Worker('/events/features/timing-framework/worker.js');
-  const conditions = conditionsPreCheck(schedule);
+  const conditions = staticConditionsPreCheck(schedule);
 
   worker.postMessage({
     message: 'schedule',
@@ -67,6 +67,19 @@ function setScheduleToScheduleWorker(schedule) {
   });
 
   return worker;
+}
+
+async function initPlugins(schedule) {
+  const SUPPORTED_PLUGINS = ['mobile-rider', 'metadata'];
+  const pluginsNeeded = SUPPORTED_PLUGINS.filter((plugin) => schedule.some((item) => item[plugin]));
+  const plugins = await Promise.all(pluginsNeeded.map((plugin) => import(`../../features/timing-framework/plugins/${plugin}/plugin.js`)));
+
+  const pluginsModules = new Map();
+  plugins.forEach(async (plugin, index) => {
+    pluginsModules.set(pluginsNeeded[index], await plugin.init(schedule));
+  });
+
+  return pluginsModules;
 }
 
 export default async function init(el) {
@@ -98,7 +111,8 @@ export default async function init(el) {
 
   el.innerHTML = '';
 
-  const worker = setScheduleToScheduleWorker(thisSchedule);
+  const pluginsOutputs = await initPlugins(thisSchedule);
+  const worker = setScheduleToScheduleWorker(thisSchedule, pluginsOutputs);
 
   el.addEventListener('worker-message', (e) => {
     const { schedule, conditions } = e.detail.data;
