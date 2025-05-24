@@ -1,10 +1,42 @@
 class TimingWorker {
   constructor() {
-    this.conditionStore = null;
     this.currentScheduleItem = null;
     this.nextScheduleItem = null;
     this.timerId = null;
+    this.plugins = new Map();
+    this.channels = new Map();
     this.setupMessageHandler();
+  }
+
+  setupBroadcastChannels(plugins) {
+    // Close any existing channels
+    this.channels.forEach((channel) => channel.close());
+    this.channels.clear();
+
+    // Only set up channels for enabled plugins
+    if (plugins.has('metadata')) {
+      const channel = new BroadcastChannel('metadata-store');
+      channel.onmessage = (event) => {
+        const { key, value } = event.data;
+        const metadataStore = this.plugins.get('metadata');
+        if (metadataStore) {
+          metadataStore.set(key, value);
+        }
+      };
+      this.channels.set('metadata', channel);
+    }
+
+    if (plugins.has('mobileRider')) {
+      const channel = new BroadcastChannel('mobile-rider-store');
+      channel.onmessage = (event) => {
+        const { sessionId, isActive } = event.data;
+        const mobileRiderStore = this.plugins.get('mobileRider');
+        if (mobileRiderStore) {
+          mobileRiderStore.set(sessionId, isActive);
+        }
+      };
+      this.channels.set('mobileRider', channel);
+    }
   }
 
   /**
@@ -24,16 +56,14 @@ class TimingWorker {
 
   /**
    * @param {Object} scheduleRoot
-   * @param {Object} cs: conditionStore
    * @returns {Object}
-   * @description Returns the first schedule item that should be shown
+   * @description Returns the first schedule item that should be shown based on toggleTime
    */
-  static getStartScheduleItem(scheduleRoot, cs, testing = {}) {
+  static getStartScheduleItem(scheduleRoot, testing = {}) {
     const currentTime = testing.toggleTime || new Date().getTime();
     let pointer = scheduleRoot;
     let start = null;
 
-    // Scan phase 1: Fast forward through toggleTime-only
     while (pointer) {
       const { toggleTime: t } = pointer;
       const toggleTimePassed = typeof t !== 'number' || currentTime > t;
@@ -44,24 +74,7 @@ class TimingWorker {
       pointer = pointer.next;
     }
 
-    // Scan Phase 2: Scan from last toggleTime match forward with condition checks
-    pointer = start || scheduleRoot;
-
-    while (pointer) {
-      const { toggleTime: t, conditions: c } = pointer;
-      const toggleTimePassed = !t || currentTime > t;
-      const conditionsMet = !c || c.every(({ key: k, expectedValue: v }) => {
-        const val = cs?.[k];
-        const isAny = v.trim().toLowerCase() === 'any' && !!val;
-        return isAny || val === v;
-      });
-
-      if (toggleTimePassed && conditionsMet) return pointer;
-
-      pointer = pointer.next;
-    }
-
-    return scheduleRoot;
+    return start || scheduleRoot;
   }
 
   /**
@@ -77,51 +90,58 @@ class TimingWorker {
   /**
    * @param {Object} scheduleItem
    * @returns {boolean}
-   * @description Returns true if the next schedule item is triggered
+   * @description Returns true if the next schedule item should be triggered based on plugins
    */
-  isNextScheduleTriggered(scheduleItem) {
+  async shouldTriggerNextSchedule(scheduleItem) {
     if (!scheduleItem) return false;
-    const { conditions: c, toggleTime: t } = scheduleItem;
-    const currentTime = new Date().getTime();
 
-    const toggleTimePassed = !t || currentTime > t;
+    // Check if previous item has mobileRider that's still active (overrun)
+    if (this.currentScheduleItem?.mobileRider) {
+      const mobileRiderStore = this.plugins.get('mobileRider');
+      if (mobileRiderStore) {
+        const { sessionId } = this.currentScheduleItem.mobileRider;
+        const isActive = mobileRiderStore.get(sessionId);
+        if (isActive) return false; // Wait for session to end
+      }
+    }
 
-    const conditionsMet = !c || c.every(({ key: k, expectedValue: v }) => {
-      const conditionValue = this.conditionStore?.[k];
-      const isAnyVal = v.trim().toLowerCase() === 'any' && !!conditionValue;
-      return isAnyVal || conditionValue === v;
-    });
+    // Check if current item has mobileRider that's ended (underrun)
+    if (scheduleItem.mobileRider) {
+      const mobileRiderStore = this.plugins.get('mobileRider');
+      if (mobileRiderStore) {
+        const { sessionId } = scheduleItem.mobileRider;
+        const isActive = mobileRiderStore.get(sessionId);
+        if (!isActive) return true; // Move on if session ended
+      }
+    }
 
-    return toggleTimePassed && conditionsMet;
-  }
+    // Check metadata conditions if present
+    if (scheduleItem.metadata) {
+      const metadataStore = this.plugins.get('metadata');
+      if (metadataStore) {
+        const { key, expectedValue } = scheduleItem.metadata;
+        const value = metadataStore.get(key);
+        if ((expectedValue && value !== expectedValue) || (!expectedValue && !value)) return false;
+      }
+    }
 
-  /**
-   * @param {number} currentTime
-   * @returns {boolean}
-   * @description Returns true if the current time is valid
-   */
-  static async validateTime(currentTime) {
-    const apiCurrentTime = await TimingWorker.getCurrentTimeFromAPI();
-    const diff = apiCurrentTime - currentTime;
-
-    if (diff > 10000) {
-      window.alert('Sorry. Your local time is off by more than 10 seconds. Please check your system clock.');
-      return false;
+    // If no plugins are blocking, check toggleTime
+    const { toggleTime: t } = scheduleItem;
+    if (t) {
+      const currentTime = new Date().getTime();
+      return currentTime > t;
     }
 
     return true;
   }
 
   async runTimer() {
-    const triggered = this.isNextScheduleTriggered(this.nextScheduleItem);
+    const shouldTrigger = await this.shouldTriggerNextSchedule(this.nextScheduleItem);
 
     const { pathToFragment: currentPath } = this.currentScheduleItem;
     const { pathToFragment: nextPath, prev: nextPrev } = this.nextScheduleItem;
 
-    if (triggered && (nextPath !== currentPath || nextPrev === null)) {
-      // const timeValid = await this.validateTime(currentTime);
-      // if (!timeValid) return;
-
+    if (shouldTrigger && (nextPath !== currentPath || nextPrev === null)) {
       postMessage(this.nextScheduleItem);
 
       this.currentScheduleItem = { ...this.nextScheduleItem };
@@ -134,21 +154,21 @@ class TimingWorker {
   }
 
   handleMessage(event) {
-    const { schedule, conditions, testing } = event.data;
+    const { schedule, plugins, testing } = event.data;
 
     if (this.timerId) {
       clearTimeout(this.timerId);
       this.timerId = null;
     }
 
-    if (conditions) {
-      this.conditionStore = { ...this.conditionStore, ...conditions };
+    if (plugins) {
+      this.plugins = new Map(Object.entries(plugins));
+      this.setupBroadcastChannels(this.plugins);
     }
 
     if (schedule) {
       this.nextScheduleItem = TimingWorker.getStartScheduleItem(
         schedule,
-        this.conditionStore,
         testing,
       );
       this.currentScheduleItem = this.nextScheduleItem?.prev || schedule;

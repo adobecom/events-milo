@@ -33,42 +33,6 @@ function getSchedule(scheduleId) {
   return thisSchedule;
 }
 
-function staticConditionsPreCheck(schedule) {
-  const conditions = {};
-  const allMetadataConditionSchedules = schedule.filter((entry) => entry.conditions?.some((condition) => condition.source === 'metadata'));
-  allMetadataConditionSchedules.forEach((s) => {
-    s.conditions.forEach((condition) => {
-      const { key } = condition;
-
-      const metadata = getMetadata(key);
-
-      if (metadata) {
-        conditions[key] = metadata;
-      }
-    });
-  });
-
-  return conditions;
-}
-
-function setScheduleToScheduleWorker(schedule) {
-  const scheduleLinkedList = buildScheduleDoubleLinkedList(schedule);
-  const worker = new Worker('/events/features/timing-framework/worker.js');
-  const conditions = staticConditionsPreCheck(schedule);
-
-  worker.postMessage({
-    message: 'schedule',
-    schedule: scheduleLinkedList,
-    conditions,
-    testing: {
-      toggleTime: getToggleTimeFromParams(),
-      scheduleItemId: getScheduleItemFromParams(),
-    },
-  });
-
-  return worker;
-}
-
 async function initPlugins(schedule) {
   const SUPPORTED_PLUGINS = ['mobile-rider', 'metadata'];
   const pluginsNeeded = SUPPORTED_PLUGINS.filter((plugin) => schedule.some((item) => item[plugin]));
@@ -76,10 +40,36 @@ async function initPlugins(schedule) {
 
   const pluginsModules = new Map();
   await Promise.all(plugins.map(async (plugin, index) => {
-    pluginsModules.set(pluginsNeeded[index], await plugin.init(schedule));
+    const pluginName = pluginsNeeded[index].replace('-', '');
+    pluginsModules.set(pluginName, await plugin.init(schedule));
   }));
 
   return pluginsModules;
+}
+
+function setScheduleToScheduleWorker(schedule, plugins) {
+  const scheduleLinkedList = buildScheduleDoubleLinkedList(schedule);
+  const worker = new Worker('/events/features/timing-framework/worker.js');
+
+  // Convert plugin instances to their serializable state
+  const pluginStates = Object.fromEntries(
+    Array.from(plugins.entries()).map(([name, plugin]) => [
+      name,
+      Object.fromEntries(plugin), // Convert Map to plain object
+    ]),
+  );
+
+  worker.postMessage({
+    message: 'schedule',
+    schedule: scheduleLinkedList,
+    plugins: pluginStates,
+    testing: {
+      toggleTime: getToggleTimeFromParams(),
+      scheduleItemId: getScheduleItemFromParams(),
+    },
+  });
+
+  return worker;
 }
 
 export default async function init(el) {
@@ -115,11 +105,19 @@ export default async function init(el) {
   const worker = setScheduleToScheduleWorker(thisSchedule, pluginsOutputs);
 
   el.addEventListener('worker-message', (e) => {
-    const { schedule, conditions } = e.detail.data;
+    const { schedule, plugins } = e.detail.data;
+
+    // Convert plugin instances to their serializable state
+    const pluginStates = Object.fromEntries(
+      Array.from(plugins.entries()).map(([name, plugin]) => [
+        name,
+        Object.fromEntries(plugin), // Convert Map to plain object
+      ]),
+    );
 
     worker.postMessage({
       schedule,
-      conditions,
+      plugins: pluginStates,
       testing: {
         toggleTime: getToggleTimeFromParams(),
         scheduleItemId: getScheduleItemFromParams(),
