@@ -75,9 +75,9 @@ async function initPlugins(schedule) {
   const plugins = await Promise.all(pluginsNeeded.map((plugin) => import(`../../features/timing-framework/plugins/${plugin}/plugin.js`)));
 
   const pluginsModules = new Map();
-  plugins.forEach(async (plugin, index) => {
+  await Promise.all(plugins.map(async (plugin, index) => {
     pluginsModules.set(pluginsNeeded[index], await plugin.init(schedule));
-  });
+  }));
 
   return pluginsModules;
 }
