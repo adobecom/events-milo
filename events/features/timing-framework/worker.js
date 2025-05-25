@@ -59,7 +59,7 @@ class TimingWorker {
    * @returns {Object}
    * @description Returns the first schedule item that should be shown based on toggleTime
    */
-  static getStartScheduleItem(scheduleRoot, testing = {}) {
+  static getStartScheduleItemByToggleTime(scheduleRoot, testing = {}) {
     const currentTime = testing.toggleTime || new Date().getTime();
     let pointer = scheduleRoot;
     let start = null;
@@ -167,7 +167,7 @@ class TimingWorker {
     }
 
     if (schedule) {
-      this.nextScheduleItem = TimingWorker.getStartScheduleItem(
+      this.nextScheduleItem = TimingWorker.getStartScheduleItemByToggleTime(
         schedule,
         testing,
       );

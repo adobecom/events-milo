@@ -104,27 +104,6 @@ export default async function init(el) {
   const pluginsOutputs = await initPlugins(thisSchedule);
   const worker = setScheduleToScheduleWorker(thisSchedule, pluginsOutputs);
 
-  el.addEventListener('worker-message', (e) => {
-    const { schedule, plugins } = e.detail.data;
-
-    // Convert plugin instances to their serializable state
-    const pluginStates = Object.fromEntries(
-      Array.from(plugins.entries()).map(([name, plugin]) => [
-        name,
-        Object.fromEntries(plugin), // Convert Map to plain object
-      ]),
-    );
-
-    worker.postMessage({
-      schedule,
-      plugins: pluginStates,
-      testing: {
-        toggleTime: getToggleTimeFromParams(),
-        scheduleItemId: getScheduleItemFromParams(),
-      },
-    });
-  });
-
   worker.onmessage = (event) => {
     const { pathToFragment } = event.data;
 
