@@ -1,0 +1,44 @@
+.mobile-rider {
+  position: relative;
+  z-index: 1; /* should be over event drawer */
+}
+
+.mobile-rider .mobile-rider-container {
+  display: block;
+}
+
+.mobile-rider .mobile-rider-container.is-hidden {
+  display: none;
+}
+
+.mobile-rider .mobile-rider-container.show-player {
+  opacity: 1;
+  transition: opacity 0.3s ease-in-out;
+  height: auto;
+}
+
+.mobile-rider .mobile-rider-container.hide-player {
+  opacity: 0;
+  transition: opacity 0.3s ease-in-out;
+  height: 0;
+}
+
+.mobile-rider .mobile-rider-container.fluid {
+  margin: 0 auto;
+  height: 100%;
+  overflow: hidden;
+  max-width: 178vh;
+}
+
+.mobile-rider .mobile-rider-container.isASL {
+  position: relative;
+  padding-bottom: 56.25%;
+}
+
+.mobile-rider .mobile-rider-viewport {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+} 
