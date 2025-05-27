@@ -129,6 +129,10 @@ function toggleClassHandler(aslButton) {
   });
 }
 
+function sanitizedKeyDiv(text) {
+  return text.trim().toLowerCase().replace(/ /g, '-');
+}
+
 function getMetaData(el) {
   const keyDivs = el.querySelectorAll(':scope > div > div:first-child');
   const metaData = {};
