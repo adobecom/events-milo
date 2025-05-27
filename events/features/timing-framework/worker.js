@@ -174,7 +174,7 @@ class TimingWorker {
       this.currentScheduleItem = this.nextScheduleItem?.prev || schedule;
     }
 
-    if (testing.scheduleItemId) {
+    if (testing && testing.scheduleItemId) {
       this.nextScheduleItem = schedule.find((item) => item.id === testing.scheduleItemId);
       this.currentScheduleItem = this.nextScheduleItem?.prev || schedule;
     }
@@ -191,3 +191,5 @@ class TimingWorker {
 
 // Initialize the worker
 (() => new TimingWorker())();
+
+export default TimingWorker;
