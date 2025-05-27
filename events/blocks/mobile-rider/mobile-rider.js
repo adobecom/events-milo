@@ -140,7 +140,7 @@ export default async function init(el) {
   };
 
   if (!config.skinid || !config.videoid) {
-    el.remove();
+    // el.remove();
     return;
   }
 
