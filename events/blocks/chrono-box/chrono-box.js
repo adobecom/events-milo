@@ -1,4 +1,3 @@
-import { getToggleTimeFromParams, getScheduleItemFromParams } from '../../features/timing-framework/testing.js';
 import { readBlockConfig, LIBS, getMetadata } from '../../scripts/utils.js';
 
 function buildScheduleDoubleLinkedList(entries) {
@@ -51,6 +50,11 @@ function setScheduleToScheduleWorker(schedule, plugins) {
   const scheduleLinkedList = buildScheduleDoubleLinkedList(schedule);
   const worker = new Worker('/events/features/timing-framework/worker.js');
 
+  // Get testing data from URL params
+  const params = new URLSearchParams(document.location.search);
+  const testTiming = params.get('timing');
+  const testing = testTiming ? { toggleTime: testTiming } : null;
+
   // Convert plugin instances to their serializable state
   const pluginStates = Object.fromEntries(
     Array.from(plugins.entries()).map(([name, plugin]) => [
@@ -63,10 +67,7 @@ function setScheduleToScheduleWorker(schedule, plugins) {
     message: 'schedule',
     schedule: scheduleLinkedList,
     plugins: pluginStates,
-    testing: {
-      toggleTime: getToggleTimeFromParams(),
-      scheduleItemId: getScheduleItemFromParams(),
-    },
+    testing,
   });
 
   return worker;

@@ -1,11 +1,22 @@
-export function getToggleTimeFromParams() {
-  const params = new URLSearchParams(document.location.search);
-  const testTiming = params.get('timing');
-  return testTiming;
-}
+export default class TestingManager {
+  constructor() {
+    this.timeOffset = 0;
+    this.isTestMode = false;
+  }
 
-export function getScheduleItemFromParams() {
-  const params = new URLSearchParams(document.location.search);
-  const scheduleItemId = params.get('scheduleItemId');
-  return scheduleItemId;
+  init(testingData) {
+    if (testingData?.toggleTime) {
+      this.isTestMode = true;
+      const currentTime = new Date().getTime();
+      this.timeOffset = testingData.toggleTime - currentTime;
+    }
+  }
+
+  getAdjustedTime(currentTime) {
+    return this.isTestMode ? currentTime + this.timeOffset : currentTime;
+  }
+
+  isTesting() {
+    return this.isTestMode;
+  }
 }

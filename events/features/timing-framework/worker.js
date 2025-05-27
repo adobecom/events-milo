@@ -1,3 +1,5 @@
+import TestingManager from './testing.js';
+
 class TimingWorker {
   constructor() {
     this.currentScheduleItem = null;
@@ -5,6 +7,7 @@ class TimingWorker {
     this.timerId = null;
     this.plugins = new Map();
     this.channels = new Map();
+    this.testingManager = new TestingManager();
     this.setupMessageHandler();
   }
 
@@ -55,12 +58,12 @@ class TimingWorker {
   }
 
   /**
-   * @param {Object} scheduleRoot
+   * @param {Object} scheduleRoot - The root of the schedule tree
    * @returns {Object}
    * @description Returns the first schedule item that should be shown based on toggleTime
    */
-  static getStartScheduleItemByToggleTime(scheduleRoot, testing = {}) {
-    const currentTime = testing.toggleTime || new Date().getTime();
+  static getStartScheduleItemByToggleTime(scheduleRoot) {
+    const currentTime = new Date().getTime();
     let pointer = scheduleRoot;
     let start = null;
 
@@ -85,6 +88,14 @@ class TimingWorker {
     const min = 500;
     const max = 1500;
     return Math.floor(Math.random() * (max - min + 1)) + min;
+  }
+
+  /**
+   * @returns {number}
+   * @description Returns the current time adjusted by the time offset if in test mode
+   */
+  getCurrentTime() {
+    return this.testingManager.getAdjustedTime(new Date().getTime());
   }
 
   /**
@@ -126,10 +137,9 @@ class TimingWorker {
     }
 
     // If no plugins are blocking, check toggleTime
-    const { toggleTime: t } = scheduleItem;
-    if (t) {
-      const currentTime = new Date().getTime();
-      return currentTime > t;
+    const { toggleTime } = scheduleItem;
+    if (toggleTime) {
+      return this.getCurrentTime() > toggleTime;
     }
 
     return true;
@@ -161,21 +171,16 @@ class TimingWorker {
       this.timerId = null;
     }
 
+    // Initialize testing manager with testing data
+    this.testingManager.init(testing);
+
     if (plugins) {
       this.plugins = new Map(Object.entries(plugins));
       this.setupBroadcastChannels(this.plugins);
     }
 
     if (schedule) {
-      this.nextScheduleItem = TimingWorker.getStartScheduleItemByToggleTime(
-        schedule,
-        testing,
-      );
-      this.currentScheduleItem = this.nextScheduleItem?.prev || schedule;
-    }
-
-    if (testing && testing.scheduleItemId) {
-      this.nextScheduleItem = schedule.find((item) => item.id === testing.scheduleItemId);
+      this.nextScheduleItem = TimingWorker.getStartScheduleItemByToggleTime(schedule);
       this.currentScheduleItem = this.nextScheduleItem?.prev || schedule;
     }
 
