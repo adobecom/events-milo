@@ -129,16 +129,20 @@ function toggleClassHandler(aslButton) {
   });
 }
 
-export default async function init(el) {
-  const config = {
-    skinid: el.dataset.skinid,
-    videoid: el.dataset.videoid,
-    identifier: {
-      first: el.dataset.identifierFirst,
-      second: el.dataset.identifierSecond,
-    },
-  };
+function getMetaData(el) {
+  const keyDivs = el.querySelectorAll(':scope > div > div:first-child');
+  const metaData = {};
+  keyDivs.forEach((div) => {
+    const valueDivText = div.nextElementSibling.textContent;
+    const keyValueText = sanitizedKeyDiv(div.textContent);
+    metaData[keyValueText] = valueDivText;
+  });
+  return metaData;
+}
 
+export default async function init(el) {
+  const config = getMetaData(el);
+  console.log('config', config);
   if (!config.skinid || !config.videoid) {
     // el.remove();
     return;
