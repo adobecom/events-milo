@@ -186,8 +186,8 @@ export default async function init(el) {
         muted: true,
         debug: true,
         analytics: { provider: ANALYTICS_PROVIDER },
-        identifier1: config.identifier.first,
-        identifier2: config.identifier.second,
+        identifier1: config.identifierFirst,
+        identifier2: config.identifierSecond,
       },
     );
     container.classList.remove('is-hidden');
