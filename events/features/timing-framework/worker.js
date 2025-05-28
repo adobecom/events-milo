@@ -95,7 +95,10 @@ class TimingWorker {
    * @description Returns the current time adjusted by the time offset if in test mode
    */
   getCurrentTime() {
-    return this.testingManager.getAdjustedTime(new Date().getTime());
+    const currentTime = new Date().getTime();
+    return this.testingManager.isTesting()
+      ? this.testingManager.adjustTime(currentTime)
+      : currentTime;
   }
 
   /**

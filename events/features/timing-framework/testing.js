@@ -12,8 +12,8 @@ export default class TestingManager {
     }
   }
 
-  getAdjustedTime(currentTime) {
-    return this.isTestMode ? currentTime + this.timeOffset : currentTime;
+  adjustTime(currentTime) {
+    return currentTime + this.timeOffset;
   }
 
   isTesting() {
