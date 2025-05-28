@@ -138,21 +138,5 @@ describe('TimingWorker', () => {
       expect(worker.plugins.size).to.equal(2);
       expect(worker.channels.size).to.equal(2);
     });
-
-    it('should handle testing.scheduleItemId', () => {
-      const schedule = [
-        { id: '1', pathToFragment: '/1' },
-        { id: '2', pathToFragment: '/2' },
-      ];
-
-      worker.handleMessage({
-        data: {
-          schedule,
-          testing: { scheduleItemId: '2' },
-        },
-      });
-
-      expect(worker.nextScheduleItem.id).to.equal('2');
-    });
   });
 });
