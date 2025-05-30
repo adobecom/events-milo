@@ -2,6 +2,7 @@
   width: 100%;
   display: block;
   height: max-content;
+  overflow: hidden;
 
   & > div:last-of-type picture img {
     display: block;
@@ -48,7 +49,7 @@
     height: 100%;
     position: relative;
     box-sizing: border-box;
-    padding: 72px 36px 0;
+    padding: 72px 36px 36px;
     transform: rotateY(0deg);
     backface-visibility: hidden;
     width: 100%;
@@ -191,7 +192,6 @@
       box-sizing: border-box;
       font-weight: 400;
       line-height: 1.5;
-      height : 180px;
     }
   }
 
@@ -212,8 +212,8 @@
   .back-view {
     position: absolute;
     top: 0;
-    left: 0;
-    width: 100%;
+    left: -1px;
+    width: calc(100% + 1px);
     backface-visibility: hidden;
     transition: transform 0.6s ease-in-out;
     transform: rotateY(180deg);
@@ -240,12 +240,6 @@
 
 @media (min-width: 600px) {
   .event-subscription-form {
-      width: 675px;
-  }
-}
-
-@media (min-width: 1200px) {
-  .event-subscription-form {
-      width: 580px;
+    max-width: 580px;
   }
 }
