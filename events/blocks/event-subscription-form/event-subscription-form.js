@@ -114,11 +114,11 @@ async function handleSubmit(e, bp) {
 function addElementToForm(form, inputP, labelP) {
   const profile = BlockMediator.get('imsProfile');
   if (profile === undefined) {
-    BlockMediator.subscribe('imsProfile', (data) => {
-      if (data && data.email) {
+    BlockMediator.subscribe('imsProfile', ({ newValue }) => {
+      if (newValue && newValue.email) {
         const subscriptionInput = form.querySelector('.subscription-input');
         if (subscriptionInput) {
-          subscriptionInput.value = data.email;
+          subscriptionInput.value = newValue.email;
         }
       }
     });
