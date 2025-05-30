@@ -37,7 +37,35 @@ export default async function init(el) {
       url = window.join_url;
     }
     url = addSearchParams(url, searchParams);
-    createTag('iframe', { src: url, frameborder: '0', allowfullscreen: 'true', class: 'fullwidth' }, '', { parent: el });
+    
+    // Create overlay
+    const overlay = createTag('div', {
+      class: 'iframe-overlay',
+      style: 'position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255, 255, 255, 0.9); display: flex; align-items: center; justify-content: center; z-index: 1000;',
+    });
+    
+    // Create loading text
+    const loadingText = createTag('div', {
+      style: 'font-size: 1.2em; color: #333;',
+    }, 'Loading event...');
+    
+    overlay.appendChild(loadingText);
+    el.appendChild(overlay);
+    
+    // Create iframe
+    const iframe = createTag('iframe', {
+      src: url,
+      frameborder: '0',
+      allowfullscreen: 'true',
+      class: 'fullwidth',
+      style: 'position: relative; z-index: 1;',
+    }, '', { parent: el });
+    
+    // Remove overlay after 7 seconds
+    setTimeout(() => {
+      overlay.remove();
+    }, 7000);
+    
     button.remove();
     document.body.querySelector('#webinar-marketo-form')?.remove();
   });
