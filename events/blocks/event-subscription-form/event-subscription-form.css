@@ -175,9 +175,8 @@
 
     h2 {
       font-size: 2.625rem;
-      line-height: 2rem;
+      line-height: 1;
       text-align: left;
-      max-height: 4.375rem;
       color: rgb(44 44 44);
       margin: 0;
       font-weight: 400;

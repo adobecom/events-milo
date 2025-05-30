@@ -39,6 +39,7 @@ function decorateError(error, inputElement) {
 
 function flipToBack(bp) {
   bp.flipper.classList.add('flipped');
+  bp.form.setAttribute('inert', '');
 }
 
 /**
