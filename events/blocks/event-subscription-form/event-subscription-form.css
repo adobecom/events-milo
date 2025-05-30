@@ -1,12 +1,57 @@
 .event-subscription-form {
-  width: 91%;
-  
-  picture {
-    display: flex;
+  width: 100%;
+  display: block;
+  height: max-content;
+
+  & > div:last-of-type picture img {
+    display: block;
+  }
+
+  form {
+    height: max-content;
+
+    .subscription-submit-container {
+      height: 5rem;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+    }
+
+    .subscription-submit {
+      font-family: var(--body-font-family);
+      background-color: #3b63fb;
+      color: #fff;
+      border-radius: 16px;
+      border: 2px solid #1473e6;
+      font-size: 15px;
+      font-style: normal;
+      font-weight: 700;
+      line-height: 16px;
+      padding: 5px 14px;
+      text-decoration: none;
+      cursor: pointer;
+    }
+
+    .subscription-submit:disabled {
+      background-color: #f4f4f4;
+      border-color: #f4f4f4;
+      color: #bcbcbc;
+      cursor: not-allowed;
+    }
+
+    .subscription-submit:hover:not(:disabled) {
+      background-color: #274dea;
+    }
   }
 
   .subscription-form {
+    height: 100%;
+    position: relative;
+    box-sizing: border-box;
     padding: 72px 36px 0;
+    transform: rotateY(0deg);
+    backface-visibility: hidden;
+    width: 100%;
   
     .subscription-title {
       padding-bottom: .5rem;
@@ -61,6 +106,7 @@
     }
 
     .subscription-input {
+      padding: 0 6px;
       border-top: none;
       border-left: none;
       border-right: none;
@@ -76,26 +122,6 @@
     .subscription-textbox-container {
       display: flex;
       flex-direction: column;
-    }
-
-    .subscription-submit-container {
-      height: 5rem;
-      display: flex;
-      align-items: center;
-      justify-content: flex-end;
-    }
-
-    .subscription-submit-container .subscription-submit {
-      background-color: #3b63fb;
-      color: #fff;
-      border-radius: 16px;
-      border: 2px solid #1473e6;
-      font-size: 15px;
-      font-style: normal;
-      font-weight: 700;
-      line-height: 16px;
-      padding: 5px 14px;
-      text-decoration: none;
     }
 
     .error-message {
@@ -116,25 +142,48 @@
   }
 
   .thankyou-view {
+    flex-direction: column;
+    justify-content: space-between;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: #fff;
+    transform: rotateY(180deg);
+    backface-visibility: hidden;
+
+    div:first-child {
+      height: 50%;
+      position: relative;
+
+      img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+    }
+
     div:last-of-type {
+      height: 50%;
+      gap: 1.25rem;
+      box-sizing: border-box;
       display: flex;
       flex-direction: column;
       justify-content: flex-start;
-      height: 100%;
       padding: 1.25rem 1.875rem;
     }
 
-    .thankyou-title {
+    h2 {
       font-size: 2.625rem;
-      line-height: 2rem;
+      line-height: 1;
       text-align: left;
-      max-height: 4.375rem;
       color: rgb(44 44 44);
       margin: 0;
       font-weight: 400;
     }
   
-    .thankyou-description {
+    p {
       color: rgb(44 44 44);
       flex-grow: 1;
       margin: 0;
@@ -146,7 +195,45 @@
     }
   }
 
-  .hide {
+  .flipper {
+    position: relative;
+    width: 100%;
+    perspective: 1000px;
+    height: auto;
+  }
+
+  .front-view {
+    height: max-content;
+    transition: transform 0.6s ease-in-out;
+    z-index: 2;
+    transform: rotateY(0deg);
+  }
+  
+  .back-view {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    backface-visibility: hidden;
+    transition: transform 0.6s ease-in-out;
+    transform: rotateY(180deg);
+    z-index: 1;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .flipper.flipped .front-view {
+    pointer-events: none;
+    transform: rotateY(-180deg);
+  }
+  
+  .flipper.flipped .back-view {
+    transform: rotateY(0deg);
+    z-index: 3;
+  }
+
+  .hidden {
     display: none;
   }
 }
@@ -162,4 +249,3 @@
       width: 580px;
   }
 }
-
