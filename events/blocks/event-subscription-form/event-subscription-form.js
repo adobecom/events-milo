@@ -123,6 +123,7 @@ function addElementToForm(form, inputP, labelP) {
       }
     });
   }
+
   const placeholder = inputP.textContent;
   const labelText = labelP.textContent;
   const labelAttr = {
@@ -135,7 +136,7 @@ function addElementToForm(form, inputP, labelP) {
     type: 'email',
     name: 'email',
     placeholder,
-    ...(profile && !profile.noProfile && !profile.account_type === 'guest' && profile.email !== undefined && { value: profile.email }),
+    ...(profile && !profile.noProfile && profile.account_type !== 'guest' && profile.email !== undefined && { value: profile.email }),
     required: 'true',
     class: 'subscription-input',
     'aria-required': 'true',
