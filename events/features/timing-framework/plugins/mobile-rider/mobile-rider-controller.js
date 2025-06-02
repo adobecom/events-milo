@@ -5,35 +5,6 @@
 class MobileRiderController {
   constructor() {
     this.baseUrl = 'https://overlay-admin-dev.mobilerider.com';
-    this.token = null;
-  }
-
-  /**
-   * Authenticate with the MobileRider API
-   * @param {string} email - User email
-   * @param {string} password - User password
-   * @returns {Promise<string>} - Authentication token
-   */
-  async login(email, password) {
-    try {
-      const response = await fetch(`${this.baseUrl}/api/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Login failed');
-      }
-
-      const data = await response.json();
-      this.token = data.token;
-      return this.token;
-    } catch (error) {
-      window.lana?.log(`MobileRider login error: ${error.message}`);
-      throw error;
-    }
   }
 
   /**
@@ -47,7 +18,7 @@ class MobileRiderController {
         `${this.baseUrl}/api/media-status?ids=${ids.join(',')}`,
         {
           method: 'GET',
-          headers: this.getHeaders(),
+          headers: { 'Content-Type': 'application/json' },
         },
       );
 
@@ -62,48 +33,6 @@ class MobileRiderController {
       window.lana?.log(`MobileRider getMediaStatus error: ${error.message}`);
       throw error;
     }
-  }
-
-  /**
-   * Toggle media items between active and inactive states
-   * @param {Object} params
-   * @param {string[]} params.active - Array of media IDs to activate
-   * @param {string[]} params.inactive - Array of media IDs to deactivate
-   * @returns {Promise<Array<{id: string, previousState: string, currentState: string}>>}
-   */
-  async toggleVideos({ active = [], inactive = [] }) {
-    try {
-      const response = await fetch(`${this.baseUrl}/api/toggle-videos`, {
-        method: 'POST',
-        headers: this.getHeaders(),
-        body: JSON.stringify({ active, inactive }),
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        window.lana?.log(`MobileRider toggleVideos error: ${JSON.stringify(error)}`);
-        throw new Error(error.message || 'Failed to toggle videos');
-      }
-
-      return await response.json();
-    } catch (error) {
-      window.lana?.log(`MobileRider toggleVideos error: ${error.message}`);
-      throw error;
-    }
-  }
-
-  /**
-   * Get headers for authenticated requests
-   * @returns {Object} Headers object
-   */
-  getHeaders() {
-    const headers = { 'Content-Type': 'application/json' };
-
-    if (this.token) {
-      headers.Authorization = `Bearer ${this.token}`;
-    }
-
-    return headers;
   }
 
   /**
