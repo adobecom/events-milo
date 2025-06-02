@@ -32,33 +32,42 @@ function getSchedule(scheduleId) {
   return thisSchedule;
 }
 
-function conditionsPreCheck(schedule) {
-  const conditions = {};
-  const allMetadataConditionSchedules = schedule.filter((entry) => entry.conditions?.some((condition) => condition.source === 'metadata'));
-  allMetadataConditionSchedules.forEach((s) => {
-    s.conditions.forEach((condition) => {
-      const { key } = condition;
+async function initPlugins(schedule) {
+  const SUPPORTED_PLUGINS = ['mobile-rider', 'metadata'];
+  const pluginsNeeded = SUPPORTED_PLUGINS.filter((plugin) => schedule.some((item) => item[plugin]));
+  const plugins = await Promise.all(pluginsNeeded.map((plugin) => import(`../../features/timing-framework/plugins/${plugin}/plugin.js`)));
 
-      const metadata = getMetadata(key);
+  const pluginsModules = new Map();
+  await Promise.all(plugins.map(async (plugin, index) => {
+    const pluginName = pluginsNeeded[index].replace('-', '');
+    pluginsModules.set(pluginName, await plugin.init(schedule));
+  }));
 
-      if (metadata) {
-        conditions[key] = metadata;
-      }
-    });
-  });
-
-  return conditions;
+  return pluginsModules;
 }
 
-function setScheduleToScheduleWorker(schedule) {
+function setScheduleToScheduleWorker(schedule, plugins) {
   const scheduleLinkedList = buildScheduleDoubleLinkedList(schedule);
   const worker = new Worker('/events/features/timing-framework/worker.js');
-  const conditions = conditionsPreCheck(schedule);
+
+  // Get testing data from URL params
+  const params = new URLSearchParams(document.location.search);
+  const testTiming = params.get('timing');
+  const testing = testTiming ? { toggleTime: testTiming } : null;
+
+  // Convert plugin instances to their serializable state
+  const pluginStates = Object.fromEntries(
+    Array.from(plugins.entries()).map(([name, plugin]) => [
+      name,
+      Object.fromEntries(plugin), // Convert Map to plain object
+    ]),
+  );
 
   worker.postMessage({
     message: 'schedule',
     schedule: scheduleLinkedList,
-    conditions,
+    plugins: pluginStates,
+    testing,
   });
 
   return worker;
@@ -93,16 +102,8 @@ export default async function init(el) {
 
   el.innerHTML = '';
 
-  const worker = setScheduleToScheduleWorker(thisSchedule);
-
-  el.addEventListener('worker-message', (e) => {
-    const { schedule, conditions } = e.detail.data;
-
-    worker.postMessage({
-      schedule,
-      conditions,
-    });
-  });
+  const pluginsOutputs = await initPlugins(thisSchedule);
+  const worker = setScheduleToScheduleWorker(thisSchedule, pluginsOutputs);
 
   worker.onmessage = (event) => {
     const { pathToFragment } = event.data;
