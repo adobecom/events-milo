@@ -26,20 +26,20 @@ function validateInput(input) {
 
 function decorateError(error, inputElement) {
   inputElement.classList.add('error');
+  inputElement.setAttribute('aria-invalid', 'true');
   const errorSpan = inputElement.nextSibling;
   errorSpan.classList.add('show');
   errorSpan.innerHTML = error;
+  errorSpan.setAttribute('aria-live', 'assertive');
 }
 
-function decorateThankYouView(thanksView) {
-  const bp = {
-    thanksView,
-    thankyouTitle: thanksView.querySelector(':scope > div:nth-of-type(2) h2'),
-    thankyouDescription: thanksView.querySelector(':scope > div:nth-of-type(2) > p'),
-  };
+// function flipToFront(bp) {
+//   bp.flipper.classList.remove('flipped');
+// }
 
-  bp.thankyouTitle.classList.add('thankyou-title');
-  bp.thankyouDescription.classList.add('thankyou-description');
+function flipToBack(bp) {
+  bp.flipper.classList.add('flipped');
+  bp.form.setAttribute('inert', '');
 }
 
 /**
@@ -58,10 +58,11 @@ async function subscribe(payload) {
   return response.json();
 }
 
-async function handleSubmit(event, bp) {
-  event.preventDefault();
+async function handleSubmit(e, bp) {
+  e.preventDefault();
 
-  const inputElement = bp.block.querySelector(':scope > form > div > div:nth-of-type(2) > input');
+  const inputElement = bp.form.querySelector('div > div:nth-of-type(2) > input');
+  const submitButton = e.target.querySelector('button');
 
   // Validate the input
   const email = inputElement.value;
@@ -75,7 +76,10 @@ async function handleSubmit(event, bp) {
 
   try {
     // Disable the multiple clicks.
-    event.target.disabled = true;
+
+    if (submitButton) {
+      submitButton.disabled = true;
+    }
 
     const payload = {
       email,
@@ -83,56 +87,43 @@ async function handleSubmit(event, bp) {
       consent_notice: bp.consentNotice.textContent,
       current_url: window.location.href,
     };
+
     const resp = await subscribe(payload);
 
     if (!resp.successful) {
-      event.target.disabled = false;
+      e.target.disabled = false;
       window.lana?.log(`Error while subscribing email :\n${JSON.stringify(resp.reason, null, 2)}`);
-      console.error(resp.reason);
       decorateError('Something went wrong', inputElement);
+      if (submitButton) {
+        submitButton.disabled = false;
+      }
       return;
     }
 
-    // hide form view
-    const formView = bp.block.querySelector(':scope > form');
-
-    formView.classList.add('hide');
-
-    // show thankyou view
-    const thankyouView = bp.block.querySelector(':scope > div:nth-of-type(1)');
-    thankyouView.classList.remove('hide');
-    decorateThankYouView(thankyouView);
+    flipToBack(bp);
   } catch (err) {
-    event.target.disabled = false;
+    e.target.disabled = false;
     window.lana?.log(`Exception in email subscription :\n "${err}"`);
-    console.error(err);
     decorateError('Internal error', inputElement);
+    if (submitButton) {
+      submitButton.disabled = false;
+    }
   }
-}
-
-function decorateButton(bp) {
-  const button = createTag('button', { class: 'subscription-submit' }, bp.submitP.textContent);
-  button.addEventListener('click', (event) => {
-    handleSubmit(event, bp);
-  });
-
-  createTag('div', { class: 'subscription-submit-container' }, button, { parent: bp.submitP.parentElement });
-
-  bp.submitP.remove();
 }
 
 function addElementToForm(form, inputP, labelP) {
   const profile = BlockMediator.get('imsProfile');
   if (profile === undefined) {
-    BlockMediator.subscribe('imsProfile', (data) => {
-      if (data && data.email) {
+    BlockMediator.subscribe('imsProfile', ({ newValue }) => {
+      if (newValue && newValue.email) {
         const subscriptionInput = form.querySelector('.subscription-input');
         if (subscriptionInput) {
-          subscriptionInput.value = data.email;
+          subscriptionInput.value = newValue.email;
         }
       }
     });
   }
+
   const placeholder = inputP.textContent;
   const labelText = labelP.textContent;
   const labelAttr = {
@@ -145,35 +136,54 @@ function addElementToForm(form, inputP, labelP) {
     type: 'email',
     name: 'email',
     placeholder,
-    ...(profile && !profile.noProfile && !profile.account_type === 'guest' && profile.email !== undefined && { value: profile.email }),
+    ...(profile && !profile.noProfile && profile.account_type !== 'guest' && profile.email !== undefined && { value: profile.email }),
     required: 'true',
     class: 'subscription-input',
+    'aria-required': 'true',
+    'aria-invalid': 'false',
+    'aria-describedby': 'email-error',
   };
 
   createTag('label', labelAttr, labelText, { parent: form });
-
-  createTag('input', inputAttr, undefined, { parent: form });
-
-  createTag('span', { class: 'error-message' }, '', { parent: form });
+  createTag('input', inputAttr, '', { parent: form });
+  createTag('span', { class: 'error-message', id: 'email-error', role: 'alert' }, '', { parent: form });
 
   inputP.remove();
-
   labelP.remove();
 }
 
 function addForm(bp) {
   const parent = bp.formDiv.parentElement;
-  const form = createTag('form', { id: 'subscription-form' }, bp.formDiv);
-  parent.insertBefore(form, parent.firstChild);
+  const form = createTag('form', {
+    class: 'front-view',
+    'aria-label': 'Email subscription form',
+    role: 'form',
+  }, bp.formDiv);
+  bp.formDiv.append(bp.consentNotice);
+  const submitContainer = createTag('div', { class: 'subscription-submit-container' }, '', { parent: bp.formDiv });
+  createTag('button', {
+    class: 'subscription-submit',
+    type: 'submit',
+    'aria-label': 'Subscribe to email updates',
+  }, bp.submitP.textContent, { parent: submitContainer });
+
+  bp.submitP.remove();
+
+  form.addEventListener('submit', (e) => {
+    handleSubmit(e, bp);
+  });
+
+  parent.prepend(form);
 
   const main = form.querySelector('div:nth-of-type(2)');
   main.classList.add('subscription-textbox-container');
   addElementToForm(main, bp.inputP, bp.labelP);
-  decorateButton(bp);
+
+  return form;
 }
 
-function decorateFormView(block) {
-  const blockElem = {
+function parseBlockElements(block) {
+  const bp = {
     block,
     formDiv: block.querySelector(':scope > div:nth-of-type(1)'),
     modalTitle: block.querySelector(':scope > div:nth-of-type(1) > div > h2'),
@@ -184,27 +194,40 @@ function decorateFormView(block) {
     consentNotice: block.querySelector(':scope > div:nth-of-type(1) > div:nth-of-type(3) > p'),
     submitP: block.querySelector(':scope > div:nth-of-type(1) > div:nth-of-type(3) > p:nth-of-type(2)'),
     thankyouView: block.querySelector(':scope > div:nth-of-type(2)'),
+    thankyouTitle: block.querySelector(':scope > div:nth-of-type(2) h2'),
+    thankyouDescription: block.querySelector(':scope > div:nth-of-type(2) > p'),
   };
 
-  blockElem.formDiv.classList.add('subscription-form');
-  blockElem.modalTitle.classList.add('subscription-title');
-  blockElem.modalDescription.classList.add('subscription-description');
-  blockElem.consentNotice.classList.add('subscription-consent-notice');
-  blockElem.thankyouView.classList.add('hide', 'thankyou-view');
-  blockElem.sname.classList.add('hide');
+  bp.formDiv.classList.add('subscription-form');
+  bp.modalTitle.classList.add('subscription-title');
+  bp.modalDescription.classList.add('subscription-description');
+  bp.consentNotice.classList.add('subscription-consent-notice');
+  bp.thankyouView.classList.add('back-view', 'thankyou-view');
+  bp.sname.classList.add('hidden');
 
-  addForm(blockElem);
+  // Add ARIA attributes to thank you view
+  bp.thankyouView.setAttribute('role', 'alert');
+  bp.thankyouView.setAttribute('aria-live', 'polite');
+  bp.thankyouView.setAttribute('aria-label', 'Subscription confirmation');
+
+  return bp;
 }
 
 export default function init(el) {
-  // decide which view to load depending on the modal url
-  const modalUrl = window.location.href.split('#')[1];
+  let bp = { flipper: createTag('div', { class: 'flipper' }) };
 
-  if (modalUrl === 'thankyou') {
-    // call a function to show thank you message.
-    decorateThankYouView(el);
-  } else {
-    // call a function to init event mailing list form.
-    decorateFormView(el);
-  }
+  bp = { ...bp, ...parseBlockElements(el) };
+  bp.form = addForm(bp);
+
+  el.prepend(bp.flipper);
+  bp.flipper.append(bp.form, bp.thankyouView);
+
+  // FIXME: This doesn't work unless the frag link is authored with #thankyou. Why did we add this?
+  // const urlHash = window.location.hash;
+
+  // if (urlHash === '#thankyou') {
+  //   flipToBack(bp);
+  // } else {
+  //   flipToFront(bp);
+  // }
 }
