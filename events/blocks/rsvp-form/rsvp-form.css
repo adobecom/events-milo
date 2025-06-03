@@ -1,0 +1,74 @@
+.rsvp-form-container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: var(--spacing-xl);
+  background-color: var(--color-white);
+  border-radius: var(--card-border-radius-l);
+  box-shadow: var(--image-filter-drop-shadow-small);
+}
+
+.rsvp-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-m);
+}
+
+.field-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xxs);
+}
+
+.submit-wrapper {
+  margin-top: var(--spacing-l);
+  display: flex;
+  justify-content: center;
+}
+
+.success-message {
+  text-align: center;
+  padding: var(--spacing-xl);
+}
+
+.success-message h2 {
+  margin-bottom: var(--spacing-m);
+  color: var(--color-black);
+}
+
+.error-message {
+  background-color: var(--color-red);
+  color: var(--color-white);
+  padding: var(--spacing-s);
+  border-radius: var(--card-border-radius-s);
+  margin-bottom: var(--spacing-m);
+  text-align: center;
+}
+
+/* Spectrum Web Components Customization */
+sp-textfield,
+sp-picker {
+  width: 100%;
+}
+
+sp-field-label {
+  font-weight: 600;
+  color: var(--color-black);
+}
+
+sp-button.submit-button {
+  min-width: 200px;
+}
+
+/* Responsive Design */
+@media screen and (min-width: 600px) {
+  .rsvp-form {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--spacing-l);
+  }
+
+  .field-wrapper:last-child,
+  .submit-wrapper {
+    grid-column: 1 / -1;
+  }
+}
