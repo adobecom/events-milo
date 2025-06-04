@@ -42,7 +42,7 @@ export default async function init(el) {
   let url = h2?.textContent;
 
   h2.remove();
-  const button = createTag('button', { class: 'button' }, 'Join the event', { parent: el });
+  const button = createTag('button', { class: 'hidden' }, 'Join the event', { parent: el });
 
   button.addEventListener('click', () => {
     const searchParams = getSearchParamsFromCurrentUrl();

@@ -7,17 +7,6 @@ if (typeof mkto_testing_loader != "function" && typeof mkto_testing_loader == "u
     let resourceLocation = ".adobe-connect";
     let resourceWatch = '.adobe-connect button[daa-ll*="Join"]';
     let mkto_testing_loader = () => {
-      //hide Join button
-  
-      let cssFast = `
-      button[daa-ll="Join the event-1--"] {
-        visibility: hidden !important;
-        opacity: 0 !important;
-      }
-      `;
-      let cssLinkFast = document.createElement("style");
-      cssLinkFast.innerHTML = cssFast;
-      document.head.appendChild(cssLinkFast);
   
       const BASE_URL = "https://engage.marketo.com";
       const MUNCHKIN_ID = "360-KCI-804";
@@ -224,21 +213,6 @@ if (typeof mkto_testing_loader != "function" && typeof mkto_testing_loader == "u
         .catch(() => {
           console.error("Error loading Marketo form");
         });
-  
-    //   window.mcz_marketoForm_adobe_connect_event = (event_url = "") => {
-    //     let final_url = "";
-    //     if (event_url != "") {
-    //       final_url = event_url.trim();
-    //     }
-  
-    //     if (document.querySelector(".marketo-form-wrapper")) {
-    //       document.querySelector(".marketo-form-wrapper").classList.add("hide");
-    //     }
-    //     if (document.querySelector('.adobe-connect button[daa-ll*="Join"]')) {
-    //       document.querySelector('.adobe-connect button[daa-ll*="Join"]').click();
-    //     }
-    //     console.log("adobe_connect_event", final_url);
-    //   };
     };
   
     window.mkto_testing_loader = mkto_testing_loader;
