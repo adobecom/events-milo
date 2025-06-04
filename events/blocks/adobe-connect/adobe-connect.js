@@ -27,7 +27,7 @@ function addSearchParams(url, searchParams) {
   return urlObj.toString();
 }
 
-function getSearchParamsFromCuurentUrl() {
+function getSearchParamsFromCurrentUrl() {
   const params = new URL(window.location.href).searchParams;
   const searchParams = {};
   addParams(searchParams, params, 'mkto_trk', 'marketo_tracker');
@@ -45,7 +45,7 @@ export default async function init(el) {
   const button = createTag('button', { class: 'button' }, 'Join the event', { parent: el });
 
   button.addEventListener('click', () => {
-    const searchParams = getSearchParamsFromCuurentUrl();
+    const searchParams = getSearchParamsFromCurrentUrl();
 
     if (validateUrl(window.join_url)) {
       url = window.join_url;
