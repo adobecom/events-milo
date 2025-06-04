@@ -2,6 +2,15 @@ import { LIBS } from '../../scripts/utils.js';
 
 const { createTag } = await import(`${LIBS}/utils/utils.js`);
 
+function validateUrl(url) {
+  try {
+    new URL(url);
+    return true;
+  } catch (_) {
+    return false;
+  }
+}
+
 function addParams(searchParams, params, key, value) {
   if (params.has(key)) {
     searchParams[key] = params.get(key);
@@ -18,6 +27,16 @@ function addSearchParams(url, searchParams) {
   return urlObj.toString();
 }
 
+function getSearchParamsFromCuurentUrl() {
+  const params = new URL(window.location.href).searchParams;
+  const searchParams = {};
+  addParams(searchParams, params, 'mkto_trk', 'marketo_tracker');
+  addParams(searchParams, params, 'mkt_tok', 'marketo_token');
+  addParams(searchParams, params, 'ecid', 'experience_cloud_id');
+  addParams(searchParams, params, 'mkto_event_id', 'marketo_event_id');
+  return searchParams;
+}
+
 export default async function init(el) {
   const h2 = el.querySelector('h2');
   let url = h2?.textContent;
@@ -26,14 +45,9 @@ export default async function init(el) {
   const button = createTag('button', { class: 'button' }, 'Join the event', { parent: el });
 
   button.addEventListener('click', () => {
-    const params = new URL(window.location.href).searchParams;
-    const searchParams = {};
-    addParams(searchParams, params, 'mkto_trk', 'marketo_tracker');
-    addParams(searchParams, params, 'mkt_tok', 'marketo_token');
-    addParams(searchParams, params, 'ecid', 'experience_cloud_id');
-    addParams(searchParams, params, 'mkto_event_id', 'marketo_event_id');
+    const searchParams = getSearchParamsFromCuurentUrl();
 
-    if (window.join_url) {
+    if (validateUrl(window.join_url)) {
       url = window.join_url;
     }
     url = addSearchParams(url, searchParams);
@@ -42,18 +56,15 @@ export default async function init(el) {
     const overlay = createTag('div', {
       class: 'iframe-overlay',
       style: 'position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255, 255, 255, 0.9); display: flex; align-items: center; justify-content: center; z-index: 1000;',
-    });
+    }, '', { parent: el });
     
     // Create loading text
-    const loadingText = createTag('div', {
+    createTag('div', {
       style: 'font-size: 1.2em; color: #333;',
-    }, 'Loading event...');
-    
-    overlay.appendChild(loadingText);
-    el.appendChild(overlay);
+    }, 'Loading event...', { parent: overlay });
     
     // Create iframe
-    const iframe = createTag('iframe', {
+    createTag('iframe', {
       src: url,
       frameborder: '0',
       allowfullscreen: 'true',
@@ -69,4 +80,21 @@ export default async function init(el) {
     button.remove();
     document.body.querySelector('#webinar-marketo-form')?.remove();
   });
+
+  window.mcz_marketoForm_adobe_connect_event = (event_url = "") => {
+    let eventUrl = "";
+    if (event_url != "") {
+      eventUrl = event_url.trim();
+      window.join_url = eventUrl;
+    }
+
+    if (document.querySelector(".marketo-form-wrapper")) {
+      document.querySelector(".marketo-form-wrapper").classList.add("hide");
+    }
+    const joinButton = document.querySelector('.adobe-connect button[daa-ll*="Join"]');
+    if (joinButton) {
+      document.querySelector('.adobe-connect button[daa-ll*="Join"]').click();
+    }
+    console.log("adobe_connect_event in Events", eventUrl);
+  };
 }

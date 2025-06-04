@@ -225,20 +225,20 @@ if (typeof mkto_testing_loader != "function" && typeof mkto_testing_loader == "u
           console.error("Error loading Marketo form");
         });
   
-      window.mcz_marketoForm_adobe_connect_event = (event_url = "") => {
-        let final_url = "";
-        if (event_url != "") {
-          final_url = event_url.trim();
-        }
+    //   window.mcz_marketoForm_adobe_connect_event = (event_url = "") => {
+    //     let final_url = "";
+    //     if (event_url != "") {
+    //       final_url = event_url.trim();
+    //     }
   
-        if (document.querySelector(".marketo-form-wrapper")) {
-          document.querySelector(".marketo-form-wrapper").classList.add("hide");
-        }
-        if (document.querySelector('.adobe-connect button[daa-ll*="Join"]')) {
-          document.querySelector('.adobe-connect button[daa-ll*="Join"]').click();
-        }
-        console.log("adobe_connect_event", final_url);
-      };
+    //     if (document.querySelector(".marketo-form-wrapper")) {
+    //       document.querySelector(".marketo-form-wrapper").classList.add("hide");
+    //     }
+    //     if (document.querySelector('.adobe-connect button[daa-ll*="Join"]')) {
+    //       document.querySelector('.adobe-connect button[daa-ll*="Join"]').click();
+    //     }
+    //     console.log("adobe_connect_event", final_url);
+    //   };
     };
   
     window.mkto_testing_loader = mkto_testing_loader;
