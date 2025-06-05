@@ -285,7 +285,7 @@ function autoUpdateLinks(scope, miloLibs) {
   };
 
   const templateLoadCallbacks = {
-    online: (a, templateId) => {
+    webinar: (a, templateId) => {
       a.href = templateId;
     },
     inperson: (a, templateId) => {
