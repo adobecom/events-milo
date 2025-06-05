@@ -966,6 +966,21 @@ async function decorateToastArea() {
   return toastArea;
 }
 
+function getFormLink(block, bp) {
+  const legacyLink = block.querySelector(':scope > div:nth-of-type(2) a[href$=".json"]');
+
+  const cloudType = getMetadata('cloud-type');
+  const form = createTag('a', { href: `/events/default/rsvp-form-configs/${cloudType.toLowerCase()}.json` });
+
+  if (legacyLink) {
+    legacyLink.href = form.href;
+    return legacyLink;
+  }
+
+  bp.formContainer.append(form);
+  return form;
+}
+
 export default async function decorate(block, formData = null) {
   block.classList.add('loading');
   const toastArea = await decorateToastArea();
@@ -975,11 +990,12 @@ export default async function decorate(block, formData = null) {
     toastArea,
     eventHero: block.querySelector(':scope > div:nth-of-type(1)'),
     formContainer: block.querySelector(':scope > div:nth-of-type(2)'),
-    form: block.querySelector(':scope > div:nth-of-type(2) a[href$=".json"]'),
     terms: block.querySelector(':scope > div:nth-of-type(3)'),
     rsvpSuccessScreen: block.querySelector(':scope > div:nth-of-type(4)'),
     waitlistSuccessScreen: block.querySelector(':scope > div:nth-of-type(5)'),
   };
+
+  bp.form = getFormLink(block, bp);
 
   await onProfile(bp, formData);
 }
