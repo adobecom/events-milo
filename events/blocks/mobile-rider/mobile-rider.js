@@ -220,7 +220,7 @@ function createEventCard(container, config, variation) {
 }
 
 function createVideoPlayer(container, config, isASL = false) {
-  const videoId = isASL ? config.aslvideoid : config.videoid;
+  const videoId = isASL ? config.identifier2 : config.videoid;
   const videoType = isASL ? 'asl' : 'main';
   
   // Get current variation's video ID if available
@@ -258,7 +258,7 @@ function createVideoPlayer(container, config, isASL = false) {
 
 function initializeMobileRider(video, config, isASL = false) {
   const isAutoplayEnabled = !document.body.classList.contains('is-editor') && config.autoplay !== 'false';
-  const videoId = isASL ? config.aslvideoid : config.videoid;
+  const videoId = isASL ? config.identifier2 : config.videoid;
   
   // Check if we should avoid stream end handling
   const avoidStreamEnd = config.avoidstreamend === 'true' || 
@@ -271,11 +271,10 @@ function initializeMobileRider(video, config, isASL = false) {
     {
       autoplay: isAutoplayEnabled,
       controls: true,
-      muted: isAutoplayEnabled, // Muted state follows autoplay for better user experience
-      ...DEFAULT_CONFIG, // Apply default configurations
-      identifier1: config.identifierfirst,
-      identifier2: config.identifiersecond,
-      responsive: config.fluidcontainer === 'true',
+      muted: isAutoplayEnabled,
+      analytics: { provider: ANALYTICS_PROVIDER },
+      identifier1: config.identifier1,
+      identifier2: config.identifier2,
       avoidStreamEnd,
     },
   );
@@ -428,8 +427,8 @@ export default async function init(el) {
   // Create main video player
   const mainVideo = createVideoPlayer(container, config);
 
-  // Create ASL video player if enabled
-  if (config.enableasl === 'true' && config.aslvideoid) {
+  // Create ASL video player if identifier2 is provided
+  if (config.identifier2) {
     const aslVideo = createVideoPlayer(container, config, true);
     container.classList.add('has-asl');
   }
@@ -440,8 +439,8 @@ export default async function init(el) {
     container.appendChild(eventCard);
   }
 
-  // Initialize ASL button handling if enabled
-  if (config.enableasl === 'true') {
+  // Initialize ASL button handling if identifier2 is provided
+  if (config.identifier2) {
     const aslButton = document.querySelector('#asl-button');
     if (!aslButton) {
       handleASLSubroutine(10000, 100, toggleClassHandler);
@@ -466,8 +465,8 @@ export default async function init(el) {
     // Initialize main video player
     const mainPlayerEmbed = initializeMobileRider(mainVideo, config);
 
-    // Initialize ASL video player if enabled
-    if (config.enableasl === 'true' && config.aslvideoid) {
+    // Initialize ASL video player if identifier2 is provided
+    if (config.identifier2) {
       const aslPlayerEmbed = initializeMobileRider(
         document.querySelector('.asl-video'),
         config,
