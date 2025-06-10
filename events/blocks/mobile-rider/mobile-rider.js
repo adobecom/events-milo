@@ -275,7 +275,7 @@ function initializeMobileRider(video, config, isASL = false) {
       ...DEFAULT_CONFIG, // Apply default configurations
       identifier1: config.identifierfirst,
       identifier2: config.identifiersecond,
-      fluidContainer: config.fluidcontainer === 'true',
+      responsive: config.fluidcontainer === 'true',
       avoidStreamEnd,
     },
   );
@@ -289,7 +289,7 @@ const getPlayerConfig = (cfg, id1, id2) => ({
   ...DEFAULT_CONFIG,
   identifier1: id1,
   identifier2: id2,
-  fluidContainer: cfg.fluidcontainer === 'true'
+  responsive: cfg.fluidcontainer === 'true'
 });
 
 // Initialize or update player
