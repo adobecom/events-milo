@@ -125,7 +125,12 @@ function handleASLSubroutine(limit, interval, toggleHandlerCallback, buttonASL) 
     if (aslButtonSecondLoad) {
       const getTimingDataElement = document.querySelector('#mr-adobe')?.closest('.dxf[data-toggle-type="timing"]');
       const valueTextForNextXF = getValuesFromDomTimingElement(getTimingDataElement);
-      setUpStreamendListener(getTimingDataElement, valueTextForNextXF);
+      
+      // Only set up stream end listener if we have timing data
+      if (getTimingDataElement && valueTextForNextXF?.concurrentVariationToSend?.mobileRiderLiveNextSession) {
+        setUpStreamendListener(getTimingDataElement, valueTextForNextXF);
+      }
+      
       return toggleHandlerCallback(aslButtonSecondLoad);
     }
     counter += 1;
@@ -137,9 +142,11 @@ function handleASLSubroutine(limit, interval, toggleHandlerCallback, buttonASL) 
 
 function toggleClassHandler(aslButton) {
   aslButton.addEventListener('click', () => {
-    const containerMR = document.querySelector('.mobile-rider-container');
-    toggleASL(containerMR);
-    handleASLSubroutine(5000, 100, toggleClassHandler);
+    const containerMR = document.querySelector('#mr-adobe');
+    if (containerMR) {
+      toggleASL(containerMR);
+      handleASLSubroutine(5000, 100, toggleClassHandler);
+    }
   });
 }
 
@@ -416,6 +423,7 @@ export default async function init(el) {
     'data-timing': config.timing ? JSON.stringify(config.timing) : '',
     'data-current-variation': '',
     'data-fragment-path': config.fragmentpath || '',
+    'id': 'mr-adobe'
   }, '', { parent: wrapper });
 
   // Create concurrent controls if needed
