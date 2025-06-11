@@ -271,6 +271,7 @@ function initializeMobileRider(video, config, isASL = false) {
   const avoidStreamEnd = config.avoidstreamend === 'true' || 
     new URLSearchParams(window?.location?.search).get('avoidStreamEndFlag') === 'true';
   
+    console.log('avoidStreamEnd', avoidStreamEnd);
   return window.mobilerider?.embed(
     video.id,
     videoId,
@@ -282,7 +283,6 @@ function initializeMobileRider(video, config, isASL = false) {
       analytics: { provider: ANALYTICS_PROVIDER },
       identifier1: config.identifier1,
       identifier2: config.identifier2,
-      avoidStreamEnd,
     },
   );
 }
