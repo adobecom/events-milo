@@ -21,6 +21,32 @@ const DEFAULT_CONFIG = {
   debug: getConfig().env === 'dev',
 };
 
+function sanitizedKeyDiv(text) {
+  return text.trim().toLowerCase().replace(/ /g, '-');
+}
+
+function getMetaData(el) {
+  const keyDivs = el.querySelectorAll(':scope > div > div:first-child');
+  const metaData = {};
+  keyDivs.forEach((div) => {
+    const valueDivText = div.nextElementSibling.textContent;
+    const keyValueText = sanitizedKeyDiv(div.textContent);
+    
+    // Handle timing data specially to parse JSON
+    if (keyValueText === 'timing') {
+      try {
+        metaData[keyValueText] = JSON.parse(valueDivText);
+      } catch (e) {
+        window.lana?.log(`Failed to parse timing data: ${e}`);
+        metaData[keyValueText] = null;
+      }
+    } else {
+      metaData[keyValueText] = valueDivText;
+    }
+  });
+  return metaData;
+}
+
 function getValuesFromDomTimingElement(element) {
   const { dataset: { timing } = {} } = element || {};
 
