@@ -1,157 +1,203 @@
-let conditionStore = null;
-let currentScheduleItem = null;
-let nextScheduleItem = null;
-let timerId = null;
+import TestingManager from './testing.js';
 
-/**
- * @returns {number}
- * @description Returns the current time from the API
- */
-async function getCurrentTimeFromAPI() {
-  try {
-    const response = await fetch('https://worldtimeapi.org/api/ip');
-    const data = await response.json();
-    return new Date(data.datetime).getTime();
-  } catch (error) {
-    console.error('Error fetching time from API:', error);
-    return null;
-  }
-}
-
-/**
- * @param {Object} scheduleRoot
- * @param {Object} cs: conditionStore
- * @returns {Object}
- * @description Returns the first schedule item that should be shown
- */
-function getStartScheduleItem(scheduleRoot, cs) {
-  const currentTime = new Date().getTime();
-  let pointer = scheduleRoot;
-  let start = null;
-
-  // Scan phase 1: Fast forward through toggleTime-only
-  while (pointer) {
-    const { toggleTime: t } = pointer;
-    const toggleTimePassed = typeof t !== 'number' || currentTime > t;
-
-    if (!toggleTimePassed) break;
-
-    start = pointer;
-    pointer = pointer.next;
+class TimingWorker {
+  constructor() {
+    this.currentScheduleItem = null;
+    this.nextScheduleItem = null;
+    this.timerId = null;
+    this.plugins = new Map();
+    this.channels = new Map();
+    this.testingManager = new TestingManager();
+    this.setupMessageHandler();
   }
 
-  // Scan Phase 2: Scan from last toggleTime match forward with condition checks
-  pointer = start || scheduleRoot;
+  setupBroadcastChannels(plugins) {
+    // Close any existing channels
+    this.channels.forEach((channel) => channel.close());
+    this.channels.clear();
 
-  while (pointer) {
-    const { toggleTime: t, conditions: c } = pointer;
-    const toggleTimePassed = !t || currentTime > t;
-    const conditionsMet = !c || c.every(({ key: k, expectedValue: v }) => {
-      const val = cs?.[k];
-      const isAny = v.trim().toLowerCase() === 'any' && !!val;
-      return isAny || val === v;
-    });
-
-    if (toggleTimePassed && conditionsMet) return pointer;
-
-    pointer = pointer.next;
-  }
-
-  return scheduleRoot;
-}
-
-/**
- * @returns {number}
- * @description Returns a random interval between 1 and 1.5 seconds
- */
-function getRandomInterval() {
-  const min = 500;
-  const max = 1500;
-  return Math.floor(Math.random() * (max - min + 1)) + min;
-}
-
-/**
- * @param {Object} scheduleItem
- * @returns {boolean}
- * @description Returns true if the next schedule item is triggered
- */
-function isNextScheduleTriggered(scheduleItem) {
-  if (!scheduleItem) return false;
-  const { conditions: c, toggleTime: t } = scheduleItem;
-  const currentTime = new Date().getTime();
-
-  const toggleTimePassed = !t || currentTime > t;
-
-  const conditionsMet = !c || c.every(({ key: k, expectedValue: v }) => {
-    const conditionValue = conditionStore?.[k];
-    const isAnyVal = v.trim().toLowerCase() === 'any' && !!conditionValue;
-    return isAnyVal || conditionValue === v;
-  });
-
-  return toggleTimePassed && conditionsMet;
-}
-
-/**
- * @param {number} currentTime
- * @returns {boolean}
- * @description Returns true if the current time is valid
- */
-// eslint-disable-next-line no-unused-vars
-async function validateTime(currentTime) {
-  const apiCurrentTime = await getCurrentTimeFromAPI();
-  const diff = apiCurrentTime - currentTime;
-
-  if (diff > 10000) {
-    window.alert('Sorry. Your local time is off by more than 10 seconds. Please check your system clock.');
-    return false;
-  }
-
-  return true;
-}
-
-/**
- * @param {Object} event
- * @description Handles messages from the main thread
- */
-onmessage = async (event) => {
-  const { schedule, conditions } = event.data;
-
-  if (timerId) {
-    clearTimeout(timerId);
-    timerId = null;
-  }
-
-  if (conditions) {
-    conditionStore = { ...conditionStore, ...conditions };
-  }
-
-  if (schedule) {
-    nextScheduleItem = getStartScheduleItem(schedule, conditionStore);
-    currentScheduleItem = nextScheduleItem?.prev || schedule;
-  }
-
-  if (!nextScheduleItem) return;
-
-  const runTimer = async () => {
-    const triggered = isNextScheduleTriggered(nextScheduleItem);
-
-    const { pathToFragment: currentPath } = currentScheduleItem;
-    const { pathToFragment: nextPath, prev: nextPrev } = nextScheduleItem;
-
-    if (triggered && (nextPath !== currentPath || nextPrev === null)) {
-      // const timeValid = await validateTime(currentTime);
-      // if (!timeValid) return;
-
-      postMessage(nextScheduleItem);
-
-      currentScheduleItem = { ...nextScheduleItem };
-      nextScheduleItem = nextScheduleItem.next;
+    // Only set up channels for enabled plugins
+    if (plugins.has('metadata')) {
+      const channel = new BroadcastChannel('metadata-store');
+      channel.onmessage = (event) => {
+        const { key, value } = event.data;
+        const metadataStore = this.plugins.get('metadata');
+        if (metadataStore) {
+          metadataStore.set(key, value);
+        }
+      };
+      this.channels.set('metadata', channel);
     }
 
-    if (!nextScheduleItem) return;
+    if (plugins.has('mobileRider')) {
+      const channel = new BroadcastChannel('mobile-rider-store');
+      channel.onmessage = (event) => {
+        const { sessionId, isActive } = event.data;
+        const mobileRiderStore = this.plugins.get('mobileRider');
+        if (mobileRiderStore) {
+          mobileRiderStore.set(sessionId, isActive);
+        }
+      };
+      this.channels.set('mobileRider', channel);
+    }
+  }
 
-    timerId = setTimeout(runTimer, getRandomInterval());
-  };
+  /**
+   * @returns {number}
+   * @description Returns the current time from the API
+   */
+  static async getCurrentTimeFromAPI() {
+    try {
+      const response = await fetch('https://worldtimeapi.org/api/ip');
+      const data = await response.json();
+      return new Date(data.datetime).getTime();
+    } catch (error) {
+      window.lana?.log(`Error fetching time from API: ${JSON.stringify(error)}`);
+      return null;
+    }
+  }
 
-  runTimer();
-};
+  /**
+   * @param {Object} scheduleRoot - The root of the schedule tree
+   * @returns {Object}
+   * @description Returns the first schedule item that should be shown based on toggleTime
+   */
+  static getStartScheduleItemByToggleTime(scheduleRoot) {
+    const currentTime = new Date().getTime();
+    let pointer = scheduleRoot;
+    let start = null;
+
+    while (pointer) {
+      const { toggleTime: t } = pointer;
+      const toggleTimePassed = typeof t !== 'number' || currentTime > t;
+
+      if (!toggleTimePassed) break;
+
+      start = pointer;
+      pointer = pointer.next;
+    }
+
+    return start || scheduleRoot;
+  }
+
+  /**
+   * @returns {number}
+   * @description Returns a random interval between 1 and 1.5 seconds
+   */
+  static getRandomInterval() {
+    const min = 500;
+    const max = 1500;
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+  }
+
+  /**
+   * @returns {number}
+   * @description Returns the current time adjusted by the time offset if in test mode
+   */
+  getCurrentTime() {
+    const currentTime = new Date().getTime();
+    return this.testingManager.isTesting()
+      ? this.testingManager.adjustTime(currentTime)
+      : currentTime;
+  }
+
+  /**
+   * @param {Object} scheduleItem
+   * @returns {boolean}
+   * @description Returns true if the next schedule item should be triggered based on plugins
+   */
+  async shouldTriggerNextSchedule(scheduleItem) {
+    if (!scheduleItem) return false;
+
+    // Check if previous item has mobileRider that's still active (overrun)
+    if (this.currentScheduleItem?.mobileRider) {
+      const mobileRiderStore = this.plugins.get('mobileRider');
+      if (mobileRiderStore) {
+        const { sessionId } = this.currentScheduleItem.mobileRider;
+        const isActive = mobileRiderStore.get(sessionId);
+        if (isActive) return false; // Wait for session to end
+      }
+    }
+
+    // Check if current item has mobileRider that's ended (underrun)
+    if (scheduleItem.mobileRider) {
+      const mobileRiderStore = this.plugins.get('mobileRider');
+      if (mobileRiderStore) {
+        const { sessionId } = scheduleItem.mobileRider;
+        const isActive = mobileRiderStore.get(sessionId);
+        if (!isActive) return true; // Move on if session ended
+      }
+    }
+
+    // Check metadata conditions if present
+    if (scheduleItem.metadata) {
+      const metadataStore = this.plugins.get('metadata');
+      if (metadataStore) {
+        const { key, expectedValue } = scheduleItem.metadata;
+        const value = metadataStore.get(key);
+        if ((expectedValue && value !== expectedValue) || (!expectedValue && !value)) return false;
+      }
+    }
+
+    // If no plugins are blocking, check toggleTime
+    const { toggleTime } = scheduleItem;
+    if (toggleTime) {
+      return this.getCurrentTime() > toggleTime;
+    }
+
+    return true;
+  }
+
+  async runTimer() {
+    const shouldTrigger = await this.shouldTriggerNextSchedule(this.nextScheduleItem);
+
+    const { pathToFragment: currentPath } = this.currentScheduleItem;
+    const { pathToFragment: nextPath, prev: nextPrev } = this.nextScheduleItem;
+
+    if (shouldTrigger && (nextPath !== currentPath || nextPrev === null)) {
+      postMessage(this.nextScheduleItem);
+
+      this.currentScheduleItem = { ...this.nextScheduleItem };
+      this.nextScheduleItem = this.nextScheduleItem.next;
+    }
+
+    if (!this.nextScheduleItem) return;
+
+    this.timerId = setTimeout(() => this.runTimer(), TimingWorker.getRandomInterval());
+  }
+
+  handleMessage(event) {
+    const { schedule, plugins, testing } = event.data;
+
+    if (this.timerId) {
+      clearTimeout(this.timerId);
+      this.timerId = null;
+    }
+
+    // Initialize testing manager with testing data
+    this.testingManager.init(testing);
+
+    if (plugins) {
+      this.plugins = new Map(Object.entries(plugins));
+      this.setupBroadcastChannels(this.plugins);
+    }
+
+    if (schedule) {
+      this.nextScheduleItem = TimingWorker.getStartScheduleItemByToggleTime(schedule);
+      this.currentScheduleItem = this.nextScheduleItem?.prev || schedule;
+    }
+
+    if (!this.nextScheduleItem) return;
+
+    this.runTimer();
+  }
+
+  setupMessageHandler() {
+    onmessage = (event) => this.handleMessage(event);
+  }
+}
+
+// Initialize the worker
+(() => new TimingWorker())();
+
+export default TimingWorker;

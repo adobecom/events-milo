@@ -152,9 +152,25 @@ function setUpStreamendListener(element) {
   window.__mr_player.off('streamend');
   
   window.__mr_player.on('streamend', () => {
+    // Get current variation data
+    const currentVariation = getTimingDataElement?.dataset?.currentVariation;
+    const timingData = JSON.parse(getTimingDataElement?.dataset?.timing || '[]');
+    const currentVariationData = timingData.find(v => v.variation === currentVariation);
+
+    // Notify timing framework plugin if this is a tracked session
+    if (currentVariationData?.mobileRider?.sessionId) {
+      const channel = new BroadcastChannel('mobile-rider-store');
+      channel.postMessage({
+        sessionId: currentVariationData.mobileRider.sessionId,
+        isActive: false
+      });
+      channel.close();
+    }
+
     window.__mr_player?.dispose();
     window.__mr_player = null;
     window.__mr_stream_published = null;
+    
     if (getTimingDataElement && valueTextForNextXF) {
       window.timingFramework?.(getTimingDataElement, {}, valueTextForNextXF);
     }
@@ -240,9 +256,35 @@ function createVideoPlayer(container, config) {
 function initializeMobileRider(video, config) {
   const isAutoplayEnabled = !document.body.classList.contains('is-editor') && config.autoplay !== 'false';
   
+  // Get timing data if available
+  const container = video.closest('.mobileRider_container');
+  const timingElement = container?.closest('.dxf[data-toggle-type="timing"]');
+  let videoId = config.videoid;
+  
+  if (timingElement) {
+    const currentVariation = timingElement.dataset.currentVariation;
+    const timingData = JSON.parse(timingElement.dataset.timing || '[]');
+    const currentVariationData = timingData.find(v => v.variation === currentVariation);
+    
+    // Use livestream ID if available
+    if (currentVariationData?.livestreamId) {
+      videoId = currentVariationData.livestreamId;
+    }
+
+    // Notify timing framework plugin about session start
+    if (currentVariationData?.mobileRider?.sessionId) {
+      const channel = new BroadcastChannel('mobile-rider-store');
+      channel.postMessage({
+        sessionId: currentVariationData.mobileRider.sessionId,
+        isActive: true
+      });
+      channel.close();
+    }
+  }
+  
   window.__mr_player = window.mobilerider?.embed(
     video.id,
-    config.videoid,
+    videoId,
     config.skinid,
     {
       autoplay: isAutoplayEnabled,
