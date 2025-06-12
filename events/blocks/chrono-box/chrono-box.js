@@ -64,7 +64,6 @@ function setScheduleToScheduleWorker(schedule, plugins) {
   );
 
   worker.postMessage({
-    message: 'schedule',
     schedule: scheduleLinkedList,
     plugins: pluginStates,
     testing,

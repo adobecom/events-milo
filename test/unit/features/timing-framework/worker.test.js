@@ -139,4 +139,51 @@ describe('TimingWorker', () => {
       expect(worker.channels.size).to.equal(2);
     });
   });
+
+  describe('runTimer with testing', () => {
+    it('should stop polling when in testing mode', async () => {
+      const clock = sinon.useFakeTimers();
+
+      // Set up testing mode
+      worker.testingManager.init({ toggleTime: Date.now() + 1000 });
+
+      // Set up a schedule item that should trigger
+      worker.nextScheduleItem = {
+        toggleTime: Date.now() - 1000,
+        pathToFragment: '/test',
+      };
+      worker.currentScheduleItem = { pathToFragment: '/current' };
+
+      // Run timer
+      await worker.runTimer();
+
+      // Verify no setTimeout was called (polling stopped)
+      expect(worker.timerId).to.be.null;
+
+      clock.restore();
+    });
+
+    it('should continue polling when not in testing mode', async () => {
+      const clock = sinon.useFakeTimers();
+
+      // Set up non-testing mode
+      worker.testingManager.init(null);
+
+      // Set up a schedule item
+      worker.nextScheduleItem = {
+        toggleTime: Date.now() + 1000,
+        pathToFragment: '/test',
+        next: { toggleTime: Date.now() + 2000, pathToFragment: '/next' },
+      };
+      worker.currentScheduleItem = { pathToFragment: '/current' };
+
+      // Run timer
+      await worker.runTimer();
+
+      // Verify setTimeout was called (polling continues)
+      expect(worker.timerId).to.not.be.null;
+
+      clock.restore();
+    });
+  });
 });

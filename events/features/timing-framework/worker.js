@@ -163,6 +163,9 @@ class TimingWorker {
 
     if (!this.nextScheduleItem) return;
 
+    // Stop polling in testing mode - we want to see exact state at the simulated timestamp
+    if (this.testingManager.isTesting()) return;
+
     this.timerId = setTimeout(() => this.runTimer(), TimingWorker.getRandomInterval());
   }
 

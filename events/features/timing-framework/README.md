@@ -248,6 +248,28 @@ The framework includes a testing system that allows:
 - Testing of schedule transitions
 - Server time synchronization testing
 
+#### Testing Mode Behavior
+
+When testing mode is enabled via the `timing` URL parameter:
+
+1. **Time Simulation**: The framework simulates being at the specified EPOCH timestamp
+2. **Polling Optimization**: Worker polling is disabled to show the exact state at that timestamp
+3. **Schedule Positioning**: The schedule immediately jumps to the appropriate position based on the simulated time
+4. **Plugin Testing**: Plugin conditions still work normally via BroadcastChannel
+
+**Example Usage:**
+```
+https://your-site.com/event-page?timing=1640995200000
+```
+
+This would simulate the page as if it were running at December 31, 2021 (timestamp 1640995200000), allowing you to:
+- Test how content appears at specific moments
+- Verify schedule positioning without waiting
+- Debug timing-sensitive content transitions
+- Test edge cases around schedule boundaries
+
+**Note**: In testing mode, the worker stops continuous polling since you're viewing a fixed point in time. This provides a more accurate representation of what users would see at that exact timestamp.
+
 ## Error Handling
 
 The framework includes comprehensive error handling:
