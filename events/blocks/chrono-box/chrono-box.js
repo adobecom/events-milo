@@ -40,7 +40,8 @@ async function initPlugins(schedule) {
   const pluginsModules = new Map();
   await Promise.all(plugins.map(async (plugin, index) => {
     const pluginName = pluginsNeeded[index].replace('-', '');
-    pluginsModules.set(pluginName, await plugin.init(schedule));
+    const initFunction = plugin.default || plugin.init;
+    pluginsModules.set(pluginName, await initFunction(schedule));
   }));
 
   return pluginsModules;
