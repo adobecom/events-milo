@@ -8,6 +8,7 @@ class TimingWorker {
     this.plugins = new Map();
     this.channels = new Map();
     this.testingManager = new TestingManager();
+    this.tabId = crypto.randomUUID();
     this.setupMessageHandler();
   }
 
@@ -20,10 +21,13 @@ class TimingWorker {
     if (plugins.has('metadata')) {
       const channel = new BroadcastChannel('metadata-store');
       channel.onmessage = (event) => {
-        const { key, value } = event.data;
-        const metadataStore = this.plugins.get('metadata');
-        if (metadataStore) {
-          metadataStore.set(key, value);
+        const { tabId, key, value } = event.data;
+        // Only process messages from this tab
+        if (tabId === this.tabId) {
+          const metadataStore = this.plugins.get('metadata');
+          if (metadataStore) {
+            metadataStore.set(key, value);
+          }
         }
       };
       this.channels.set('metadata', channel);
@@ -32,10 +36,13 @@ class TimingWorker {
     if (plugins.has('mobileRider')) {
       const channel = new BroadcastChannel('mobile-rider-store');
       channel.onmessage = (event) => {
-        const { sessionId, isActive } = event.data;
-        const mobileRiderStore = this.plugins.get('mobileRider');
-        if (mobileRiderStore) {
-          mobileRiderStore.set(sessionId, isActive);
+        const { tabId, sessionId, isActive } = event.data;
+        // Only process messages from this tab
+        if (tabId === this.tabId) {
+          const mobileRiderStore = this.plugins.get('mobileRider');
+          if (mobileRiderStore) {
+            mobileRiderStore.set(sessionId, isActive);
+          }
         }
       };
       this.channels.set('mobileRider', channel);

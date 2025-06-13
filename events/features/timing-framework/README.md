@@ -312,6 +312,28 @@ Benefits:
 - **Cross-context**: Works across different windows, tabs, and iframes
 - **State Management**: Centralized state management for plugins
 
+#### Tab Isolation
+The framework implements tab isolation to prevent cross-tab interference:
+- Each tab instance generates a unique UUID on initialization
+- All BroadcastChannel messages include the sender's tab ID
+- Messages are only processed if they originate from the same tab
+- This prevents schedule transitions in one tab from affecting others
+
+Example message format:
+```javascript
+{
+  tabId: "550e8400-e29b-41d4-a716-446655440000",
+  key: "eventStatus",
+  value: "active"
+}
+```
+
+This isolation ensures:
+- Independent testing in different tabs
+- No interference between multiple event pages
+- Clean separation of plugin states
+- Predictable behavior in each tab
+
 ### Implementation Example
 
 ```javascript

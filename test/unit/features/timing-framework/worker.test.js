@@ -186,4 +186,66 @@ describe('TimingWorker', () => {
       clock.restore();
     });
   });
+
+  describe('BroadcastChannel handling', () => {
+    it('should only process messages from the same tab', () => {
+      const metadataWorker = new TimingWorker();
+      const metadataStore = new Map();
+      metadataWorker.plugins.set('metadata', metadataStore);
+
+      // Set up the channel
+      metadataWorker.setupBroadcastChannels(new Set(['metadata']));
+      const channel = metadataWorker.channels.get('metadata');
+
+      // Send message from different tab
+      channel.postMessage({
+        tabId: 'different-tab-id',
+        key: 'testKey',
+        value: 'testValue',
+      });
+
+      // Value should not be set
+      expect(metadataStore.get('testKey')).to.be.undefined;
+
+      // Send message from same tab
+      channel.postMessage({
+        tabId: metadataWorker.tabId,
+        key: 'testKey',
+        value: 'testValue',
+      });
+
+      // Value should be set
+      expect(metadataStore.get('testKey')).to.equal('testValue');
+    });
+
+    it('should handle mobile rider messages with tab isolation', () => {
+      const riderWorker = new TimingWorker();
+      const mobileRiderStore = new Map();
+      riderWorker.plugins.set('mobileRider', mobileRiderStore);
+
+      // Set up the channel
+      riderWorker.setupBroadcastChannels(new Set(['mobileRider']));
+      const channel = riderWorker.channels.get('mobileRider');
+
+      // Send message from different tab
+      channel.postMessage({
+        tabId: 'different-tab-id',
+        sessionId: 'session1',
+        isActive: true,
+      });
+
+      // Session should not be set
+      expect(mobileRiderStore.get('session1')).to.be.undefined;
+
+      // Send message from same tab
+      channel.postMessage({
+        tabId: riderWorker.tabId,
+        sessionId: 'session1',
+        isActive: true,
+      });
+
+      // Session should be set
+      expect(mobileRiderStore.get('session1')).to.be.true;
+    });
+  });
 });
