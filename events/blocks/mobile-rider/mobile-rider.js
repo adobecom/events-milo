@@ -1,4 +1,5 @@
 import { LIBS } from '../../scripts/utils.js';
+import { mobileRiderStore } from '../../features/timing-framework/plugins/mobile-rider/plugin.js';
 
 const { createTag, getConfig } = await import(`${LIBS}/utils/utils.js`);
 import initDrawer from './mobile-rider-drawer.js';
@@ -152,25 +153,9 @@ function setUpStreamendListener(element) {
   window.__mr_player.off('streamend');
   
   window.__mr_player.on('streamend', () => {
-    // Get current variation data
-    const currentVariation = getTimingDataElement?.dataset?.currentVariation;
-    const timingData = JSON.parse(getTimingDataElement?.dataset?.timing || '[]');
-    const currentVariationData = timingData.find(v => v.variation === currentVariation);
-
-    // Notify timing framework plugin if this is a tracked session
-    if (currentVariationData?.mobileRider?.sessionId) {
-      const channel = new BroadcastChannel('mobile-rider-store');
-      channel.postMessage({
-        sessionId: currentVariationData.mobileRider.sessionId,
-        isActive: false
-      });
-      channel.close();
-    }
-
     window.__mr_player?.dispose();
     window.__mr_player = null;
     window.__mr_stream_published = null;
-    
     if (getTimingDataElement && valueTextForNextXF) {
       window.timingFramework?.(getTimingDataElement, {}, valueTextForNextXF);
     }
@@ -180,7 +165,7 @@ function setUpStreamendListener(element) {
 function toggleASL(container, toggleClass = 'isASL') {
   const video = container.querySelector('.mobile-rider-viewport');
   const isASL = container.classList.contains(toggleClass);
-  const videoId = isASL ? container.dataset.videoid : container.dataset.identifier2;
+  const videoId = isASL ? container.dataset.videoid : container.dataset.aslid;
   
   if (!video || !window.mobilerider || !videoId) return;
 
@@ -195,10 +180,13 @@ function toggleASL(container, toggleClass = 'isASL') {
       controls: true,
       muted: true,
       analytics: { provider: ANALYTICS_PROVIDER },
-      identifier1: container.dataset.videoid,
-      identifier2: container.dataset.identifier2,
     }
   );
+
+  // Update store with session status
+  if (container.dataset.sessionid) {
+    mobileRiderStore.set(container.dataset.sessionid, true);
+  }
 }
 
 function handleASLSubroutine(limit, interval, toggleHandlerCallback, buttonASL) {
@@ -256,47 +244,82 @@ function createVideoPlayer(container, config) {
 function initializeMobileRider(video, config) {
   const isAutoplayEnabled = !document.body.classList.contains('is-editor') && config.autoplay !== 'false';
   
-  // Get timing data if available
-  const container = video.closest('.mobileRider_container');
-  const timingElement = container?.closest('.dxf[data-toggle-type="timing"]');
-  let videoId = config.videoid;
-  
-  if (timingElement) {
-    const currentVariation = timingElement.dataset.currentVariation;
-    const timingData = JSON.parse(timingElement.dataset.timing || '[]');
-    const currentVariationData = timingData.find(v => v.variation === currentVariation);
-    
-    // Use livestream ID if available
-    if (currentVariationData?.livestreamId) {
-      videoId = currentVariationData.livestreamId;
-    }
-
-    // Notify timing framework plugin about session start
-    if (currentVariationData?.mobileRider?.sessionId) {
-      const channel = new BroadcastChannel('mobile-rider-store');
-      channel.postMessage({
-        sessionId: currentVariationData.mobileRider.sessionId,
-        isActive: true
-      });
-      channel.close();
-    }
-  }
-  
   window.__mr_player = window.mobilerider?.embed(
     video.id,
-    videoId,
+    config.videoid,
     config.skinid,
     {
       autoplay: isAutoplayEnabled,
       controls: true,
       muted: isAutoplayEnabled,
       analytics: { provider: ANALYTICS_PROVIDER },
-      identifier1: config.videoid,
-      identifier2: config.identifier2,
     }
   );
 
+  // Update store with session status
+  if (config.sessionid) {
+    mobileRiderStore.set(config.sessionid, true);
+  }
+
   return window.__mr_player;
+}
+
+function createConcurrentPlayer(container, config) {
+  if (!config.concurrent?.enabled) return null;
+
+  const concurrentWrapper = createTag('div', {
+    class: 'video-wrapper concurrent-wrapper',
+    'data-fragment-path': config.fragmentpath || '',
+  });
+
+  const concurrentVideo = createTag('video', {
+    id: 'idConcurrentPlayer',
+    class: 'mobile-rider-viewport concurrent-video',
+    controls: true,
+  });
+
+  concurrentWrapper.appendChild(concurrentVideo);
+  container.appendChild(concurrentWrapper);
+
+  // Initialize concurrent player
+  const concurrentPlayer = window.mobilerider?.embed(
+    concurrentVideo.id,
+    config.concurrent.videos[0].videoId,
+    config.skinid,
+    {
+      autoplay: false,
+      controls: true,
+      muted: true,
+      analytics: { provider: ANALYTICS_PROVIDER },
+    }
+  );
+
+  // Update store with concurrent session status
+  if (config.concurrent.videos[0].sessionId) {
+    mobileRiderStore.set(config.concurrent.videos[0].sessionId, true);
+  }
+
+  return concurrentPlayer;
+}
+
+function createVideoMetadata(container, config) {
+  if (!config.concurrent?.enabled) return;
+
+  const metadataWrapper = createTag('div', { class: 'concurrent-metadata' });
+  
+  // Add title if available
+  if (config.concurrent.videos[0].title) {
+    const title = createTag('h3', { class: 'concurrent-title' }, config.concurrent.videos[0].title);
+    metadataWrapper.appendChild(title);
+  }
+
+  // Add description if available
+  if (config.concurrent.videos[0].description) {
+    const desc = createTag('p', { class: 'concurrent-description' }, config.concurrent.videos[0].description);
+    metadataWrapper.appendChild(desc);
+  }
+
+  container.appendChild(metadataWrapper);
 }
 
 export default async function init(el) {
@@ -309,7 +332,10 @@ export default async function init(el) {
     : el;
 
   // Create main container with appropriate layout class
-  const layoutClass = config.concurrentvideolayout ? LAYOUT_CLASSES[config.concurrentvideolayout] : '';
+  const layoutClass = config.concurrent?.enabled 
+    ? LAYOUT_CLASSES[config.concurrent.layout] || ''
+    : '';
+
   const container = createTag('div', { 
     class: `mobileRider_container is-hidden ${layoutClass}`,
     'data-type': config.mobileridertype || 'video',
@@ -318,19 +344,18 @@ export default async function init(el) {
     'data-current-variation': '',
     'data-fragment-path': config.fragmentpath || '',
     'data-videoid': config.videoid,
-    'data-identifier2': config.identifier2,
+    'data-aslid': config.aslid,
     'data-skinid': config.skinid,
+    'data-sessionid': config.sessionid || '',
     'id': 'mr-adobe'
   }, '', { parent: wrapper });
 
-  // Create video player
+  // Create main video player
   const video = createVideoPlayer(container, config);
-  if (config.identifier2) {
+  
+  // Handle ASL support
+  if (config.aslid) {
     container.classList.add('has-asl');
-  }
-
-  // Initialize ASL button handling if identifier2 is provided
-  if (config.identifier2) {
     const aslButton = document.querySelector('#asl-button');
     if (!aslButton) {
       handleASLSubroutine(10000, 100, toggleClassHandler);
@@ -352,8 +377,14 @@ export default async function init(el) {
   const script = document.createElement('script');
   script.src = scriptPath;
   script.onload = () => {
-    // Initialize video player
-    const playerEmbed = initializeMobileRider(video, config);
+    // Initialize main video player
+    const mainPlayer = initializeMobileRider(video, config);
+
+    // Initialize concurrent video if enabled
+    if (config.concurrent?.enabled) {
+      const concurrentPlayer = createConcurrentPlayer(container, config);
+      createVideoMetadata(container, config);
+    }
 
     // Set up stream end listener if needed
     const shouldSetStreamendListener = defineShouldSetStreamendListener(container);

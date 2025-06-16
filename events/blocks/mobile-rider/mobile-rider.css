@@ -157,12 +157,18 @@
 .mobile-rider-container.layout-side-by-side {
   flex-direction: row;
   flex-wrap: wrap;
+  gap: 2rem;
 }
 
 .mobile-rider-container.layout-side-by-side .video-wrapper {
+  flex: 1;
+  min-width: 300px;
   position: relative;
-  height: 0;
-  padding-bottom: 56.25%;
+}
+
+.mobile-rider-container.layout-side-by-side .concurrent-metadata {
+  flex-basis: 100%;
+  margin-top: 1rem;
 }
 
 /* Layout: Picture in Picture */
@@ -170,24 +176,60 @@
   position: relative;
 }
 
-.mobile-rider-container.layout-pip .asl-wrapper {
+.mobile-rider-container.layout-pip .concurrent-wrapper {
   position: absolute;
-  bottom: 1rem;
-  right: 1rem;
-  width: 25%;
-  min-width: 200px;
-  z-index: 1;
+  bottom: 2rem;
+  right: 2rem;
+  width: 30%;
+  min-width: 240px;
+  z-index: 2;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.mobile-rider-container.layout-pip .concurrent-metadata {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgba(0, 0, 0, 0.75);
+  color: white;
+  padding: 1rem;
+  z-index: 3;
 }
 
 /* Layout: Stacked */
 .mobile-rider-container.layout-stacked {
   flex-direction: column;
+  gap: 2rem;
 }
 
 .mobile-rider-container.layout-stacked .video-wrapper {
+  width: 100%;
   position: relative;
-  height: 0;
-  padding-bottom: 56.25%;
+}
+
+/* Concurrent Metadata Styles */
+.concurrent-metadata {
+  padding: 1rem;
+  background: var(--background-color, #fff);
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.concurrent-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin: 0 0 0.5rem;
+  color: var(--text-color, #2c2c2c);
+}
+
+.concurrent-description {
+  font-size: 1rem;
+  line-height: 1.5;
+  margin: 0;
+  color: var(--text-secondary, #666);
 }
 
 /* Concurrent Hidden State */
@@ -280,11 +322,21 @@
 @media (max-width: 768px) {
   .mobile-rider-container.layout-side-by-side {
     flex-direction: column;
+    gap: 1rem;
   }
 
-  .mobile-rider-container.layout-pip .asl-wrapper {
-    width: 40%;
-    height: 40%;
+  .mobile-rider-container.layout-pip .concurrent-wrapper {
+    position: relative;
+    width: 100%;
+    bottom: auto;
+    right: auto;
+    margin-top: 1rem;
+  }
+
+  .mobile-rider-container.layout-pip .concurrent-metadata {
+    position: relative;
+    background: var(--background-color, #fff);
+    color: var(--text-color, #2c2c2c);
   }
 
   .modal-wrapper {
@@ -320,6 +372,14 @@
   }
 
   .event-card {
+    border: 1px solid CanvasText;
+  }
+
+  .concurrent-metadata {
+    border: 1px solid CanvasText;
+  }
+  
+  .mobile-rider-container.layout-pip .concurrent-wrapper {
     border: 1px solid CanvasText;
   }
 }
@@ -467,5 +527,11 @@
     --hover-color: #2a2a2a;
     --selected-color: #333;
     --card-background: #2a2a2a;
+  }
+
+  .concurrent-metadata {
+    --background-color: #1a1a1a;
+    --text-color: #fff;
+    --text-secondary: #999;
   }
 } 

@@ -1,4 +1,5 @@
 import { createTag } from '../../scripts/utils.js';
+import { mobileRiderStore } from '../../features/timing-framework/plugins/mobile-rider/plugin.js';
 
 // Create toggle button with event handling
 const createToggle = (c, cfg) => {
@@ -32,7 +33,8 @@ const createThumb = (v, onClick) => {
     role: 'button',
     tabindex: '0',
     'data-vid': v.videoId,
-    'data-asl': v.aslVideoId
+    'data-asl': v.aslId,
+    'data-session': v.sessionId
   }, [
     createTag('div', { class: 'drawer-item-thumbnail' }, 
       v.thumbnail ? [createTag('img', {
@@ -96,12 +98,17 @@ export default function initDrawer(c, cfg) {
 
       if (cfg.enableasl === 'true') {
         const aslVid = c.querySelector('.asl-video');
-        if (aslVid && video.aslVideoId) aslVid.id = `id${video.aslVideoId}`;
+        if (aslVid && video.aslId) aslVid.id = `id${video.aslId}`;
       }
 
       // Update players
       window.mrPlayer?.changeMedia(video.videoId);
-      if (video.aslVideoId) window.mrPlayerASL?.changeMedia(video.aslVideoId);
+      if (video.aslId) window.mrPlayerASL?.changeMedia(video.aslId);
+
+      // Update store with session status
+      if (video.sessionId) {
+        mobileRiderStore.set(video.sessionId, true);
+      }
 
       // Update selection
       list.querySelectorAll('.drawer-item').forEach(i => i.classList.remove('current'));
