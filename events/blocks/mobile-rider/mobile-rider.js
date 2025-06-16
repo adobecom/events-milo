@@ -268,7 +268,7 @@ function initializeMobileRider(video, config) {
 }
 
 function createConcurrentPlayer(container, config) {
-  if (!config.concurrent?.enabled) return null;
+  if (!config.concurrentenabled === 'true') return null;
 
   const concurrentWrapper = createTag('div', {
     class: 'video-wrapper concurrent-wrapper',
@@ -287,40 +287,40 @@ function createConcurrentPlayer(container, config) {
   // Initialize concurrent player
   const concurrentPlayer = window.mobilerider?.embed(
     concurrentVideo.id,
-    config.concurrent.videos[0].videoId,
+    config.concurrentvideoid,
     config.skinid,
     {
       autoplay: false,
       controls: true,
       muted: true,
       analytics: { provider: ANALYTICS_PROVIDER },
-      identifier1: config.concurrent.videos[0].videoId,
-      identifier2: config.concurrent.videos[0].aslId
+      identifier1: config.concurrentvideoid,
+      identifier2: config.concurrentaslid
     }
   );
 
   // Update store with concurrent session status
-  if (config.concurrent.videos[0].sessionId) {
-    mobileRiderStore.set(config.concurrent.videos[0].sessionId, true);
+  if (config.concurrentsessionid) {
+    mobileRiderStore.set(config.concurrentsessionid, true);
   }
 
   return concurrentPlayer;
 }
 
 function createVideoMetadata(container, config) {
-  if (!config.concurrent?.enabled) return;
+  if (!config.concurrentenabled === 'true') return;
 
   const metadataWrapper = createTag('div', { class: 'concurrent-metadata' });
   
   // Add title if available
-  if (config.concurrent.videos[0].title) {
-    const title = createTag('h3', { class: 'concurrent-title' }, config.concurrent.videos[0].title);
+  if (config.concurrenttitle) {
+    const title = createTag('h3', { class: 'concurrent-title' }, config.concurrenttitle);
     metadataWrapper.appendChild(title);
   }
 
   // Add description if available
-  if (config.concurrent.videos[0].description) {
-    const desc = createTag('p', { class: 'concurrent-description' }, config.concurrent.videos[0].description);
+  if (config.concurrentdescription) {
+    const desc = createTag('p', { class: 'concurrent-description' }, config.concurrentdescription);
     metadataWrapper.appendChild(desc);
   }
 
@@ -337,8 +337,8 @@ export default async function init(el) {
     : el;
 
   // Create main container with appropriate layout class
-  const layoutClass = config.concurrent?.enabled 
-    ? LAYOUT_CLASSES[config.concurrent.layout] || ''
+  const layoutClass = config.concurrentenabled === 'true' 
+    ? LAYOUT_CLASSES[config.concurrentlayout] || ''
     : '';
 
   const container = createTag('div', { 
@@ -386,7 +386,7 @@ export default async function init(el) {
     const mainPlayer = initializeMobileRider(video, config);
 
     // Initialize concurrent video if enabled
-    if (config.concurrent?.enabled) {
+    if (config.concurrentenabled === 'true') {
       const concurrentPlayer = createConcurrentPlayer(container, config);
       createVideoMetadata(container, config);
     }
