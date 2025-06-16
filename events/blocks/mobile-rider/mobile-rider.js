@@ -253,7 +253,8 @@ function initializeMobileRider(video, config) {
       controls: true,
       muted: isAutoplayEnabled,
       analytics: { provider: ANALYTICS_PROVIDER },
-      aslId: config.aslid
+      identifier1: config.videoid,
+      identifier2: config.aslid
     }
   );
 
