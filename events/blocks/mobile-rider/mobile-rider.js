@@ -253,6 +253,7 @@ function initializeMobileRider(video, config) {
       controls: true,
       muted: isAutoplayEnabled,
       analytics: { provider: ANALYTICS_PROVIDER },
+      aslId: config.aslid
     }
   );
 
@@ -291,6 +292,7 @@ function createConcurrentPlayer(container, config) {
       controls: true,
       muted: true,
       analytics: { provider: ANALYTICS_PROVIDER },
+      aslId: config.concurrent.videos[0].aslId
     }
   );
 
