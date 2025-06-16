@@ -45,6 +45,7 @@ function getMetaData(el) {
       metaData[keyValueText] = valueDivText;
     }
   });
+  console.log('metaData', metaData);
   return metaData;
 }
 
@@ -293,7 +294,8 @@ function createConcurrentPlayer(container, config) {
       controls: true,
       muted: true,
       analytics: { provider: ANALYTICS_PROVIDER },
-      aslId: config.concurrent.videos[0].aslId
+      identifier1: config.concurrent.videos[0].videoId,
+      identifier2: config.concurrent.videos[0].aslId
     }
   );
 
