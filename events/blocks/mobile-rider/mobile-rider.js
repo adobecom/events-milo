@@ -45,8 +45,40 @@ function getMetaData(el) {
       metaData[keyValueText] = valueDivText;
     }
   });
-  console.log('metaData', metaData);
-  return metaData;
+
+  // Map AEM block metadata to our expected format
+  return {
+    // Main video
+    videoid: metaData.videoid || '',
+    skinid: metaData.skinid || '',
+    aslid: metaData.aslid || '',
+    description: metaData.description || '',
+    thumbnail: metaData.thumbnail || '',
+    autoplay: metaData.autoplay === 'true',
+    fluidContainer: metaData.fluidcontainer === 'true',
+    renderInPage: metaData.renderinpage === 'true',
+    
+    // Concurrent video
+    concurrentenabled: metaData.concurrentenabled === 'true',
+    concurrentlayout: metaData.concurrentlayout || 'side-by-side',
+    concurrentvideoid: metaData.concurrentvideoid || '',
+    concurrentaslid: metaData.concurrentaslid || '',
+    concurrenttitle: metaData.concurrenttitle || '',
+    concurrentdescription: metaData.concurrentdescription || '',
+    concurrentthumbnail: metaData.concurrentthumbnail || '',
+    concurrentsessionid: metaData.concurrentsessionid || '',
+    
+    // Drawer settings
+    drawerenabled: metaData.drawerenabled === 'true',
+    drawerposition: metaData.drawerposition || 'right',
+    drawertitle: metaData.drawertitle || '',
+    
+    // ASL settings
+    aslenabled: metaData.aslenabled === 'true',
+    
+    // Timing data
+    timing: metaData.timing || null
+  };
 }
 
 function defineShouldSetStreamendListener(element) {
@@ -200,20 +232,16 @@ function injectPlayer(wrapper, videoId, skinId, aslId = null) {
 }
 
 function createVideoMetadata(container, config, wrapper) {
-  if (!config.concurrentenabled === 'true') return;
+  if (!config.concurrentenabled) return;
 
-  const metadataWrapper = createTag('div', { class: 'concurrent-metadata' });
+  const metadataWrapper = createTag('div', { 
+    class: `concurrent-metadata layout-${config.concurrentlayout || 'side-by-side'}`
+  });
   
   // Add title if available
   if (config.concurrenttitle) {
     const title = createTag('h3', { class: 'concurrent-title' }, config.concurrenttitle);
     metadataWrapper.appendChild(title);
-  }
-
-  // Add description if available
-  if (config.concurrentdescription) {
-    const desc = createTag('p', { class: 'concurrent-description' }, config.concurrentdescription);
-    metadataWrapper.appendChild(desc);
   }
 
   // Create metadata items
@@ -227,14 +255,35 @@ function createVideoMetadata(container, config, wrapper) {
     'data-aslid': config.aslid
   });
   
-  const defaultLink = createTag('a', { 
-    class: 'concurrent-metadata-link',
-    href: '#'
-  });
+  const defaultThumbnail = createTag('div', { class: 'concurrent-metadata-thumbnail' });
+  if (config.thumbnail) {
+    const img = createTag('img', { 
+      src: config.thumbnail,
+      alt: 'Main Stream Thumbnail'
+    });
+    defaultThumbnail.appendChild(img);
+  } else {
+    // Add default thumbnail if none provided
+    const defaultImg = createTag('img', {
+      src: 'https://placehold.co/1280x720/1d1d1d/ffffff?text=Main+Stream',
+      alt: 'Default Main Stream Thumbnail'
+    });
+    defaultThumbnail.appendChild(defaultImg);
+  }
   
-  const defaultTitle = createTag('div', { class: 'concurrent-metadata-title' }, 'Main Stream');
-  defaultLink.appendChild(defaultTitle);
-  defaultItem.appendChild(defaultLink);
+  const playButton = createTag('div', { class: 'play-button' });
+  playButton.innerHTML = '<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>';
+  defaultThumbnail.appendChild(playButton);
+  
+  const defaultContent = createTag('div', { class: 'concurrent-metadata-content' });
+  const defaultTitle = createTag('h4', { class: 'concurrent-metadata-title' }, 'Main Stream');
+  const defaultDesc = createTag('p', { class: 'concurrent-metadata-description' }, config.description || '');
+  
+  defaultContent.appendChild(defaultTitle);
+  defaultContent.appendChild(defaultDesc);
+  
+  defaultItem.appendChild(defaultThumbnail);
+  defaultItem.appendChild(defaultContent);
   metadataList.appendChild(defaultItem);
 
   // Add concurrent video item if available
@@ -246,17 +295,39 @@ function createVideoMetadata(container, config, wrapper) {
       'data-aslid': config.concurrentaslid
     });
     
-    const concurrentLink = createTag('a', { 
-      class: 'concurrent-metadata-link',
-      href: '#'
-    });
+    const concurrentThumbnail = createTag('div', { class: 'concurrent-metadata-thumbnail' });
+    if (config.concurrentthumbnail) {
+      const img = createTag('img', { 
+        src: config.concurrentthumbnail,
+        alt: 'Concurrent Stream Thumbnail'
+      });
+      concurrentThumbnail.appendChild(img);
+    } else {
+      // Add default thumbnail if none provided
+      const defaultImg = createTag('img', {
+        src: 'https://placehold.co/1280x720/1d1d1d/ffffff?text=Concurrent+Stream',
+        alt: 'Default Concurrent Stream Thumbnail'
+      });
+      concurrentThumbnail.appendChild(defaultImg);
+    }
     
-    const concurrentTitle = createTag('div', { 
+    const concurrentPlayButton = createTag('div', { class: 'play-button' });
+    concurrentPlayButton.innerHTML = '<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>';
+    concurrentThumbnail.appendChild(concurrentPlayButton);
+    
+    const concurrentContent = createTag('div', { class: 'concurrent-metadata-content' });
+    const concurrentTitle = createTag('h4', { 
       class: 'concurrent-metadata-title'
     }, config.concurrenttitle || 'Concurrent Stream');
+    const concurrentDesc = createTag('p', { 
+      class: 'concurrent-metadata-description'
+    }, config.concurrentdescription || '');
     
-    concurrentLink.appendChild(concurrentTitle);
-    concurrentItem.appendChild(concurrentLink);
+    concurrentContent.appendChild(concurrentTitle);
+    concurrentContent.appendChild(concurrentDesc);
+    
+    concurrentItem.appendChild(concurrentThumbnail);
+    concurrentItem.appendChild(concurrentContent);
     metadataList.appendChild(concurrentItem);
   }
 
