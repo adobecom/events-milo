@@ -156,3 +156,38 @@ export default function initDrawer(c, cfg) {
 
   return drawer;
 }
+
+function injectPlayer(wrapper, videoId, skinId, aslId = null) {
+  // Remove any existing player (iframe or video)
+  while (wrapper.firstChild) {
+    wrapper.removeChild(wrapper.firstChild);
+  }
+
+  // Create a new div for the player
+  const playerDiv = document.createElement('div');
+  playerDiv.id = 'mr-adobe-player';
+  wrapper.appendChild(playerDiv);
+
+  // Dispose of existing player if it exists
+  if (window.__mr_player) {
+    window.__mr_player.dispose();
+    window.__mr_player = null;
+  }
+
+  // Initialize new player (let MobileRider handle the internals)
+  window.__mr_player = window.mobilerider.embed(
+    playerDiv.id,
+    videoId,
+    skinId,
+    {
+      autoplay: true,
+      controls: true,
+      muted: false,
+      analytics: { provider: ANALYTICS_PROVIDER },
+      identifier1: videoId,
+      identifier2: aslId
+    }
+  );
+
+  return window.__mr_player;
+}
