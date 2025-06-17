@@ -194,40 +194,34 @@ function initializeMobileRider(video, config) {
   return window.__mr_player;
 }
 
-function createConcurrentPlayer(container, config) {
-  if (!config.concurrentenabled === 'true') return null;
+function loadVideo(videoId, skinId, aslId = null) {
+  if (!window.mobilerider || !videoId) return;
 
-  const concurrentVideo = createTag('video', {
-    id: 'idConcurrentPlayer',
-    class: 'mobile-rider-viewport concurrent-video',
-    controls: true,
-  });
+  const video = document.querySelector('.mobile-rider-viewport');
+  if (!video) return;
 
-  // Add concurrent video to the existing wrapper
-  const wrapper = container.querySelector('.video-wrapper');
-  wrapper.appendChild(concurrentVideo);
+  // Dispose of existing player if it exists
+  if (window.__mr_player) {
+    window.__mr_player.dispose();
+    window.__mr_player = null;
+  }
 
-  // Initialize concurrent player
-  const concurrentPlayer = window.mobilerider?.embed(
-    concurrentVideo.id,
-    config.concurrentvideoid,
-    config.skinid,
+  // Initialize new player
+  window.__mr_player = window.mobilerider.embed(
+    video.id,
+    videoId,
+    skinId,
     {
-      autoplay: false,
+      autoplay: true,
       controls: true,
-      muted: true,
+      muted: false,
       analytics: { provider: ANALYTICS_PROVIDER },
-      identifier1: config.concurrentvideoid,
-      identifier2: config.concurrentaslid
+      identifier1: videoId,
+      identifier2: aslId
     }
   );
 
-  // Update store with concurrent session status
-  if (config.concurrentsessionid) {
-    mobileRiderStore.set(config.concurrentsessionid, true);
-  }
-
-  return concurrentPlayer;
+  return window.__mr_player;
 }
 
 function createVideoMetadata(container, config) {
@@ -247,7 +241,73 @@ function createVideoMetadata(container, config) {
     metadataWrapper.appendChild(desc);
   }
 
+  // Create metadata items
+  const metadataList = createTag('div', { class: 'concurrent-metadata-list' });
+
+  // Add default video as first item
+  const defaultItem = createTag('div', { 
+    class: 'concurrent-metadata-item active',
+    'data-videoid': config.videoid,
+    'data-skinid': config.skinid,
+    'data-aslid': config.aslid
+  });
+  
+  const defaultLink = createTag('a', { 
+    class: 'concurrent-metadata-link',
+    href: '#'
+  });
+  
+  const defaultTitle = createTag('div', { class: 'concurrent-metadata-title' }, 'Main Stream');
+  defaultLink.appendChild(defaultTitle);
+  defaultItem.appendChild(defaultLink);
+  metadataList.appendChild(defaultItem);
+
+  // Add concurrent video item if available
+  if (config.concurrentvideoid) {
+    const concurrentItem = createTag('div', { 
+      class: 'concurrent-metadata-item',
+      'data-videoid': config.concurrentvideoid,
+      'data-skinid': config.skinid,
+      'data-aslid': config.concurrentaslid
+    });
+    
+    const concurrentLink = createTag('a', { 
+      class: 'concurrent-metadata-link',
+      href: '#'
+    });
+    
+    const concurrentTitle = createTag('div', { 
+      class: 'concurrent-metadata-title'
+    }, config.concurrenttitle || 'Concurrent Stream');
+    
+    concurrentLink.appendChild(concurrentTitle);
+    concurrentItem.appendChild(concurrentLink);
+    metadataList.appendChild(concurrentItem);
+  }
+
+  metadataWrapper.appendChild(metadataList);
   container.appendChild(metadataWrapper);
+
+  // Add click handlers for metadata items
+  const items = metadataWrapper.querySelectorAll('.concurrent-metadata-item');
+  items.forEach(item => {
+    item.addEventListener('click', (e) => {
+      e.preventDefault();
+      
+      // Remove active class from all items
+      items.forEach(i => i.classList.remove('active'));
+      
+      // Add active class to clicked item
+      item.classList.add('active');
+      
+      // Load the selected video
+      const videoId = item.dataset.videoid;
+      const skinId = item.dataset.skinid;
+      const aslId = item.dataset.aslid;
+      
+      loadVideo(videoId, skinId, aslId);
+    });
+  });
 }
 
 export default async function init(el) {
@@ -257,20 +317,14 @@ export default async function init(el) {
   const container = createTag('div', { class: 'mobile-rider' });
   el.appendChild(container);
 
-  // Create video player
+  // Create video player and initialize with default video
   const video = createVideoPlayer(container, config);
   const player = initializeMobileRider(video, config);
 
-  // Create concurrent player if enabled
+  // Create metadata section if concurrent videos are enabled
   if (config.concurrentenabled === 'true') {
-    const concurrentPlayer = createConcurrentPlayer(container, config);
-    if (concurrentPlayer) {
-      window.__mr_concurrent_player = concurrentPlayer;
-    }
+    createVideoMetadata(container, config);
   }
-
-  // Create metadata section
-  createVideoMetadata(container, config);
 
   // Initialize drawer if needed
   if (config.drawerenabled === 'true') {
