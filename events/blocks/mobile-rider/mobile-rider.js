@@ -158,9 +158,22 @@ function injectPlayer(wrapper, videoId, skinId, aslId = null) {
     wrapper.removeChild(wrapper.firstChild);
   }
 
-  // Create a new div for the player (for iframe/JS player)
-  const playerDiv = createTag('div', { id: 'mr-adobe-player' });
-  wrapper.appendChild(playerDiv);
+  // Create container div
+  const container = createTag('div', { 
+    class: 'mobileRider_container is-hidden',
+    'data-videoid': videoId,
+    'data-skinid': skinId,
+    id: 'mr-adobe'
+  });
+  wrapper.appendChild(container);
+
+  // Create video element
+  const video = createTag('video', {
+    id: 'idPlayer',
+    controls: true,
+    class: 'mobileRider_viewport'
+  });
+  container.appendChild(video);
 
   // Dispose of existing player if it exists
   if (window.__mr_player) {
@@ -170,7 +183,7 @@ function injectPlayer(wrapper, videoId, skinId, aslId = null) {
 
   // Initialize new player
   window.__mr_player = window.mobilerider.embed(
-    playerDiv.id,
+    video.id,
     videoId,
     skinId,
     {
