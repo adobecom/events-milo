@@ -152,53 +152,15 @@ function toggleClassHandler(aslButton) {
   });
 }
 
-function createVideoPlayer(container, config) {
-  const wrapper = createTag('div', { 
-    class: 'video-wrapper',
-    'data-fragment-path': config.fragmentpath || '',
-  });
-
-  const video = createTag('video', {
-    id: 'idPlayer',
-    class: 'mobile-rider-viewport',
-    controls: true,
-  });
-
-  wrapper.appendChild(video);
-  container.appendChild(wrapper);
-  return video;
-}
-
-function initializeMobileRider(video, config) {
-  const isAutoplayEnabled = !document.body.classList.contains('is-editor') && config.autoplay !== 'false';
-  
-  window.__mr_player = window.mobilerider?.embed(
-    video.id,
-    config.videoid,
-    config.skinid,
-    {
-      autoplay: isAutoplayEnabled,
-      controls: true,
-      muted: isAutoplayEnabled,
-      analytics: { provider: ANALYTICS_PROVIDER },
-      identifier1: config.videoid,
-      identifier2: config.aslid
-    }
-  );
-
-  // Update store with session status
-  if (config.sessionid) {
-    mobileRiderStore.set(config.sessionid, true);
+function injectPlayer(wrapper, videoId, skinId, aslId = null) {
+  // Remove any existing player (iframe or video)
+  while (wrapper.firstChild) {
+    wrapper.removeChild(wrapper.firstChild);
   }
 
-  return window.__mr_player;
-}
-
-function loadVideo(videoId, skinId, aslId = null) {
-  if (!window.mobilerider || !videoId) return;
-
-  const video = document.querySelector('.mobile-rider-viewport');
-  if (!video) return;
+  // Create a new div for the player (for iframe/JS player)
+  const playerDiv = createTag('div', { id: 'mr-adobe-player' });
+  wrapper.appendChild(playerDiv);
 
   // Dispose of existing player if it exists
   if (window.__mr_player) {
@@ -208,7 +170,7 @@ function loadVideo(videoId, skinId, aslId = null) {
 
   // Initialize new player
   window.__mr_player = window.mobilerider.embed(
-    video.id,
+    playerDiv.id,
     videoId,
     skinId,
     {
@@ -224,7 +186,7 @@ function loadVideo(videoId, skinId, aslId = null) {
   return window.__mr_player;
 }
 
-function createVideoMetadata(container, config) {
+function createVideoMetadata(container, config, wrapper) {
   if (!config.concurrentenabled === 'true') return;
 
   const metadataWrapper = createTag('div', { class: 'concurrent-metadata' });
@@ -304,8 +266,7 @@ function createVideoMetadata(container, config) {
       const videoId = item.dataset.videoid;
       const skinId = item.dataset.skinid;
       const aslId = item.dataset.aslid;
-      
-      loadVideo(videoId, skinId, aslId);
+      injectPlayer(wrapper, videoId, skinId, aslId);
     });
   });
 }
@@ -317,13 +278,16 @@ export default async function init(el) {
   const container = createTag('div', { class: 'mobile-rider' });
   el.appendChild(container);
 
-  // Create video player and initialize with default video
-  const video = createVideoPlayer(container, config);
-  const player = initializeMobileRider(video, config);
+  // Create video wrapper
+  const wrapper = createTag('div', { class: 'video-wrapper' });
+  container.appendChild(wrapper);
+
+  // Inject default player
+  injectPlayer(wrapper, config.videoid, config.skinid, config.aslid);
 
   // Create metadata section if concurrent videos are enabled
   if (config.concurrentenabled === 'true') {
-    createVideoMetadata(container, config);
+    createVideoMetadata(container, config, wrapper);
   }
 
   // Initialize drawer if needed
@@ -345,5 +309,5 @@ export default async function init(el) {
     setUpStreamendListener(el);
   }
 
-  return player;
+  return window.__mr_player;
 }
