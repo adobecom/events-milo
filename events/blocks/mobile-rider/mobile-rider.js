@@ -154,7 +154,7 @@ function toggleClassHandler(aslButton) {
 
 function createVideoPlayer(container, config) {
   const wrapper = createTag('div', { 
-    class: 'video-wrapper main-wrapper',
+    class: 'video-wrapper',
     'data-fragment-path': config.fragmentpath || '',
   });
 
@@ -197,19 +197,15 @@ function initializeMobileRider(video, config) {
 function createConcurrentPlayer(container, config) {
   if (!config.concurrentenabled === 'true') return null;
 
-  const concurrentWrapper = createTag('div', {
-    class: 'video-wrapper concurrent-wrapper',
-    'data-fragment-path': config.fragmentpath || '',
-  });
-
   const concurrentVideo = createTag('video', {
     id: 'idConcurrentPlayer',
     class: 'mobile-rider-viewport concurrent-video',
     controls: true,
   });
 
-  concurrentWrapper.appendChild(concurrentVideo);
-  container.appendChild(concurrentWrapper);
+  // Add concurrent video to the existing wrapper
+  const wrapper = container.querySelector('.video-wrapper');
+  wrapper.appendChild(concurrentVideo);
 
   // Initialize concurrent player
   const concurrentPlayer = window.mobilerider?.embed(
@@ -256,80 +252,44 @@ function createVideoMetadata(container, config) {
 
 export default async function init(el) {
   const config = getMetaData(el);
-  if (!config.skinid || !config.videoid) return;
-
-  // Create wrapper for modal if not rendering in page
-  const wrapper = config.renderinpage === 'false' 
-    ? createTag('div', { class: 'modal-wrapper' }) 
-    : el;
-
-  // Create main container with appropriate layout class
-  const layoutClass = config.concurrentenabled === 'true' 
-    ? LAYOUT_CLASSES[config.concurrentlayout] || ''
-    : '';
-
-  const container = createTag('div', { 
-    class: `mobileRider_container is-hidden ${layoutClass}`,
-    'data-type': config.mobileridertype || 'video',
-    'data-fluid': config.fluidcontainer,
-    'data-timing': config.timing ? JSON.stringify(config.timing) : '',
-    'data-current-variation': '',
-    'data-fragment-path': config.fragmentpath || '',
-    'data-videoid': config.videoid,
-    'data-aslid': config.aslid,
-    'data-skinid': config.skinid,
-    'data-sessionid': config.sessionid || '',
-    'id': 'mr-adobe'
-  }, '', { parent: wrapper });
-
-  // Create main video player
-  const video = createVideoPlayer(container, config);
   
-  // Handle ASL support
-  if (config.aslid) {
-    container.classList.add('has-asl');
+  // Create container
+  const container = createTag('div', { class: 'mobile-rider' });
+  el.appendChild(container);
+
+  // Create video player
+  const video = createVideoPlayer(container, config);
+  const player = initializeMobileRider(video, config);
+
+  // Create concurrent player if enabled
+  if (config.concurrentenabled === 'true') {
+    const concurrentPlayer = createConcurrentPlayer(container, config);
+    if (concurrentPlayer) {
+      window.__mr_concurrent_player = concurrentPlayer;
+    }
+  }
+
+  // Create metadata section
+  createVideoMetadata(container, config);
+
+  // Initialize drawer if needed
+  if (config.drawerenabled === 'true') {
+    initDrawer(container, config);
+  }
+
+  // Set up ASL toggle if needed
+  if (config.aslenabled === 'true') {
     const aslButton = document.querySelector('#asl-button');
-    if (!aslButton) {
-      handleASLSubroutine(10000, 100, toggleClassHandler);
-    } else {
-      toggleClassHandler(aslButton);
+    if (aslButton) {
+      handleASLSubroutine(5000, 100, toggleClassHandler, aslButton);
     }
   }
 
-  // If modal wrapper was created, add it to the page
-  if (wrapper !== el) {
-    el.appendChild(wrapper);
+  // Set up stream end listener if needed
+  const shouldSetStreamendListener = defineShouldSetStreamendListener(el);
+  if (shouldSetStreamendListener) {
+    setUpStreamendListener(el);
   }
 
-  // Determine environment and load appropriate script
-  const env = getConfig().env || 'prod';
-  const scriptPath = MOBILE_RIDER_SCRIPTS[env] || MOBILE_RIDER_SCRIPTS.prod;
-
-  // Load the mobile rider script
-  const script = document.createElement('script');
-  script.src = scriptPath;
-  script.onload = () => {
-    // Initialize main video player
-    const mainPlayer = initializeMobileRider(video, config);
-
-    // Initialize concurrent video if enabled
-    if (config.concurrentenabled === 'true') {
-      const concurrentPlayer = createConcurrentPlayer(container, config);
-      createVideoMetadata(container, config);
-    }
-
-    // Set up stream end listener if needed
-    const shouldSetStreamendListener = defineShouldSetStreamendListener(container);
-    if (shouldSetStreamendListener) {
-      setUpStreamendListener(container);
-    }
-
-    container.classList.remove('is-hidden');
-
-    // Initialize drawer if enabled
-    if (config.drawerenabled === 'true') {
-      initDrawer(container, config);
-    }
-  };
-  document.head.appendChild(script);
+  return player;
 }
