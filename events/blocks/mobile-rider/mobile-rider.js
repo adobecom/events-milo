@@ -271,6 +271,32 @@ function createVideoMetadata(container, config, wrapper) {
   });
 }
 
+function loadMobileRiderScript(callback) {
+  if (window.mobilerider) {
+    callback();
+    return;
+  }
+  // Prevent loading multiple times
+  if (window._mobileriderScriptLoading) {
+    const checkInterval = setInterval(() => {
+      if (window.mobilerider) {
+        clearInterval(checkInterval);
+        callback();
+      }
+    }, 50);
+    return;
+  }
+  window._mobileriderScriptLoading = true;
+  const env = getConfig().env || 'prod';
+  const scriptPath = MOBILE_RIDER_SCRIPTS[env] || MOBILE_RIDER_SCRIPTS.prod;
+  const script = document.createElement('script');
+  script.src = scriptPath;
+  script.onload = () => {
+    callback();
+  };
+  document.head.appendChild(script);
+}
+
 export default async function init(el) {
   const config = getMetaData(el);
   
@@ -282,13 +308,13 @@ export default async function init(el) {
   const wrapper = createTag('div', { class: 'video-wrapper' });
   container.appendChild(wrapper);
 
-  // Inject default player
-  injectPlayer(wrapper, config.videoid, config.skinid, config.aslid);
-
-  // Create metadata section if concurrent videos are enabled
-  if (config.concurrentenabled === 'true') {
-    createVideoMetadata(container, config, wrapper);
-  }
+  // Wait for MobileRider script, then inject default player and metadata
+  loadMobileRiderScript(() => {
+    injectPlayer(wrapper, config.videoid, config.skinid, config.aslid);
+    if (config.concurrentenabled === 'true') {
+      createVideoMetadata(container, config, wrapper);
+    }
+  });
 
   // Initialize drawer if needed
   if (config.drawerenabled === 'true') {
