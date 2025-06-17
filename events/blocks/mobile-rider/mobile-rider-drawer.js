@@ -3,24 +3,25 @@ import { mobileRiderStore } from '../../features/timing-framework/plugins/mobile
 
 // Create toggle button with event handling
 const createToggle = (c, cfg) => {
-  if (!cfg.showmsg || !cfg.hidemsg) return null;
+  if (!cfg.drawertitle) return null;
 
   const btn = createTag('button', {
     class: 'drawer-toggle',
     'aria-expanded': 'false',
-    'aria-label': cfg.showmsg,
+    'aria-label': cfg.drawertitle,
   }, [
-    createTag('span', { class: 'drawer-toggle-label' }, cfg.showmsg),
+    createTag('span', { class: 'drawer-toggle-label' }, cfg.drawertitle),
     createTag('span', { class: 'drawer-toggle-icon' })
   ]);
 
   btn.onclick = () => {
     const exp = btn.getAttribute('aria-expanded') === 'true';
-    const msg = exp ? cfg.showmsg : cfg.hidemsg;
-    btn.setAttribute('aria-expanded', !exp);
-    c.classList.toggle('drawer-open');
-    btn.querySelector('.drawer-toggle-label').textContent = msg;
-    btn.setAttribute('aria-label', msg);
+    const drawer = c.querySelector('.mobile-rider-drawer');
+    if (drawer) {
+      drawer.classList.toggle('drawer-open');
+      btn.setAttribute('aria-expanded', !exp);
+      btn.setAttribute('aria-label', exp ? cfg.drawertitle : 'Close drawer');
+    }
   };
 
   return btn;
@@ -64,12 +65,12 @@ const createThumb = (v, onClick) => {
 
 // Initialize drawer with video list
 export default function initDrawer(c, cfg) {
-  if (!cfg.concurrentenabled || cfg.concurrentenabled !== 'true') return null;
+  if (!cfg.drawerenabled) return null;
 
   // Create drawer container
   const drawer = createTag('div', {
     class: `mobile-rider-drawer ${cfg.drawerposition || 'right'}`,
-    'aria-label': cfg.drawertitle || 'Concurrent Video'
+    'aria-label': cfg.drawertitle || 'Related Videos'
   });
 
   // Add toggle button
@@ -78,78 +79,140 @@ export default function initDrawer(c, cfg) {
 
   // Create content container with title
   const content = createTag('div', { class: 'drawer-content' });
-  if (cfg.concurrenttitle) {
-    content.appendChild(createTag('h2', { class: 'drawer-title' }, cfg.concurrenttitle));
+  if (cfg.drawertitle) {
+    content.appendChild(createTag('h2', { class: 'drawer-title' }, cfg.drawertitle));
   }
 
-  // Create video list (single concurrent video)
+  // Create video list
   const list = createTag('div', { class: 'drawer-items' });
 
-  // Only one concurrent video is authored in the flattened config
-  const v = {
-    videoId: cfg.concurrentvideoid,
-    aslId: cfg.concurrentaslid,
-    title: cfg.concurrenttitle,
-    description: cfg.concurrentdescription,
-    sessionId: cfg.concurrentsessionid
+  // Add main video to drawer
+  const mainVideo = {
+    videoId: cfg.videoid,
+    aslId: cfg.aslid,
+    title: 'Main Stream',
+    description: cfg.description,
+    thumbnail: cfg.thumbnail
   };
 
-  // Create the card
-  const item = createTag('div', {
+  // Create the main video card
+  const mainItem = createTag('div', {
     class: 'drawer-item',
     role: 'button',
     tabindex: '0',
-    'data-vid': v.videoId,
-    'data-asl': v.aslId,
-    'data-session': v.sessionId
-  }, [
-    createTag('div', { class: 'drawer-item-content' }, [
-      v.title && createTag('h3', { class: 'drawer-item-title' }, v.title),
-      v.description && createTag('p', { class: 'drawer-item-description' }, v.description)
-    ].filter(Boolean))
-  ]);
+    'data-vid': mainVideo.videoId,
+    'data-asl': mainVideo.aslId
+  });
 
-  // Click handler: load concurrent video into main player
-  item.onclick = () => {
+  // Add thumbnail if available
+  if (mainVideo.thumbnail) {
+    const thumbnail = createTag('div', { class: 'drawer-item-thumbnail' });
+    thumbnail.appendChild(createTag('img', {
+      src: mainVideo.thumbnail,
+      alt: mainVideo.title
+    }));
+    mainItem.appendChild(thumbnail);
+  }
+
+  // Add content
+  const mainContent = createTag('div', { class: 'drawer-item-content' });
+  mainContent.appendChild(createTag('h3', { class: 'drawer-item-title' }, mainVideo.title));
+  if (mainVideo.description) {
+    mainContent.appendChild(createTag('p', { class: 'drawer-item-description' }, mainVideo.description));
+  }
+  mainItem.appendChild(mainContent);
+
+  // Add click handler
+  mainItem.onclick = () => {
     const mainVid = c.querySelector('.mobile-rider-viewport');
-    if (mainVid) {
-      // Dispose previous player if needed
+    if (mainVid && window.mobilerider) {
       if (window.__mr_player && window.__mr_player.dispose) {
         window.__mr_player.dispose();
       }
-      // Re-embed with new video/ASL
-      window.__mr_player = window.mobilerider?.embed(
+      window.__mr_player = window.mobilerider.embed(
         mainVid.id,
-        v.videoId,
+        mainVideo.videoId,
         cfg.skinid,
         {
           autoplay: true,
           controls: true,
           muted: true,
           analytics: { provider: 'adobe' },
-          identifier1: v.videoId,
-          identifier2: v.aslId
+          identifier1: mainVideo.videoId,
+          identifier2: mainVideo.aslId
         }
       );
-      // Update store with session status
-      if (v.sessionId) {
-        mobileRiderStore.set(v.sessionId, true);
-      }
     }
-    // UI feedback (optional): highlight selected
     list.querySelectorAll('.drawer-item').forEach(i => i.classList.remove('current'));
-    item.classList.add('current');
+    mainItem.classList.add('current');
   };
 
-  // Keyboard accessibility
-  item.onkeydown = (e) => {
-    if (e.key === 'Enter' || e.key === ' ') {
-      e.preventDefault();
-      item.onclick();
+  list.appendChild(mainItem);
+
+  // Add concurrent video if available
+  if (cfg.concurrentvideoid) {
+    const concurrentVideo = {
+      videoId: cfg.concurrentvideoid,
+      aslId: cfg.concurrentaslid,
+      title: cfg.concurrenttitle || 'Concurrent Stream',
+      description: cfg.concurrentdescription,
+      thumbnail: cfg.concurrentthumbnail
+    };
+
+    const concurrentItem = createTag('div', {
+      class: 'drawer-item',
+      role: 'button',
+      tabindex: '0',
+      'data-vid': concurrentVideo.videoId,
+      'data-asl': concurrentVideo.aslId
+    });
+
+    // Add thumbnail if available
+    if (concurrentVideo.thumbnail) {
+      const thumbnail = createTag('div', { class: 'drawer-item-thumbnail' });
+      thumbnail.appendChild(createTag('img', {
+        src: concurrentVideo.thumbnail,
+        alt: concurrentVideo.title
+      }));
+      concurrentItem.appendChild(thumbnail);
     }
-  };
 
-  list.appendChild(item);
+    // Add content
+    const concurrentContent = createTag('div', { class: 'drawer-item-content' });
+    concurrentContent.appendChild(createTag('h3', { class: 'drawer-item-title' }, concurrentVideo.title));
+    if (concurrentVideo.description) {
+      concurrentContent.appendChild(createTag('p', { class: 'drawer-item-description' }, concurrentVideo.description));
+    }
+    concurrentItem.appendChild(concurrentContent);
+
+    // Add click handler
+    concurrentItem.onclick = () => {
+      const mainVid = c.querySelector('.mobile-rider-viewport');
+      if (mainVid && window.mobilerider) {
+        if (window.__mr_player && window.__mr_player.dispose) {
+          window.__mr_player.dispose();
+        }
+        window.__mr_player = window.mobilerider.embed(
+          mainVid.id,
+          concurrentVideo.videoId,
+          cfg.skinid,
+          {
+            autoplay: true,
+            controls: true,
+            muted: true,
+            analytics: { provider: 'adobe' },
+            identifier1: concurrentVideo.videoId,
+            identifier2: concurrentVideo.aslId
+          }
+        );
+      }
+      list.querySelectorAll('.drawer-item').forEach(i => i.classList.remove('current'));
+      concurrentItem.classList.add('current');
+    };
+
+    list.appendChild(concurrentItem);
+  }
+
   content.appendChild(list);
   drawer.appendChild(content);
   c.appendChild(drawer);

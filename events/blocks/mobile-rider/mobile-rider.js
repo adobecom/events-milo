@@ -395,18 +395,20 @@ export default async function init(el) {
   // Wait for MobileRider script, then inject default player and metadata
   loadMobileRiderScript(() => {
     injectPlayer(wrapper, config.videoid, config.skinid, config.aslid);
-    if (config.concurrentenabled === 'true') {
+    
+    // Initialize drawer first if enabled
+    if (config.drawerenabled) {
+      initDrawer(container, config);
+    }
+    
+    // Then initialize concurrent metadata if enabled
+    if (config.concurrentenabled) {
       createVideoMetadata(container, config, wrapper);
     }
   });
 
-  // Initialize drawer if needed
-  if (config.drawerenabled === 'true') {
-    initDrawer(container, config);
-  }
-
   // Set up ASL toggle if needed
-  if (config.aslenabled === 'true') {
+  if (config.aslenabled) {
     const aslButton = document.querySelector('#asl-button');
     if (aslButton) {
       handleASLSubroutine(5000, 100, toggleClassHandler, aslButton);
