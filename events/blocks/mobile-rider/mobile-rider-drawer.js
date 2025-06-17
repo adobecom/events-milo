@@ -105,20 +105,20 @@ export default function initDrawer(c, cfg) {
   });
 
   // Add thumbnail if available
+  const thumbnail = createTag('div', { class: 'drawer-item-thumbnail' });
   if (mainVideo.thumbnail) {
-    const thumbnail = createTag('div', { class: 'drawer-item-thumbnail' });
     thumbnail.appendChild(createTag('img', {
       src: mainVideo.thumbnail,
       alt: mainVideo.title
     }));
-    mainItem.appendChild(thumbnail);
   }
+  mainItem.appendChild(thumbnail);
 
   // Add content
   const mainContent = createTag('div', { class: 'drawer-item-content' });
-  mainContent.appendChild(createTag('h3', { class: 'drawer-item-title' }, mainVideo.title));
+  mainContent.appendChild(createTag('div', { class: 'drawer-item-title' }, mainVideo.title));
   if (mainVideo.description) {
-    mainContent.appendChild(createTag('p', { class: 'drawer-item-description' }, mainVideo.description));
+    mainContent.appendChild(createTag('div', { class: 'drawer-item-description' }, mainVideo.description));
   }
   mainItem.appendChild(mainContent);
 
@@ -168,20 +168,20 @@ export default function initDrawer(c, cfg) {
     });
 
     // Add thumbnail if available
+    const concurrentThumbnail = createTag('div', { class: 'drawer-item-thumbnail' });
     if (concurrentVideo.thumbnail) {
-      const thumbnail = createTag('div', { class: 'drawer-item-thumbnail' });
-      thumbnail.appendChild(createTag('img', {
+      concurrentThumbnail.appendChild(createTag('img', {
         src: concurrentVideo.thumbnail,
         alt: concurrentVideo.title
       }));
-      concurrentItem.appendChild(thumbnail);
     }
+    concurrentItem.appendChild(concurrentThumbnail);
 
     // Add content
     const concurrentContent = createTag('div', { class: 'drawer-item-content' });
-    concurrentContent.appendChild(createTag('h3', { class: 'drawer-item-title' }, concurrentVideo.title));
+    concurrentContent.appendChild(createTag('div', { class: 'drawer-item-title' }, concurrentVideo.title));
     if (concurrentVideo.description) {
-      concurrentContent.appendChild(createTag('p', { class: 'drawer-item-description' }, concurrentVideo.description));
+      concurrentContent.appendChild(createTag('div', { class: 'drawer-item-description' }, concurrentVideo.description));
     }
     concurrentItem.appendChild(concurrentContent);
 
