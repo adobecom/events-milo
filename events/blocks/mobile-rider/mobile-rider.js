@@ -182,29 +182,36 @@ function toggleClassHandler(aslButton) {
 }
 
 function injectPlayer(wrapper, videoId, skinId, aslId = null, sessionId = null, analyticsProvider = 'adobe') {
-  // Remove any existing player (iframe or video)
-  while (wrapper.firstChild) {
-    wrapper.removeChild(wrapper.firstChild);
+  // Find or create the container div
+  let container = wrapper.querySelector('.mobileRider_container');
+  if (!container) {
+    container = createTag('div', {
+      class: 'mobileRider_container',
+      'data-videoid': videoId,
+      'data-skinid': skinId,
+      'data-aslid': aslId,
+      'data-sessionid': sessionId,
+      id: 'mr-adobe'
+    });
+    wrapper.appendChild(container);
+  } else {
+    // Update data attributes
+    container.dataset.videoid = videoId;
+    container.dataset.skinid = skinId;
+    container.dataset.aslid = aslId;
+    container.dataset.sessionid = sessionId;
   }
 
-  // Create container div
-  const container = createTag('div', {
-    class: 'mobileRider_container is-hidden',
-    'data-videoid': videoId,
-    'data-skinid': skinId,
-    'data-aslid': aslId,
-    'data-sessionid': sessionId,
-    id: 'mr-adobe'
-  });
-  wrapper.appendChild(container);
-
-  // Create video element
-  const video = createTag('video', {
-    id: 'idPlayer',
-    controls: true,
-    class: 'mobileRider_viewport'
-  });
-  container.appendChild(video);
+  // Find or create the video element
+  let video = container.querySelector('.mobileRider_viewport');
+  if (!video) {
+    video = createTag('video', {
+      id: 'idPlayer',
+      controls: true,
+      class: 'mobileRider_viewport'
+    });
+    container.appendChild(video);
+  }
 
   // Dispose of existing player if it exists
   if (window.__mr_player) {
@@ -275,6 +282,9 @@ export default async function init(el) {
   const wrapper = createTag('div', { class: 'video-wrapper' });
   container.appendChild(wrapper);
 
+  // Drawer will be appended as a sibling to the video wrapper
+  let drawerEl = null;
+
   loadMobileRiderScript(() => {
     injectPlayer(
       wrapper,
@@ -284,7 +294,8 @@ export default async function init(el) {
       null,
     );
     if (config.drawerenabled && config.concurrentVideos.length > 0) {
-      initDrawer(container, { ...config, videos: config.concurrentVideos });
+      // Append drawer as a sibling to the video wrapper
+      drawerEl = initDrawer(container, { ...config, videos: config.concurrentVideos });
     }
   });
 

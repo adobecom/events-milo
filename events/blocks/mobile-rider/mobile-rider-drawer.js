@@ -110,7 +110,13 @@ export default function initDrawer(c, cfg) {
 
     // Click handler: use injectPlayer to play the selected video
     item.onclick = () => {
-      const wrapper = c.querySelector('.video-wrapper');
+      // Find the video wrapper in the parent container (sibling, not child)
+      let wrapper = c.querySelector('.video-wrapper');
+      if (!wrapper) {
+        wrapper = c.previousElementSibling && c.previousElementSibling.classList.contains('video-wrapper')
+          ? c.previousElementSibling
+          : null;
+      }
       if (wrapper && window.injectPlayer) {
         window.injectPlayer(
           wrapper,
