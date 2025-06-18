@@ -146,7 +146,14 @@ export default function initDrawer(c, cfg) {
 
   content.appendChild(list);
   drawer.appendChild(content);
-  c.appendChild(drawer);
+
+  // Always insert the drawer after the .video-wrapper
+  const wrapper = c.querySelector('.video-wrapper');
+  if (wrapper) {
+    wrapper.insertAdjacentElement('afterend', drawer);
+  } else {
+    c.appendChild(drawer);
+  }
 
   return drawer;
 }
