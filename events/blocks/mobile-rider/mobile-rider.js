@@ -32,8 +32,6 @@ function getMetaData(el) {
   keyDivs.forEach((div) => {
     const valueDivText = div.nextElementSibling.textContent;
     const keyValueText = sanitizedKeyDiv(div.textContent);
-    
-    // Handle timing data specially to parse JSON
     if (keyValueText === 'timing') {
       try {
         metaData[keyValueText] = JSON.parse(valueDivText);
@@ -45,10 +43,7 @@ function getMetaData(el) {
       metaData[keyValueText] = valueDivText;
     }
   });
-
-  // Map AEM block metadata to our expected format
   return {
-    // Main video
     videoid: metaData.videoid || '',
     skinid: metaData.skinid || '',
     aslid: metaData.aslid || '',
@@ -57,26 +52,10 @@ function getMetaData(el) {
     autoplay: metaData.autoplay === 'true',
     fluidContainer: metaData.fluidcontainer === 'true',
     renderInPage: metaData.renderinpage === 'true',
-    
-    // Concurrent video
-    concurrentenabled: metaData.concurrentenabled === 'true',
-    concurrentlayout: metaData.concurrentlayout || 'side-by-side',
-    concurrentvideoid: metaData.concurrentvideoid || '',
-    concurrentaslid: metaData.concurrentaslid || '',
-    concurrenttitle: metaData.concurrenttitle || '',
-    concurrentdescription: metaData.concurrentdescription || '',
-    concurrentthumbnail: metaData.concurrentthumbnail || '',
-    concurrentsessionid: metaData.concurrentsessionid || '',
-    
-    // Drawer settings
     drawerenabled: metaData.drawerenabled === 'true',
-    drawerposition: metaData.drawerposition || 'right',
+    drawerposition: metaData.drawerposition || 'bottom',
     drawertitle: metaData.drawertitle || '',
-    
-    // ASL settings
     aslenabled: metaData.aslenabled === 'true',
-    
-    // Timing data
     timing: metaData.timing || null
   };
 }
@@ -231,130 +210,6 @@ function injectPlayer(wrapper, videoId, skinId, aslId = null) {
   return window.__mr_player;
 }
 
-function createVideoMetadata(container, config, wrapper) {
-  if (!config.concurrentenabled) return;
-
-  const metadataWrapper = createTag('div', { 
-    class: `concurrent-metadata layout-${config.concurrentlayout || 'side-by-side'}`
-  });
-  
-  // Add title if available
-  if (config.concurrenttitle) {
-    const title = createTag('h3', { class: 'concurrent-title' }, config.concurrenttitle);
-    metadataWrapper.appendChild(title);
-  }
-
-  // Create metadata items
-  const metadataList = createTag('div', { class: 'concurrent-metadata-list' });
-
-  // Add default video as first item
-  const defaultItem = createTag('div', { 
-    class: 'concurrent-metadata-item active',
-    'data-videoid': config.videoid,
-    'data-skinid': config.skinid,
-    'data-aslid': config.aslid
-  });
-  
-  const defaultThumbnail = createTag('div', { class: 'concurrent-metadata-thumbnail' });
-  if (config.thumbnail) {
-    const img = createTag('img', { 
-      src: config.thumbnail,
-      alt: 'Main Stream Thumbnail'
-    });
-    defaultThumbnail.appendChild(img);
-  } else {
-    // Add default thumbnail if none provided
-    const defaultImg = createTag('img', {
-      src: 'https://placehold.co/1280x720/1d1d1d/ffffff?text=Main+Stream',
-      alt: 'Default Main Stream Thumbnail'
-    });
-    defaultThumbnail.appendChild(defaultImg);
-  }
-  
-  const playButton = createTag('div', { class: 'play-button' });
-  playButton.innerHTML = '<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>';
-  defaultThumbnail.appendChild(playButton);
-  
-  const defaultContent = createTag('div', { class: 'concurrent-metadata-content' });
-  const defaultTitle = createTag('h4', { class: 'concurrent-metadata-title' }, 'Main Stream');
-  const defaultDesc = createTag('p', { class: 'concurrent-metadata-description' }, config.description || '');
-  
-  defaultContent.appendChild(defaultTitle);
-  defaultContent.appendChild(defaultDesc);
-  
-  defaultItem.appendChild(defaultThumbnail);
-  defaultItem.appendChild(defaultContent);
-  metadataList.appendChild(defaultItem);
-
-  // Add concurrent video item if available
-  if (config.concurrentvideoid) {
-    const concurrentItem = createTag('div', { 
-      class: 'concurrent-metadata-item',
-      'data-videoid': config.concurrentvideoid,
-      'data-skinid': config.skinid,
-      'data-aslid': config.concurrentaslid
-    });
-    
-    const concurrentThumbnail = createTag('div', { class: 'concurrent-metadata-thumbnail' });
-    if (config.concurrentthumbnail) {
-      const img = createTag('img', { 
-        src: config.concurrentthumbnail,
-        alt: 'Concurrent Stream Thumbnail'
-      });
-      concurrentThumbnail.appendChild(img);
-    } else {
-      // Add default thumbnail if none provided
-      const defaultImg = createTag('img', {
-        src: 'https://placehold.co/1280x720/1d1d1d/ffffff?text=Concurrent+Stream',
-        alt: 'Default Concurrent Stream Thumbnail'
-      });
-      concurrentThumbnail.appendChild(defaultImg);
-    }
-    
-    const concurrentPlayButton = createTag('div', { class: 'play-button' });
-    concurrentPlayButton.innerHTML = '<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>';
-    concurrentThumbnail.appendChild(concurrentPlayButton);
-    
-    const concurrentContent = createTag('div', { class: 'concurrent-metadata-content' });
-    const concurrentTitle = createTag('h4', { 
-      class: 'concurrent-metadata-title'
-    }, config.concurrenttitle || 'Concurrent Stream');
-    const concurrentDesc = createTag('p', { 
-      class: 'concurrent-metadata-description'
-    }, config.concurrentdescription || '');
-    
-    concurrentContent.appendChild(concurrentTitle);
-    concurrentContent.appendChild(concurrentDesc);
-    
-    concurrentItem.appendChild(concurrentThumbnail);
-    concurrentItem.appendChild(concurrentContent);
-    metadataList.appendChild(concurrentItem);
-  }
-
-  metadataWrapper.appendChild(metadataList);
-  container.appendChild(metadataWrapper);
-
-  // Add click handlers for metadata items
-  const items = metadataWrapper.querySelectorAll('.concurrent-metadata-item');
-  items.forEach(item => {
-    item.addEventListener('click', (e) => {
-      e.preventDefault();
-      
-      // Remove active class from all items
-      items.forEach(i => i.classList.remove('active'));
-      
-      // Add active class to clicked item
-      item.classList.add('active');
-      
-      // Load the selected video
-      const videoId = item.dataset.videoid;
-      const skinId = item.dataset.skinid;
-      const aslId = item.dataset.aslid;
-      injectPlayer(wrapper, videoId, skinId, aslId);
-    });
-  });
-}
-
 function loadMobileRiderScript(callback) {
   if (window.mobilerider) {
     callback();
@@ -383,43 +238,25 @@ function loadMobileRiderScript(callback) {
 
 export default async function init(el) {
   const config = getMetaData(el);
-  
-  // Create container
   const container = createTag('div', { class: 'mobile-rider' });
   el.appendChild(container);
-
-  // Create video wrapper
   const wrapper = createTag('div', { class: 'video-wrapper' });
   container.appendChild(wrapper);
-
-  // Wait for MobileRider script, then inject default player and metadata
   loadMobileRiderScript(() => {
     injectPlayer(wrapper, config.videoid, config.skinid, config.aslid);
-    
-    // Initialize drawer first if enabled
     if (config.drawerenabled) {
       initDrawer(container, config);
     }
-    
-    // Then initialize concurrent metadata if enabled
-    if (config.concurrentenabled) {
-      createVideoMetadata(container, config, wrapper);
-    }
   });
-
-  // Set up ASL toggle if needed
   if (config.aslenabled) {
     const aslButton = document.querySelector('#asl-button');
     if (aslButton) {
       handleASLSubroutine(5000, 100, toggleClassHandler, aslButton);
     }
   }
-
-  // Set up stream end listener if needed
   const shouldSetStreamendListener = defineShouldSetStreamendListener(el);
   if (shouldSetStreamendListener) {
     setUpStreamendListener(el);
   }
-
   return window.__mr_player;
 }
