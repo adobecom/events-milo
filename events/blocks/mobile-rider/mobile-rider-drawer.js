@@ -118,12 +118,14 @@ export default function initDrawer(c, cfg) {
     // Click handler: use injectPlayer to play the selected video
     item.onclick = () => {
       const wrapper = c.querySelector('.video-wrapper');
-      if (wrapper) {
-        injectPlayer(
+      if (wrapper && window.injectPlayer) {
+        window.injectPlayer(
           wrapper,
           video.videoid,
           cfg.skinid,
-          video.aslid
+          video.aslid,
+          null,
+          'adobe'
         );
       }
       list.querySelectorAll('.drawer-item').forEach(i => i.classList.remove('current'));

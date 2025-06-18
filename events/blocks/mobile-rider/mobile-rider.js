@@ -181,14 +181,14 @@ function toggleClassHandler(aslButton) {
   });
 }
 
-function injectPlayer(wrapper, videoId, skinId, aslId = null, sessionId = null) {
+function injectPlayer(wrapper, videoId, skinId, aslId = null, sessionId = null, analyticsProvider = 'adobe') {
   // Remove any existing player (iframe or video)
   while (wrapper.firstChild) {
     wrapper.removeChild(wrapper.firstChild);
   }
 
   // Create container div
-  const container = createTag('div', { 
+  const container = createTag('div', {
     class: 'mobileRider_container is-hidden',
     'data-videoid': videoId,
     'data-skinid': skinId,
@@ -221,7 +221,7 @@ function injectPlayer(wrapper, videoId, skinId, aslId = null, sessionId = null) 
       autoplay: true,
       controls: true,
       muted: false,
-      analytics: { provider: ANALYTICS_PROVIDER },
+      analytics: { provider: analyticsProvider },
       identifier1: videoId,
       identifier2: aslId,
       sessionId: sessionId,
@@ -230,6 +230,8 @@ function injectPlayer(wrapper, videoId, skinId, aslId = null, sessionId = null) 
 
   return window.__mr_player;
 }
+
+window.injectPlayer = injectPlayer;
 
 function loadMobileRiderScript(callback) {
   if (window.mobilerider) {
