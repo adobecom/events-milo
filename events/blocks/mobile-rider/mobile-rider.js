@@ -182,6 +182,10 @@ function toggleClassHandler(aslButton) {
 }
 
 function injectPlayer(wrapper, videoId, skinId, aslId = null, sessionId = null, analyticsProvider = 'adobe') {
+  if (!wrapper) {
+    console.warn('injectPlayer: wrapper is null');
+    return;
+  }
   // Find or create the container div
   let container = wrapper.querySelector('.mobileRider_container');
   if (!container) {
@@ -211,6 +215,12 @@ function injectPlayer(wrapper, videoId, skinId, aslId = null, sessionId = null, 
       class: 'mobileRider_viewport'
     });
     container.appendChild(video);
+  }
+
+  // Defensive: ensure video exists before embedding
+  if (!video) {
+    console.warn('injectPlayer: video element is null');
+    return;
   }
 
   // Dispose of existing player if it exists

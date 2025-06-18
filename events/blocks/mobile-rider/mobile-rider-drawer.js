@@ -110,14 +110,21 @@ export default function initDrawer(c, cfg) {
 
     // Click handler: use injectPlayer to play the selected video
     item.onclick = () => {
-      // Find the video wrapper in the parent container (sibling, not child)
+      // Find the closest .video-wrapper sibling (not inside the drawer)
       let wrapper = c.querySelector('.video-wrapper');
       if (!wrapper) {
-        wrapper = c.previousElementSibling && c.previousElementSibling.classList.contains('video-wrapper')
-          ? c.previousElementSibling
-          : null;
+        // Try previous or next sibling
+        if (c.previousElementSibling && c.previousElementSibling.classList.contains('video-wrapper')) {
+          wrapper = c.previousElementSibling;
+        } else if (c.nextElementSibling && c.nextElementSibling.classList.contains('video-wrapper')) {
+          wrapper = c.nextElementSibling;
+        }
       }
-      if (wrapper && window.injectPlayer) {
+      if (!wrapper) {
+        console.warn('Drawer: Could not find .video-wrapper sibling for player injection');
+        return;
+      }
+      if (window.injectPlayer) {
         window.injectPlayer(
           wrapper,
           video.videoid,
