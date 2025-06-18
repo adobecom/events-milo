@@ -206,16 +206,19 @@ function injectPlayer(wrapper, videoId, skinId, aslId = null, sessionId = null, 
     container.dataset.sessionid = sessionId;
   }
 
-  // Find or create the video element
-  let video = container.querySelector('.mobileRider_viewport');
-  if (!video) {
-    video = createTag('video', {
-      id: 'idPlayer',
-      controls: true,
-      class: 'mobileRider_viewport'
-    });
-    container.appendChild(video);
+  // Always remove any existing <video id="idPlayer"> inside the container
+  const oldVideo = container.querySelector('#idPlayer');
+  if (oldVideo) {
+    oldVideo.remove();
   }
+
+  // Create and append a new video element
+  const video = createTag('video', {
+    id: 'idPlayer',
+    controls: true,
+    class: 'mobileRider_viewport'
+  });
+  container.appendChild(video);
 
   // Defensive: ensure video exists before embedding
   if (!video) {
