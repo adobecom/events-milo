@@ -519,93 +519,34 @@
   }
 }
 
-/* Drawer styles */
+/* Drawer as part of player */
 .mobile-rider-drawer {
-  position: fixed;
-  top: 0;
-  right: -320px; /* Reduced width */
-  width: 320px;
-  height: 100vh;
-  background: #1d1d1d;
-  box-shadow: -2px 0 8px rgba(0, 0, 0, 0.2);
-  transition: right 0.3s ease;
-  z-index: 1000;
-  overflow-y: auto;
-}
-
-.mobile-rider-drawer.drawer-open {
-  right: 0;
-}
-
-.mobile-rider-drawer.left {
-  right: auto;
-  left: -320px;
-}
-
-.mobile-rider-drawer.left.drawer-open {
-  left: 0;
-}
-
-.drawer-toggle {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  background: #1473e6;
-  color: white;
-  border: none;
-  padding: 0.75rem;
-  cursor: pointer;
-  border-radius: 4px 0 0 4px;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  transition: background-color 0.2s;
-  font-size: 0.9rem;
-}
-
-.mobile-rider-drawer.left .drawer-toggle {
-  right: -40px;
-  border-radius: 0 4px 4px 0;
-}
-
-.mobile-rider-drawer.right .drawer-toggle {
-  left: -40px;
-}
-
-.drawer-toggle:hover {
-  background: #0d66d0;
-}
-
-.drawer-toggle-icon {
-  width: 10px;
-  height: 10px;
-  border-right: 2px solid currentColor;
-  border-bottom: 2px solid currentColor;
-  transform: rotate(-45deg);
-  transition: transform 0.3s ease;
-}
-
-.drawer-open .drawer-toggle-icon {
-  transform: rotate(135deg);
+  width: 100%;
+  background: #181818;
+  box-sizing: border-box;
+  border-top: 2px solid #222;
+  box-shadow: 0 -2px 8px rgba(0,0,0,0.12);
+  margin: 0;
+  padding: 0;
+  position: static;
 }
 
 .drawer-content {
-  padding: 1.5rem 0.75rem;
+  padding: 0.5rem 0 0 0;
 }
 
 .drawer-title {
   color: #fff;
-  font-size: 1.25rem;
-  margin: 0 0 1rem;
-  padding: 0 0.75rem;
+  font-size: 1.1rem;
+  margin: 0 0 0.5rem 1rem;
+  padding: 0;
 }
 
-/* Drawer items (YouTube style) */
 .drawer-items {
   display: flex;
   flex-direction: row;
   gap: 0.75rem;
-  padding: 0 0.75rem 1rem 0.75rem;
+  padding: 0 1rem 1rem 1rem;
   overflow-x: auto;
   scrollbar-width: thin;
   scrollbar-color: #1473e6 #2a2a2a;
@@ -685,11 +626,6 @@
 }
 
 @media (max-width: 768px) {
-  .mobile-rider-drawer {
-    width: 100vw;
-    right: -100vw;
-    min-width: 0;
-  }
   .drawer-item {
     flex: 0 0 140px;
     max-width: 140px;

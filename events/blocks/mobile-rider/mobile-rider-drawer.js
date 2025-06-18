@@ -67,10 +67,11 @@ const createThumb = (v, onClick) => {
 export default function initDrawer(c, cfg) {
   if (!cfg.drawerenabled) return null;
 
-  // Create drawer container
+  // Create drawer container (no fixed/absolute positioning)
   const drawer = createTag('div', {
-    class: `mobile-rider-drawer ${cfg.drawerposition || 'right'}`,
-    'aria-label': cfg.drawertitle || 'Related Videos'
+    class: `mobile-rider-drawer ${cfg.drawerposition || 'bottom'}`,
+    'aria-label': cfg.drawertitle || 'Related Videos',
+    style: 'width: 100%; box-sizing: border-box;'
   });
 
   // Add toggle button
