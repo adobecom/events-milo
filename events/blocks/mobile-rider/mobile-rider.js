@@ -261,7 +261,16 @@ function loadMobileRiderScript(callback) {
 
 export default async function init(el) {
   const config = getMetaData(el);
-  const container = createTag('div', { class: 'mobile-rider' });
+
+  // Remove/hide all authored metadata rows (all direct children except the new .mobile-rider)
+  Array.from(el.children).forEach(child => {
+    if (!child.classList.contains('mobile-rider')) {
+      child.style.display = 'none';
+    }
+  });
+
+  // Create a single .mobile-rider container for the player UI
+  const container = createTag('div', { class: 'mobile-rider-player' });
   el.appendChild(container);
   const wrapper = createTag('div', { class: 'video-wrapper' });
   container.appendChild(wrapper);
