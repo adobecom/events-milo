@@ -290,13 +290,22 @@ export default async function init(el) {
   });
 
   // Create a single .mobile-rider container for the player UI
-  const container = createTag('div', { class: 'mobile-rider-player' });
-  el.appendChild(container);
-  const wrapper = createTag('div', { class: 'video-wrapper' });
-  container.appendChild(wrapper);
+  let container = el.querySelector('.mobile-rider-player');
+  if (!container) {
+    container = createTag('div', { class: 'mobile-rider-player' });
+    el.appendChild(container);
+  }
+  let wrapper = container.querySelector('.video-wrapper');
+  if (!wrapper) {
+    wrapper = createTag('div', { class: 'video-wrapper' });
+    container.appendChild(wrapper);
+  }
 
-  // Drawer will be appended as a sibling to the video wrapper
-  let drawerEl = null;
+  // Only append the drawer if it does not already exist
+  let drawerEl = container.querySelector('.mobile-rider-drawer');
+  if (config.drawerenabled && config.concurrentVideos.length > 0 && !drawerEl) {
+    drawerEl = initDrawer(container, { ...config, videos: config.concurrentVideos });
+  }
 
   loadMobileRiderScript(() => {
     injectPlayer(
@@ -306,10 +315,6 @@ export default async function init(el) {
       config.aslid,
       null,
     );
-    if (config.drawerenabled && config.concurrentVideos.length > 0) {
-      // Append drawer as a sibling to the video wrapper
-      drawerEl = initDrawer(container, { ...config, videos: config.concurrentVideos });
-    }
   });
 
   // ASL button logic (if needed)
