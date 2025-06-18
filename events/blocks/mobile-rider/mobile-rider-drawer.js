@@ -78,7 +78,7 @@ export default function initDrawer(c, cfg) {
   const toggle = createToggle(c, cfg);
   if (toggle) drawer.appendChild(toggle);
 
-  // Create content container with title
+  // Add content
   const content = createTag('div', { class: 'drawer-content' });
   if (cfg.drawertitle) {
     content.appendChild(createTag('h2', { class: 'drawer-title' }, cfg.drawertitle));
@@ -87,107 +87,36 @@ export default function initDrawer(c, cfg) {
   // Create video list
   const list = createTag('div', { class: 'drawer-items' });
 
-  // Add main video to drawer
-  const mainVideo = {
-    videoId: cfg.videoid,
-    aslId: cfg.aslid,
-    title: 'Main Stream',
-    description: cfg.description,
-    thumbnail: cfg.thumbnail
-  };
-
-  // Create the main video card
-  const mainItem = createTag('div', {
-    class: 'drawer-item',
-    role: 'button',
-    tabindex: '0',
-    'data-vid': mainVideo.videoId,
-    'data-asl': mainVideo.aslId
-  });
-
-  // Add thumbnail if available
-  const thumbnail = createTag('div', { class: 'drawer-item-thumbnail' });
-  if (mainVideo.thumbnail) {
-    thumbnail.appendChild(createTag('img', {
-      src: mainVideo.thumbnail,
-      alt: mainVideo.title
-    }));
-  }
-  mainItem.appendChild(thumbnail);
-
-  // Add content
-  const mainContent = createTag('div', { class: 'drawer-item-content' });
-  mainContent.appendChild(createTag('div', { class: 'drawer-item-title' }, mainVideo.title));
-  if (mainVideo.description) {
-    mainContent.appendChild(createTag('div', { class: 'drawer-item-description' }, mainVideo.description));
-  }
-  mainItem.appendChild(mainContent);
-
-  // Add click handler
-  mainItem.onclick = () => {
-    const mainVid = c.querySelector('.mobile-rider-viewport');
-    if (mainVid && window.mobilerider) {
-      if (window.__mr_player && window.__mr_player.dispose) {
-        window.__mr_player.dispose();
-      }
-      window.__mr_player = window.mobilerider.embed(
-        mainVid.id,
-        mainVideo.videoId,
-        cfg.skinid,
-        {
-          autoplay: true,
-          controls: true,
-          muted: true,
-          analytics: { provider: 'adobe' },
-          identifier1: mainVideo.videoId,
-          identifier2: mainVideo.aslId
-        }
-      );
-    }
-    list.querySelectorAll('.drawer-item').forEach(i => i.classList.remove('current'));
-    mainItem.classList.add('current');
-  };
-
-  list.appendChild(mainItem);
-
-  // Add concurrent video if available
-  if (cfg.concurrentvideoid) {
-    const concurrentVideo = {
-      videoId: cfg.concurrentvideoid,
-      aslId: cfg.concurrentaslid,
-      title: cfg.concurrenttitle || 'Concurrent Stream',
-      description: cfg.concurrentdescription,
-      thumbnail: cfg.concurrentthumbnail
-    };
-
-    const concurrentItem = createTag('div', {
+  // Render all videos from cfg.videos array
+  (cfg.videos || []).forEach((video, idx) => {
+    const item = createTag('div', {
       class: 'drawer-item',
       role: 'button',
       tabindex: '0',
-      'data-vid': concurrentVideo.videoId,
-      'data-asl': concurrentVideo.aslId
+      'data-vid': video.videoid,
+      'data-asl': video.aslid
     });
 
-    // Add thumbnail if available
-    const concurrentThumbnail = createTag('div', { class: 'drawer-item-thumbnail' });
-    if (concurrentVideo.thumbnail) {
-      concurrentThumbnail.appendChild(createTag('img', {
-        src: concurrentVideo.thumbnail,
-        alt: concurrentVideo.title
+    // Thumbnail
+    const thumbnail = createTag('div', { class: 'drawer-item-thumbnail' });
+    if (video.thumbnail) {
+      thumbnail.appendChild(createTag('img', {
+        src: video.thumbnail,
+        alt: video.title
       }));
     }
-    concurrentItem.appendChild(concurrentThumbnail);
+    item.appendChild(thumbnail);
 
-    // Add content
-    const concurrentContent = createTag('div', { class: 'drawer-item-content' });
-    concurrentContent.appendChild(createTag('div', { class: 'drawer-item-title' }, concurrentVideo.title));
-    if (concurrentVideo.description) {
-      concurrentContent.appendChild(createTag('div', { class: 'drawer-item-description' }, concurrentVideo.description));
+    // Content
+    const contentDiv = createTag('div', { class: 'drawer-item-content' });
+    contentDiv.appendChild(createTag('div', { class: 'drawer-item-title' }, video.title));
+    if (video.description) {
+      contentDiv.appendChild(createTag('div', { class: 'drawer-item-description' }, video.description));
     }
-    concurrentItem.appendChild(concurrentContent);
+    item.appendChild(contentDiv);
 
-    // Add click handler
-    concurrentItem.onclick = () => {
+    // Click handler: load this video in the main player
+    item.onclick = () => {
       const mainVid = c.querySelector('.mobile-rider-viewport');
       if (mainVid && window.mobilerider) {
         if (window.__mr_player && window.__mr_player.dispose) {
@@ -195,24 +124,27 @@ export default function initDrawer(c, cfg) {
         }
         window.__mr_player = window.mobilerider.embed(
           mainVid.id,
-          concurrentVideo.videoId,
+          video.videoid,
           cfg.skinid,
           {
             autoplay: true,
             controls: true,
             muted: true,
             analytics: { provider: 'adobe' },
-            identifier1: concurrentVideo.videoId,
-            identifier2: concurrentVideo.aslId
+            identifier1: video.videoid,
+            identifier2: video.aslid
           }
         );
       }
       list.querySelectorAll('.drawer-item').forEach(i => i.classList.remove('current'));
-      concurrentItem.classList.add('current');
+      item.classList.add('current');
     };
 
-    list.appendChild(concurrentItem);
-  }
+    // Mark the first video as current by default
+    if (idx === 0) item.classList.add('current');
+
+    list.appendChild(item);
+  });
 
   content.appendChild(list);
   drawer.appendChild(content);

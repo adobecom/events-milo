@@ -43,20 +43,27 @@ function getMetaData(el) {
       metaData[keyValueText] = valueDivText;
     }
   });
+
+  // Only use concurrent video info, ignore related videos
   return {
-    videoid: metaData.videoid || '',
+    videoid: metaData.concurrentvideoid || metaData.videoid || '',
     skinid: metaData.skinid || '',
-    aslid: metaData.aslid || '',
-    description: metaData.description || '',
-    thumbnail: metaData.thumbnail || '',
+    aslid: metaData.concurrentaslId || metaData.aslid || '',
+    description: metaData.concurrentdescription || metaData.description || '',
+    thumbnail: metaData.concurrentthumbnail || metaData.thumbnail || '',
     autoplay: metaData.autoplay === 'true',
     fluidContainer: metaData.fluidcontainer === 'true',
     renderInPage: metaData.renderinpage === 'true',
-    drawerenabled: metaData.drawerenabled === 'true',
-    drawerposition: metaData.drawerposition || 'bottom',
-    drawertitle: metaData.drawertitle || '',
-    aslenabled: metaData.aslenabled === 'true',
-    timing: metaData.timing || null
+    drawerenabled: metaData.drawerenabled === 'true' || metaData.drawerenabled === 'true',
+    drawerposition: metaData.drawerposition || metaData.drawerPosition || 'right',
+    drawertitle: metaData.drawertitle || metaData.drawerTitle || '',
+    concurrentenabled: metaData.concurrentenabled === 'true',
+    concurrentlayout: metaData.concurrentlayout || 'side-by-side',
+    concurrentsessionid: metaData.concurrentsessionid || '',
+    concurrenttitle: metaData.concurrenttitle || '',
+    concurrentdescription: metaData.concurrentdescription || '',
+    concurrentthumbnail: metaData.concurrentthumbnail || '',
+    timing: metaData.timing || null,
   };
 }
 
@@ -163,7 +170,7 @@ function toggleClassHandler(aslButton) {
   });
 }
 
-function injectPlayer(wrapper, videoId, skinId, aslId = null) {
+function injectPlayer(wrapper, videoId, skinId, aslId = null, sessionId = null) {
   // Remove any existing player (iframe or video)
   while (wrapper.firstChild) {
     wrapper.removeChild(wrapper.firstChild);
@@ -174,6 +181,8 @@ function injectPlayer(wrapper, videoId, skinId, aslId = null) {
     class: 'mobileRider_container is-hidden',
     'data-videoid': videoId,
     'data-skinid': skinId,
+    'data-aslid': aslId,
+    'data-sessionid': sessionId,
     id: 'mr-adobe'
   });
   wrapper.appendChild(container);
@@ -203,7 +212,8 @@ function injectPlayer(wrapper, videoId, skinId, aslId = null) {
       muted: false,
       analytics: { provider: ANALYTICS_PROVIDER },
       identifier1: videoId,
-      identifier2: aslId
+      identifier2: aslId,
+      sessionId: sessionId,
     }
   );
 
@@ -242,18 +252,37 @@ export default async function init(el) {
   el.appendChild(container);
   const wrapper = createTag('div', { class: 'video-wrapper' });
   container.appendChild(wrapper);
+
   loadMobileRiderScript(() => {
-    injectPlayer(wrapper, config.videoid, config.skinid, config.aslid);
+    injectPlayer(
+      wrapper,
+      config.videoid,
+      config.skinid,
+      config.aslid,
+      config.concurrentsessionid
+    );
     if (config.drawerenabled) {
-      initDrawer(container, config);
+      const videos = [
+        {
+          videoid: config.videoid,
+          aslid: config.aslid,
+          title: config.concurrenttitle || 'Concurrent Video',
+          description: config.concurrentdescription || '',
+          thumbnail: config.concurrentthumbnail || ''
+        }
+      ];
+      initDrawer(container, { ...config, videos });
     }
   });
-  if (config.aslenabled) {
+
+  // ASL button logic (if needed)
+  if (config.aslid) {
     const aslButton = document.querySelector('#asl-button');
     if (aslButton) {
       handleASLSubroutine(5000, 100, toggleClassHandler, aslButton);
     }
   }
+
   const shouldSetStreamendListener = defineShouldSetStreamendListener(el);
   if (shouldSetStreamendListener) {
     setUpStreamendListener(el);
