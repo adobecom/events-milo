@@ -115,25 +115,15 @@ export default function initDrawer(c, cfg) {
     }
     item.appendChild(contentDiv);
 
-    // Click handler: load this video in the main player
+    // Click handler: use injectPlayer to play the selected video
     item.onclick = () => {
-      const mainVid = c.querySelector('.mobile-rider-viewport');
-      if (mainVid && window.mobilerider) {
-        if (window.__mr_player && window.__mr_player.dispose) {
-          window.__mr_player.dispose();
-        }
-        window.__mr_player = window.mobilerider.embed(
-          mainVid.id,
+      const wrapper = c.querySelector('.video-wrapper');
+      if (wrapper) {
+        injectPlayer(
+          wrapper,
           video.videoid,
           cfg.skinid,
-          {
-            autoplay: true,
-            controls: true,
-            muted: true,
-            analytics: { provider: 'adobe' },
-            identifier1: video.videoid,
-            identifier2: video.aslid
-          }
+          video.aslid
         );
       }
       list.querySelectorAll('.drawer-item').forEach(i => i.classList.remove('current'));
