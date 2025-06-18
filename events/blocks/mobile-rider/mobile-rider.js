@@ -181,7 +181,7 @@ function toggleClassHandler(aslButton) {
   });
 }
 
-function injectPlayer(wrapper, videoId, skinId, aslId = null, sessionId = null) {
+function injectPlayer(wrapper, videoId, skinId, aslId = null, sessionId = null, analyticsProvider = 'adobe') {
   // Remove any existing player (iframe or video)
   while (wrapper.firstChild) {
     wrapper.removeChild(wrapper.firstChild);
@@ -221,7 +221,7 @@ function injectPlayer(wrapper, videoId, skinId, aslId = null, sessionId = null) 
       autoplay: true,
       controls: true,
       muted: false,
-      analytics: { provider: ANALYTICS_PROVIDER },
+      analytics: { provider: analyticsProvider },
       identifier1: videoId,
       identifier2: aslId,
       sessionId: sessionId,
@@ -269,7 +269,9 @@ export default async function init(el) {
       wrapper,
       config.videoid,
       config.skinid,
-      config.aslid
+      config.aslid,
+      null,
+      'adobe'
     );
     if (config.drawerenabled && config.concurrentVideos.length > 0) {
       initDrawer(container, { ...config, videos: config.concurrentVideos });
