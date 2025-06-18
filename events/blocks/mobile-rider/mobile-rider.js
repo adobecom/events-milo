@@ -65,6 +65,8 @@ function getMetaData(el) {
     concurrentthumbnail: metaData.concurrentthumbnail || '',
     timing: metaData.timing || null,
     relatedvideos: metaData.relatedvideos || [],
+    concurrentVideoId: metaData.concurrentvideoid || '',
+    concurrentAslId: metaData.concurrentaslid || '',
   };
 }
 
@@ -262,16 +264,16 @@ export default async function init(el) {
       config.aslid
     );
     if (config.drawerenabled) {
-      const videos = [
-        {
-          videoid: config.videoid,
-          aslid: config.aslid,
-          title: config.title || 'Main Video',
-          description: config.description || '',
-          thumbnail: config.thumbnail || ''
-        },
-        ...config.relatedvideos
-      ];
+      const videos = [];
+      if (config.concurrentVideoId) {
+        videos.push({
+          videoid: config.concurrentVideoId,
+          aslid: config.concurrentAslId,
+          title: config.concurrentTitle || 'Concurrent Video',
+          description: config.concurrentDescription || '',
+          thumbnail: config.concurrentThumbnail || ''
+        });
+      }
       initDrawer(container, { ...config, videos });
     }
   });
