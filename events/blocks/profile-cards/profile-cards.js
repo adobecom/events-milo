@@ -77,7 +77,7 @@ async function decorateSocialIcons(cardContainer, socialLinks) {
     try {
       const url = new URL(link);
       const hostname = url.hostname.toLowerCase();
-      platform = SUPPORTED_SOCIAL.find((p) => hostname.includes(`${p}.`)) || 'web';
+      platform = SUPPORTED_SOCIAL.find((p) => hostname.includes(`.${p}.`)) || 'web';
     } catch (error) {
       platform = 'web';
     }
