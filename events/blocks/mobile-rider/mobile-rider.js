@@ -46,11 +46,11 @@ function getMetaData(el) {
 
   // Only use concurrent video info, ignore related videos
   return {
-    videoid: metaData.concurrentvideoid || metaData.videoid || '',
+    videoid: metaData.videoid || '',
     skinid: metaData.skinid || '',
-    aslid: metaData.concurrentaslId || metaData.aslid || '',
-    description: metaData.concurrentdescription || metaData.description || '',
-    thumbnail: metaData.concurrentthumbnail || metaData.thumbnail || '',
+    aslid: metaData.aslid || '',
+    description: metaData.description || '',
+    thumbnail: metaData.thumbnail || '',
     autoplay: metaData.autoplay === 'true',
     fluidContainer: metaData.fluidcontainer === 'true',
     renderInPage: metaData.renderinpage === 'true',
@@ -64,6 +64,7 @@ function getMetaData(el) {
     concurrentdescription: metaData.concurrentdescription || '',
     concurrentthumbnail: metaData.concurrentthumbnail || '',
     timing: metaData.timing || null,
+    relatedvideos: metaData.relatedvideos || [],
   };
 }
 
@@ -258,18 +259,18 @@ export default async function init(el) {
       wrapper,
       config.videoid,
       config.skinid,
-      config.aslid,
-      config.concurrentsessionid
+      config.aslid
     );
     if (config.drawerenabled) {
       const videos = [
         {
           videoid: config.videoid,
           aslid: config.aslid,
-          title: config.concurrenttitle || 'Concurrent Video',
-          description: config.concurrentdescription || '',
-          thumbnail: config.concurrentthumbnail || ''
-        }
+          title: config.title || 'Main Video',
+          description: config.description || '',
+          thumbnail: config.thumbnail || ''
+        },
+        ...config.relatedvideos
       ];
       initDrawer(container, { ...config, videos });
     }
