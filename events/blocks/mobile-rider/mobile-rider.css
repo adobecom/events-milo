@@ -16,6 +16,10 @@
   background: #1d1d1d;
   transition: opacity 0.3s;
   margin-bottom: 0; /* Remove gap below player */
+  aspect-ratio: 16 / 9;
+  min-height: 300px; /* fallback for browsers without aspect-ratio */
+  background: #000;  /* ensures no white flash */
+  flex: 0 0 auto;
 }
 
 /* Ensure video maintains aspect ratio */
@@ -532,6 +536,7 @@
   position: static;
   /* Remove any top margin or gap */
   --selected-color: #232323; /* or your preferred color */
+  flex: 0 0 auto;
 }
 
 .drawer-content {
@@ -680,4 +685,11 @@
     --text-color: #fff;
     --text-secondary: #999;
   }
+}
+
+.mobile-rider-player {
+  min-height: 400px; /* or whatever height fits your player */
+  position: relative;
+  display: flex;
+  flex-direction: column;
 } 
