@@ -44,29 +44,37 @@ function getMetaData(el) {
     }
   });
 
-  // Only use concurrent video info, ignore related videos
+  // Gather all concurrent videos (concurrentvideoid1, concurrentvideoid2, ...)
+  const concurrentVideos = [];
+  Object.keys(metaData).forEach((key) => {
+    const match = key.match(/^concurrentvideoid(\d*)$/);
+    if (match) {
+      const idx = match[1] || '';
+      concurrentVideos.push({
+        videoid: metaData[`concurrentvideoid${idx}`],
+        aslid: metaData[`concurrentaslid${idx}`] || '',
+        title: metaData[`concurrenttitle${idx}`] || '',
+        description: metaData[`concurrentdescription${idx}`] || '',
+        thumbnail: metaData[`concurrentthumbnail${idx}`] || '',
+        sessionid: metaData[`concurrentsessionid${idx}`] || '',
+      });
+    }
+  });
+
   return {
     videoid: metaData.videoid || '',
     skinid: metaData.skinid || '',
     aslid: metaData.aslid || '',
-    description: metaData.description || '',
-    thumbnail: metaData.thumbnail || '',
     autoplay: metaData.autoplay === 'true',
     fluidContainer: metaData.fluidcontainer === 'true',
     renderInPage: metaData.renderinpage === 'true',
-    drawerenabled: metaData.drawerenabled === 'true' || metaData.drawerenabled === 'true',
+    drawerenabled: metaData.drawerenabled === 'true',
     drawerposition: metaData.drawerposition || metaData.drawerPosition || 'right',
     drawertitle: metaData.drawertitle || metaData.drawerTitle || '',
     concurrentenabled: metaData.concurrentenabled === 'true',
     concurrentlayout: metaData.concurrentlayout || 'side-by-side',
-    concurrentsessionid: metaData.concurrentsessionid || '',
-    concurrenttitle: metaData.concurrenttitle || '',
-    concurrentdescription: metaData.concurrentdescription || '',
-    concurrentthumbnail: metaData.concurrentthumbnail || '',
     timing: metaData.timing || null,
-    relatedvideos: metaData.relatedvideos || [],
-    concurrentVideoId: metaData.concurrentvideoid || '',
-    concurrentAslId: metaData.concurrentaslid || '',
+    concurrentVideos, // array of all concurrent videos
   };
 }
 
@@ -263,18 +271,8 @@ export default async function init(el) {
       config.skinid,
       config.aslid
     );
-    if (config.drawerenabled) {
-      const videos = [];
-      if (config.concurrentVideoId) {
-        videos.push({
-          videoid: config.concurrentVideoId,
-          aslid: config.concurrentAslId,
-          title: config.concurrentTitle || 'Concurrent Video',
-          description: config.concurrentDescription || '',
-          thumbnail: config.concurrentThumbnail || ''
-        });
-      }
-      initDrawer(container, { ...config, videos });
+    if (config.drawerenabled && config.concurrentVideos.length > 0) {
+      initDrawer(container, { ...config, videos: config.concurrentVideos });
     }
   });
 
