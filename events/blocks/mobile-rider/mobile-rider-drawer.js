@@ -74,15 +74,8 @@ export default function initDrawer(c, cfg) {
     style: 'width: 100%; box-sizing: border-box;'
   });
 
-  // Add toggle button
-  const toggle = createToggle(c, cfg);
-  if (toggle) drawer.appendChild(toggle);
-
   // Add content
   const content = createTag('div', { class: 'drawer-content' });
-  if (cfg.drawertitle) {
-    content.appendChild(createTag('h2', { class: 'drawer-title' }, cfg.drawertitle));
-  }
 
   // Create video list
   const list = createTag('div', { class: 'drawer-items' });
