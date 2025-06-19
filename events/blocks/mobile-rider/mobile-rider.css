@@ -648,6 +648,16 @@
   text-overflow: ellipsis;
 }
 
+@media (max-width: 768px) {
+  .drawer-items {
+    /* flex-direction: column !important; */
+    gap: 0.5rem;
+    overflow-x: unset;
+    overflow-y: auto;
+  }
+  /* You may want to keep .drawer-item width settings for mobile here, or move them to a lower breakpoint if you want only phones to stack vertically */
+}
+
 @media (max-width: 600px) {
   .drawer-items {
     flex-direction: column !important;
