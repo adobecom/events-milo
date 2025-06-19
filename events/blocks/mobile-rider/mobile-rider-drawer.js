@@ -138,9 +138,6 @@ export default function initDrawer(c, cfg) {
       item.classList.add('current');
     };
 
-    // Mark the first video as current by default
-    if (idx === 0) item.classList.add('current');
-
     list.appendChild(item);
   });
 
