@@ -3,7 +3,6 @@ import { mobileRiderStore } from '../../features/timing-framework/plugins/mobile
 
 const { createTag, getConfig } = await import(`${LIBS}/utils/utils.js`);
 import initDrawer from './mobile-rider-drawer.js';
-import { initLivestream, isLivestream } from './mobile-rider-livestream.js';
 
 // Constants
 const CONFIG = {
@@ -24,29 +23,12 @@ const CONFIG = {
     VIDEO_ID: 'idPlayer',
     VIDEO_CLASS: 'mobileRider_viewport',
   },
-  DRAWER: {
-    DEFAULT_POSITION: 'bottom',
-    DEFAULT_TITLE: 'Related Videos',
-  },
   ASL: {
     TOGGLE_CLASS: 'isASL',
     BUTTON_ID: 'asl-button',
     CHECK_INTERVAL: 100,
     MAX_CHECKS: 50,
   },
-  TIMING: {
-    QUERY_PARAM_AVOID_STREAM_END: 'avoidStreamEndFlag',
-  },
-  LIVESTREAM: {
-    METADATA_KEY: 'islivestream',
-    SESSION_ID_KEY: 'sessionid',
-  },
-};
-
-// Default configurations
-const DEFAULT_CONFIG = {
-  analytics: { provider: CONFIG.ANALYTICS.PROVIDER },
-  debug: getConfig().env === 'dev',
 };
 
 /**
@@ -71,16 +53,7 @@ function extractMetadata(element) {
     const valueDivText = div.nextElementSibling.textContent;
     const keyValueText = sanitizeTextForClass(div.textContent);
     
-    if (keyValueText === 'timing') {
-      try {
-        metadata[keyValueText] = JSON.parse(valueDivText);
-      } catch (error) {
-        window.lana?.log(`Failed to parse timing data: ${error}`);
-        metadata[keyValueText] = null;
-      }
-    } else {
-      metadata[keyValueText] = valueDivText;
-    }
+    metadata[keyValueText] = valueDivText;
   });
 
   // Extract concurrent videos
@@ -93,15 +66,8 @@ function extractMetadata(element) {
     autoplay: metadata.autoplay === 'true',
     fluidContainer: metadata.fluidcontainer === 'true',
     renderInPage: metadata.renderinpage === 'true',
-    drawerenabled: metadata.drawerenabled === 'true',
-    drawerposition: metadata.drawerposition || metadata.drawerPosition || CONFIG.DRAWER.DEFAULT_POSITION,
-    drawertitle: metadata.drawertitle || metadata.drawerTitle || '',
     concurrentenabled: metadata.concurrentenabled === 'true',
-    timing: metadata.timing || null,
     concurrentVideos,
-    // Livestream metadata
-    isLiveStream: metadata[CONFIG.LIVESTREAM.METADATA_KEY] === 'true',
-    sessionId: metadata[CONFIG.LIVESTREAM.SESSION_ID_KEY] || '',
   };
 }
 
@@ -129,33 +95,6 @@ function extractConcurrentVideos(metadata) {
   });
 
   return concurrentVideos;
-}
-
-/**
- * Checks if stream end listener should be set up
- * @param {HTMLElement} element - DOM element
- * @returns {boolean} Whether to set up stream end listener
- */
-function shouldSetStreamEndListener(element) {
-  const parentDXF = element?.closest('.dxf[data-toggle-type="timing"]');
-  if (!parentDXF) return false;
-
-  const currentVariation = parentDXF.dataset.currentVariation;
-  const timingString = parentDXF.dataset.timing;
-  const parsedTimingVariations = JSON.parse(timingString);
-  const currentVariationObject = parsedTimingVariations.find(
-    (variationObject) => variationObject.variation === currentVariation
-  );
-  
-  if (!currentVariationObject) return false;
-  
-  // Check query param for testing purposes
-  const avoidStreamEndFlag = new URLSearchParams(window?.location?.search).get(CONFIG.TIMING.QUERY_PARAM_AVOID_STREAM_END);
-  if (avoidStreamEndFlag === 'true') {
-    return false;
-  }
-  
-  return currentVariationObject.mobileRiderLiveNextSession === true;
 }
 
 /**
@@ -230,10 +169,7 @@ function handleASLInitialization(maxChecks, interval, toggleHandlerCallback, asl
     if (button) {
       const container = document.querySelector(`#${CONFIG.PLAYER.CONTAINER_ID}`);
       if (container) {
-        const shouldSetStreamendListener = shouldSetStreamEndListener(container);
-        if (shouldSetStreamendListener) {
-          setupStreamEndListener(container);
-        }
+        // Removed shouldSetStreamEndListener check
       }
       return toggleHandlerCallback(button);
     }
@@ -439,12 +375,6 @@ export default async function init(element) {
     );
   });
 
-  // Initialize livestream functionality if applicable
-  let livestreamManager = null;
-  if (isLivestream(config)) {
-    livestreamManager = initLivestream(container, config);
-  }
-
   // Setup ASL button if needed
   if (config.aslid) {
     const aslButton = document.querySelector(`#${CONFIG.ASL.BUTTON_ID}`);
@@ -456,17 +386,6 @@ export default async function init(element) {
         aslButton
       );
     }
-  }
-
-  // Setup stream end listener if needed
-  const shouldSetStreamendListener = shouldSetStreamEndListener(element);
-  if (shouldSetStreamendListener) {
-    setupStreamEndListener(element);
-  }
-
-  // Store livestream manager for potential cleanup
-  if (livestreamManager) {
-    container.livestreamManager = livestreamManager;
   }
 
   return window.__mr_player;
