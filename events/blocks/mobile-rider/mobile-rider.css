@@ -649,10 +649,15 @@
 }
 
 @media (max-width: 768px) {
+  .drawer-items {
+    flex-direction: row !important; /* Always horizontal */
+    overflow-x: auto;
+    gap: 1rem;
+  }
   .drawer-item {
-    flex: 0 0 200px;
-    max-width: 200px;
-    min-width: 140px;
+    flex: 0 0 140px;
+    max-width: 140px;
+    min-width: 100px;
     height: 48px;
   }
   .drawer-item-thumbnail {
