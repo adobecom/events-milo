@@ -356,9 +356,6 @@ export default async function init(element) {
   if (config.concurrentVideos && config.concurrentVideos.length > 0 && !drawerElement) {
     const drawerConfig = {
       ...config,
-      drawerenabled: true,
-      drawertitle: '',
-      drawerposition: CONFIG.DRAWER.DEFAULT_POSITION,
       videos: config.concurrentVideos,
     };
     drawerElement = initDrawer(container, drawerConfig);

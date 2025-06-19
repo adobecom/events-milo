@@ -37,14 +37,15 @@ const CONFIG = {
  * @returns {HTMLElement|null} Toggle button element or null
  */
 function createDrawerToggle(container, config) {
-  if (!config.drawertitle) return null;
+  const drawertitle = config.drawertitle || CONFIG.DRAWER.DEFAULT_TITLE;
+  if (!drawertitle) return null;
 
   const button = createTag('button', {
     class: 'drawer-toggle',
     'aria-expanded': 'false',
-    'aria-label': config.drawertitle,
+    'aria-label': drawertitle,
   }, [
-    createTag('span', { class: 'drawer-toggle-label' }, config.drawertitle),
+    createTag('span', { class: 'drawer-toggle-label' }, drawertitle),
     createTag('span', { class: 'drawer-toggle-icon' }),
   ]);
 
@@ -54,7 +55,7 @@ function createDrawerToggle(container, config) {
     if (drawer) {
       drawer.classList.toggle('drawer-open');
       button.setAttribute('aria-expanded', !isExpanded);
-      button.setAttribute('aria-label', isExpanded ? config.drawertitle : 'Close drawer');
+      button.setAttribute('aria-label', isExpanded ? drawertitle : 'Close drawer');
     }
   };
 
@@ -198,9 +199,12 @@ function createDrawerItem(video, container, config, itemsList) {
  * @returns {Object} Drawer elements
  */
 function createDrawerStructure(config) {
+  const drawerposition = config.drawerposition || CONFIG.DRAWER.DEFAULT_POSITION;
+  const drawertitle = config.drawertitle || CONFIG.DRAWER.DEFAULT_TITLE;
+  
   const drawer = createTag('div', {
-    class: `${CONFIG.DRAWER.CLASSES.CONTAINER} ${config.drawerposition || CONFIG.DRAWER.DEFAULT_POSITION}`,
-    'aria-label': config.drawertitle || CONFIG.DRAWER.DEFAULT_TITLE,
+    class: `${CONFIG.DRAWER.CLASSES.CONTAINER} ${drawerposition}`,
+    'aria-label': drawertitle,
     style: CONFIG.DRAWER.STYLES.CONTAINER,
   });
 
@@ -231,7 +235,8 @@ function insertDrawerIntoDOM(drawer, container) {
  * @returns {HTMLElement|null} Drawer element or null
  */
 export default function initDrawer(container, config) {
-  if (!config.drawerenabled) return null;
+  const drawerenabled = config.drawerenabled !== false; // Default to true if not specified
+  if (!drawerenabled) return null;
 
   const { drawer, content, itemsList } = createDrawerStructure(config);
 
