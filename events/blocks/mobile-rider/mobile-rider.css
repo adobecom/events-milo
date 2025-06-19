@@ -680,7 +680,6 @@
 @media (max-width: 480px) {
   .drawer-item {
     flex: 0 0 110px;
-    max-width: 110px;
     min-width: 80px;
     height: 44px;
   }
