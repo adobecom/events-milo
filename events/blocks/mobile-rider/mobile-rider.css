@@ -1,3 +1,7 @@
+/* ==========================================================================
+   Mobile Rider Video Player Block
+   ========================================================================== */
+
 /* Root container for the block */
 .mobile-rider {
   position: relative;
@@ -6,19 +10,33 @@
   max-width: 1200px;
   margin: 0 auto;
   box-sizing: border-box;
-  background: #000; /* Match player background */
+  background: #000;
 }
 
-/* Video wrapper */
+/* ==========================================================================
+   Player Container
+   ========================================================================== */
+
+.mobile-rider-player {
+  min-height: 400px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ==========================================================================
+   Video Wrapper
+   ========================================================================== */
+
 .video-wrapper {
   width: 100%;
   position: relative;
   background: #1d1d1d;
   transition: opacity 0.3s;
-  margin-bottom: 0; /* Remove gap below player */
+  margin-bottom: 0;
   aspect-ratio: 16 / 9;
-  min-height: 300px; /* fallback for browsers without aspect-ratio */
-  background: #000;  /* ensures no white flash */
+  min-height: 300px;
+  background: #000;
   flex: 0 0 auto;
 }
 
@@ -39,6 +57,363 @@
   border: none;
   background: #1d1d1d;
 }
+
+/* Video iframe styling */
+.video-wrapper iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+  background: #1d1d1d;
+  display: block;
+  transition: opacity 1.5s;
+}
+
+/* ==========================================================================
+   Loading State
+   ========================================================================== */
+
+.video-wrapper::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 40px;
+  height: 40px;
+  margin: -20px 0 0 -20px;
+  border: 4px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  border-top-color: #fff;
+  opacity: 0;
+  transition: opacity 0.2s;
+  z-index: 3;
+}
+
+.video-wrapper.is-loading::before {
+  opacity: 1;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ==========================================================================
+   Livestream Components
+   ========================================================================== */
+
+.live-indicator {
+  position: absolute;
+  top: 1rem;
+  left: 1rem;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: rgba(0, 0, 0, 0.7);
+  border-radius: 20px;
+  padding: 0.5rem 1rem;
+  backdrop-filter: blur(10px);
+  transition: opacity 0.3s ease;
+}
+
+.live-indicator.is-live .live-badge {
+  background: #ff4444;
+  animation: pulse 2s infinite;
+}
+
+.live-indicator.is-ended .live-badge {
+  background: #666;
+}
+
+.live-indicator.is-error .live-badge {
+  background: #ff8800;
+}
+
+.live-indicator.is-paused .live-badge {
+  background: #ffaa00;
+}
+
+.live-badge {
+  background: #666;
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 0.25rem 0.5rem;
+  border-radius: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  min-width: 40px;
+  text-align: center;
+}
+
+.viewer-count {
+  color: #fff;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.stream-status {
+  color: #ccc;
+  font-size: 0.75rem;
+  font-style: italic;
+}
+
+@keyframes pulse {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+/* ==========================================================================
+   Drawer Component
+   ========================================================================== */
+
+.mobile-rider-drawer {
+  width: 100%;
+  background: #181818;
+  box-sizing: border-box;
+  border-top: 2px solid #222;
+  box-shadow: 0 -2px 8px rgba(0,0,0,0.12);
+  margin: 0;
+  padding: 0;
+  position: static;
+  flex: 0 0 auto;
+}
+
+.drawer-content {
+  padding: 0.5rem 0 0 0;
+  margin: 0;
+}
+
+.drawer-title {
+  color: #fff;
+  font-size: 1.1rem;
+  margin: 0 0 0.5rem 1rem;
+  padding: 0;
+}
+
+.drawer-items {
+  display: flex;
+  flex-direction: row;
+  gap: 1rem;
+  padding: 0 1rem 1rem 1rem;
+  overflow-x: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #1473e6 #2a2a2a;
+  -webkit-overflow-scrolling: touch;
+  scroll-snap-type: x mandatory;
+}
+
+.drawer-item {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  background: #232323;
+  border-radius: 6px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: box-shadow 0.2s, border 0.2s, transform 0.2s;
+  flex: 0 0 320px;
+  max-width: 320px;
+  min-width: 240px;
+  height: 64px;
+  position: relative;
+  border: 1.5px solid transparent;
+  box-sizing: border-box;
+}
+
+.drawer-item.current::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 4px;
+  background: #1473e6;
+  border-radius: 0 0 4px 4px;
+}
+
+.drawer-item:hover, .drawer-item.current {
+  border: 1.5px solid #1473e6;
+  box-shadow: 0 2px 8px rgba(20,115,230,0.15);
+  z-index: 2;
+}
+
+.drawer-item-thumbnail {
+  width: 56px;
+  height: 56px;
+  min-width: 56px;
+  min-height: 56px;
+  background: #000;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  margin-left: 4px;
+}
+
+.drawer-item-thumbnail img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  border-radius: 4px;
+}
+
+.drawer-item-content {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 0 0.75rem;
+  min-width: 0;
+  width: 100%;
+}
+
+.drawer-item-title {
+  color: #fff;
+  font-size: 1rem;
+  font-weight: 700;
+  margin: 0 0 2px 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.drawer-item-description {
+  color: #bdbdbd;
+  font-size: 0.85rem;
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ==========================================================================
+   Responsive Design
+   ========================================================================== */
+
+/* Tablet and smaller desktop */
+@media (max-width: 768px) {
+  .drawer-items {
+    gap: 0.5rem;
+    overflow-x: unset;
+    overflow-y: auto;
+  }
+
+  .live-indicator {
+    top: 0.5rem;
+    left: 0.5rem;
+    padding: 0.375rem 0.75rem;
+    gap: 0.5rem;
+  }
+
+  .live-badge {
+    font-size: 0.6875rem;
+    padding: 0.1875rem 0.375rem;
+    min-width: 36px;
+  }
+
+  .viewer-count {
+    font-size: 0.8125rem;
+  }
+
+  .stream-status {
+    font-size: 0.6875rem;
+  }
+}
+
+/* Mobile devices */
+@media (max-width: 600px) {
+  .drawer-items {
+    flex-direction: column !important;
+    gap: 0.5rem;
+    overflow-x: unset;
+    overflow-y: auto;
+  }
+  
+  .drawer-item {
+    flex: 1 1 100%;
+    max-width: 100%;
+    min-width: 0;
+    width: 100% !important;
+    height: 56px;
+    box-sizing: border-box;
+  }
+
+  .live-indicator {
+    flex-direction: column;
+    gap: 0.25rem;
+    padding: 0.25rem 0.5rem;
+  }
+}
+
+/* Small mobile devices */
+@media (max-width: 480px) {
+  .drawer-item {
+    flex: 0 0 110px;
+    min-width: 80px;
+    height: 44px;
+  }
+
+  .live-indicator {
+    top: 0.25rem;
+    left: 0.25rem;
+    padding: 0.25rem 0.5rem;
+  }
+
+  .live-badge {
+    font-size: 0.625rem;
+    padding: 0.125rem 0.25rem;
+    min-width: 32px;
+  }
+
+  .viewer-count {
+    font-size: 0.75rem;
+  }
+
+  .stream-status {
+    font-size: 0.625rem;
+  }
+}
+
+/* ==========================================================================
+   High Contrast Mode Support
+   ========================================================================== */
+
+@media (forced-colors: active) {
+  .video-wrapper {
+    border: 1px solid CanvasText;
+  }
+  
+  .video-wrapper-viewport {
+    forced-color-adjust: none;
+  }
+
+  .drawer-item {
+    border: 1px solid CanvasText;
+  }
+
+  .live-indicator {
+    border: 1px solid CanvasText;
+  }
+
+  .live-badge {
+    border: 1px solid CanvasText;
+  }
+}
+
+/* ==========================================================================
+   Concurrent Metadata Section
+   ========================================================================== */
 
 /* Concurrent metadata section */
 .concurrent-metadata {
@@ -191,16 +566,6 @@
 .video-wrapper-asl iframe {
   position: absolute;
   top: 0; left: 0; width: 100%; height: 100%;
-}
-
-/* Video iframe styling */
-.video-wrapper iframe {
-  width: 100%;
-  height: 100%;
-  border: none;
-  background: #1d1d1d;
-  display: block;
-  transition: opacity 1.5s;
 }
 
 /* ASL video overlay/side-by-side */
@@ -430,34 +795,6 @@
   min-height: 300px;
 }
 
-/* Loading state */
-.video-wrapper::before {
-  content: '';
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 40px;
-  height: 40px;
-  margin: -20px 0 0 -20px;
-  border: 4px solid rgba(255, 255, 255, 0.3);
-  border-radius: 50%;
-  border-top-color: #fff;
-  opacity: 0;
-  transition: opacity 0.2s;
-  z-index: 3;
-}
-
-.video-wrapper.is-loading::before {
-  opacity: 1;
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
 /* Responsive adjustments */
 @media (max-width: 768px) {
   .video-wrapper.layout-side-by-side {
@@ -497,192 +834,6 @@
   }
 }
 
-/* High contrast mode support */
-@media (forced-colors: active) {
-  .video-wrapper {
-    border: 1px solid CanvasText;
-  }
-  
-  .video-wrapper-viewport {
-    forced-color-adjust: none;
-  }
-
-  .concurrent-toggle {
-    border: 1px solid ButtonText;
-  }
-
-  .event-card {
-    border: 1px solid CanvasText;
-  }
-
-  .concurrent-metadata {
-    border: 1px solid CanvasText;
-  }
-  
-  .video-wrapper.layout-pip .concurrent-wrapper {
-    border: 1px solid CanvasText;
-  }
-}
-
-/* Drawer as part of player */
-.mobile-rider-drawer {
-  width: 100%;
-  background: #181818;
-  box-sizing: border-box;
-  border-top: 2px solid #222;
-  box-shadow: 0 -2px 8px rgba(0,0,0,0.12);
-  margin: 0;
-  padding: 0;
-  position: static;
-  /* Remove any top margin or gap */
-  --selected-color: #232323; /* or your preferred color */
-  flex: 0 0 auto;
-}
-
-.drawer-content {
-  padding: 0.5rem 0 0 0;
-  margin: 0;
-}
-
-.drawer-title {
-  color: #fff;
-  font-size: 1.1rem;
-  margin: 0 0 0.5rem 1rem;
-  padding: 0;
-}
-
-.drawer-items {
-  display: flex;
-  flex-direction: row;
-  gap: 1rem;
-  padding: 0 1rem 1rem 1rem;
-  overflow-x: auto;
-  scrollbar-width: thin;
-  scrollbar-color: #1473e6 #2a2a2a;
-  -webkit-overflow-scrolling: touch;
-  scroll-snap-type: x mandatory;
-}
-
-.drawer-item {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  background: #232323;
-  border-radius: 6px;
-  overflow: hidden;
-  cursor: pointer;
-  transition: box-shadow 0.2s, border 0.2s, transform 0.2s;
-  flex: 0 0 320px;
-  max-width: 320px;
-  min-width: 240px;
-  height: 64px;
-  position: relative;
-  border: 1.5px solid transparent;
-  box-sizing: border-box;
-}
-
-.drawer-item.current::after {
-  content: '';
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  height: 4px;
-  background: #1473e6;
-  border-radius: 0 0 4px 4px;
-}
-
-.drawer-item:hover, .drawer-item.current {
-  border: 1.5px solid #1473e6;
-  box-shadow: 0 2px 8px rgba(20,115,230,0.15);
-  z-index: 2;
-}
-
-.drawer-item-thumbnail {
-  width: 56px;
-  height: 56px;
-  min-width: 56px;
-  min-height: 56px;
-  background: #000;
-  overflow: hidden;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 4px;
-  margin-left: 4px;
-}
-
-.drawer-item-thumbnail img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-  border-radius: 4px;
-}
-
-.drawer-item-content {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  padding: 0 0.75rem;
-  min-width: 0;
-  width: 100%;
-}
-
-.drawer-item-title {
-  color: #fff;
-  font-size: 1rem;
-  font-weight: 700;
-  margin: 0 0 2px 0;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.drawer-item-description {
-  color: #bdbdbd;
-  font-size: 0.85rem;
-  margin: 0;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-@media (max-width: 768px) {
-  .drawer-items {
-    /* flex-direction: column !important; */
-    gap: 0.5rem;
-    overflow-x: unset;
-    overflow-y: auto;
-  }
-  /* You may want to keep .drawer-item width settings for mobile here, or move them to a lower breakpoint if you want only phones to stack vertically */
-}
-
-@media (max-width: 600px) {
-  .drawer-items {
-    flex-direction: column !important;
-    gap: 0.5rem;
-    overflow-x: unset;
-    overflow-y: auto;
-  }
-  .drawer-item {
-    flex: 1 1 100%;
-    max-width: 100%;
-    min-width: 0;
-    width: 100% !important;
-    height: 56px;
-    box-sizing: border-box;
-  }
-}
-
-@media (max-width: 480px) {
-  .drawer-item {
-    flex: 0 0 110px;
-    min-width: 80px;
-    height: 44px;
-  }
-}
-
 /* Dark theme support */
 @media (prefers-color-scheme: dark) {
   .concurrent-metadata {
@@ -699,11 +850,4 @@
     --text-color: #fff;
     --text-secondary: #999;
   }
-}
-
-.mobile-rider-player {
-  min-height: 400px; /* or whatever height fits your player */
-  position: relative;
-  display: flex;
-  flex-direction: column;
 } 
