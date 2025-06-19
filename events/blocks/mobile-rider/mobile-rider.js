@@ -98,29 +98,6 @@ function extractConcurrentVideos(metadata) {
 }
 
 /**
- * Sets up stream end listener for live sessions
- * @param {HTMLElement} element - DOM element
- */
-function setupStreamEndListener(element) {
-  const timingDataElement = element?.closest('.dxf[data-toggle-type="timing"]');
-  const valueTextForNextXF = getValuesFromDomTimingElement(timingDataElement);
-  
-  if (!window.__mr_player) return;
-
-  // Remove any previous streamend listeners
-  window.__mr_player.off('streamend');
-  
-  window.__mr_player.on('streamend', () => {
-    window.__mr_player?.dispose();
-    window.__mr_player = null;
-    window.__mr_stream_published = null;
-    if (timingDataElement && valueTextForNextXF) {
-      window.timingFramework?.(timingDataElement, {}, valueTextForNextXF);
-    }
-  });
-}
-
-/**
  * Toggles ASL (American Sign Language) video
  * @param {HTMLElement} container - Video container
  * @param {string} toggleClass - CSS class for ASL state
