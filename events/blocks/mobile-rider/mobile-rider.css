@@ -648,7 +648,7 @@
   text-overflow: ellipsis;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 600px) {
   .drawer-items {
     flex-direction: column !important;
     gap: 0.5rem;
@@ -660,20 +660,8 @@
     max-width: 100%;
     min-width: 0;
     width: 100% !important;
-    height: 56px; /* or your preferred height */
+    height: 56px;
     box-sizing: border-box;
-  }
-  .drawer-item-thumbnail {
-    width: 40px;
-    height: 40px;
-    min-width: 40px;
-    min-height: 40px;
-  }
-  .drawer-item-title {
-    font-size: 0.9rem;
-  }
-  .drawer-item-description {
-    font-size: 0.75rem;
   }
 }
 
