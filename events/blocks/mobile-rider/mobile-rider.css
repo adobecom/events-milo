@@ -656,11 +656,12 @@
     overflow-y: auto;
   }
   .drawer-item {
-    flex: 1 1 auto;
+    flex: 1 1 100%;
     max-width: 100%;
     min-width: 0;
-    width: 100%;
-    height: 56px; /* or whatever height you prefer */
+    width: 100% !important;
+    height: 56px; /* or your preferred height */
+    box-sizing: border-box;
   }
   .drawer-item-thumbnail {
     width: 40px;
