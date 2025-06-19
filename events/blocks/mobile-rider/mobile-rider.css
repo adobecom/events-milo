@@ -569,7 +569,7 @@
   top: 0; left: 0; width: 100%; height: 100%;
 }
 
-/* ASL video overlay/side-by-side */
+/* ASL video overlay */
 .video-wrapper-asl {
   position: relative;
   padding-bottom: 56.25%; /* 16:9 aspect ratio */
@@ -657,52 +657,6 @@
   display: block;
   font-size: 0.875rem;
   color: var(--color-gray-600, #6e6e6e);
-}
-
-/* Layout: Side by Side */
-.video-wrapper.layout-side-by-side {
-  flex-direction: row;
-  flex-wrap: wrap;
-  gap: 2rem;
-}
-
-.video-wrapper.layout-side-by-side .video-wrapper {
-  flex: 1;
-  min-width: 300px;
-  position: relative;
-}
-
-.video-wrapper.layout-side-by-side .concurrent-metadata {
-  flex-basis: 100%;
-  margin-top: 1rem;
-}
-
-/* Layout: Picture in Picture */
-.video-wrapper.layout-pip {
-  position: relative;
-}
-
-.video-wrapper.layout-pip .concurrent-wrapper {
-  position: absolute;
-  bottom: 2rem;
-  right: 2rem;
-  width: 30%;
-  min-width: 240px;
-  z-index: 2;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  border-radius: 8px;
-  overflow: hidden;
-}
-
-.video-wrapper.layout-pip .concurrent-metadata {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  background: rgba(0, 0, 0, 0.75);
-  color: white;
-  padding: 1rem;
-  z-index: 3;
 }
 
 /* Layout: Stacked */
@@ -851,4 +805,9 @@
     --text-color: #fff;
     --text-secondary: #999;
   }
+}
+
+/* Remove all side-by-side related CSS rules */
+.video-wrapper.layout-overlay {
+  /* ... existing overlay styles ... */
 } 

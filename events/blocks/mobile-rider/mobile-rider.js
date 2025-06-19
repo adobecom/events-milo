@@ -14,11 +14,6 @@ const CONFIG = {
     dev: '//assets.mobilerider.com/p/player-adobe-dev/player.min.js',
     prod: '//assets.mobilerider.com/p/adobe/player.min.js',
   },
-  LAYOUTS: {
-    'side-by-side': 'layout-side-by-side',
-    'picture-in-picture': 'layout-pip',
-    'stacked': 'layout-stacked',
-  },
   PLAYER: {
     DEFAULT_OPTIONS: {
       autoplay: true,
@@ -102,7 +97,6 @@ function extractMetadata(element) {
     drawerposition: metadata.drawerposition || metadata.drawerPosition || CONFIG.DRAWER.DEFAULT_POSITION,
     drawertitle: metadata.drawertitle || metadata.drawerTitle || '',
     concurrentenabled: metadata.concurrentenabled === 'true',
-    concurrentlayout: metadata.concurrentlayout || 'side-by-side',
     timing: metadata.timing || null,
     concurrentVideos,
     // Livestream metadata
