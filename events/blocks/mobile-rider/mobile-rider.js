@@ -301,10 +301,10 @@ export default async function init(el) {
     container.appendChild(wrapper);
   }
 
-  // Only append the drawer if it does not already exist
+  // Automatically enable the drawer if concurrent videos are present
   let drawerEl = container.querySelector('.mobile-rider-drawer');
-  if (config.drawerenabled && config.concurrentVideos.length > 0 && !drawerEl) {
-    drawerEl = initDrawer(container, { ...config, videos: config.concurrentVideos });
+  if (config.concurrentVideos && config.concurrentVideos.length > 0 && !drawerEl) {
+    drawerEl = initDrawer(container, { ...config, drawerenabled: true, drawertitle: '', drawerposition: 'bottom', videos: config.concurrentVideos });
   }
 
   loadMobileRiderScript(() => {
