@@ -136,9 +136,4 @@ export default async function init(el) {
     attributes: true, // Observe attribute changes
     attributeFilter: ['data-mcz-dl-status'], // Optional: filter specific attributes
   });
-
-  // Add debounce to sync and make it run only once
-  setTimeout(() => {
-    el.setAttribute('data-mcz-dl-status', 'loaded');
-  }, 10000);
 }
