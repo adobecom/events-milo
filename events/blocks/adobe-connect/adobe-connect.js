@@ -83,7 +83,7 @@ export default async function init(el) {
     document.body.querySelector('#webinar-marketo-form')?.remove();
   });
 
-  function mcz_marketoForm_adobe_connect_event2 = () => {
+  function mcz_marketoForm_adobe_connect_event() {
    
     if (window.mcz_marketoForm_pref?.form?.success?.type === "adobe_connect") {
       const eventUrl = window.mcz_marketoForm_pref?.form?.success?.content;
@@ -120,7 +120,7 @@ export default async function init(el) {
     console.log('Attribute "data-mcz-dl-status" changed to',
       el.getAttribute('data-mcz-dl-status'));
     if (status === 'active') {
-      window.mcz_marketoForm_adobe_connect_event2();
+      window.mcz_marketoForm_adobe_connect_event();
     }
   }, 300); // 300ms debounce delay
 
