@@ -142,7 +142,12 @@ class TimingWorker {
       if (metadataStore) {
         const { key, expectedValue } = scheduleItem.metadata;
         const value = metadataStore.get(key);
-        if ((expectedValue && value !== expectedValue) || (!expectedValue && !value)) return false;
+
+        const isEmpty = !value
+          || (Array.isArray(value) && value.length === 0)
+          || (typeof value === 'object' && Object.keys(value).length === 0);
+        const isAnyVal = expectedValue.trim().toLowerCase() === 'any' && !isEmpty;
+        return isAnyVal || value === expectedValue;
       }
     }
 
