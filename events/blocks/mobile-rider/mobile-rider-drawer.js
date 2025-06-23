@@ -120,9 +120,7 @@ class MobileRiderDrawer {
   #handleItemClick(clickedItem, video, itemsList) {
     this.#updateDrawerSelection(clickedItem, itemsList);
     if (window.injectPlayer) {
-      const wrapper = this.container.querySelector('.video-wrapper');
       window.injectPlayer(
-        wrapper,
         video.videoid,
         this.config.skinid,
         video.aslid,
