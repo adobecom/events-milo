@@ -46,36 +46,46 @@ class MobileRiderBlock {
     this.container = container;
     this.wrapper = wrapper;
 
-    await this.#initializeDrawer();
-    await this.#initializePlayer();
-    this.#initializeASL();
+    if (this.config.concurrentenabled) {
+      const liveVideos = await this.#filterLiveConcurrentVideos(this.config.concurrentVideos);
+      if (liveVideos.length > 0) {
+        // Load the first live video by default
+        const videoToLoad = liveVideos[0];
+        await this.#initializePlayer(videoToLoad.videoid, videoToLoad.aslid, videoToLoad.sessionid);
+
+        // Initialize the drawer with all live videos
+        await this.#initializeDrawer(liveVideos);
+      } else {
+        // No live videos, initialize an empty player
+        await this.#initializePlayer();
+      }
+    } else {
+      // Standard, non-concurrent initialization
+      await this.#initializePlayer(this.config.videoid, this.config.aslid, this.config.sessionId);
+      if (this.config.aslid) {
+        this.#initializeASL();
+      }
+    }
   }
 
-  async #initializeDrawer() {
+  async #initializeDrawer(liveVideos) {
     const drawerElement = this.container.querySelector('.mobile-rider-drawer');
     if (drawerElement) return;
 
-    let videosForDrawer = [];
-    if (this.config.concurrentenabled && this.config.concurrentVideos?.length > 0) {
-      videosForDrawer = await this.#filterLiveConcurrentVideos(this.config.concurrentVideos);
-    } else if (this.config.concurrentVideos?.length > 0) {
-      videosForDrawer = this.config.concurrentVideos;
-    }
-
-    if (videosForDrawer.length > 0) {
+    if (liveVideos.length > 0) {
       try {
         const { default: initDrawer } = await import('./mobile-rider-drawer.js');
-        initDrawer(this.container, { ...this.config, videos: videosForDrawer });
+        initDrawer(this.container, { ...this.config, videos: liveVideos });
       } catch (e) {
         console.error('Failed to load mobile rider drawer', e);
       }
     }
   }
 
-  async #initializePlayer() {
+  async #initializePlayer(videoId, aslId, sessionId) {
     try {
       await this.#loadMobileRiderScript();
-      this.#injectPlayer(this.config.videoid, this.config.skinid, this.config.aslid, this.config.sessionId);
+      this.#injectPlayer(videoId, this.config.skinid, aslId, sessionId);
     } catch (e) {
       console.error('Failed to initialize Mobile Rider player', e);
     }
