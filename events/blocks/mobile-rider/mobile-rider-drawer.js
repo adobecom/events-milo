@@ -70,8 +70,11 @@ class MobileRiderDrawer {
     const itemsList = this.drawerElement.querySelector(`.${CONFIG.DRAWER.CLASSES.ITEMS}`);
     if (!itemsList) return;
 
-    (this.config.videos || []).forEach((video) => {
+    (this.config.videos || []).forEach((video, index) => {
       const item = this.#createDrawerItem(video, itemsList);
+      if (index === 0) {
+        item.classList.add(CONFIG.DRAWER.CLASSES.CURRENT);
+      }
       itemsList.appendChild(item);
     });
   }
