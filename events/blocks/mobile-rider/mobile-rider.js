@@ -278,15 +278,34 @@ class MobileRiderBlock {
 
   async #filterLiveConcurrentVideos(videos) {
     if (!videos || videos.length === 0) return [];
+
+    // Trust that the Timing Framework has already validated the first video is live.
+    const [firstVideo, ...otherVideos] = videos;
+
+    // If there are no other videos to check, we're done.
+    if (otherVideos.length === 0) {
+      return [firstVideo];
+    }
+
     const controller = new MobileRiderController();
-    const sessionIds = videos.map((v) => v.sessionid).filter(Boolean);
-    if (sessionIds.length === 0) return [];
+    // We check the status using the video IDs.
+    const otherVideoIds = otherVideos.map((v) => v.videoid).filter(Boolean);
+
+    if (otherVideoIds.length === 0) {
+      return [firstVideo]; // No valid IDs to check for other videos.
+    }
+
     try {
-      const { active } = await controller.getMediaStatus(sessionIds);
-      return videos.filter((v) => active.includes(v.sessionid));
+      // Only check the status of the *other* videos.
+      const { active } = await controller.getMediaStatus(otherVideoIds);
+      const liveOtherVideos = otherVideos.filter((v) => active.includes(v.videoid));
+
+      // The final list includes the trusted first video plus any others that are live.
+      return [firstVideo, ...liveOtherVideos];
     } catch (error) {
       window.lana?.log(`Failed to filter live concurrent videos: ${error.message}`);
-      return [];
+      // In case of an error, gracefully fall back to only showing the first video.
+      return [firstVideo];
     }
   }
 }
