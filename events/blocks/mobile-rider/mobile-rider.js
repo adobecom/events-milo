@@ -298,6 +298,7 @@ class MobileRiderBlock {
     try {
       // Only check the status of the *other* videos.
       const { active } = await controller.getMediaStatus(otherVideoIds);
+      console.log('active Check', active);
       const liveOtherVideos = otherVideos.filter((v) => active.includes(v.videoid));
 
       // The final list includes the trusted first video plus any others that are live.
