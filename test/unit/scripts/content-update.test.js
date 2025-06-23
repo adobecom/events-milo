@@ -409,5 +409,134 @@ describe('autoUpdateContent - Array Iteration', () => {
       // Verify the result
       expect(container.textContent).to.equal('Contact us: John Doe,Jane Smith');
     });
+
+    it('should extract object attributes from array', () => {
+      // Set up test metadata with array of objects
+      setMetadata('speakers', JSON.stringify([
+        { name: 'Dr. Alice Brown', title: 'Senior Researcher' },
+        { name: 'Prof. Charlie Wilson', title: 'Professor' },
+        { name: 'Jane Smith', title: 'Engineer' }
+      ]));
+      setMetadata('event-id', 'test-event');
+
+      // Create test HTML with attribute extraction
+      container.innerHTML = '<p>Speakers: [[@array(speakers.name),]]</p>';
+
+      // Mock miloDeps
+      const miloDeps = {
+        getConfig: () => ({ locale: { ietf: 'en-US' } }),
+        miloLibs: '/libs',
+      };
+
+      // Call autoUpdateContent
+      autoUpdateContent(container, miloDeps, {});
+
+      // Debug: log the actual content
+      console.log('Actual content:', container.textContent);
+      console.log('Expected content:', 'Speakers: Dr. Alice Brown,Prof. Charlie Wilson,Jane Smith');
+
+      // Verify the result extracts the 'name' attribute
+      expect(container.textContent).to.equal('Speakers: Dr. Alice Brown,Prof. Charlie Wilson,Jane Smith');
+    });
+
+    it('should extract object attributes with custom separator', () => {
+      // Set up test metadata with array of objects
+      setMetadata('speakers', JSON.stringify([
+        { name: 'Dr. Alice Brown', title: 'Senior Researcher' },
+        { name: 'Prof. Charlie Wilson', title: 'Professor' }
+      ]));
+      setMetadata('event-id', 'test-event');
+
+      // Create test HTML with attribute extraction and custom separator
+      container.innerHTML = '<p>Speakers: [[@array(speakers.name) | ]]</p>';
+
+      // Mock miloDeps
+      const miloDeps = {
+        getConfig: () => ({ locale: { ietf: 'en-US' } }),
+        miloLibs: '/libs',
+      };
+
+      // Call autoUpdateContent
+      autoUpdateContent(container, miloDeps, {});
+
+      // Verify the result uses custom separator
+      expect(container.textContent).to.equal('Speakers: Dr. Alice Brown | Prof. Charlie Wilson');
+    });
+
+    it('should handle nested arrays with object attributes', () => {
+      // Set up test metadata with nested structure containing objects
+      setMetadata('event-data', JSON.stringify({
+        speakers: [
+          { name: 'Dr. Alice Brown', title: 'Senior Researcher' },
+          { name: 'Prof. Charlie Wilson', title: 'Professor' }
+        ],
+        other: 'data'
+      }));
+      setMetadata('event-id', 'test-event');
+
+      // Create test HTML with nested array and attribute extraction
+      container.innerHTML = '<p>Speakers: [[@array(event-data.speakers.name),]]</p>';
+
+      // Mock miloDeps
+      const miloDeps = {
+        getConfig: () => ({ locale: { ietf: 'en-US' } }),
+        miloLibs: '/libs',
+      };
+
+      // Call autoUpdateContent
+      autoUpdateContent(container, miloDeps, {});
+
+      // Verify the result
+      expect(container.textContent).to.equal('Speakers: Dr. Alice Brown,Prof. Charlie Wilson');
+    });
+
+    it('should handle objects without attribute specification', () => {
+      // Set up test metadata with array of objects
+      setMetadata('speakers', JSON.stringify([
+        { name: 'Dr. Alice Brown', title: 'Senior Researcher' },
+        { name: 'Prof. Charlie Wilson', title: 'Professor' }
+      ]));
+      setMetadata('event-id', 'test-event');
+
+      // Create test HTML without attribute specification
+      container.innerHTML = '<p>Speakers: [[@array(speakers),]]</p>';
+
+      // Mock miloDeps
+      const miloDeps = {
+        getConfig: () => ({ locale: { ietf: 'en-US' } }),
+        miloLibs: '/libs',
+      };
+
+      // Call autoUpdateContent
+      autoUpdateContent(container, miloDeps, {});
+
+      // Verify the result converts objects to JSON strings
+      expect(container.textContent).to.include('Speakers: {"name":"Dr. Alice Brown","title":"Senior Researcher"},{"name":"Prof. Charlie Wilson","title":"Professor"}');
+    });
+
+    it('should handle missing attributes gracefully', () => {
+      // Set up test metadata with array of objects
+      setMetadata('speakers', JSON.stringify([
+        { name: 'Dr. Alice Brown', title: 'Senior Researcher' },
+        { name: 'Prof. Charlie Wilson' }, // Missing title
+        { title: 'Engineer' } // Missing name
+      ]));
+      setMetadata('event-id', 'test-event');
+
+      // Create test HTML with attribute extraction
+      container.innerHTML = '<p>Speakers: [[@array(speakers.name),]]</p>';
+
+      // Mock miloDeps
+      const miloDeps = {
+        getConfig: () => ({ locale: { ietf: 'en-US' } }),
+        miloLibs: '/libs',
+      };
+
+      // Call autoUpdateContent
+      autoUpdateContent(container, miloDeps, {});
+
+      // Verify the result handles missing attributes
+      expect(container.textContent).to.equal('Speakers: Dr. Alice Brown,Prof. Charlie Wilson,');
+    });
   });
 });

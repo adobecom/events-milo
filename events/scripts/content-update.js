@@ -16,36 +16,6 @@ const preserveFormatKeys = [
   'description',
 ];
 
-/**
- * Processes array iteration syntax [[@array(metadata-path)separator]]
- * @param {string} placeholder - The placeholder text (e.g., "@array(contacts)," or
- * "@array(contacts) ")
- * @param {Object} extraData - Optional extra data
- * @returns {string} The processed array joined with the provided separator
- */
-function processArrayIteration(placeholder, extraData) {
-  // Extract the metadata path and separator from @array(path)separator syntax
-  const arrayMatch = placeholder.match(/^@array\(([^)]+)\)(.*)$/);
-  if (!arrayMatch) {
-    return placeholder; // Not an array iteration, return as-is
-  }
-
-  const metadataPath = arrayMatch[1];
-  const separator = arrayMatch[2]; // This will be the separator from the template
-  const arrayData = parseMetadataPath(metadataPath, extraData);
-
-  // Ensure we have an array
-  if (!Array.isArray(arrayData) || arrayData.length === 0) {
-    return '';
-  }
-
-  // Use provided separator or default to space
-  const finalSeparator = separator || ' ';
-
-  // Join array elements with the provided or default separator
-  return arrayData.join(finalSeparator);
-}
-
 export async function miloReplaceKey(miloLibs, key, sheetName) {
   try {
     const [utils, placeholders] = await Promise.all([
@@ -711,11 +681,6 @@ export default function autoUpdateContent(parent, miloDeps, extraData) {
   };
 
   const getContent = (_match, p1, n) => {
-    // Check if this is an array iteration syntax
-    if (p1.includes('@array(')) {
-      return processArrayIteration(p1, extraData);
-    }
-
     let content = parseMetadataPath(p1, extraData);
 
     if (preserveFormatKeys.includes(p1)) {

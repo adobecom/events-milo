@@ -12,7 +12,7 @@
     <meta name="event-title" content="Tech Conference 2024">
     
     <!-- Example with nested structure -->
-    <meta name="event-data" content='{"organizers": ["Adobe Events", "Tech Partners"], "sponsors": ["Adobe", "Microsoft", "Google"]}'>
+    <meta name="event-data" content='{"organizers": ["Adobe Events", "Tech Partners"], "sponsors": ["Adobe", "Microsoft", "Google"], "speakers": [{"name": "Dr. Alice Brown", "title": "Senior Researcher"}, {"name": "Prof. Charlie Wilson", "title": "Professor of Computer Science"}]}'>
 </head>
 <body>
     <h1>Array Iteration Examples</h1>
@@ -55,6 +55,25 @@
         <p>Speakers: [[@array(speakers),]]</p>
         <!-- Expected output: Speakers: [object Object], [object Object] -->
         <!-- Note: This would need additional processing for object properties -->
+        
+        <p>Speaker Names: [[@array(speakers.name),]]</p>
+        <!-- Expected output: Speaker Names: Dr. Alice Brown, Prof. Charlie Wilson -->
+        
+        <p>Speaker Titles: [[@array(speakers.title) | ]]</p>
+        <!-- Expected output: Speaker Titles: Senior Researcher | Professor of Computer Science -->
+    </section>
+    
+    <section>
+        <h2>Nested Arrays with Objects</h2>
+        <p>Organizers: [[@array(event-data.organizers),]]</p>
+        <!-- Expected output: Organizers: Adobe Events, Tech Partners -->
+        
+        <p>Sponsors: [[@array(event-data.sponsors) | ]]</p>
+        <!-- Expected output: Sponsors: Adobe | Microsoft | Google -->
+        
+        <!-- Example with nested objects -->
+        <p>Speaker Names from Event Data: [[@array(event-data.speakers.name),]]</p>
+        <!-- Expected output: Speaker Names from Event Data: Dr. Alice Brown, Prof. Charlie Wilson -->
     </section>
     
     <section>
