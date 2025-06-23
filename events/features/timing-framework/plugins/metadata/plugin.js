@@ -1,4 +1,4 @@
-import { getMetadata } from '../../../../scripts/utils.js';
+import { parseMetadataPath } from '../../../../scripts/utils.js';
 
 const store = new Map();
 const channel = new BroadcastChannel('metadata-store');
@@ -22,7 +22,7 @@ export default function init(schedule) {
   const allMetadataInSchedules = schedule.filter((entry) => entry.metadata);
   allMetadataInSchedules.forEach((metadata) => {
     metadata.forEach((m) => {
-      const value = getMetadata(metadata.key);
+      const value = parseMetadataPath(metadata.key);
       metadataStore.set(m.key, value);
     });
   });
