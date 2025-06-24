@@ -9,6 +9,7 @@ class TimingWorker {
     this.channels = new Map();
     this.testingManager = new TestingManager();
     this.tabId = crypto.randomUUID();
+    this.previouslySentItem = null;
     this.setupMessageHandler();
   }
 
@@ -163,14 +164,21 @@ class TimingWorker {
   async runTimer() {
     const shouldTrigger = await this.shouldTriggerNextSchedule(this.nextScheduleItem);
 
-    const { pathToFragment: currentPath } = this.currentScheduleItem;
-    const { pathToFragment: nextPath, prev: nextPrev } = this.nextScheduleItem;
+    let itemToSend = null;
 
-    if (shouldTrigger && (nextPath !== currentPath || nextPrev === null)) {
-      postMessage(this.nextScheduleItem);
-
+    if (shouldTrigger) {
+      itemToSend = this.nextScheduleItem;
       this.currentScheduleItem = { ...this.nextScheduleItem };
       this.nextScheduleItem = this.nextScheduleItem.next;
+    } else {
+      // If no items are triggered and we've reached the end, send the first item as fallback
+      itemToSend = this.getFirstScheduleItem();
+    }
+
+    // Send the item if it's different from what we previously sent
+    if (itemToSend && itemToSend !== this.previouslySentItem) {
+      postMessage(itemToSend);
+      this.previouslySentItem = itemToSend;
     }
 
     if (!this.nextScheduleItem) return;
@@ -179,6 +187,15 @@ class TimingWorker {
     if (this.testingManager.isTesting()) return;
 
     this.timerId = setTimeout(() => this.runTimer(), TimingWorker.getRandomInterval());
+  }
+
+  getFirstScheduleItem() {
+    // Find the first item in the schedule by traversing backwards from current
+    let item = this.currentScheduleItem;
+    while (item?.prev) {
+      item = item.prev;
+    }
+    return item;
   }
 
   handleMessage(event) {
@@ -200,6 +217,7 @@ class TimingWorker {
     if (schedule) {
       this.nextScheduleItem = TimingWorker.getStartScheduleItemByToggleTime(schedule);
       this.currentScheduleItem = this.nextScheduleItem?.prev || schedule;
+      this.previouslySentItem = null;
     }
 
     if (!this.nextScheduleItem) return;
