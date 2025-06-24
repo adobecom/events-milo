@@ -124,8 +124,14 @@ describe('TimingWorker', () => {
   describe('handleMessage', () => {
     it('should set up plugins and channels', () => {
       const plugins = {
-        metadata: { key1: 'value1' },
-        mobileRider: { session1: true },
+        metadata: {
+          type: 'metadata',
+          data: { key1: 'value1' },
+        },
+        mobileRider: {
+          type: 'mobileRider',
+          data: { session1: true },
+        },
       };
 
       worker.handleMessage({

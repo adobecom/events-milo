@@ -8,9 +8,9 @@ export const mobileRiderStore = {
     return store.get(sessionId);
   },
 
-  set(sessionId, isActive) {
+  set(sessionId, isActive, tabId) {
     store.set(sessionId, isActive);
-    channel.postMessage({ sessionId, isActive });
+    channel.postMessage({ sessionId, isActive, tabId });
   },
 
   getAll() {
@@ -18,7 +18,7 @@ export const mobileRiderStore = {
   },
 };
 
-export default function init(schedule) {
+export default function init(schedule, tabId) {
   const controller = new MobileRiderController();
 
   const mobileRiderSchedules = schedule.filter((entry) => entry.mobileRider);
@@ -26,7 +26,7 @@ export default function init(schedule) {
     s.mobileRider.forEach((condition) => {
       const { sessionId } = condition;
       const isActive = controller.isMediaActive(sessionId);
-      mobileRiderStore.set(sessionId, isActive);
+      mobileRiderStore.set(sessionId, isActive, tabId);
     });
   });
 

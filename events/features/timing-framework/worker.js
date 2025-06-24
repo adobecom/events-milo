@@ -2,14 +2,14 @@ import TestingManager from './testing.js';
 
 class TimingWorker {
   constructor() {
-    this.currentScheduleItem = null;
-    this.nextScheduleItem = null;
-    this.timerId = null;
+    this.tabId = crypto.randomUUID();
     this.plugins = new Map();
     this.channels = new Map();
-    this.testingManager = new TestingManager();
-    this.tabId = crypto.randomUUID();
+    this.timerId = null;
+    this.currentScheduleItem = null;
+    this.nextScheduleItem = null;
     this.previouslySentItem = null;
+    this.testingManager = new TestingManager();
     this.setupMessageHandler();
   }
 
@@ -147,8 +147,7 @@ class TimingWorker {
         const isEmpty = !value
           || (Array.isArray(value) && value.length === 0)
           || (typeof value === 'object' && Object.keys(value).length === 0);
-        const isAnyVal = expectedValue.trim().toLowerCase() === 'any' && !isEmpty;
-        return isAnyVal || value === expectedValue;
+        return isEmpty || value === expectedValue;
       }
     }
 
@@ -199,7 +198,7 @@ class TimingWorker {
   }
 
   handleMessage(event) {
-    const { schedule, plugins, testing } = event.data;
+    const { schedule, plugins, testing, tabId } = event.data;
 
     if (this.timerId) {
       clearTimeout(this.timerId);
@@ -209,8 +208,23 @@ class TimingWorker {
     // Initialize testing manager with testing data
     this.testingManager.init(testing);
 
+    // Use the tabId from the message to ensure consistency
+    if (tabId) {
+      this.tabId = tabId;
+    }
+
     if (plugins) {
-      this.plugins = new Map(Object.entries(plugins));
+      // Recreate store interfaces from the data
+      const pluginStores = new Map();
+      Object.entries(plugins).forEach(([name, pluginInfo]) => {
+        const store = new Map(Object.entries(pluginInfo.data));
+        pluginStores.set(name, {
+          get: (key) => store.get(key),
+          set: (key, value) => store.set(key, value),
+          getAll: () => Object.fromEntries(store),
+        });
+      });
+      this.plugins = pluginStores;
       this.setupBroadcastChannels(this.plugins);
     }
 

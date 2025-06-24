@@ -37,16 +37,19 @@ async function initPlugins(schedule) {
   const pluginsNeeded = SUPPORTED_PLUGINS.filter((plugin) => schedule.some((item) => item[plugin]));
   const plugins = await Promise.all(pluginsNeeded.map((plugin) => import(`../../features/timing-framework/plugins/${plugin}/plugin.js`)));
 
+  // Generate a unique tabId for this instance
+  const tabId = crypto.randomUUID();
+
   const pluginsModules = new Map();
   await Promise.all(plugins.map(async (plugin, index) => {
     const pluginName = pluginsNeeded[index].replace('-', '');
-    pluginsModules.set(pluginName, await plugin.init(schedule));
+    pluginsModules.set(pluginName, await plugin.default(schedule, tabId));
   }));
 
-  return pluginsModules;
+  return { plugins: pluginsModules, tabId };
 }
 
-function setScheduleToScheduleWorker(schedule, plugins) {
+function setScheduleToScheduleWorker(schedule, plugins, tabId) {
   const scheduleLinkedList = buildScheduleDoubleLinkedList(schedule);
   const worker = new Worker('/events/features/timing-framework/worker.js', { type: 'module' });
 
@@ -59,7 +62,10 @@ function setScheduleToScheduleWorker(schedule, plugins) {
   const pluginStates = Object.fromEntries(
     Array.from(plugins.entries()).map(([name, plugin]) => [
       name,
-      Object.fromEntries(plugin), // Convert Map to plain object
+      {
+        type: name,
+        data: plugin.getAll ? plugin.getAll() : plugin,
+      },
     ]),
   );
 
@@ -67,6 +73,7 @@ function setScheduleToScheduleWorker(schedule, plugins) {
     schedule: scheduleLinkedList,
     plugins: pluginStates,
     testing,
+    tabId,
   });
 
   return worker;
@@ -102,7 +109,11 @@ export default async function init(el) {
   el.innerHTML = '';
 
   const pluginsOutputs = await initPlugins(thisSchedule);
-  const worker = setScheduleToScheduleWorker(thisSchedule, pluginsOutputs);
+  const worker = setScheduleToScheduleWorker(
+    thisSchedule,
+    pluginsOutputs.plugins,
+    pluginsOutputs.tabId,
+  );
 
   worker.onmessage = (event) => {
     const { pathToFragment } = event.data;

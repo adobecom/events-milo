@@ -8,9 +8,9 @@ export const metadataStore = {
     return store.get(key);
   },
 
-  set(key, value) {
+  set(key, value, tabId) {
     store.set(key, value);
-    channel.postMessage({ key, value });
+    channel.postMessage({ key, value, tabId });
   },
 
   getAll() {
@@ -18,12 +18,12 @@ export const metadataStore = {
   },
 };
 
-export default function init(schedule) {
+export default function init(schedule, tabId) {
   const allMetadataInSchedules = schedule.filter((entry) => entry.metadata);
-  allMetadataInSchedules.forEach((metadata) => {
+  allMetadataInSchedules.forEach(({ metadata }) => {
     metadata.forEach((m) => {
-      const value = parseMetadataPath(metadata.key);
-      metadataStore.set(m.key, value);
+      const value = parseMetadataPath(m.key);
+      metadataStore.set(m.key, value, tabId);
     });
   });
 
