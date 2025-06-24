@@ -503,8 +503,8 @@ function injectFragments(parent) {
 
 export async function getNonProdData(env) {
   const isPreviewMode = new URLSearchParams(window.location.search).get('previewMode')
-  || window.location.hostname.includes('.hlx.')
-  || window.location.hostname.includes('.aem.');
+  || window.location.hostname.includes('.hlx.page')
+  || window.location.hostname.includes('.aem.page');
 
   const localeMatch = window.location.pathname.match(/^(\/[^/]+)?\/events\//);
   const localePath = localeMatch?.[1] || '';
