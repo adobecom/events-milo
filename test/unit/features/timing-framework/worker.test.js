@@ -99,7 +99,7 @@ describe('TimingWorker', () => {
 
     it('should handle metadata conditions', async () => {
       const nextItem = {
-        metadata: { key: 'testKey', expectedValue: 'expected' },
+        metadata: [{ key: 'testKey', expectedValue: 'expected' }],
         pathToFragment: '/next',
       };
 
@@ -107,6 +107,60 @@ describe('TimingWorker', () => {
 
       const result = await worker.shouldTriggerNextSchedule(nextItem);
       expect(result).to.be.true;
+    });
+
+    it('should handle multiple metadata conditions', async () => {
+      const nextItem = {
+        metadata: [
+          { key: 'testKey1', expectedValue: 'expected1' },
+          { key: 'testKey2', expectedValue: 'expected2' },
+        ],
+        pathToFragment: '/next',
+      };
+
+      worker.plugins.set('metadata', new Map([
+        ['testKey1', 'wrong'],
+        ['testKey2', 'expected2'],
+      ]));
+
+      const result = await worker.shouldTriggerNextSchedule(nextItem);
+      expect(result).to.be.false;
+    });
+
+    it('should trigger when all metadata conditions are met', async () => {
+      const nextItem = {
+        metadata: [
+          { key: 'testKey1', expectedValue: 'expected1' },
+          { key: 'testKey2', expectedValue: 'expected2' },
+        ],
+        pathToFragment: '/next',
+      };
+
+      worker.plugins.set('metadata', new Map([
+        ['testKey1', 'expected1'],
+        ['testKey2', 'expected2'],
+      ]));
+
+      const result = await worker.shouldTriggerNextSchedule(nextItem);
+      expect(result).to.be.true;
+    });
+
+    it('should not trigger when no metadata conditions are met', async () => {
+      const nextItem = {
+        metadata: [
+          { key: 'testKey1', expectedValue: 'expected1' },
+          { key: 'testKey2', expectedValue: 'expected2' },
+        ],
+        pathToFragment: '/next',
+      };
+
+      worker.plugins.set('metadata', new Map([
+        ['testKey1', 'wrong1'],
+        ['testKey2', 'wrong2'],
+      ]));
+
+      const result = await worker.shouldTriggerNextSchedule(nextItem);
+      expect(result).to.be.false;
     });
 
     it('should fall back to toggleTime if no plugins are blocking', async () => {

@@ -138,16 +138,20 @@ class TimingWorker {
     }
 
     // Check metadata conditions if present
-    if (scheduleItem.metadata) {
+    if (scheduleItem.metadata && Array.isArray(scheduleItem.metadata)) {
       const metadataStore = this.plugins.get('metadata');
       if (metadataStore) {
-        const { key, expectedValue } = scheduleItem.metadata;
-        const value = metadataStore.get(key);
-
-        const isEmpty = !value
-          || (Array.isArray(value) && value.length === 0)
-          || (typeof value === 'object' && Object.keys(value).length === 0);
-        return isEmpty || value === expectedValue;
+        // Require all metadata conditions to be met
+        const allConditionMet = scheduleItem.metadata.every(({ key, expectedValue }) => {
+          const value = metadataStore.get(key);
+          const isEmpty = !value
+            || (Array.isArray(value) && value.length === 0)
+            || (typeof value === 'object' && Object.keys(value).length === 0);
+          const isAnyVal = !expectedValue && !isEmpty;
+          const matchesExpectedValue = expectedValue && value === expectedValue;
+          return isAnyVal || matchesExpectedValue;
+        });
+        return allConditionMet;
       }
     }
 
