@@ -48,7 +48,7 @@ async function initPlugins(schedule) {
 
 function setScheduleToScheduleWorker(schedule, plugins) {
   const scheduleLinkedList = buildScheduleDoubleLinkedList(schedule);
-  const worker = new Worker('/events/features/timing-framework/worker.js');
+  const worker = new Worker('/events/features/timing-framework/worker.js', { type: 'module' });
 
   // Get testing data from URL params
   const params = new URLSearchParams(document.location.search);
