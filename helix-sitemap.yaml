@@ -5,7 +5,7 @@ sitemaps:
     languages:
       default:
         source: /events/query-index.json
-        destination: /events/create-now/sitemap.xml
+        destination: /events/sitemap.xml
         hreflang: en
         alternate: /{path}
       de:
@@ -34,7 +34,7 @@ sitemaps:
     languages:
       default:
         source: /events/default/metadata.json?sheet=sitemap
-        destination: /events/create-now/events-sitemap.xml
+        destination: /events/events-sitemap.xml
         hreflang: en
         alternate: /{path}
       de:
