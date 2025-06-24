@@ -201,7 +201,7 @@ async function handleRSVPBtnBasedOnProfile(rsvpBtn, miloLibs, profile) {
     if (!allowGuestReg) {
       rsvpBtn.el.addEventListener('click', (e) => {
         e.preventDefault();
-        signIn(getSusiOptions(getConfig()));
+        signIn({ ...getSusiOptions(getConfig()), redirect_uri: `${e.target.href}` });
       });
     }
   }

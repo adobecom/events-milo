@@ -182,10 +182,16 @@ function toClassName(name) {
 
 export function getSusiOptions(conf) {
   const { env: { name: envName } } = conf;
+  const { href, hash } = window.location;
+
   const susiOptions = Object.keys(SUSI_OPTIONS).reduce((opts, key) => {
     opts[key] = SUSI_OPTIONS[key][envName] || SUSI_OPTIONS[key];
     return opts;
   }, {});
+
+  if (hash.includes('#rsvp-form')) {
+    susiOptions.redirect_uri = `${href}`;
+  }
 
   return susiOptions;
 }
