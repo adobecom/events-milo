@@ -181,7 +181,6 @@
   width: 100%;
   background: #181818;
   box-sizing: border-box;
-  border-top: 2px solid #222;
   box-shadow: 0 -2px 8px rgba(0,0,0,0.12);
   margin: 0;
   padding: 0;
@@ -190,7 +189,6 @@
 }
 
 .drawer-content {
-  padding: 0.5rem 0 0 0;
   margin: 0;
 }
 
