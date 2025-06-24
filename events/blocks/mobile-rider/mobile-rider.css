@@ -208,6 +208,29 @@
   align-items: center;
 }
 
+.relatedContent-NowPlaying {
+  height: 80px;
+  width: 90px;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.relatedContent-NowPlaying-Text {
+  color: #fff;
+    margin: 0;
+    font-size: 12px;
+}
+
+.relatedContent-NowPlaying-sideText {
+  font-size: 12px;
+    line-height: 1;
+    color: #fff;
+    font-weight: lighter;
+}
+
 .drawer-item {
   background-color: #1d1d1d;
   width: 317px;
