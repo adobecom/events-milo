@@ -239,17 +239,6 @@
   flex-direction: row;
 }
 
-.drawer-item.current::after {
-  content: '';
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  height: 4px;
-  background: #1473e6;
-  border-radius: 0 0 4px 4px;
-}
-
 .drawer-item:hover, .drawer-item.current {
   border-bottom: 3px solid #1473e6;
 }
