@@ -48,19 +48,14 @@ class MobileRiderBlock {
 
     if (this.config.concurrentenabled) {
       const liveVideos = await this.#filterLiveConcurrentVideos(this.config.concurrentVideos);
+      let videoToLoad = this.config.concurrentVideos[0]; // Default to first authored
       if (liveVideos.length > 0) {
-        // Load the first live video by default
-        const videoToLoad = liveVideos[0];
-        await this.#initializePlayer(videoToLoad.videoid, videoToLoad.aslid, videoToLoad.sessionid);
-
-        // Initialize the drawer with all live videos
-        await this.#initializeDrawer(liveVideos);
-      } else {
-        // No live videos, initialize an empty player
-        await this.#initializePlayer();
+        videoToLoad = liveVideos[0];
       }
+      await this.#initializePlayer(videoToLoad.videoid, videoToLoad.aslid, videoToLoad.sessionid);
+      // Always show all authored videos in the drawer
+      await this.#initializeDrawer(this.config.concurrentVideos);
     } else {
-      // Standard, non-concurrent initialization
       await this.#initializePlayer(this.config.videoid, this.config.aslid, this.config.sessionId);
       if (this.config.aslid) {
         this.#initializeASL();
@@ -157,7 +152,6 @@ class MobileRiderBlock {
       aslid: metadata.aslid || '',
       autoplay: metadata.autoplay === 'true',
       fluidContainer: metadata.fluidcontainer === 'true',
-      renderInPage: metadata.renderinpage === 'true',
       concurrentenabled: metadata.concurrentenabled === 'true',
       concurrentVideos,
       sessionId: metadata.sessionid || '',
@@ -282,30 +276,36 @@ class MobileRiderBlock {
     // Trust that the Timing Framework has already validated the first video is live.
     const [firstVideo, ...otherVideos] = videos;
 
-    // If there are no other videos to check, we're done.
+    // Update the store for the first video
+    if (firstVideo?.sessionid) {
+      mobileRiderStore.set(firstVideo.sessionid, true);
+    }
+
     if (otherVideos.length === 0) {
       return [firstVideo];
     }
 
     const controller = new MobileRiderController();
-    // We check the status using the video IDs.
     const otherVideoIds = otherVideos.map((v) => v.videoid).filter(Boolean);
 
     if (otherVideoIds.length === 0) {
-      return [firstVideo]; // No valid IDs to check for other videos.
+      return [firstVideo];
     }
 
     try {
-      // Only check the status of the *other* videos.
       const { active } = await controller.getMediaStatus(otherVideoIds);
-      console.log('active Check', active);
-      const liveOtherVideos = otherVideos.filter((v) => active.includes(v.videoid));
+      const liveOtherVideos = otherVideos.filter((v) => {
+        const isLive = active.includes(v.videoid);
+        // Update the store for each live video
+        if (isLive && v.sessionid) {
+          mobileRiderStore.set(v.sessionid, true);
+        }
+        return isLive;
+      });
 
-      // The final list includes the trusted first video plus any others that are live.
       return [firstVideo, ...liveOtherVideos];
     } catch (error) {
       window.lana?.log(`Failed to filter live concurrent videos: ${error.message}`);
-      // In case of an error, gracefully fall back to only showing the first video.
       return [firstVideo];
     }
   }

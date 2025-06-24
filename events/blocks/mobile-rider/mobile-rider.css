@@ -214,10 +214,10 @@
 }
 
 .drawer-item {
-  display: flex;
+  /* display: flex;
   flex-direction: row;
   align-items: center;
-  background: #232323;
+  background: #1d1d1d;
   border-radius: 6px;
   overflow: hidden;
   cursor: pointer;
@@ -228,7 +228,15 @@
   height: 64px;
   position: relative;
   border: 1.5px solid transparent;
-  box-sizing: border-box;
+  box-sizing: border-box; */
+  background-color: #1d1d1d;
+  width: 317px;
+  margin: 0 9px;
+  height: 64px;
+  font-size: 12px;
+  padding: 10px 0 10px 10px;
+  display: flex;
+  flex-direction: row;
 }
 
 .drawer-item.current::after {
@@ -243,9 +251,7 @@
 }
 
 .drawer-item:hover, .drawer-item.current {
-  border: 1.5px solid #1473e6;
-  box-shadow: 0 2px 8px rgba(20,115,230,0.15);
-  z-index: 2;
+  border-bottom: 3px solid #1473e6;
 }
 
 .drawer-item-thumbnail {
@@ -280,22 +286,30 @@
 }
 
 .drawer-item-title {
-  color: #fff;
-  font-size: 1rem;
-  font-weight: 700;
-  margin: 0 0 2px 0;
-  white-space: nowrap;
-  overflow: hidden;
+  color: #FCFCFC;
+  font-size: 12px;
+  line-height: 1.25;
+  display: inline;
+  width: 100%;
+  padding-bottom: 5px;
+  line-clamp: 2;
   text-overflow: ellipsis;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  word-wrap: break-word;
+  font-weight: 700;
 }
 
 .drawer-item-description {
-  color: #bdbdbd;
-  font-size: 0.85rem;
-  margin: 0;
-  white-space: nowrap;
+  font-size: 12px;
+  font-weight: 100;
   overflow: hidden;
   text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  width: 100%;
+  color: #FCFCFC;
 }
 
 /* ==========================================================================

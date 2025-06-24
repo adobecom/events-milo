@@ -120,12 +120,30 @@ class MobileRiderDrawer {
   #handleItemClick(clickedItem, video, itemsList) {
     this.#updateDrawerSelection(clickedItem, itemsList);
     if (window.injectPlayer) {
-      window.injectPlayer(
-        video.videoid,
-        this.config.skinid,
-        video.aslid,
-        video.sessionid,
-      );
+      // Check if the video is live before playing
+      import('../../features/timing-framework/plugins/mobile-rider/mobile-rider-controller.js').then(({ default: MobileRiderController }) => {
+        const controller = new MobileRiderController();
+        controller.getMediaStatus([video.videoid]).then(({ active }) => {
+          if (active.includes(video.videoid)) {
+            window.injectPlayer(
+              video.videoid,
+              this.config.skinid,
+              video.aslid,
+              video.sessionid,
+            );
+            // Optionally update store as active
+            if (video.sessionid && window.mobileRiderStore) {
+              window.mobileRiderStore.set(video.sessionid, true);
+            }
+          } else {
+            // Not live: update store as inactive and optionally show a message
+            if (video.sessionid && window.mobileRiderStore) {
+              window.mobileRiderStore.set(video.sessionid, false);
+            }
+            alert('This stream is not currently live.');
+          }
+        });
+      });
     } else {
       console.warn('window.injectPlayer is not available to the drawer.');
     }
