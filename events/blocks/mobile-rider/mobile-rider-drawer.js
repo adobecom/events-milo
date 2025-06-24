@@ -70,8 +70,17 @@ class MobileRiderDrawer {
     const itemsList = this.drawerElement.querySelector(`.${CONFIG.DRAWER.CLASSES.ITEMS}`);
     if (!itemsList) return;
 
+    // Add Now Playing header as a separate element before the tiles
+    const header = document.createElement('div');
+    header.className = 'relatedContent-NowPlaying';
+    header.innerHTML = `
+      <p class="relatedContent-NowPlaying-Text">Now Playing</p>
+      <span class="relatedContent-NowPlaying-sideText">Select a live session</span>
+    `;
+    this.drawerElement.insertBefore(header, itemsList);
+
     (this.config.videos || []).forEach((video, index) => {
-      const item = this.#createDrawerItem(video, itemsList);
+      const item = this.#createDrawerItem(video, itemsList, index);
       if (index === 0) {
         item.classList.add(CONFIG.DRAWER.CLASSES.CURRENT);
       }
@@ -79,7 +88,7 @@ class MobileRiderDrawer {
     });
   }
 
-  #createDrawerItem(video, itemsList) {
+  #createDrawerItem(video, itemsList, index) {
     const {
       videoid, title, description, thumbnail,
     } = video;
@@ -97,6 +106,7 @@ class MobileRiderDrawer {
     }
 
     const contentWrapper = createTag('div', { class: CONFIG.DRAWER.CLASSES.CONTENT_WRAPPER });
+
     if (title) {
       contentWrapper.appendChild(createTag('div', { class: CONFIG.DRAWER.CLASSES.TITLE }, title));
     }
