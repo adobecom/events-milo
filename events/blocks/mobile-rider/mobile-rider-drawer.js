@@ -70,7 +70,7 @@ class MobileRiderDrawer {
     const itemsList = this.drawerElement.querySelector(`.${CONFIG.DRAWER.CLASSES.ITEMS}`);
     if (!itemsList) return;
 
-    // Create and add Now Playing header as a separate element before the tiles
+    // Create the header
     const header = document.createElement('div');
     header.className = 'relatedContent-NowPlaying';
     header.innerHTML = `
@@ -78,9 +78,8 @@ class MobileRiderDrawer {
       <span class="relatedContent-NowPlaying-sideText">Select a live session</span>
     `;
 
-    // Append header and itemsList in order
-    this.drawerElement.appendChild(header);
-    this.drawerElement.appendChild(itemsList);
+    // Insert header as the first child of itemsList
+    itemsList.insertBefore(header, itemsList.firstChild);
 
     (this.config.videos || []).forEach((video, index) => {
       const item = this.#createDrawerItem(video, itemsList);
