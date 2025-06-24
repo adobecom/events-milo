@@ -202,41 +202,23 @@
 }
 
 .drawer-items {
+  background-color: #0e0e0e;
+  height: 80px;
   display: flex;
-  flex-direction: row;
-  gap: 1rem;
-  padding: 0 1rem 1rem 1rem;
-  overflow-x: auto;
-  scrollbar-width: thin;
-  scrollbar-color: #1473e6 #2a2a2a;
-  -webkit-overflow-scrolling: touch;
-  scroll-snap-type: x mandatory;
+  max-width: 1200px;
+  justify-content: center;
+  align-items: center;
 }
 
 .drawer-item {
-  /* display: flex;
-  flex-direction: row;
-  align-items: center;
-  background: #1d1d1d;
-  border-radius: 6px;
-  overflow: hidden;
-  cursor: pointer;
-  transition: box-shadow 0.2s, border 0.2s, transform 0.2s;
-  flex: 0 0 320px;
-  max-width: 320px;
-  min-width: 240px;
-  height: 64px;
-  position: relative;
-  border: 1.5px solid transparent;
-  box-sizing: border-box; */
   background-color: #1d1d1d;
   width: 317px;
   margin: 0 9px;
   height: 64px;
   font-size: 12px;
-  padding: 10px 0 10px 10px;
+  padding: 0 0 0 10px;
   display: flex;
-  flex-direction: row;
+  align-items: center;
 }
 
 .drawer-item:hover, .drawer-item.current {
@@ -244,17 +226,9 @@
 }
 
 .drawer-item-thumbnail {
-  width: 56px;
-  height: 56px;
-  min-width: 56px;
-  min-height: 56px;
-  background: #000;
-  overflow: hidden;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 4px;
-  margin-left: 4px;
+  height: 45px;
+  width: 74.66px;
+  margin: 0;
 }
 
 .drawer-item-thumbnail img {
