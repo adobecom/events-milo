@@ -202,14 +202,11 @@
     align-items: flex-start;
     height: auto;
   }
-  
+
   .drawer-item {
-    flex: 1 1 100%;
-    max-width: 100%;
-    min-width: 0;
-    width: 100% !important;
-    height: 56px;
     box-sizing: border-box;
+    width: 100%;
+    margin: 0;
   }
 
   .relatedContent-NowPlaying {
@@ -231,65 +228,6 @@
     font-weight: lighter;
   }
 }
-
-/* Small mobile devices */
-@media (max-width: 480px) {
-  .drawer-item {
-    flex: 0 0 110px;
-    min-width: 80px;
-    height: 44px;
-  }
-
-  .live-indicator {
-    top: 0.25rem;
-    left: 0.25rem;
-    padding: 0.25rem 0.5rem;
-  }
-
-  .live-badge {
-    font-size: 0.625rem;
-    padding: 0.125rem 0.25rem;
-    min-width: 32px;
-  }
-
-  .viewer-count {
-    font-size: 0.75rem;
-  }
-
-  .stream-status {
-    font-size: 0.625rem;
-  }
-}
-
-/* ==========================================================================
-   High Contrast Mode Support
-   ========================================================================== */
-
-@media (forced-colors: active) {
-  .video-wrapper {
-    border: 1px solid CanvasText;
-  }
-  
-  .video-wrapper-viewport {
-    forced-color-adjust: none;
-  }
-
-  .drawer-item {
-    border: 1px solid CanvasText;
-  }
-
-  .live-indicator {
-    border: 1px solid CanvasText;
-  }
-
-  .live-badge {
-    border: 1px solid CanvasText;
-  }
-}
-
-/* ==========================================================================
-   Concurrent Metadata Section
-   ========================================================================== */
 
 /* Concurrent metadata section */
 .concurrent-metadata {
@@ -332,6 +270,7 @@
 .concurrent-metadata-item:hover {
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  
 }
 
 .concurrent-metadata-item.active {
