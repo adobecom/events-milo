@@ -119,19 +119,14 @@ class MobileRiderBlock {
   }
 
   #initializeASL() {
-    if (this.config.aslid && !this.config.concurrentenabled) {
-      const aslButton = document.querySelector(`#${CONFIG.ASL.BUTTON_ID}`);
-      if (aslButton) {
-        const handler = () => {
-          const container = document.querySelector(`#${CONFIG.PLAYER.CONTAINER_ID}`);
-          if (container) this.#toggleASL(container);
-        };
-        const aslButtonClickHandler = () => {
-          handler();
-          this.#handleASLInitialization(aslButton, aslButtonClickHandler);
-        };
-        this.#handleASLInitialization(aslButton, aslButtonClickHandler);
-      }
+    const aslButton = document.querySelector(`#${CONFIG.ASL.BUTTON_ID}`);
+    const containerMR = document.querySelector('.mobileRider_container');
+    if (aslButton && containerMR) {
+      aslButton.addEventListener('click', () => {
+        containerMR.classList.toggle('isASL');
+      });
+    } else {
+      attachASLButtonToggle();
     }
   }
 
@@ -318,3 +313,33 @@ export default function init(element) {
     console.error('Failed to initialize Mobile Rider Block', e);
   }
 }
+
+// Minimal ASL toggle logic: wait for #asl-button, then attach click to toggle 'isASL' on .mobileRider_container
+function attachASLButtonToggle() {
+  let attempts = 0;
+  const maxAttempts = 50; // 5 seconds at 100ms interval
+
+  function tryAttach() {
+    const aslButton = document.querySelector('#asl-button');
+    const containerMR = document.querySelector('.mobileRider_container');
+    if (aslButton && containerMR) {
+      aslButton.addEventListener('click', () => {
+        containerMR.classList.toggle('isASL');
+      });
+      return true;
+    }
+    return false;
+  }
+
+  if (!tryAttach()) {
+    const interval = setInterval(() => {
+      attempts++;
+      if (tryAttach() || attempts >= maxAttempts) {
+        clearInterval(interval);
+      }
+    }, 100);
+  }
+}
+
+// Call this after player/container is rendered
+attachASLButtonToggle();
