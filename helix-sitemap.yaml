@@ -2,7 +2,6 @@ version: 1.2
 sitemaps:
   website:
     origin: https://www.adobe.com
-
     languages:
       default:
         source: /events/query-index.json
