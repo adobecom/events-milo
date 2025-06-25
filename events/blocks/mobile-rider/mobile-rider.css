@@ -201,6 +201,7 @@
     gap: 0.5rem;
     align-items: flex-start;
     height: auto;
+    padding: 10px 10px;
   }
 
   .drawer-item {
@@ -270,7 +271,7 @@
 .concurrent-metadata-item:hover {
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-  
+
 }
 
 .concurrent-metadata-item.active {
