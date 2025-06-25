@@ -6,4 +6,34 @@
   <sitemap>
     <loc>https://www.adobe.com/events/create-now/events-sitemap.xml</loc>
   </sitemap>
+  <sitemap>
+    <loc>https://www.adobe.com/de/events/create-now/sitemap.xml</loc>
+  </sitemap>
+  <sitemap>
+    <loc>https://www.adobe.com/de/events/create-now/events-sitemap.xml</loc>
+  </sitemap>
+  <sitemap>
+    <loc>https://www.adobe.com/fr/events/create-now/sitemap.xml</loc>
+  </sitemap>
+  <sitemap>
+    <loc>https://www.adobe.com/fr/events/create-now/events-sitemap.xml</loc>
+  </sitemap>
+  <sitemap>
+    <loc>https://www.adobe.com/es/events/create-now/sitemap.xml</loc>
+  </sitemap>
+  <sitemap>
+    <loc>https://www.adobe.com/es/events/create-now/events-sitemap.xml</loc>
+  </sitemap>
+  <sitemap>
+    <loc>https://www.adobe.com/th_en/events/create-now/sitemap.xml</loc>
+  </sitemap>
+  <sitemap>
+    <loc>https://www.adobe.com/th_en/events/create-now/events-sitemap.xml</loc>
+  </sitemap>
+  <sitemap>
+    <loc>https://www.adobe.com/uk/events/create-now/sitemap.xml</loc>
+  </sitemap>
+  <sitemap>
+    <loc>https://www.adobe.com/uk/events/create-now/events-sitemap.xml</loc>
+  </sitemap>
 </sitemapindex>
