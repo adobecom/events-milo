@@ -15,38 +15,54 @@ class TimingWorker {
 
   setupBroadcastChannels(plugins) {
     // Close any existing channels
-    this.channels.forEach((channel) => channel.close());
+    this.channels.forEach((channel) => {
+      try {
+        if (channel && typeof channel.close === 'function') {
+          channel.close();
+        }
+      } catch (error) {
+        window.lana?.log(`Error closing BroadcastChannel: ${JSON.stringify(error)}`);
+      }
+    });
     this.channels.clear();
 
     // Only set up channels for enabled plugins
     if (plugins.has('metadata')) {
-      const channel = new BroadcastChannel('metadata-store');
-      channel.onmessage = (event) => {
-        const { tabId, key, value } = event.data;
-        // Only process messages from this tab
-        if (tabId === this.tabId) {
-          const metadataStore = this.plugins.get('metadata');
-          if (metadataStore) {
-            metadataStore.set(key, value);
+      try {
+        const channel = new BroadcastChannel('metadata-store');
+        channel.onmessage = (event) => {
+          const { tabId, key, value } = event.data;
+          // Only process messages from this tab
+          if (tabId === this.tabId) {
+            const metadataStore = this.plugins.get('metadata');
+            if (metadataStore) {
+              metadataStore.set(key, value);
+            }
           }
-        }
-      };
-      this.channels.set('metadata', channel);
+        };
+        this.channels.set('metadata', channel);
+      } catch (error) {
+        window.lana?.log(`Error setting up metadata BroadcastChannel: ${JSON.stringify(error)}`);
+      }
     }
 
     if (plugins.has('mobileRider')) {
-      const channel = new BroadcastChannel('mobile-rider-store');
-      channel.onmessage = (event) => {
-        const { tabId, sessionId, isActive } = event.data;
-        // Only process messages from this tab
-        if (tabId === this.tabId) {
-          const mobileRiderStore = this.plugins.get('mobileRider');
-          if (mobileRiderStore) {
-            mobileRiderStore.set(sessionId, isActive);
+      try {
+        const channel = new BroadcastChannel('mobile-rider-store');
+        channel.onmessage = (event) => {
+          const { tabId, sessionId, isActive } = event.data;
+          // Only process messages from this tab
+          if (tabId === this.tabId) {
+            const mobileRiderStore = this.plugins.get('mobileRider');
+            if (mobileRiderStore) {
+              mobileRiderStore.set(sessionId, isActive);
+            }
           }
-        }
-      };
-      this.channels.set('mobileRider', channel);
+        };
+        this.channels.set('mobileRider', channel);
+      } catch (error) {
+        window.lana?.log(`Error setting up mobileRider BroadcastChannel: ${JSON.stringify(error)}`);
+      }
     }
   }
 

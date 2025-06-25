@@ -6,9 +6,21 @@ export default class TestingManager {
 
   init(testingData) {
     if (testingData?.toggleTime) {
-      this.isTestMode = true;
-      const currentTime = new Date().getTime();
-      this.timeOffset = testingData.toggleTime - currentTime;
+      const toggleTime = parseInt(testingData.toggleTime, 10);
+      
+      // Validate that toggleTime is a valid number
+      if (!Number.isNaN(toggleTime) && Number.isFinite(toggleTime)) {
+        this.isTestMode = true;
+        const currentTime = new Date().getTime();
+        this.timeOffset = toggleTime - currentTime;
+      } else {
+        window.lana?.log(`Invalid toggleTime provided for testing: ${testingData.toggleTime}`);
+        this.isTestMode = false;
+        this.timeOffset = 0;
+      }
+    } else {
+      this.isTestMode = false;
+      this.timeOffset = 0;
     }
   }
 

@@ -23,11 +23,21 @@ export default function init(schedule, tabId) {
 
   const mobileRiderSchedules = schedule.filter((entry) => entry.mobileRider);
   mobileRiderSchedules.forEach((s) => {
-    s.mobileRider.forEach((condition) => {
-      const { sessionId } = condition;
+    // Handle mobileRider as an object with sessionId property
+    if (s.mobileRider && typeof s.mobileRider === 'object' && s.mobileRider.sessionId) {
+      const { sessionId } = s.mobileRider;
       const isActive = controller.isMediaActive(sessionId);
       mobileRiderStore.set(sessionId, isActive, tabId);
-    });
+    } else if (Array.isArray(s.mobileRider)) {
+      // Backward compatibility for array format
+      s.mobileRider.forEach((condition) => {
+        if (condition && condition.sessionId) {
+          const { sessionId } = condition;
+          const isActive = controller.isMediaActive(sessionId);
+          mobileRiderStore.set(sessionId, isActive, tabId);
+        }
+      });
+    }
   });
 
   return mobileRiderStore;
