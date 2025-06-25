@@ -1,4 +1,4 @@
-import { readBlockConfig, LIBS, getMetadata } from '../../scripts/utils.js';
+import { readBlockConfig, LIBS, getMetadata, parseMetadataPath } from '../../scripts/utils.js';
 
 function buildScheduleDoubleLinkedList(entries) {
   if (!entries.length) return null;
