@@ -1,21 +1,13 @@
-/* ==========================================================================
-   Mobile Rider Video Player Block
-   ========================================================================== */
 
-/* Root container for the block */
 .mobile-rider {
   position: relative;
   z-index: 1;
   width: 100%;
-  max-width: 1200px;
   margin: 0 auto;
   box-sizing: border-box;
   background: #000;
 }
 
-/* ==========================================================================
-   Player Container
-   ========================================================================== */
 
 .mobile-rider-player .isASL {
   position: relative;
