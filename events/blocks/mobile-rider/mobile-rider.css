@@ -200,6 +200,7 @@
     flex-direction: column !important;
     gap: 0.5rem;
     align-items: flex-start;
+    height: auto;
   }
   
   .drawer-item {
