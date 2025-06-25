@@ -1,32 +1,38 @@
-version: 1.1
+version: 1.2
 sitemaps:
   website:
     origin: https://www.adobe.com
+
     languages:
       default:
         source: /events/query-index.json
-        destination: /events/sitemap.xml
-        hreflang: en
+        destination: /events/create-now/sitemap.xml
+        hreflang: en_US
         alternate: /{path}
       de:
         source: /de/events/query-index.json
         destination: /de/events/create-now/sitemap.xml
-        hreflang: de
+        hreflang: de_DE
         alternate: /{path}
       fr:
         source: /fr/events/query-index.json
         destination: /fr/events/create-now/sitemap.xml
-        hreflang: fr
+        hreflang: fr_FR
         alternate: /{path}
       es:
         source: /es/events/query-index.json
         destination: /es/events/create-now/sitemap.xml
-        hreflang: es
+        hreflang: es_ES
         alternate: /{path}
       th_en:
         source: /th_en/events/query-index.json
         destination: /th_en/events/create-now/sitemap.xml
-        hreflang: th
+        hreflang: th_EN
+        alternate: /{path}
+      uk:
+        source: /uk/events/query-index.json
+        destination: /uk/events/create-now/sitemap.xml
+        hreflang: en_GB
         alternate: /{path}
   
   seo-templates:
@@ -34,26 +40,31 @@ sitemaps:
     languages:
       default:
         source: /events/default/metadata.json?sheet=sitemap
-        destination: /events/events-sitemap.xml
-        hreflang: en
+        destination: /events/create-now/events-sitemap.xml
+        hreflang: en_US
         alternate: /{path}
       de:
         source: /de/events/default/metadata.json?sheet=sitemap
         destination: /de/events/create-now/events-sitemap.xml
-        hreflang: de
+        hreflang: de_DE
         alternate: /{path}
       fr:
         source: /fr/events/default/metadata.json?sheet=sitemap
         destination: /fr/events/create-now/events-sitemap.xml
-        hreflang: fr
+        hreflang: fr_FR
         alternate: /{path}
       es:
         source: /es/events/default/metadata.json?sheet=sitemap
         destination: /es/events/create-now/events-sitemap.xml
-        hreflang: es
+        hreflang: es_ES
         alternate: /{path}
       th_en:
         source: /th_en/events/default/metadata.json?sheet=sitemap
         destination: /th_en/events/create-now/events-sitemap.xml
-        hreflang: th
+        hreflang: th_EN
+        alternate: /{path}
+      uk:
+        source: /uk/events/default/metadata.json?sheet=sitemap
+        destination: /uk/events/create-now/events-sitemap.xml
+        hreflang: en_GB
         alternate: /{path}
