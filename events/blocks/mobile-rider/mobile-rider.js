@@ -124,6 +124,7 @@ class MobileRiderBlock {
     if (aslButton && containerMR) {
       aslButton.addEventListener('click', () => {
         containerMR.classList.toggle('isASL');
+        attachASLButtonToggle();
       });
     } else {
       attachASLButtonToggle();
