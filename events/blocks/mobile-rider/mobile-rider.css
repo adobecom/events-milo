@@ -170,8 +170,6 @@
 @media (max-width: 768px) {
   .drawer-items {
     gap: 0.5rem;
-    overflow-x: unset;
-    overflow-y: auto;
   }
 
   .live-indicator {
@@ -201,8 +199,7 @@
   .drawer-items {
     flex-direction: column !important;
     gap: 0.5rem;
-    overflow-x: unset;
-    overflow-y: auto;
+    align-items: flex-start;
   }
   
   .drawer-item {
