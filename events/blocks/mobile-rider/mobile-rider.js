@@ -341,5 +341,3 @@ function attachASLButtonToggle() {
   }
 }
 
-// Call this after player/container is rendered
-attachASLButtonToggle();

@@ -17,7 +17,7 @@
    Player Container
    ========================================================================== */
 
-.mobile-rider-player {
+.mobile-rider-player .isASL {
   position: relative;
   padding-bottom: 56.25%;
 }
