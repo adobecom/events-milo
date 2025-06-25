@@ -6,11 +6,15 @@ const { createTag, getConfig } = await import(`${LIBS}/utils/utils.js`);
 function decorateImage(card, photo) {
   if (!photo) return;
 
-  const { sharepointUrl, imageUrl } = photo;
+  const { sharepointUrl, imageUrl, altText } = photo;
   const imgElement = createTag('img', {
     src: sharepointUrl || imageUrl,
     class: 'card-image',
   });
+
+  if (altText) {
+    imgElement.setAttribute('alt', altText);
+  }
 
   const imgContainer = createTag('div', { class: 'card-image-container' });
   imgContainer.append(imgElement);
