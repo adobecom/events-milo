@@ -28,25 +28,6 @@
    Video Wrapper
    ========================================================================== */
 
-.video-wrapper {
-  width: 100%;
-  position: relative;
-  background: #1d1d1d;
-  transition: opacity 0.3s;
-  margin-bottom: 0;
-  aspect-ratio: 16 / 9;
-  min-height: 300px;
-  background: #000;
-  flex: 0 0 auto;
-}
-
-/* Ensure video maintains aspect ratio */
-.video-wrapper::before {
-  content: '';
-  display: block;
-  padding-top: 56.25%; /* 16:9 aspect ratio */
-}
-
 /* Video element */
 .mobile-rider-viewport {
   position: absolute;
@@ -206,6 +187,7 @@
   max-width: 1200px;
   justify-content: center;
   align-items: center;
+  padding: 0 10px;
 }
 
 .relatedContent-NowPlaying {
