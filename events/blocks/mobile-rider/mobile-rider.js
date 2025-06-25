@@ -326,7 +326,6 @@ function attachASLButtonToggle() {
     if (aslButton && containerMR) {
       aslButton.addEventListener('click', () => {
         containerMR.classList.toggle('isASL');
-        attachASLButtonToggle();
       });
       return true;
     }
