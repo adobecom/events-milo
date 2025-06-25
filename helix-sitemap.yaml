@@ -29,6 +29,11 @@ sitemaps:
         destination: /th_en/events/create-now/sitemap.xml
         hreflang: th_EN
         alternate: /{path}
+      uk:
+        source: /uk/events/query-index.json
+        destination: /uk/events/create-now/sitemap.xml
+        hreflang: en_GB
+        alternate: /{path}
   
   seo-templates:
     origin: https://www.adobe.com
@@ -57,4 +62,9 @@ sitemaps:
         source: /th_en/events/default/metadata.json?sheet=sitemap
         destination: /th_en/events/create-now/events-sitemap.xml
         hreflang: th_EN
+        alternate: /{path}
+      uk:
+        source: /uk/events/default/metadata.json?sheet=sitemap
+        destination: /uk/events/create-now/events-sitemap.xml
+        hreflang: en_GB
         alternate: /{path}
