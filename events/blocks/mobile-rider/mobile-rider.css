@@ -221,7 +221,15 @@
     flex-direction: row;
     justify-content: center;
     align-items: center;
-}
+    gap: 0.5rem;
+  }
+
+  .relatedContent-NowPlaying-Text {
+    font-size: 12px;
+    line-height: 1;
+    color: #fff;
+    font-weight: lighter;
+  }
 }
 
 /* Small mobile devices */
