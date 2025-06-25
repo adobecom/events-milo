@@ -7,7 +7,7 @@ export default class TestingManager {
   init(testingData) {
     if (testingData?.toggleTime) {
       const toggleTime = parseInt(testingData.toggleTime, 10);
-      
+
       // Validate that toggleTime is a valid number
       if (!Number.isNaN(toggleTime) && Number.isFinite(toggleTime)) {
         this.isTestMode = true;
