@@ -74,7 +74,6 @@ class MobileRider {
   async loadPlayer(videoId, aslId, sessionId) {
     try {
       this.injectPlayer(videoId, this.config.skinid, aslId, sessionId);
-      if (aslId) this.initASL();
     } catch (err) {
       console.error('Player error', err);
     }
@@ -115,6 +114,7 @@ class MobileRider {
       sessionId,
     });
 
+    if (aslId) this.initASL();
     if (sessionId) this.addStreamEnd(sessionId);
   }
   
