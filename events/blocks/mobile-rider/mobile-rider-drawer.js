@@ -1,100 +1,82 @@
 import { createTag } from '../../scripts/utils.js';
 
-const CONFIG = {
-  TITLE: 'Related Videos',
-  CLASSES: {
-    CONTAINER: 'mobile-rider-drawer',
-    CONTENT: 'drawer-content',
-    ITEMS: 'drawer-items',
-    ITEM: 'drawer-item',
-    THUMB: 'drawer-item-thumbnail',
-    TEXT: 'drawer-item-content',
-    TITLE: 'drawer-item-title',
-    DESC: 'drawer-item-description',
-    CURRENT: 'current',
-  },
-  ATTR: {
-    ROLE: 'button',
-    TABINDEX: '0',
-  },
-  STYLE: 'width: 100%; box-sizing: border-box;',
-};
-
 class Drawer {
-  constructor(container, config) {
-    this.container = container;
-    this.config = config;
-    this.videos = config.videos || [];
+  constructor(container, config = {}) {
+    if (!container) throw new Error('Drawer requires a container element.');
 
-    if (config.drawerenabled === false) return;
+    this.container = container;
+    this.config = { showheader: true, ...config };
+    this.videos = this.config.videos || [];
+    this.itemsList = null;
+    this.onVideoClick = this.config.onVideoClick || this.defaultVideoClickHandler;
+
     this.render();
   }
 
   render() {
+    const drawer = this.createDrawer();
+    this.container.append(drawer);
+  }
+
+  createDrawer() {
     const drawer = createTag('div', {
-      class: this.getDrawerClass(),
-      'aria-label': this.config.drawertitle || CONFIG.TITLE,
-      style: CONFIG.STYLE,
+      class: 'mobile-rider-drawer',
+      'aria-label': this.config.drawertitle || 'Videos',
+      style: 'width: 100%; box-sizing: border-box;',
     });
 
-    const content = createTag('div', { class: CONFIG.CLASSES.CONTENT });
-    this.itemsList = createTag('div', { class: CONFIG.CLASSES.ITEMS });
+    const content = createTag('div', { class: 'drawer-content' });
+    this.itemsList = createTag('div', { class: 'drawer-items' });
 
-    this.appendNowPlayingHeader();
-    this.videos.forEach((video, i) => {
-      const item = this.createItem(video);
-      if (i === 0) item.classList.add(CONFIG.CLASSES.CURRENT);
+    if (this.config.showheader) this.itemsList.appendChild(this.createHeader());
+    this.videos.forEach((video, index) => {
+      const item = this.createVideoItem(video);
+      if (index === 0) item.classList.add('current');
       this.itemsList.appendChild(item);
     });
 
     content.appendChild(this.itemsList);
     drawer.appendChild(content);
-    this.insertIntoDOM(drawer);
+    return drawer;
   }
 
-  getDrawerClass() {
-    const classes = [CONFIG.CLASSES.CONTAINER];
-    if (this.config.drawerposition) classes.push(this.config.drawerposition);
-    return classes.join(' ');
-  }
-
-  appendNowPlayingHeader() {
-    const header = document.createElement('div');
-    header.className = 'relatedContent-NowPlaying';
+  createHeader() {
+    const header = createTag('div', { class: 'relatedContent-NowPlaying' });
     header.innerHTML = `
       <p class="relatedContent-NowPlaying-Text">Now Playing</p>
       <span class="relatedContent-NowPlaying-sideText">Select a live session</span>
     `;
-    this.itemsList.appendChild(header);
+    return header;
   }
 
-  createItem(video) {
+  createVideoItem(video) {
     const item = createTag('div', {
-      class: CONFIG.CLASSES.ITEM,
-      role: CONFIG.ATTR.ROLE,
-      tabindex: CONFIG.ATTR.TABINDEX,
+      class: 'drawer-item',
+      role: 'button',
+      tabindex: '0',
       'data-videoid': video.videoid,
     });
 
     if (video.thumbnail) {
-      const thumb = createTag('div', { class: CONFIG.CLASSES.THUMB });
-      thumb.appendChild(createTag('img', {
+      const thumbnail = createTag('div', { class: 'drawer-item-thumbnail' });
+      thumbnail.appendChild(createTag('img', {
         src: video.thumbnail,
         alt: video.title || 'video thumbnail',
       }));
-      item.appendChild(thumb);
+      item.appendChild(thumbnail);
     }
 
-    const content = createTag('div', { class: CONFIG.CLASSES.TEXT });
-    if (video.title) {
-      content.appendChild(createTag('div', { class: CONFIG.CLASSES.TITLE }, video.title));
-    }
-    if (video.description) {
-      content.appendChild(createTag('div', { class: CONFIG.CLASSES.DESC }, video.description));
-    }
+    const content = createTag('div', { class: 'drawer-item-content' });
+    if (video.title) content.appendChild(createTag('div', { class: 'drawer-item-title' }, video.title));
+    if (video.description) content.appendChild(createTag('div', { class: 'drawer-item-description' }, video.description));
     item.appendChild(content);
 
-    const handler = () => this.handleClick(item, video);
+    this.addItemEventListeners(item, video);
+    return item;
+  }
+
+  addItemEventListeners(item, video) {
+    const handler = () => this.handleVideoClick(item, video);
     item.addEventListener('click', handler);
     item.addEventListener('keydown', (e) => {
       if (e.key === 'Enter' || e.key === ' ') {
@@ -102,58 +84,38 @@ class Drawer {
         handler();
       }
     });
-
-    return item;
   }
 
-  async handleClick(item, video) {
+  async handleVideoClick(item, video) {
     this.setActiveItem(item);
-
-    if (!window.injectPlayer) {
-      console.warn('injectPlayer not found');
-      return;
-    }
-
     try {
-      const { default: Controller } = await import('../../features/timing-framework/plugins/mobile-rider/mobile-rider-controller.js');
-      const ctrl = new Controller();
-      const { active = [] } = await ctrl.getMediaStatus([video.videoid]);
-
-      if (active.includes(video.videoid)) {
-        window.injectPlayer(video.videoid, this.config.skinid, video.aslid, video.sessionid);
-        if (video.sessionid && window.mobileRiderStore) {
-          window.mobileRiderStore.set(video.sessionid, true);
-        }
-      } else {
-        if (video.sessionid && window.mobileRiderStore) {
-          window.mobileRiderStore.set(video.sessionid, false);
-        }
-        alert('This stream is not currently live.');
-      }
-    } catch (e) {
-      console.error('Failed to validate video status', e);
+      await this.onVideoClick(item, video);
+    } catch (err) {
+      console.error('Video click handler failed:', err);
     }
   }
 
-  setActiveItem(activeItem) {
-    Array.from(this.itemsList.children).forEach((item) => {
-      item.classList.remove(CONFIG.CLASSES.CURRENT);
-    });
-    activeItem.classList.add(CONFIG.CLASSES.CURRENT);
+  setActiveItem(target) {
+    this.itemsList.querySelectorAll('.drawer-item.current')
+      .forEach(el => el.classList.remove('current'));
+    target.classList.add('current');
   }
 
-  insertIntoDOM(drawer) {
-    const pos = this.config.drawerposition || 'bottom';
-    if (pos === 'top') {
-      this.container.prepend(drawer);
-    } else {
-      this.container.appendChild(drawer);
-    }
+  setActiveVideo(videoId) {
+    const target = this.itemsList?.querySelector(`[data-videoid="${videoId}"]`);
+    if (target) this.setActiveItem(target);
+  }
+
+  defaultVideoClickHandler() {
+    console.warn('No onVideoClick handler provided.');
   }
 }
 
 export default function initDrawer(container, config) {
-  if (!container || !config) return null;
-  const drawer = new Drawer(container, config);
-  return drawer.itemsList;
+  try {
+    return new Drawer(container, config);
+  } catch (err) {
+    console.error('Drawer initialization failed:', err);
+    return null;
+  }
 }

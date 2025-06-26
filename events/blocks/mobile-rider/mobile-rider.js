@@ -46,7 +46,6 @@ class MobileRider {
     this.wrapper = null;
     this.container = null;
 
-    window.injectPlayer = this.injectPlayer.bind(this);
     this.init();
   }
 
@@ -65,7 +64,7 @@ class MobileRider {
       this.initDrawer(this.config.concurrentVideos);
     } else {
       await this.loadPlayer(this.config.videoid, this.config.aslid, this.config.sessionId);
-      // if (this.config.aslid) this.initASL();
+      if (this.config.aslid) this.initASL();
     }
   }
 
@@ -135,11 +134,48 @@ class MobileRider {
 
   async initDrawer(videos) {
     if (this.container.querySelector('.mobile-rider-drawer')) return;
+    
     try {
       const { default: initDrawer } = await import('./mobile-rider-drawer.js');
-      initDrawer(this.container, { ...this.config, videos });
+      
+      // Simple configuration with single callback
+      const drawerConfig = {
+        ...this.config,
+        videos,
+        showheader: true,
+        onVideoClick: (_, video) => this.handleDrawerVideoClick(video),
+      };
+      
+      this.drawer = initDrawer(this.container, drawerConfig);
     } catch (err) {
       console.error('Drawer load failed', err);
+    }
+  }
+
+  async handleDrawerVideoClick(video) {
+    try {
+      const isLive = await this.validateVideoStatus(video);
+      this.updateSessionStatus(video.sessionid, isLive);
+      if (!isLive) {
+        alert('This stream is not currently live.');
+        return;
+      }
+      this.injectPlayer(video.videoid, this.config.skinid, video.aslid, video.sessionid);
+    } catch (error) {
+      console.error('Failed to handle video click:', error);
+    }
+  }
+  
+  async validateVideoStatus(video) {
+    const { default: Controller } = await import('../../features/timing-framework/plugins/mobile-rider/mobile-rider-controller.js');
+    const controller = new Controller();
+    const { active = [] } = await controller.getMediaStatus([video.videoid]);
+    return active.includes(video.videoid);
+  }
+
+  updateSessionStatus(sessionId, isActive) {
+    if (sessionId && window.mobileRiderStore) {
+      window.mobileRiderStore.set(sessionId, isActive);
     }
   }
 
@@ -149,13 +185,11 @@ class MobileRider {
       playerBox = createTag('div', { class: 'mobile-rider-player' });
       this.el.appendChild(playerBox);
     }
-
     let wrap = playerBox.querySelector('.video-wrapper');
     if (!wrap) {
       wrap = createTag('div', { class: 'video-wrapper' });
       playerBox.appendChild(wrap);
     }
-
     return { container: playerBox, wrapper: wrap };
   }
 
