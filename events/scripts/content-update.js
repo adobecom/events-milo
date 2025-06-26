@@ -18,8 +18,6 @@ const preserveFormatKeys = [
 ];
 
 export async function miloReplaceKey(miloLibs, key, sheetName) {
-      import(`${miloLibs}/features/placeholders.js`),
-    ]);
   return miloReplaceKeyFn(miloLibs, key, sheetName);
 }
 
