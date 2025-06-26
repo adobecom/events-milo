@@ -84,6 +84,7 @@ class MobileRider {
 
     let container = this.wrapper.querySelector('.mobileRider_container');
     if (!container) {
+      this.wrapper.appendChild(container);
       container = createTag('div', {
         class: 'mobileRider_container',
         id: CONFIG.PLAYER.CONTAINER_ID,
@@ -92,7 +93,6 @@ class MobileRider {
         'data-aslid': aslId,
         'data-sessionid': sessionId,
       });
-      this.wrapper.appendChild(container);
     } else {
       Object.assign(container.dataset, { videoid: videoId, skinid: skinId, aslid: aslId, sessionid: sessionId });
     }
