@@ -11,7 +11,7 @@
   display: none;
 }
 
-.mobileRider_container.is-hidden {
+.mobileRider_container .is-hidden {
   display: none;
 }
 
