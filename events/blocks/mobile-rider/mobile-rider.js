@@ -64,7 +64,6 @@ class MobileRider {
       this.initDrawer(this.config.concurrentVideos);
     } else {
       await this.loadPlayer(this.config.videoid, this.config.aslid, this.config.sessionId);
-      if (this.config.aslid) this.initASL();
     }
   }
 
@@ -75,6 +74,7 @@ class MobileRider {
   async loadPlayer(videoId, aslId, sessionId) {
     try {
       this.injectPlayer(videoId, this.config.skinid, aslId, sessionId);
+      if (aslid) this.initASL();
     } catch (err) {
       console.error('Player error', err);
     }
