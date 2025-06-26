@@ -84,7 +84,10 @@ function isNextScheduleTriggered(scheduleItem) {
 
   const conditionsMet = !c || c.every(({ key: k, expectedValue: v }) => {
     const conditionValue = conditionStore?.[k];
-    const isAnyVal = v.trim().toLowerCase() === 'any' && !!conditionValue;
+    const isEmpty = !conditionValue
+      || (Array.isArray(conditionValue) && conditionValue.length === 0)
+      || (typeof conditionValue === 'object' && Object.keys(conditionValue).length === 0);
+    const isAnyVal = v.trim().toLowerCase() === 'any' && !isEmpty;
     return isAnyVal || conditionValue === v;
   });
 

@@ -275,6 +275,6 @@ if (getMetadata('event-details-page') === 'yes') await validatePageAndRedirect(L
 (async function loadPage() {
   await loadLana({ clientId: 'events-milo' });
   await loadArea().then(() => {
-    lazyCaptureProfile();
+    if (getMetadata('event-details-page') === 'yes') lazyCaptureProfile();
   });
 }());

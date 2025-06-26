@@ -1,7 +1,7 @@
 import { LIBS, getMetadata, getSusiOptions } from '../../scripts/utils.js';
 import { deleteAttendeeFromEvent, getAndCreateAndAddAttendee, getAttendee, getEvent } from '../../scripts/esp-controller.js';
 import BlockMediator from '../../scripts/deps/block-mediator.min.js';
-import { miloReplaceKey, signIn } from '../../scripts/content-update.js';
+import autoUpdateContent, { miloReplaceKey, signIn } from '../../scripts/content-update.js';
 import { dictionaryManager } from '../../scripts/dictionary-manager.js';
 
 const { createTag, getConfig } = await import(`${LIBS}/utils/utils.js`);
@@ -795,6 +795,8 @@ async function createForm(bp, formData) {
       }
     });
   });
+
+  autoUpdateContent(formEl, { getConfig, miloLibs: LIBS });
 
   return {
     formEl,
