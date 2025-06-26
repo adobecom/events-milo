@@ -1,4 +1,4 @@
-import { readBlockConfig, LIBS, getMetadata } from '../../scripts/utils.js';
+import { readBlockConfig, LIBS, getMetadata, parseMetadataPath } from '../../scripts/utils.js';
 
 function buildScheduleDoubleLinkedList(entries) {
   if (!entries.length) return null;
@@ -38,15 +38,12 @@ function conditionsPreCheck(schedule) {
   allMetadataConditionSchedules.forEach((s) => {
     s.conditions.forEach((condition) => {
       const { key } = condition;
-
-      const metadata = getMetadata(key);
-
+      const metadata = parseMetadataPath(key);
       if (metadata) {
         conditions[key] = metadata;
       }
     });
   });
-
   return conditions;
 }
 
