@@ -14,7 +14,7 @@
 .mobileRider_container {
   position: relative;
   width: 100%;
-  padding-top: 56.25%; /* 16:9 aspect ratio fallback */
+  padding-bottom: 56.25%; /* 16:9 aspect ratio fallback */
 }
 
 .mobileRider_container video {
