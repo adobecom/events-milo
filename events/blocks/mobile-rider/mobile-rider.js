@@ -112,9 +112,8 @@ class MobileRider {
       identifier1: videoId,
       identifier2: aslId,
       sessionId,
-    });
+    }); 
 
-    if (aslId) this.initASL();
     if (sessionId) this.addStreamEnd(sessionId);
   }
   
