@@ -108,7 +108,7 @@ class MobileRider {
 
     window.__mr_player?.dispose();
 
-    const player = window.mobilerider.embed(video.id, videoId, skinId, {
+    window.mobilerider.embed(video.id, videoId, skinId, {
       ...CONFIG.PLAYER.DEFAULT_OPTIONS,
       analytics: { provider: CONFIG.ANALYTICS.PROVIDER },
       identifier1: videoId,
@@ -118,42 +118,7 @@ class MobileRider {
 
     if (sessionId) this.addStreamEnd(sessionId);
   }
-
-  // initASL() {
-  //   const container = this.wrapper?.querySelector('.mobileRider_container');
-  //   if (!container) {
-  //     console.warn('Mobile Rider container not found for ASL initialization');
-  //     return;
-  //   }
   
-  //   const maxAttempts = CONFIG.ASL.MAX_CHECKS;
-  //   const interval = CONFIG.ASL.CHECK_INTERVAL;
-  //   const buttonId = CONFIG.ASL.BUTTON_ID;
-  
-  //   let attempts = 0;
-  //   const check = () => {
-  //     const btn = container.querySelector(`#${buttonId}`);
-  //     if (btn) return this.setupASLButtonHandler(btn, container);
-  
-  //     if (++attempts < maxAttempts) {
-  //       setTimeout(check, interval);
-  //     } else {
-  //       console.warn(`ASL button not found after ${maxAttempts} attempts`);
-  //     }
-  //   };
-  
-  //   check();
-  // }
-  
-  // setupASLButtonHandler(button, container) {
-  //   button.addEventListener('click', () => {
-  //     const toggled = container.classList.toggle(CONFIG.ASL.TOGGLE_CLASS);
-  //     const videoId = toggled ? container.dataset.aslid : container.dataset.videoid;
-  //     this.injectPlayer(videoId, container.dataset.skinid, null, container.dataset.sessionid);
-  //   });
-  // }
-  
-
   addStreamEnd(sessionId) {
     window?.__mr_player?.off('streamend');
     window.__mr_player.on('streamend', () => {
