@@ -244,6 +244,38 @@ class MobileRider {
       return [first];
     }
   }
+
+  initASL() {
+    const container = this.wrapper?.querySelector('.mobileRider_container');
+    if (!container) {
+      console.warn('Mobile Rider container not found for ASL initialization');
+      return;
+    }
+
+    const maxAttempts = CONFIG.ASL.MAX_CHECKS;
+    const interval = CONFIG.ASL.CHECK_INTERVAL;
+    const buttonId = CONFIG.ASL.BUTTON_ID;
+
+    let attempts = 0;
+    const check = () => {
+      const btn = container.querySelector(`#${buttonId}`);
+      if (btn) return this.setupASLButtonHandler(btn, container);
+
+      if (++attempts < maxAttempts) {
+        setTimeout(check, interval);
+      } else {
+        console.warn(`ASL button not found after ${maxAttempts} attempts`);
+      }
+    };
+
+    check();
+  }
+  
+  setupASLButtonHandler(button, container) {
+    button.addEventListener('click', () => {
+      container.classList.toggle(CONFIG.ASL.TOGGLE_CLASS);
+    });
+  }
 }
 
 export default function init(el) {
