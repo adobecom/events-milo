@@ -11,6 +11,10 @@
   display: none;
 }
 
+.mobileRider_container.is-hidden {
+  display: none;
+}
+
 .mobileRider_container {
   position: relative;
   width: 100%;

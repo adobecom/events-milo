@@ -85,7 +85,7 @@ class MobileRider {
     let container = this.wrapper.querySelector('.mobileRider_container');
     if (!container) {
       container = createTag('div', {
-        class: 'mobileRider_container',
+        class: 'mobileRider_container is-hidden',
         id: CONFIG.PLAYER.CONTAINER_ID,
         'data-videoid': videoId,
         'data-skinid': skinId,
@@ -122,7 +122,7 @@ class MobileRider {
       identifier2: aslId,
       sessionId,
     });
-  
+    this.container.classList.remove('is-hidden');
     if (sessionId) this.addStreamEnd(sessionId);
   }
   
