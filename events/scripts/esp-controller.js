@@ -3,7 +3,7 @@ import BlockMediator from './deps/block-mediator.min.js';
 
 const API_CONFIG = {
   esl: {
-    local: { host: 'http://localhost:8499' },
+    local: { host: 'https://wcms-events-service-layer-deploy-ethos102-stage-va-9c3ecd.stage.cloud.adobe.io' },
     dev: { host: 'https://wcms-events-service-layer-deploy-ethos102-stage-va-9c3ecd.stage.cloud.adobe.io' },
     dev02: { host: 'https://wcms-events-service-layer-deploy-ethos102-stage-va-d5dc93.stage.cloud.adobe.io' },
     stage: { host: 'https://events-service-layer-stage.adobe.io' },
@@ -11,7 +11,7 @@ const API_CONFIG = {
     prod: { host: 'https://events-service-layer.adobe.io' },
   },
   esp: {
-    local: { host: 'http://localhost:8500' },
+    local: { host: 'https://wcms-events-service-platform-deploy-ethos102-stage-caff5f.stage.cloud.adobe.io' },
     dev: { host: 'https://wcms-events-service-platform-deploy-ethos102-stage-caff5f.stage.cloud.adobe.io' },
     dev02: { host: 'https://wcms-events-service-platform-deploy-ethos102-stage-c81eb6.stage.cloud.adobe.io' },
     stage: { host: 'https://events-service-platform-stage-or2.adobe.io' },
