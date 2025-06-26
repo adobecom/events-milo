@@ -1,5 +1,4 @@
-import { getIcon, getMetadata } from './utils.js';
-import miloReplaceKey from './milo-utils.js';
+import { getIcon, getMetadata, miloReplaceKey } from './utils.js';
 
 export function updateAnalyticTag(el, newVal) {
   const eventTitle = getMetadata('event-title');

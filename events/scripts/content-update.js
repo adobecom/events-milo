@@ -8,18 +8,14 @@ import {
   getSusiOptions,
   getEventServiceEnv,
   parseMetadataPath,
+  miloReplaceKey,
 } from './utils.js';
 import { rsvpStateManager } from './rsvp-state-manager.js';
-import miloReplaceKeyFn from './milo-utils.js';
 import { setCtaState as setCtaStateFn, updateAnalyticTag as updateAnalyticTagFn } from './rsvp-state-logic.js';
 
 const preserveFormatKeys = [
   'description',
 ];
-
-export async function miloReplaceKey(miloLibs, key, sheetName) {
-  return miloReplaceKeyFn(miloLibs, key, sheetName);
-}
 
 export function updateAnalyticTag(el, newVal) {
   return updateAnalyticTagFn(el, newVal);
