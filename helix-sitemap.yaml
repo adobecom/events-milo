@@ -46,24 +46,24 @@ sitemaps:
         source: /de/events/default/metadata.json?sheet=sitemap
         destination: /de/events/create-now/events-sitemap.xml
         hreflang: de
-        alternate: /{path}
+        alternate: /de/{path}
       fr:
         source: /fr/events/default/metadata.json?sheet=sitemap
         destination: /fr/events/create-now/events-sitemap.xml
         hreflang: fr
-        alternate: /{path}
+        alternate: /fr/{path}
       es:
         source: /es/events/default/metadata.json?sheet=sitemap
         destination: /es/events/create-now/events-sitemap.xml
         hreflang: es
-        alternate: /{path}
+        alternate: /es/{path}
       th_en:
         source: /th_en/events/default/metadata.json?sheet=sitemap
         destination: /th_en/events/create-now/events-sitemap.xml
         hreflang: th-EN
-        alternate: /{path}
+        alternate: /th_en/{path}
       uk:
         source: /uk/events/default/metadata.json?sheet=sitemap
         destination: /uk/events/create-now/events-sitemap.xml
         hreflang: en-GB
-        alternate: /{path}
+        alternate: /uk/{path}
