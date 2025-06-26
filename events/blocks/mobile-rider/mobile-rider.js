@@ -81,10 +81,9 @@ class MobileRider {
 
   injectPlayer(videoId, skinId, aslId = null, sessionId = null) {
     if (!this.wrapper) return;
-
+  
     let container = this.wrapper.querySelector('.mobileRider_container');
     if (!container) {
-      this.wrapper.appendChild(container);
       container = createTag('div', {
         class: 'mobileRider_container',
         id: CONFIG.PLAYER.CONTAINER_ID,
@@ -93,29 +92,40 @@ class MobileRider {
         'data-aslid': aslId,
         'data-sessionid': sessionId,
       });
+      this.wrapper.appendChild(container); // ✅ only on creation
     } else {
-      Object.assign(container.dataset, { videoid: videoId, skinid: skinId, aslid: aslId, sessionid: sessionId });
+      Object.assign(container.dataset, {
+        videoid: videoId,
+        skinid: skinId,
+        aslid: aslId,
+        sessionid: sessionId,
+      });
     }
-
+  
     container.querySelector(`#${CONFIG.PLAYER.VIDEO_ID}`)?.remove();
-
-    const video = createTag('video', { id: CONFIG.PLAYER.VIDEO_ID, class: CONFIG.PLAYER.VIDEO_CLASS, controls: true });
+  
+    const video = createTag('video', {
+      id: CONFIG.PLAYER.VIDEO_ID,
+      class: CONFIG.PLAYER.VIDEO_CLASS,
+      controls: true,
+    });
     container.appendChild(video);
-
+  
     if (!video || !window.mobilerider) return;
-
+  
     window.__mr_player?.dispose();
-
+  
     window.mobilerider.embed(video.id, videoId, skinId, {
       ...CONFIG.PLAYER.DEFAULT_OPTIONS,
       analytics: { provider: CONFIG.ANALYTICS.PROVIDER },
       identifier1: videoId,
       identifier2: aslId,
       sessionId,
-    }); 
-
+    });
+  
     if (sessionId) this.addStreamEnd(sessionId);
   }
+  
   
   addStreamEnd(sessionId) {
     window?.__mr_player?.off('streamend');
