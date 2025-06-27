@@ -11,11 +11,11 @@
   display: none;
 }
 
-.mobile-rider .mobileRider_container .is-hidden {
+.mobileRider_container .is-hidden {
   display: none;
 }
 
-.mobile-rider .mobileRider_container .isASL {
+.mobileRider_container .isASL {
   position: relative;
   width: 100%;
   padding-bottom: 56.25%; /* 16:9 aspect ratio fallback */
