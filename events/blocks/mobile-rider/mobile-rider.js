@@ -81,51 +81,41 @@ class MobileRider {
 
   injectPlayer(videoId, skinId, aslId = null, sessionId = null) {
     if (!this.wrapper) return;
-  
+
     let container = this.wrapper.querySelector('.mobileRider_container');
     if (!container) {
       container = createTag('div', {
-        class: 'mobileRider_container is-hidden',
+        class: 'mobileRider_container',
         id: CONFIG.PLAYER.CONTAINER_ID,
         'data-videoid': videoId,
         'data-skinid': skinId,
         'data-aslid': aslId,
         'data-sessionid': sessionId,
       });
-      this.wrapper.appendChild(container); // ✅ only on creation
+      this.wrapper.appendChild(container);
     } else {
-      Object.assign(container.dataset, {
-        videoid: videoId,
-        skinid: skinId,
-        aslid: aslId,
-        sessionid: sessionId,
-      });
+      Object.assign(container.dataset, { videoid: videoId, skinid: skinId, aslid: aslId, sessionid: sessionId });
     }
-  
+
     container.querySelector(`#${CONFIG.PLAYER.VIDEO_ID}`)?.remove();
-  
-    const video = createTag('video', {
-      id: CONFIG.PLAYER.VIDEO_ID,
-      class: CONFIG.PLAYER.VIDEO_CLASS,
-      controls: true,
-    });
+
+    const video = createTag('video', { id: CONFIG.PLAYER.VIDEO_ID, class: CONFIG.PLAYER.VIDEO_CLASS, controls: true });
     container.appendChild(video);
-  
+
     if (!video || !window.mobilerider) return;
-  
+
     window.__mr_player?.dispose();
-  
+
     window.mobilerider.embed(video.id, videoId, skinId, {
       ...CONFIG.PLAYER.DEFAULT_OPTIONS,
       analytics: { provider: CONFIG.ANALYTICS.PROVIDER },
       identifier1: videoId,
       identifier2: aslId,
       sessionId,
-    });
-    this.container.classList.remove('is-hidden');
+    }); 
+    if (aslId) this.initASL();
     if (sessionId) this.addStreamEnd(sessionId);
   }
-  
   
   addStreamEnd(sessionId) {
     window?.__mr_player?.off('streamend');
@@ -255,6 +245,7 @@ class MobileRider {
   }
 
   initASL() {
+    console.log('ASL Init called');
     const container = this.wrapper?.querySelector('.mobileRider_container');
     if (!container) {
       console.warn('Mobile Rider container not found for ASL initialization');
@@ -282,7 +273,11 @@ class MobileRider {
   
   setupASLButtonHandler(button, container) {
     button.addEventListener('click', () => {
-      container.classList.toggle(CONFIG.ASL.TOGGLE_CLASS);
+      if (!container?.classList?.contains(toggleClass)) {
+        container?.classList?.add(toggleClass);
+        console.log('ASL enabled');
+        this.initASL();
+      }
     });
   }
 }
