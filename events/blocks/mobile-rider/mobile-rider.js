@@ -273,8 +273,8 @@ class MobileRider {
   
   setupASLButtonHandler(button, container) {
     button.addEventListener('click', () => {
-      if (!container?.classList?.contains(toggleClass)) {
-        container?.classList?.add(toggleClass);
+      if (!container?.classList?.contains(this.config.ASL.TOGGLE_CLASS)) {
+        container?.classList?.add(this.config.ASL.TOGGLE_CLASS);
         console.log('ASL enabled');
         this.initASL();
       }
