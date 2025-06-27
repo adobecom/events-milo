@@ -82,7 +82,7 @@ class MobileRider {
   injectPlayer(videoId, skinId, aslId = null, sessionId = null) {
     if (!this.wrapper) return;
 
-    let container = this.wrapper.querySelector('.mobileRider_container');
+    let container = this.wrapper.querySelector('.mobileRider_container is-hidden');
     if (!container) {
       container = createTag('div', {
         class: 'mobileRider_container',
@@ -115,6 +115,7 @@ class MobileRider {
     }); 
     if (aslId) this.initASL();
     if (sessionId) this.addStreamEnd(sessionId);
+    container?.classList.remove('is-hidden');
   }
   
   addStreamEnd(sessionId) {
