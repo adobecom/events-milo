@@ -32,7 +32,7 @@ async function loadScript() {
 
   scriptPromise = new Promise(async (res) => {
     const env = (await getConfig()).env || 'prod';
-    const s = createTag('script', { src: CONFIG.SCRIPTS[env] });
+    const s = createTag('script', { src: CONFIG.SCRIPTS[env.name] });
     s.onload = res;
     document.head.appendChild(s);
   });
