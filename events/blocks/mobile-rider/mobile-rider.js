@@ -103,7 +103,7 @@ class MobileRider {
     window.__mr_player?.dispose();
     con.querySelector(`#${CONFIG.PLAYER.VIDEO_ID}`)?.remove();
     const video = createTag('video', { id: CONFIG.PLAYER.VIDEO_ID, class: CONFIG.PLAYER.VIDEO_CLASS, controls: true });
-    con.appendChild(v);
+    con.appendChild(video);
 
     if (!video || !window.mobilerider) return;
 
