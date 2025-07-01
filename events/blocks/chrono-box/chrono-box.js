@@ -1,4 +1,4 @@
-import { readBlockConfig, LIBS, getMetadata, parseMetadataPath } from '../../scripts/utils.js';
+import { readBlockConfig, LIBS, getMetadata } from '../../scripts/utils.js';
 
 function buildScheduleDoubleLinkedList(entries) {
   if (!entries.length) return null;
@@ -32,30 +32,48 @@ function getSchedule(scheduleId) {
   return thisSchedule;
 }
 
-function conditionsPreCheck(schedule) {
-  const conditions = {};
-  const allMetadataConditionSchedules = schedule.filter((entry) => entry.conditions?.some((condition) => condition.source === 'metadata'));
-  allMetadataConditionSchedules.forEach((s) => {
-    s.conditions.forEach((condition) => {
-      const { key } = condition;
-      const metadata = parseMetadataPath(key);
-      if (metadata) {
-        conditions[key] = metadata;
-      }
-    });
-  });
-  return conditions;
+async function initPlugins(schedule) {
+  const SUPPORTED_PLUGINS = ['mobile-rider', 'metadata'];
+  const pluginsNeeded = SUPPORTED_PLUGINS.filter((plugin) => schedule.some((item) => item[plugin]));
+  const plugins = await Promise.all(pluginsNeeded.map((plugin) => import(`../../features/timing-framework/plugins/${plugin}/plugin.js`)));
+
+  // Generate a unique tabId for this instance
+  const tabId = crypto.randomUUID();
+
+  const pluginsModules = new Map();
+  await Promise.all(plugins.map(async (plugin, index) => {
+    const pluginName = pluginsNeeded[index].replace('-', '');
+    pluginsModules.set(pluginName, await plugin.default(schedule, tabId));
+  }));
+
+  return { plugins: pluginsModules, tabId };
 }
 
-function setScheduleToScheduleWorker(schedule) {
+function setScheduleToScheduleWorker(schedule, plugins, tabId) {
   const scheduleLinkedList = buildScheduleDoubleLinkedList(schedule);
-  const worker = new Worker('/events/features/timing-framework/worker.js');
-  const conditions = conditionsPreCheck(schedule);
+  const worker = new Worker('/events/features/timing-framework/worker.js', { type: 'module' });
+
+  // Get testing data from URL params
+  const params = new URLSearchParams(document.location.search);
+  const testTiming = params.get('timing');
+  const testing = testTiming ? { toggleTime: testTiming } : null;
+
+  // Convert plugin instances to their serializable state
+  const pluginStates = Object.fromEntries(
+    Array.from(plugins.entries()).map(([name, plugin]) => [
+      name,
+      {
+        type: name,
+        data: plugin.getAll ? plugin.getAll() : plugin,
+      },
+    ]),
+  );
 
   worker.postMessage({
-    message: 'schedule',
     schedule: scheduleLinkedList,
-    conditions,
+    plugins: pluginStates,
+    testing,
+    tabId,
   });
 
   return worker;
@@ -90,16 +108,12 @@ export default async function init(el) {
 
   el.innerHTML = '';
 
-  const worker = setScheduleToScheduleWorker(thisSchedule);
-
-  el.addEventListener('worker-message', (e) => {
-    const { schedule, conditions } = e.detail.data;
-
-    worker.postMessage({
-      schedule,
-      conditions,
-    });
-  });
+  const pluginsOutputs = await initPlugins(thisSchedule);
+  const worker = setScheduleToScheduleWorker(
+    thisSchedule,
+    pluginsOutputs.plugins,
+    pluginsOutputs.tabId,
+  );
 
   worker.onmessage = (event) => {
     const { pathToFragment } = event.data;
@@ -120,6 +134,18 @@ export default async function init(el) {
       spTheme.remove();
       el.removeAttribute('style');
       el.classList.remove('loading');
+    }).catch((error) => {
+      // Handle fragment loading errors
+      window.lana?.log(`Error loading fragment ${pathToFragment}: ${JSON.stringify(error)}`);
+
+      // Remove loading state
+      spTheme.remove();
+      el.removeAttribute('style');
+      el.classList.remove('loading');
+
+      // Show error state to user
+      el.innerHTML = '<div class="error-message">Unable to load content. Please refresh the page.</div>';
+      el.classList.add('error');
     });
   };
 }
