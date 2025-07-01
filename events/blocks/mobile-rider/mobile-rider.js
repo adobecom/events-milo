@@ -7,6 +7,7 @@ const CONFIG = {
   ANALYTICS: { PROVIDER: 'adobe' },
   SCRIPTS: {
     dev: '//assets.mobilerider.com/p/player-adobe-dev/player.min.js',
+    stage: '//assets.mobilerider.com/p/player-adobe-stage/player.min.js',
     prod: '//assets.mobilerider.com/p/adobe/player.min.js',
   },
   PLAYER: {
