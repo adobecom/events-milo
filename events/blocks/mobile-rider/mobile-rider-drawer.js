@@ -1,84 +1,45 @@
 import { createTag } from '../../scripts/utils.js';
 
 class Drawer {
-  constructor(container, config = {}) {
-    if (!container) throw new Error('Drawer requires a container element.');
+  constructor(root, cfg = {}) {
+    if (!root) throw new Error('Drawer needs a root element.');
 
-    this.container = container;
-    this.config = { showheader: true, ...config };
-    this.videos = this.config.videos || [];
-    this.itemsList = null;
-    this.onVideoClick = this.config.onVideoClick || this.defaultVideoClickHandler;
+    this.root = root;
+    this.cfg = cfg;
+    this.items = cfg.items || [];
+    this.renderItem = cfg.renderItem || (() => createTag('div', { class: 'drawer-item' }, 'Item'));
+    this.onClick = cfg.onItemClick || this.defaultClick;
+    this.itemsEl = null;
 
     this.render();
   }
 
   render() {
-    const drawer = this.createDrawer();
-    this.container.append(drawer);
-  }
-
-  createDrawer() {
     const drawer = createTag('div', {
-      class: 'mobile-rider-drawer',
-      'aria-label': this.config.drawertitle || 'Videos',
-      style: 'width: 100%; box-sizing: border-box;',
+      class: 'drawer',
+      'aria-label': this.cfg.ariaLabel || 'Drawer',
     });
 
     const content = createTag('div', { class: 'drawer-content' });
-    this.itemsList = createTag('div', { class: 'drawer-items' });
+    this.itemsEl = createTag('div', { class: 'drawer-items' });
 
-    if (this.config.showheader) this.itemsList.appendChild(this.createHeader());
-    this.videos.forEach((video, index) => {
-      const item = this.createVideoItem(video);
-      if (index === 0) item.classList.add('current');
-      this.itemsList.appendChild(item);
+    this.items.forEach((data, i) => {
+      const el = this.renderItem(data, i);
+      if (!el) return;
+      if (i === 0) el.classList.add('current');
+      this.bindEvents(el, data);
+      this.itemsEl.append(el);
     });
 
-    content.appendChild(this.itemsList);
-    drawer.appendChild(content);
-    return drawer;
+    content.append(this.itemsEl);
+    drawer.append(content);
+    this.root.append(drawer);
   }
 
-  createHeader() {
-    const header = createTag('div', { class: 'relatedContent-NowPlaying' });
-    header.innerHTML = `
-      <p class="relatedContent-NowPlaying-Text">Now Playing</p>
-      <span class="relatedContent-NowPlaying-sideText">Select a live session</span>
-    `;
-    return header;
-  }
-
-  createVideoItem(video) {
-    const item = createTag('div', {
-      class: 'drawer-item',
-      role: 'button',
-      tabindex: '0',
-      'data-videoid': video.videoid,
-    });
-
-    if (video.thumbnail) {
-      const thumbnail = createTag('div', { class: 'drawer-item-thumbnail' });
-      thumbnail.appendChild(createTag('img', {
-        src: video.thumbnail,
-        alt: video.title || 'video thumbnail',
-      }));
-      item.appendChild(thumbnail);
-    }
-
-    const content = createTag('div', { class: 'drawer-item-content' });
-    if (video.title) content.appendChild(createTag('div', { class: 'drawer-item-title' }, video.title));
-    if (video.description) content.appendChild(createTag('div', { class: 'drawer-item-description' }, video.description));
-    item.appendChild(content);
-
-    this.addItemEventListeners(item, video);
-    return item;
-  }
-
-  addItemEventListeners(item, video) {
-    const handler = () => this.handleVideoClick(item, video);
-    item.addEventListener('click', handler);
-    item.addEventListener('keydown', (e) => {
+  bindEvents(el, data) {
+    const handler = () => this.setActive(el, data);
+    el.addEventListener('click', handler);
+    el.addEventListener('keydown', (e) => {
       if (e.key === 'Enter' || e.key === ' ') {
         e.preventDefault();
         handler();
@@ -86,36 +47,32 @@ class Drawer {
     });
   }
 
-  async handleVideoClick(item, video) {
-    this.setActiveItem(item);
+  async setActive(el, data) {
+    this.itemsEl?.querySelectorAll('.drawer-item.current')
+      .forEach(i => i.classList.remove('current'));
+    el.classList.add('current');
     try {
-      await this.onVideoClick(item, video);
-    } catch (err) {
-      console.error('Video click handler failed:', err);
+      await this.onClick(el, data);
+    } catch (e) {
+      console.error('Drawer click failed:', e);
     }
   }
 
-  setActiveItem(target) {
-    this.itemsList.querySelectorAll('.drawer-item.current')
-      .forEach(el => el.classList.remove('current'));
-    target.classList.add('current');
+  setActiveById(id) {
+    const el = this.itemsEl?.querySelector(`[data-id="${id}"]`);
+    if (el) this.setActive(el, this.items.find(i => i.videoid === id));
   }
 
-  setActiveVideo(videoId) {
-    const target = this.itemsList?.querySelector(`[data-videoid="${videoId}"]`);
-    if (target) this.setActiveItem(target);
-  }
-
-  defaultVideoClickHandler() {
-    console.warn('No onVideoClick handler provided.');
+  defaultClick() {
+    console.warn('No drawer item click handler set.');
   }
 }
 
-export default function initDrawer(container, config) {
+export default function initDrawer(root, cfg) {
   try {
-    return new Drawer(container, config);
-  } catch (err) {
-    console.error('Drawer initialization failed:', err);
+    return new Drawer(root, cfg);
+  } catch (e) {
+    console.error('Drawer init failed:', e);
     return null;
   }
 }

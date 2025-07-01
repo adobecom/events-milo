@@ -18,7 +18,7 @@
 .mobileRider_container.isASL {
   position: relative;
   width: 100%;
-  padding-bottom: 56.25%; /* 16:9 aspect ratio fallback */
+  padding-bottom: 56.25%;
 }
 
 .mobileRider_container video {
@@ -28,10 +28,6 @@
   width: 100%;
   height: 100%;
 }
-
-/* ==========================================================================
-   Drawer Component
-   ========================================================================== */
 
 .mobile-rider-drawer {
   width: 100%;
