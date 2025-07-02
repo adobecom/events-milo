@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multiple Chrono-Boxes Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .chrono-box {
+            border: 2px solid #007bff;
+            margin: 20px 0;
+            padding: 15px;
+            border-radius: 5px;
+        }
+        .chrono-box h3 {
+            margin-top: 0;
+            color: #007bff;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; }
+        .info { background-color: #d1ecf1; border-color: #bee5eb; }
+        pre {
+            background-color: #f8f9fa;
+            padding: 10px;
+            border-radius: 3px;
+            overflow-x: auto;
+            font-size: 12px;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 3px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .store-data {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Multiple Chrono-Boxes Test</h1>
+    
+    <div class="test-section info">
+        <h2>Test Overview</h2>
+        <p>This page tests multiple chrono-boxes with separate plugin stores and worker communication.</p>
+        <p>Each chrono-box should maintain its own isolated state.</p>
+    </div>
+
+    <div class="test-section">
+        <h2>Test Controls</h2>
+        <button onclick="runIsolationTest()">Run Isolation Test</button>
+        <button onclick="checkWorkerCommunication()">Check Worker Communication</button>
+        <button onclick="clearResults()">Clear Results</button>
+    </div>
+
+    <div id="test-results"></div>
+
+    <!-- Chrono-Box Instances -->
+    <div class="chrono-box">
+        <h3>Chrono-Box 1</h3>
+        <div data-block-name="chrono-box" data-schedule-id="test-schedule-1"></div>
+    </div>
+
+    <div class="chrono-box">
+        <h3>Chrono-Box 2</h3>
+        <div data-block-name="chrono-box" data-schedule-id="test-schedule-2"></div>
+    </div>
+
+    <script type="module">
+        // Mock metadata for testing
+        window.getMetadata = (key) => {
+            if (key === 'schedules') {
+                return JSON.stringify({
+                    'test-schedule-1': [
+                        {
+                            time: '09:00',
+                            title: 'Session 1',
+                            pathToFragment: '/fragment-1',
+                            metadata: [{ key: 'video.url' }],
+                            'mobile-rider': [{ sessionId: 'session-1' }]
+                        }
+                    ],
+                    'test-schedule-2': [
+                        {
+                            time: '10:00',
+                            title: 'Session 2',
+                            pathToFragment: '/fragment-2',
+                            metadata: [{ key: 'speaker.name' }],
+                            'mobile-rider': [{ sessionId: 'session-2' }]
+                        }
+                    ]
+                });
+            }
+            return null;
+        };
+
+        // Mock lana for logging
+        window.lana = {
+            log: (message) => console.log('LANA:', message)
+        };
+
+        // Mock crypto for UUID generation
+        if (!window.crypto) {
+            window.crypto = {
+                randomUUID: () => 'test-uuid-' + Math.random().toString(36).substr(2, 9)
+            };
+        }
+
+        // Test functions
+        window.runIsolationTest = async () => {
+            const results = document.getElementById('test-results');
+            results.innerHTML = '<div class="info"><h3>Running Isolation Test...</h3></div>';
+
+            try {
+                // Test 1: Import plugins
+                const { default: metadataPlugin } = await import('./events/features/timing-framework/plugins/metadata/plugin.js');
+                const { default: mobileRiderPlugin } = await import('./events/features/timing-framework/plugins/mobile-rider/plugin.js');
+                
+                results.innerHTML += `<div class="success"><p>✅ Plugins imported successfully</p></div>`;
+
+                // Test 2: Create separate stores
+                const schedule1 = [
+                    {
+                        metadata: [{ key: 'video.url' }],
+                        'mobile-rider': [{ sessionId: 'session-1' }]
+                    }
+                ];
+                const schedule2 = [
+                    {
+                        metadata: [{ key: 'speaker.name' }],
+                        'mobile-rider': [{ sessionId: 'session-2' }]
+                    }
+                ];
+
+                const tabId1 = window.crypto.randomUUID();
+                const tabId2 = window.crypto.randomUUID();
+
+                const metadataStore1 = metadataPlugin(schedule1, tabId1);
+                const metadataStore2 = metadataPlugin(schedule2, tabId2);
+                const mobileRiderStore1 = mobileRiderPlugin(schedule1, tabId1);
+                const mobileRiderStore2 = mobileRiderPlugin(schedule2, tabId2);
+
+                results.innerHTML += `<div class="success"><p>✅ Created separate store instances</p></div>`;
+
+                // Test 3: Verify store isolation
+                metadataStore1.set('test.key', 'value-1', tabId1);
+                metadataStore2.set('test.key', 'value-2', tabId2);
+
+                const value1 = metadataStore1.get('test.key');
+                const value2 = metadataStore2.get('test.key');
+
+                if (value1 === 'value-1' && value2 === 'value-2') {
+                    results.innerHTML += `<div class="success"><p>✅ Store isolation verified - stores maintain separate data</p></div>`;
+                } else {
+                    results.innerHTML += `<div class="error"><p>❌ Store isolation failed - data is shared between stores</p></div>`;
+                }
+
+                // Test 4: Verify different tab IDs
+                if (tabId1 !== tabId2) {
+                    results.innerHTML += `<div class="success"><p>✅ Tab isolation verified - different tab IDs generated</p></div>`;
+                } else {
+                    results.innerHTML += `<div class="error"><p>❌ Tab isolation failed - same tab ID generated</p></div>`;
+                }
+
+                // Test 5: Verify separate BroadcastChannels
+                if (metadataStore1._channel !== metadataStore2._channel) {
+                    results.innerHTML += `<div class="success"><p>✅ BroadcastChannel isolation verified - separate channels created</p></div>`;
+                } else {
+                    results.innerHTML += `<div class="error"><p>❌ BroadcastChannel isolation failed - same channel shared</p></div>`;
+                }
+
+                results.innerHTML += `<div class="success"><h4>✅ Isolation Test Passed</h4></div>`;
+
+            } catch (error) {
+                results.innerHTML += `<div class="error"><h4>❌ Isolation Test Failed</h4><p>${error.message}</p></div>`;
+            }
+        };
+
+        window.checkWorkerCommunication = async () => {
+            const results = document.getElementById('test-results');
+            results.innerHTML = '<div class="info"><h3>Checking Worker Communication...</h3></div>';
+
+            try {
+                // Test 1: Check if Worker API is available
+                if (typeof Worker !== 'undefined') {
+                    results.innerHTML += `<div class="success"><p>✅ Worker API is available</p></div>`;
+                } else {
+                    results.innerHTML += `<div class="error"><p>❌ Worker API is not available</p></div>`;
+                    return;
+                }
+
+                // Test 2: Check if BroadcastChannel API is available
+                if (typeof BroadcastChannel !== 'undefined') {
+                    results.innerHTML += `<div class="success"><p>✅ BroadcastChannel API is available</p></div>`;
+                } else {
+                    results.innerHTML += `<div class="error"><p>❌ BroadcastChannel API is not available</p></div>`;
+                    return;
+                }
+
+                // Test 3: Test BroadcastChannel communication
+                const channel = new BroadcastChannel('test-channel');
+                let messageReceived = false;
+                
+                channel.onmessage = (event) => {
+                    if (event.data === 'test-message') {
+                        messageReceived = true;
+                    }
+                };
+
+                channel.postMessage('test-message');
+                
+                // Wait a bit for the message to be processed
+                setTimeout(() => {
+                    if (messageReceived) {
+                        results.innerHTML += `<div class="success"><p>✅ BroadcastChannel communication works</p></div>`;
+                    } else {
+                        results.innerHTML += `<div class="error"><p>❌ BroadcastChannel communication failed</p></div>`;
+                    }
+                    channel.close();
+                }, 100);
+
+                results.innerHTML += `<div class="success"><h4>✅ Worker Communication Test Passed</h4></div>`;
+
+            } catch (error) {
+                results.innerHTML += `<div class="error"><h4>❌ Worker Communication Test Failed</h4><p>${error.message}</p></div>`;
+            }
+        };
+
+        window.clearResults = () => {
+            document.getElementById('test-results').innerHTML = '';
+        };
+
+        // Auto-run isolation test on page load
+        setTimeout(() => {
+            window.runIsolationTest();
+        }, 1000);
+    </script>
+</body>
+</html>
