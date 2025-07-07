@@ -11,7 +11,7 @@ import {
   miloReplaceKey,
 } from './utils.js';
 import { rsvpStateManager } from './rsvp-state-manager.js';
-import { setCtaState as setCtaStateFn, updateAnalyticTag as updateAnalyticTagFn } from './rsvp-state-logic.js';
+import { setCtaState as setCtaStateFn, updateAnalyticTag as updateAnalyticTagFn } from './rsvp-state-helper.js';
 
 const preserveFormatKeys = [
   'description',

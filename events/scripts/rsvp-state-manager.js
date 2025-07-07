@@ -1,7 +1,7 @@
 import { getEvent } from './esp-controller.js';
 import { getMetadata } from './utils.js';
 import BlockMediator from './deps/block-mediator.min.js';
-import { setCtaState } from './rsvp-state-logic.js';
+import { setCtaState } from './rsvp-state-helper.js';
 
 class RSVPStateManager {
   constructor() {
