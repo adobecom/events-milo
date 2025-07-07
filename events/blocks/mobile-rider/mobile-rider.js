@@ -125,9 +125,9 @@ class MobileRider {
     con.appendChild(video);
 
     if (!video || !window.mobilerider) return;
-    console.log('Testing Purpose', this.getPlayerOptions());
+    console.log('Testing Purpose', ...CONFIG.PLAYER.DEFAULT_OPTIONS);
     window.mobilerider.embed(video.id, vid, skin, {
-      CONFIG.PLAYER.DEFAULT_OPTIONS,
+      ...CONFIG.PLAYER.DEFAULT_OPTIONS,
       analytics: { provider: CONFIG.ANALYTICS.PROVIDER },
       identifier1: vid,
       identifier2: asl,
