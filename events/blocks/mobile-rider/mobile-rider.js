@@ -10,7 +10,7 @@ const CONFIG = {
     prod: '//assets.mobilerider.com/p/adobe/player.min.js',
   },
   PLAYER: {
-    DEFAULT_OPTIONS: { autoplay: true, controls: true, muted: false },
+    DEFAULT_OPTIONS: { autoplay: true, controls: true, muted: true },
     CONTAINER_ID: 'mr-adobe',
     VIDEO_ID: 'idPlayer',
     VIDEO_CLASS: 'mobileRider_viewport',
