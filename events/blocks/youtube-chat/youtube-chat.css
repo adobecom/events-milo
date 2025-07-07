@@ -12,6 +12,12 @@
   min-height: auto;
 }
 
+.youtube-chat-container {
+  flex: 1 1 1%;
+  max-width: 100%;
+  min-height: auto;
+}
+
 .youtube-video {
   height: 100%;
   left: 0;
