@@ -180,7 +180,7 @@ class MobileRider {
       });
   
       // 👉 Insert the drawer header before the first video item
-      const itemsList = drawer?.querySelector?.('.drawer-items');
+      const itemsList = drawerRoot?.querySelector?.('.drawer-items');
       if (itemsList?.firstChild) {
         const header = this.createDrawerHeader();
         itemsList.insertBefore(header, itemsList.firstChild);
