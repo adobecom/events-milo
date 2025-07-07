@@ -29,9 +29,9 @@ function buildYouTubeStream(videoId, config, showChat) {
       class: 'youtube-chat',
       src: `https://www.youtube.com/live_chat?v=${videoId}&embed_domain=${window.location.hostname}`,
     });
-    const chatWrap = createTag('div', { class: 'youtube-chat-container' }, chatIframe);
-    const chatContainer = createTag('div', { class: 'frame-container' }, chatWrap);
-    container.append(chatContainer);
+    const chatContainer = createTag('div', { class: 'frame-container' }, chatIframe);
+    const chatWrap = createTag('div', { class: 'youtube-chat-container' }, chatContainer);
+    container.append(chatWrap);
   }
   
 
