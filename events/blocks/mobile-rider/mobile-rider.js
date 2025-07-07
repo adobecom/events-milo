@@ -180,9 +180,10 @@ class MobileRider {
       });
   
       // 👉 Insert the drawer header before the first video item
-      if (drawerRoot?.firstChild) {
+      const itemsList = drawer?.querySelector?.('.drawer-items');
+      if (itemsList?.firstChild) {
         const header = this.createDrawerHeader();
-        drawerRoot.insertBefore(header, drawerRoot.firstChild);
+        itemsList.insertBefore(header, itemsList.firstChild);
       }
     } catch (e) {
       console.error('Drawer load failed:', e);
