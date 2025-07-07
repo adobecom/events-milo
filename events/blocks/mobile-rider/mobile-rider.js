@@ -135,14 +135,13 @@ class MobileRider {
     window.__mr_stream_published = null;
   }
 
-  createDrawerHeader() {
-    if (this.root.querySelector('.relatedContent-NowPlaying')) return;
+  drawerHeading() {
     const header = createTag('div', { class: 'relatedContent-NowPlaying' });
     header.innerHTML = `
       <p class="relatedContent-NowPlaying-Text">Now Playing</p>
       <span class="relatedContent-NowPlaying-sideText">Select a live session</span>
     `;
-    this.root.prepend(header);
+    return header;
   }
 
   async initDrawer(vList) {
@@ -182,7 +181,7 @@ class MobileRider {
       // 👉 Insert the drawer header before the first video item
       const itemsList = drawer?.itemsEl;
       if (itemsList?.firstChild) {
-        const header = this.createDrawerHeader();
+        const header = this.drawerHeading();
         itemsList.insertBefore(header, itemsList.firstChild);
       }
     } catch (e) {
