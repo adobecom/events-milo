@@ -204,11 +204,11 @@ describe('autoUpdateContent - Array Iteration', () => {
       const testText = 'Contact us: [[@array(contacts),]]';
       const matches = [];
       let match;
-      
+      // eslint-disable-next-line no-cond-assign
       while ((match = META_REG.exec(testText)) !== null) {
         matches.push(match);
       }
-      
+
       console.log('META_REG matches:', matches);
       expect(matches.length).to.be.greaterThan(0);
       expect(matches[0][1]).to.equal('@array(contacts),');
@@ -415,7 +415,7 @@ describe('autoUpdateContent - Array Iteration', () => {
       setMetadata('speakers', JSON.stringify([
         { name: 'Dr. Alice Brown', title: 'Senior Researcher' },
         { name: 'Prof. Charlie Wilson', title: 'Professor' },
-        { name: 'Jane Smith', title: 'Engineer' }
+        { name: 'Jane Smith', title: 'Engineer' },
       ]));
       setMetadata('event-id', 'test-event');
 
@@ -443,7 +443,7 @@ describe('autoUpdateContent - Array Iteration', () => {
       // Set up test metadata with array of objects
       setMetadata('speakers', JSON.stringify([
         { name: 'Dr. Alice Brown', title: 'Senior Researcher' },
-        { name: 'Prof. Charlie Wilson', title: 'Professor' }
+        { name: 'Prof. Charlie Wilson', title: 'Professor' },
       ]));
       setMetadata('event-id', 'test-event');
 
@@ -468,9 +468,9 @@ describe('autoUpdateContent - Array Iteration', () => {
       setMetadata('event-data', JSON.stringify({
         speakers: [
           { name: 'Dr. Alice Brown', title: 'Senior Researcher' },
-          { name: 'Prof. Charlie Wilson', title: 'Professor' }
+          { name: 'Prof. Charlie Wilson', title: 'Professor' },
         ],
-        other: 'data'
+        other: 'data',
       }));
       setMetadata('event-id', 'test-event');
 
@@ -494,7 +494,7 @@ describe('autoUpdateContent - Array Iteration', () => {
       // Set up test metadata with array of objects
       setMetadata('speakers', JSON.stringify([
         { name: 'Dr. Alice Brown', title: 'Senior Researcher' },
-        { name: 'Prof. Charlie Wilson', title: 'Professor' }
+        { name: 'Prof. Charlie Wilson', title: 'Professor' },
       ]));
       setMetadata('event-id', 'test-event');
 
@@ -519,7 +519,7 @@ describe('autoUpdateContent - Array Iteration', () => {
       setMetadata('speakers', JSON.stringify([
         { name: 'Dr. Alice Brown', title: 'Senior Researcher' },
         { name: 'Prof. Charlie Wilson' }, // Missing title
-        { title: 'Engineer' } // Missing name
+        { title: 'Engineer' }, // Missing name
       ]));
       setMetadata('event-id', 'test-event');
 
