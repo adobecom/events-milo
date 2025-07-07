@@ -86,7 +86,7 @@ class MobileRider {
 
   extractPlayerOverrides() {
     const overrides = {};
-    [CONFIG.PLAYER.DEFAULT_OPTIONS].forEach((key) => {
+    Object.keys(CONFIG.PLAYER.DEFAULT_OPTIONS).forEach((key) => {
       if (key in this.cfg) {
         const val = this.cfg[key];
         overrides[key] = val === 'true' || val === true;
@@ -125,9 +125,9 @@ class MobileRider {
     con.appendChild(video);
 
     if (!video || !window.mobilerider) return;
-    console.log('Testing Purpose', ...CONFIG.PLAYER.DEFAULT_OPTIONS);
+    console.log('Testing Purpose', this.getPlayerOptions());
     window.mobilerider.embed(video.id, vid, skin, {
-      ...CONFIG.PLAYER.DEFAULT_OPTIONS,
+      CONFIG.PLAYER.DEFAULT_OPTIONS,
       analytics: { provider: CONFIG.ANALYTICS.PROVIDER },
       identifier1: vid,
       identifier2: asl,
