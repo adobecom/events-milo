@@ -84,6 +84,24 @@ class MobileRider {
     }
   }
 
+  extractPlayerOverrides() {
+    const overrides = {};
+    Object.keys(CONFIG.PLAYER.DEFAULT_OPTIONS).forEach((key) => {
+      if (key in this.cfg) {
+        const val = this.cfg[key];
+        overrides[key] = val === 'true' || val === true;
+      }
+    });
+    return overrides;
+  }
+
+  getPlayerOptions() {
+    return {
+      ...CONFIG.PLAYER.DEFAULT_OPTIONS,
+      ...this.extractPlayerOverrides(),
+    };
+  }  
+
   injectPlayer(vid, skin, asl = null, sid = null) {
     if (!this.wrap) return;
     let con = this.wrap.querySelector('.mobileRider_container');
@@ -107,9 +125,9 @@ class MobileRider {
     con.appendChild(video);
 
     if (!video || !window.mobilerider) return;
-
+    console.log('Testing Purpose', ...this.getPlayerOptions());
     window.mobilerider.embed(video.id, vid, skin, {
-      ...CONFIG.PLAYER.DEFAULT_OPTIONS,
+      ...this.getPlayerOptions(),
       analytics: { provider: CONFIG.ANALYTICS.PROVIDER },
       identifier1: vid,
       identifier2: asl,
