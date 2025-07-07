@@ -18,6 +18,14 @@
   min-height: auto;
 }
 
+.youtube-video {
+    height: 100%;
+    width: 100%;
+    left: 0;
+    top: 0;
+    position: absolute;
+}
+
 /* Responsive design for mobile */
 @media (max-width: 768px) {
   .youtube-stream {
