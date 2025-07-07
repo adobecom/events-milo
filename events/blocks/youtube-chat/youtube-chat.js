@@ -2,48 +2,57 @@ import { createTag, readBlockConfig } from '../../scripts/utils.js';
 
 export default async function init(block) {
   const config = readBlockConfig(block);
-  if (!config['video-id']) return;
+  const videoId = config['video-id'];
+  const chatEnabled = config['chat-id'];
 
+  if (!videoId) return;
+
+  block.textContent = ''; // Clear authored content first
+  const streamEl = buildYouTubeStream(videoId, config, chatEnabled);
+  block.append(streamEl);
+}
+
+function buildYouTubeStream(videoId, config, showChat) {
   const container = createTag('div', { class: 'youtube-stream' });
-
-  // Build YouTube embed URL with parameters
-  const embedUrl = buildEmbedUrl(config);
 
   const videoIframe = createTag('iframe', {
     class: 'youtube-video',
-    src: embedUrl,
+    src: buildEmbedUrl(videoId, config),
     allowfullscreen: true,
   });
 
   const videoWrap = createTag('div', { class: 'youtube-video-container' }, videoIframe);
   container.append(videoWrap);
 
-  // If chat-id is present, add the chat iframe
-  if (config['chat-id']) {
+  if (showChat) {
     const chatIframe = createTag('iframe', {
       class: 'youtube-chat',
-      src: `https://www.youtube.com/live_chat?v=${config['video-id']}&embed_domain=${window.location.hostname}`,
+      src: `https://www.youtube.com/live_chat?v=${videoId}&embed_domain=${window.location.hostname}`,
     });
 
     const chatWrap = createTag('div', { class: 'youtube-chat-container' }, chatIframe);
     container.append(chatWrap);
   }
 
-  block.textContent = ''; // Clean authored content
-  block.append(container);
+  return container;
 }
 
-function buildEmbedUrl(config) {
-  const baseUrl = `https://www.youtube.com/embed/${config['video-id']}`;
+function buildEmbedUrl(videoId, config) {
+  const base = `https://www.youtube.com/embed/${videoId}`;
   const params = new URLSearchParams();
 
-  // Add optional parameters
-  if (config.autoplay === 'true') params.append('autoplay', '1');
-  if (config.mute === 'true') params.append('mute', '1');
-  if (config['show-controls'] === 'true') params.append('controls', '1');
-  if (config['show-player-title-actions'] === 'true') params.append('modestbranding', '0');
-  if (config['show-suggestions-after-video-ends'] === 'true') params.append('rel', '1');
+  const options = {
+    autoplay: 'autoplay',
+    mute: 'mute',
+    'show-controls': 'controls',
+    'show-player-title-actions': 'modestbranding',
+    'show-suggestions-after-video-ends': 'rel',
+  };
 
-  const queryString = params.toString();
-  return queryString ? `${baseUrl}?${queryString}` : baseUrl;
+  Object.entries(options).forEach(([key, param]) => {
+    if (config[key] === 'true') params.append(param, '1');
+  });
+
+  const query = params.toString();
+  return query ? `${base}?${query}` : base;
 }
