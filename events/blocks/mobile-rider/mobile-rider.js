@@ -10,7 +10,7 @@ const CONFIG = {
     prod: '//assets.mobilerider.com/p/adobe/player.min.js',
   },
   PLAYER: {
-    DEFAULT_OPTIONS: { autoplay: true, controls: true, muted: true },
+    DEFAULT_OPTIONS: { autoplay: true, controls: true, muted: false },
     CONTAINER_ID: 'mr-adobe',
     VIDEO_ID: 'idPlayer',
     VIDEO_CLASS: 'mobileRider_viewport',
@@ -125,7 +125,6 @@ class MobileRider {
     con.appendChild(video);
 
     if (!video || !window.mobilerider) return;
-    console.log('Testing Purpose', {...this.getPlayerOptions()});
     window.mobilerider.embed(video.id, vid, skin, {
       ...this.getPlayerOptions(),
       analytics: { provider: CONFIG.ANALYTICS.PROVIDER },
