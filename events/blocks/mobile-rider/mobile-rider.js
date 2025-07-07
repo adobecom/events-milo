@@ -7,7 +7,6 @@ const CONFIG = {
   ANALYTICS: { PROVIDER: 'adobe' },
   SCRIPTS: {
     dev: '//assets.mobilerider.com/p/player-adobe-dev/player.min.js',
-    stage: '//assets.mobilerider.com/p/player-adobe-dev/player.min.js',
     prod: '//assets.mobilerider.com/p/adobe/player.min.js',
   },
   PLAYER: {
@@ -32,10 +31,13 @@ async function loadScript() {
 
   scriptPromise = new Promise(async (res) => {
     const env = (await getConfig()).env || 'prod';
-    const s = createTag('script', { src: CONFIG.SCRIPTS[env.name] });
+    const isProd = env === 'prod';
+    const src = isProd ? CONFIG.SCRIPTS.prod : CONFIG.SCRIPTS.dev;
+    const s = createTag('script', { src });
     s.onload = res;
     document.head.appendChild(s);
   });
+
   return scriptPromise;
 }
 
@@ -61,7 +63,6 @@ class MobileRider {
         const vid = this.cfg.concurrentVideos?.[0];
         if (vid?.videoid) {
           await this.loadPlayer(vid.videoid, vid.aslid, vid.sessionid);
-          this.addDrawerHeader();
           this.initDrawer(this.cfg.concurrentVideos);
           await this.updateStatus(this.cfg.concurrentVideos);
         } else console.log('Missing video config.');
@@ -134,7 +135,7 @@ class MobileRider {
     window.__mr_stream_published = null;
   }
 
-  addDrawerHeader() {
+  createDrawerHeader() {
     if (this.root.querySelector('.relatedContent-NowPlaying')) return;
     const header = createTag('div', { class: 'relatedContent-NowPlaying' });
     header.innerHTML = `
@@ -144,10 +145,11 @@ class MobileRider {
     this.root.prepend(header);
   }
 
-  async initDrawer(list) {
-    if (!list?.length) return;
+  async initDrawer(vList) {
+    if (!vList?.length) return;
     try {
       const { default: createDrawer } = await import('./mobile-rider-drawer.js');
+  
       const renderItem = (v) => {
         const item = createTag('div', {
           class: 'drawer-item',
@@ -155,28 +157,37 @@ class MobileRider {
           role: 'button',
           tabindex: '0',
         });
+  
         if (v.thumbnail) {
           const thumbImg = createTag('div', { class: 'drawer-item-thumbnail' });
           thumbImg.appendChild(createTag('img', { src: v.thumbnail, alt: v.title || 'video thumbnail' }));
           item.appendChild(thumbImg);
         }
+  
         const vidCon = createTag('div', { class: 'drawer-item-content' });
         if (v.title) vidCon.appendChild(createTag('div', { class: 'drawer-item-title' }, v.title));
         if (v.description) vidCon.appendChild(createTag('div', { class: 'drawer-item-description' }, v.description));
         item.appendChild(vidCon);
+  
         return item;
       };
-
-      createDrawer(this.root, {
-        items: list,
+  
+      const drawerRoot = createDrawer(this.root, {
+        items: vList,
         ariaLabel: 'Videos',
         renderItem,
         onItemClick: (_, v) => this.onDrawerClick(v),
       });
+  
+      // 👉 Insert the drawer header before the first video item
+      if (drawerRoot?.firstChild) {
+        const header = this.createDrawerHeader();
+        drawerRoot.insertBefore(header, drawerRoot.firstChild);
+      }
     } catch (e) {
       console.error('Drawer load failed:', e);
     }
-  }
+  }  
 
   async onDrawerClick(v) {
     try {
