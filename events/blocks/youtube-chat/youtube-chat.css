@@ -1,33 +1,43 @@
 .youtube-stream {
   display: flex;
-  flex-wrap: wrap;
   max-width: 100%;
   margin: 0 auto;
 }
 
 .youtube-video-container {
-  flex: 1 1 75%;
+  width: 75%;
+  max-width: 75%;
+  flex: 1 1 auto;
+  min-height: auto;
   position: relative;
-  padding-bottom: 56.25%; /* 16:9 ratio */
+  padding-bottom: 56.25%;
 }
 
 .youtube-chat-container {
-  flex: 1 1 25%;
-  position: relative;
+  flex: 1 1 1%;
+  max-width: 100%;
+  min-height: auto;
 }
 
 .frame-container {
-  width: 100%;
   height: 100%;
   padding-bottom: 0;
   position: relative;
+  width: 100%;
 }
 
-.youtube-video,
-.youtube-chat {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
+.frame-container iframe {
   height: 100%;
+  width: 100%;
+  left: 0;
+  top: 0;
+  position: absolute;
+}
+
+.youtube-video {
+  height: 100%;
+  width: 100%;
+  left: 0;
+  top: 0;
+  position: absolute;
 }
