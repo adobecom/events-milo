@@ -172,7 +172,7 @@ class MobileRider {
         return item;
       };
   
-      const drawerRoot = createDrawer(this.root, {
+      const drawer = createDrawer(this.root, {
         items: vList,
         ariaLabel: 'Videos',
         renderItem,
@@ -180,7 +180,7 @@ class MobileRider {
       });
   
       // 👉 Insert the drawer header before the first video item
-      const itemsList = drawerRoot?.querySelector?.('.drawer-items');
+      const itemsList = drawer?.itemsEl;
       if (itemsList?.firstChild) {
         const header = this.createDrawerHeader();
         itemsList.insertBefore(header, itemsList.firstChild);
