@@ -20,12 +20,27 @@
   min-height: auto;
 }
 
+.frame-container {
+  height: 100%;
+  padding-bottom: 0;
+  position: relative;
+  width: 100%;
+}
+
 .youtube-video {
-    height: 100%;
-    width: 100%;
-    left: 0;
-    top: 0;
-    position: absolute;
+  height: 100%;
+  width: 100%;
+  left: 0;
+  top: 0;
+  position: absolute;
+}
+
+.youtube-chat {
+  height: 100%;
+  width: 100%;
+  left: 0;
+  top: 0;
+  position: absolute;
 }
 
 /* Responsive design for mobile */
