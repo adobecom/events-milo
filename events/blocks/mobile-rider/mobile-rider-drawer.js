@@ -8,7 +8,7 @@ class Drawer {
     this.cfg = cfg;
     this.items = cfg.items || [];
     this.renderItem = cfg.renderItem || (() => createTag('div', { class: 'drawer-item' }, 'Item'));
-    this.onClick = cfg.onItemClick || this.defaultClick;
+    this.onClick = cfg.onItemClick || this.defaultClick.bind(this);
     this.itemsEl = null;
 
     this.render();
@@ -54,7 +54,7 @@ class Drawer {
     try {
       await this.onClick(el, data);
     } catch (e) {
-      console.error('Drawer click failed:', e);
+      window.lana?.log(`Drawer click failed: ${e.message}`);
     }
   }
 
@@ -63,8 +63,9 @@ class Drawer {
     if (el) this.setActive(el, this.items.find(i => i.videoid === id));
   }
 
-  defaultClick() {
-    console.warn('No drawer item click handler set.');
+  defaultClick(e) {
+    e?.stopPropagation();
+    window.lana?.log('[Drawer] Click ignored — no handler set.');
   }
 }
 

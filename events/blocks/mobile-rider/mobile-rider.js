@@ -64,15 +64,14 @@ class MobileRider {
         if (vid?.videoid) {
           await this.loadPlayer(vid.videoid, vid.aslid, vid.sessionid);
           this.initDrawer(this.cfg.concurrentVideos);
-          await this.updateStatus(this.cfg.concurrentVideos);
-        } else console.log('Missing video config.');
+        } else window.lana?.log('Missing video-id in config.');
       } else {
         if (this.cfg.videoid) {
           await this.loadPlayer(this.cfg.videoid, this.cfg.aslid, this.cfg.sessionid);
-        } else console.log('Missing videoid in config.');
+        } else window.lana?.log('Missing video-id in config.');
       }
     } catch (e) {
-      console.error('Init error:', e);
+      window.lana?.log(`MobileRider Init error: ${e.message}`);
     }
   }
 
@@ -80,7 +79,7 @@ class MobileRider {
     try {
       this.injectPlayer(vid, this.cfg.skinid, asl, sid);
     } catch (e) {
-      console.error('Player error', e);
+      window.lana?.log(`Failed to initialize the player: ${e.message}`)
     }
   }
 
@@ -194,25 +193,24 @@ class MobileRider {
         renderItem,
         onItemClick: (_, v) => this.onDrawerClick(v),
       });
-  
-      // 👉 Insert the drawer header before the first video item
+
       const itemsList = drawer?.itemsEl;
       if (itemsList?.firstChild) {
         const header = this.drawerHeading();
         itemsList.insertBefore(header, itemsList.firstChild);
       }
     } catch (e) {
-      console.error('Drawer load failed:', e);
+      window.lana?.log(`Drawer load failed: ${e.message}`);
     }
   }  
 
   async onDrawerClick(v) {
     try {
       const live = await this.checkLive(v);
-      if (!live) return console.log('This stream is not currently live.');
+      if (!live) return window.lana?.log(`This stream is not currently live: ${v.videoid}`);
       this.injectPlayer(v.videoid, this.cfg.skinid, v.aslid, v.sessionid);
     } catch (e) {
-      console.error('Drawer click error:', e);
+      window.lana?.log(`Drawer item click error: ${e.message}`);
     }
   }
 
@@ -225,23 +223,7 @@ class MobileRider {
   }
 
   setStatus(sid, live) {
-    if (sid && window.mobileRiderStore) window.mobileRiderStore.set(sid, live);
-  }
-
-  async updateStatus(videos = []) {
-    if (!Array.isArray(videos) || !videos.length) return;
-    const valid = videos.filter(v => v?.videoid && v?.sessionid);
-    if (!valid.length) return;
-    const ids = valid.map(v => v.videoid);
-    try {
-      const { active = [] } = await this.ctrl.getMediaStatus(ids);
-      valid.forEach(v => {
-        const live = active.includes(v.videoid);
-        this.setStatus(v.sessionid, live);
-      });
-    } catch (e) {
-      window.lana?.log?.(`Live check failed: ${e.message}`);
-    }
+    if (sid && window.mobileRiderStore) window.mobileRiderStore?.set(sid, live);
   }
 
   initASL() {
@@ -316,6 +298,6 @@ export default function init(el) {
   try {
     new MobileRider(el);
   } catch (e) {
-    console.error('Mobile Rider init failed', e);
+    window.lana?.log(`Mobile Rider init failed: ${e.message}`);
   }
 }
