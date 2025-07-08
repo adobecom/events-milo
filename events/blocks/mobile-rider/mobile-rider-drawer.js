@@ -63,9 +63,8 @@ class Drawer {
     if (el) this.setActive(el, this.items.find(i => i.videoid === id));
   }
 
-  defaultClick(e) {
-    e?.stopPropagation();
-    window.lana?.log('[Drawer] Click ignored — no handler set.');
+  defaultClick() {
+    window.lana?.log('Drawer Click ignored — no handler set.');
   }
 }
 
