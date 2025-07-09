@@ -1,5 +1,6 @@
 import { LIBS } from '../../scripts/utils.js';
-import MobileRiderController from '../../features/timing-framework/plugins/mobile-rider/mobile-rider-controller.js';
+import { MobileRiderController } from '../../features/timing-framework/plugins/mobile-rider/mobile-rider-controller.js';
+import { mobileRiderStore } from '../../features/timing-framework/plugins/mobile-rider/plugin.js';
 
 const { createTag, getConfig } = await import(`${LIBS}/utils/utils.js`);
 
@@ -133,15 +134,18 @@ class MobileRider {
     });
 
     if (asl) this.initASL();
-    if (sid) this.onStreamEnd(sid);
+    if (sid) {
+      const isActive = mobileRiderStore.get(sid);
+      if (isActive) this.onStreamEnd(sid);
+    }
     con.classList.remove('is-hidden');
   }
 
   onStreamEnd(sid) {
     window.__mr_player?.off('streamend');
     window.__mr_player?.on('streamend', () => {
+      this.setStatus(sid, false);
       this.dispose();
-      window.updateMobileRiderSession?.(sid, false);
     });
   }
 
@@ -216,14 +220,18 @@ class MobileRider {
 
   async checkLive(v) {
     if (!v?.videoid || !v?.sessionid) return false;
-    const { active = [] } = await this.ctrl.getMediaStatus([v.videoid]);
-    const live = active.includes(v.videoid);
-    this.setStatus(v.sessionid, live);
-    return live;
+    try {
+      const active = await this.ctrl.isMediaActive(v.videoid);
+      this.setStatus(v.sessionid, active);
+      return active;
+    } catch (e) {
+      window.lana?.log?.(`checkLive failed: ${e.message}`);
+      return false;
+    }
   }
 
   setStatus(sid, live) {
-    if (sid && window.mobileRiderStore) window.mobileRiderStore?.set(sid, live);
+    if (sid) mobileRiderStore.set(sid, live);
   }
 
   initASL() {
