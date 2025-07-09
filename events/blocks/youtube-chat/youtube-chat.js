@@ -14,14 +14,14 @@ export default async function init(block) {
 
 function buildYouTubeStream(videoId, config, showChat) {
   const container = createTag('div', { class: 'youtube-stream' });
-
   const videoIframe = createTag('iframe', {
     class: 'youtube-video',
     src: buildEmbedUrl(videoId, config),
     allowfullscreen: true,
   });
 
-  const videoWrap = createTag('div', { class: 'youtube-video-container' }, videoIframe);
+  const video = createTag('div', { class: 'video' }, videoIframe);
+  const videoWrap = createTag('div', { class: 'youtube-video-container'}, video);
   container.append(videoWrap);
 
   if (showChat) {
