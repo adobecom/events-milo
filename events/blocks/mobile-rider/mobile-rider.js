@@ -1,5 +1,5 @@
 import { LIBS } from '../../scripts/utils.js';
-import { MobileRiderController } from '../../features/timing-framework/plugins/mobile-rider/mobile-rider-controller.js';
+import MobileRiderController from '../../features/timing-framework/plugins/mobile-rider/mobile-rider-controller.js';
 import { mobileRiderStore } from '../../features/timing-framework/plugins/mobile-rider/plugin.js';
 
 const { createTag, getConfig } = await import(`${LIBS}/utils/utils.js`);
