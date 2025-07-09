@@ -22,6 +22,7 @@ export const EVENT_ATTENDEE_DATA_FILTER = {
  */
 
 export const BASE_ATTENDEE_DATA_FILTER = {
+  attendeeId: { type: 'string', submittable: true },
   firstName: { type: 'string', submittable: true },
   lastName: { type: 'string', submittable: true },
   email: { type: 'string', submittable: true },
@@ -48,6 +49,7 @@ export const BASE_ATTENDEE_DATA_FILTER = {
   contactMethods: { type: 'array', submittable: true },
   isGuest: { type: 'boolean', submittable: true },
   consentStringId: { type: 'string', submittable: true },
+  modificationTime: { type: 'string', submittable: true },
 };
 
 export function isValidAttribute(attr) {

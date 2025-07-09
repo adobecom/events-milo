@@ -193,9 +193,8 @@ export async function createAttendee(attendeeData) {
 export async function addAttendeeToEvent(eventId, attendee) {
   if (!eventId || !attendee) return false;
 
-  const { firstName, lastName, email, registrationStatus } = attendee;
   const { host } = API_CONFIG.esl[getEventServiceEnv()];
-  const raw = JSON.stringify({ firstName, lastName, email, registrationStatus });
+  const raw = JSON.stringify(attendee);
   const options = await constructRequestOptions('POST', raw);
 
   try {
@@ -311,6 +310,11 @@ export async function getAndCreateAndAddAttendee(eventId, attendeeData) {
   if (eventObj.data.isFull) registrationStatus = 'waitlisted';
 
   // Use EventAttendee filter for adding attendee to event
-  const eventAttendeePayload = getEventAttendeePayload({ ...newAttendeeData, registrationStatus });
+  const eventAttendeePayload = getEventAttendeePayload({
+    ...newAttendeeData,
+    ...attendeeData,
+    registrationStatus,
+  });
+  console.log('[getAndCreateAndAddAttendee] Adding attendee to event:', eventAttendeePayload);
   return addAttendeeToEvent(eventId, eventAttendeePayload);
 }
