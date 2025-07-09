@@ -203,8 +203,9 @@ describe('autoUpdateContent - Array Iteration', () => {
       const META_REG = /\[\[(.*?)\]\]/g;
       const testText = 'Contact us: [[@array(contacts),]]';
       const matches = [];
-      let match = META_REG.exec(testText);
-      while (match !== null) {
+      let match;
+      // eslint-disable-next-line no-cond-assign
+      while ((match = META_REG.exec(testText)) !== null) {
         matches.push(match);
         match = META_REG.exec(testText);
       }
