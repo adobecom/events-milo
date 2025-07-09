@@ -37,13 +37,19 @@ async function initPlugins(schedule) {
   const pluginsNeeded = SUPPORTED_PLUGINS.filter((plugin) => schedule.some((item) => item[plugin]));
   const plugins = await Promise.all(pluginsNeeded.map((plugin) => import(`../../features/timing-framework/plugins/${plugin}/plugin.js`)));
 
-  // Generate a unique tabId for this instance
-  const tabId = crypto.randomUUID();
+  // Get or create a global tabId that's shared across all chrono-boxes on this page
+  // This ensures that multiple chrono-boxes on the same page use the same tabId,
+  // allowing their plugin stores to communicate via BroadcastChannel correctly
+  let tabId = sessionStorage.getItem('chrono-box-tab-id');
+  if (!tabId) {
+    tabId = crypto.randomUUID();
+    sessionStorage.setItem('chrono-box-tab-id', tabId);
+  }
 
   const pluginsModules = new Map();
   await Promise.all(plugins.map(async (plugin, index) => {
     const pluginName = pluginsNeeded[index].replace('-', '');
-    pluginsModules.set(pluginName, await plugin.default(schedule, tabId));
+    pluginsModules.set(pluginName, await plugin.default(schedule));
   }));
 
   return { plugins: pluginsModules, tabId };

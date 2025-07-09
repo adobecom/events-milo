@@ -190,6 +190,7 @@ describe('TimingWorker', () => {
 
       worker.handleMessage({
         data: {
+          tabId: 'test-tab-id',
           plugins,
           schedule: { toggleTime: Date.now() },
         },
@@ -250,11 +251,23 @@ describe('TimingWorker', () => {
   describe('BroadcastChannel handling', () => {
     it('should only process messages from the same tab', () => {
       const metadataWorker = new TimingWorker();
-      const metadataStore = new Map();
-      metadataWorker.plugins.set('metadata', metadataStore);
 
-      // Set up the channel
-      metadataWorker.setupBroadcastChannels(new Set(['metadata']));
+      // Initialize the worker with a tabId and plugins
+      metadataWorker.handleMessage({
+        data: {
+          tabId: 'test-tab-id',
+          plugins: {
+            metadata: {
+              type: 'metadata',
+              data: {},
+            },
+          },
+          schedule: { toggleTime: Date.now() },
+        },
+      });
+
+      // Get the store from the worker's plugins
+      const metadataStore = metadataWorker.plugins.get('metadata');
       const channel = metadataWorker.channels.get('metadata');
 
       // Send message from different tab
@@ -280,11 +293,23 @@ describe('TimingWorker', () => {
 
     it('should handle mobile rider messages with tab isolation', () => {
       const riderWorker = new TimingWorker();
-      const mobileRiderStore = new Map();
-      riderWorker.plugins.set('mobileRider', mobileRiderStore);
 
-      // Set up the channel
-      riderWorker.setupBroadcastChannels(new Set(['mobileRider']));
+      // Initialize the worker with a tabId and plugins
+      riderWorker.handleMessage({
+        data: {
+          tabId: 'test-tab-id',
+          plugins: {
+            mobileRider: {
+              type: 'mobileRider',
+              data: {},
+            },
+          },
+          schedule: { toggleTime: Date.now() },
+        },
+      });
+
+      // Get the store from the worker's plugins
+      const mobileRiderStore = riderWorker.plugins.get('mobileRider');
       const channel = riderWorker.channels.get('mobileRider');
 
       // Send message from different tab

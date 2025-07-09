@@ -1,8 +1,22 @@
 import TestingManager from './testing.js';
 
+/**
+ * Gets the current tabId from sessionStorage
+ * This function is used by plugins that are not part of the worker context
+ * @returns {string} The current tabId
+ * @throws {Error} If tabId is not found in sessionStorage
+ */
+export function getCurrentTabId() {
+  const tabId = sessionStorage.getItem('chrono-box-tab-id');
+  if (!tabId) {
+    throw new Error('tabId not found in sessionStorage. Ensure chrono-box is initialized first.');
+  }
+  return tabId;
+}
+
 class TimingWorker {
   constructor() {
-    this.tabId = crypto.randomUUID();
+    this.tabId = null;
     this.plugins = new Map();
     this.channels = new Map();
     this.timerId = null;
@@ -228,10 +242,11 @@ class TimingWorker {
     // Initialize testing manager with testing data
     this.testingManager.init(testing);
 
-    // Use the tabId from the message to ensure consistency
-    if (tabId) {
-      this.tabId = tabId;
+    // Set the tabId from the message (required for plugin communication)
+    if (!tabId) {
+      throw new Error('tabId is required for worker initialization');
     }
+    this.tabId = tabId;
 
     if (plugins) {
       // Recreate store interfaces from the data

@@ -9,6 +9,7 @@ The Timing Framework is a robust system for managing dynamic content scheduling 
 1. **Chronobox Block**
    - Entry point for the timing system
    - Loads schedule from metadata or static configuration
+   - Generates and manages global tabId via sessionStorage
    - Dynamically imports and initializes required plugins
    - Creates and manages the Timing Worker
    - Handles fragment loading with loading states
@@ -27,6 +28,7 @@ The Timing Framework is a robust system for managing dynamic content scheduling 
      - Metadata Plugin: Handles metadata-based conditions
    - Plugins communicate via BroadcastChannel
    - Each plugin maintains its own state store
+   - Plugins use `getCurrentTabId()` API for unified state management
 
 ### Data Flow
 
@@ -312,12 +314,26 @@ Benefits:
 - **Cross-context**: Works across different windows, tabs, and iframes
 - **State Management**: Centralized state management for plugins
 
-#### Tab Isolation
-The framework implements tab isolation to prevent cross-tab interference:
-- Each tab instance generates a unique UUID on initialization
+#### Tab Isolation and Unification
+The framework implements a sophisticated tab management system that provides both isolation and unification:
+
+**Tab Isolation (Cross-Tab)**
+- Each browser tab generates a unique UUID stored in sessionStorage
 - All BroadcastChannel messages include the sender's tab ID
 - Messages are only processed if they originate from the same tab
 - This prevents schedule transitions in one tab from affecting others
+
+**Tab Unification (Within Tab)**
+- Multiple chrono-boxes on the same page share the same tabId via sessionStorage
+- All plugin stores within a tab are unified and communicate via BroadcastChannel
+- This ensures consistent state across all chrono-boxes on the same page
+
+**Implementation Details**
+- TabId is generated once per page session and stored in `sessionStorage.getItem('chrono-box-tab-id')`
+- Plugins automatically retrieve the tabId via `getCurrentTabId()` API (reads from sessionStorage)
+- Worker receives the tabId from the chrono-box and stores it in `this.tabId` for message filtering
+- The self-supplied approach eliminates the need for manual tabId parameter passing
+- Both worker and plugins use the same tabId source (sessionStorage for plugins, this.tabId for worker)
 
 Example message format:
 ```javascript
@@ -328,33 +344,87 @@ Example message format:
 }
 ```
 
-This isolation ensures:
-- Independent testing in different tabs
-- No interference between multiple event pages
-- Clean separation of plugin states
-- Predictable behavior in each tab
+This system ensures:
+- **Cross-tab isolation**: Independent testing in different tabs
+- **Within-tab unification**: Multiple chrono-boxes share plugin state
+- **No interference**: Clean separation between different browser tabs
+- **Predictable behavior**: Consistent state management within each tab
 
 ### Implementation Example
 
 ```javascript
+// Chrono-box initialization with tabId management
+let tabId = sessionStorage.getItem('chrono-box-tab-id');
+if (!tabId) {
+  tabId = crypto.randomUUID();
+  sessionStorage.setItem('chrono-box-tab-id', tabId);
+}
+
 // Worker setup
 const worker = new Worker('/events/features/timing-framework/worker.js');
 
 // Plugin communication via BroadcastChannel
 const channel = new BroadcastChannel('metadata-store');
 channel.onmessage = (event) => {
-  const { key, value } = event.data;
-  // Handle plugin state updates
+  const { tabId: messageTabId, key, value } = event.data;
+  // Only process messages from the same tab
+  if (messageTabId === tabId) {
+    // Handle plugin state updates
+  }
 };
 
 // Worker communication
 worker.postMessage({
-  message: 'schedule',
   schedule: scheduleLinkedList,
   plugins: pluginStates,
   testing,
+  tabId, // Pass the unified tabId to the worker
 });
 ```
+
+### Plugin Development
+
+When creating new plugins, the tabId is automatically handled internally:
+
+```javascript
+import { getCurrentTabId } from '../../worker.js';
+
+export const yourPluginStore = {
+  get(key) {
+    return store.get(key);
+  },
+
+  set(key, value) {
+    const tabId = getCurrentTabId(); // Automatically retrieved from sessionStorage
+    store.set(key, value);
+    channel.postMessage({ key, value, tabId });
+  },
+
+  getAll() {
+    return Object.fromEntries(store);
+  },
+};
+
+export default function init(schedule) {
+  // Your plugin logic here
+  // No need to manually handle tabId - it's self-supplied
+  
+  return yourPluginStore;
+}
+```
+
+**Architecture Notes:**
+- **Plugins**: Run in main thread, use `getCurrentTabId()` to read from sessionStorage
+- **Worker**: Runs in separate thread, uses `this.tabId` (received from chrono-box)
+- **Consistency**: Both use the same tabId value, just accessed differently based on context
+
+**Benefits of the self-supplied approach:**
+- **Simplified API**: Plugins don't need to pass tabId parameters
+- **Automatic Management**: tabId is retrieved when needed
+- **Encapsulation**: Hides implementation details from plugins
+- **Error Handling**: Centralized error handling for missing tabId
+- **Testing**: Easy to mock in unit tests
+- **Flexibility**: Can change implementation without updating plugins
 
 ### Why This Architecture?
 
@@ -362,18 +432,28 @@ worker.postMessage({
    - Schedule processing is isolated in the worker
    - UI updates happen on the main thread
    - Plugin state is managed via BroadcastChannel
+   - TabId management is centralized via sessionStorage
 
 2. **Performance Optimization**
    - Main thread stays responsive
    - Schedule processing is non-blocking
    - Real-time updates are efficient
+   - Single tabId generation per page session
 
 3. **Scalability**
    - Can handle complex schedules
    - Supports multiple plugin types
    - Maintains performance under load
+   - Supports multiple chrono-boxes on the same page
 
 4. **Reliability**
    - Consistent timing checks
    - Reliable state management
    - Robust error handling
+   - Unified plugin state across chrono-boxes
+
+5. **Tab Management**
+   - **Cross-tab isolation**: Each browser tab operates independently
+   - **Within-tab unification**: Multiple chrono-boxes share plugin state
+   - **Session persistence**: TabId persists across page refreshes
+   - **Clean separation**: No interference between different tabs
