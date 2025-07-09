@@ -17,21 +17,16 @@ class RSVPStateManager {
   async debouncedUpdate(rsvpBtn, miloLibs) {
     // Use the href hash as the unique identifier
     const key = rsvpBtn.el.href.split('#')[1] || 'default';
-    console.log('[RSVPStateManager] debouncedUpdate called', { key, href: rsvpBtn.el.href, el: rsvpBtn.el });
     // Clear existing timer
     if (this.debounceTimers.has(key)) {
-      console.log('[RSVPStateManager] Clearing existing debounce timer for', key);
       clearTimeout(this.debounceTimers.get(key));
     }
     // Set new timer
     const timer = setTimeout(async () => {
-      console.log('[RSVPStateManager] Debounce timer fired for', key);
       this.debounceTimers.delete(key);
-      console.log('[RSVPStateManager] Processing update for button:', rsvpBtn.el.href);
       await this.performUpdate(rsvpBtn, miloLibs);
     }, this.DEBOUNCE_DELAY);
     this.debounceTimers.set(key, timer);
-    console.log('[RSVPStateManager] Set new debounce timer for', key);
   }
 
   // Memoized metadata parsing
