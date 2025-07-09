@@ -11,6 +11,7 @@ import {
   miloReplaceKey,
 } from './utils.js';
 import { rsvpStateManager } from './rsvp-state-manager.js';
+// aliasing to avoid circular dependency
 import { setCtaState as setCtaStateFn, updateAnalyticTag as updateAnalyticTagFn } from './rsvp-state-helper.js';
 
 const preserveFormatKeys = [

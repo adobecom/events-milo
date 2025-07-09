@@ -15,47 +15,23 @@ class RSVPStateManager {
 
   // Debounced update function
   async debouncedUpdate(rsvpBtn, miloLibs) {
-    const key = `${rsvpBtn.el.id || 'rsvp-btn'}-${miloLibs}`;
+    // Use the href hash as the unique identifier
+    const key = rsvpBtn.el.href.split('#')[1] || 'default';
+    console.log('[RSVPStateManager] debouncedUpdate called', { key, href: rsvpBtn.el.href, el: rsvpBtn.el });
     // Clear existing timer
     if (this.debounceTimers.has(key)) {
+      console.log('[RSVPStateManager] Clearing existing debounce timer for', key);
       clearTimeout(this.debounceTimers.get(key));
     }
     // Set new timer
-    const timer = setTimeout(() => {
+    const timer = setTimeout(async () => {
+      console.log('[RSVPStateManager] Debounce timer fired for', key);
       this.debounceTimers.delete(key);
-      this.queueUpdate(rsvpBtn, miloLibs);
+      console.log('[RSVPStateManager] Processing update for button:', rsvpBtn.el.href);
+      await this.performUpdate(rsvpBtn, miloLibs);
     }, this.DEBOUNCE_DELAY);
     this.debounceTimers.set(key, timer);
-  }
-
-  // Queue-based update system
-  async queueUpdate(rsvpBtn, miloLibs) {
-    return new Promise((resolve, reject) => {
-      this.updateQueue.push({ rsvpBtn, miloLibs, resolve, reject });
-      this.processQueue();
-    });
-  }
-
-  async processQueue() {
-    if (this.isProcessing || this.updateQueue.length === 0) {
-      return;
-    }
-    this.isProcessing = true;
-    try {
-      // Process all items in queue sequentially
-      const promises = this.updateQueue.map(async ({ rsvpBtn, miloLibs, resolve, reject }) => {
-        try {
-          const result = await this.performUpdate(rsvpBtn, miloLibs);
-          resolve(result);
-        } catch (error) {
-          reject(error);
-        }
-      });
-      await Promise.all(promises);
-      this.updateQueue = [];
-    } finally {
-      this.isProcessing = false;
-    }
+    console.log('[RSVPStateManager] Set new debounce timer for', key);
   }
 
   // Memoized metadata parsing
