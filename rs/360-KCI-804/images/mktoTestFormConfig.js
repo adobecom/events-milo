@@ -49,6 +49,12 @@ if (typeof mkto_testing_loader != "function" && typeof mkto_testing_loader == "u
     const MUNCHKIN_ID = "360-KCI-804";
 
     let formID = 3131;
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.has('formId')) {
+      formID = urlParams.get('formId');
+    }
+    console.log('formID', formID);
+
     let resourceFormHTML = `
     <div class="marketo show-warnings">
     <section class="marketo-form-wrapper">
