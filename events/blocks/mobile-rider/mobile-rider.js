@@ -1,5 +1,4 @@
 import { LIBS } from '../../scripts/utils.js';
-import MobileRiderController from '../../features/timing-framework/plugins/mobile-rider/mobile-rider-controller.js';
 import { mobileRiderStore } from '../../features/timing-framework/plugins/mobile-rider/plugin.js';
 
 const { createTag, getConfig } = await import(`${LIBS}/utils/utils.js`);
@@ -21,6 +20,9 @@ const CONFIG = {
     BUTTON_ID: 'asl-button',
     CHECK_INTERVAL: 100,
     MAX_CHECKS: 50,
+  },
+  API: {
+    BASE_URL: 'https://overlay-admin-dev.mobilerider.com',
   },
 };
 
@@ -48,7 +50,6 @@ class MobileRider {
     this.cfg = null;
     this.wrap = null;
     this.root = null;
-    this.ctrl = new MobileRiderController();
     this.init();
   }
 
@@ -60,17 +61,17 @@ class MobileRider {
       this.root = container;
       this.wrap = wrapper;
 
-      if (this.cfg.concurrentenabled) {
-        const vid = this.cfg.concurrentVideos?.[0];
-        if (vid?.videoid) {
-          await this.loadPlayer(vid.videoid, vid.aslid, vid.sessionid);
-          this.initDrawer(this.cfg.concurrentVideos);
-        } else window.lana?.log('Missing video-id in config.');
-      } else {
-        if (this.cfg.videoid) {
-          await this.loadPlayer(this.cfg.videoid, this.cfg.aslid, this.cfg.sessionid);
-        } else window.lana?.log('Missing video-id in config.');
+      const isConcurrent = this.cfg.concurrentenabled;
+      const videos = isConcurrent ? this.cfg.concurrentVideos : [this.cfg];
+
+      if (!videos?.[0]?.videoid) {
+        window.lana?.log('Missing video-id in config.');
+        return;
       }
+
+      const { videoid, aslid, sessionid } = videos[0];
+      await this.loadPlayer(videoid, aslid, sessionid);
+      if (isConcurrent) await this.initDrawer(videos);
     } catch (e) {
       window.lana?.log(`MobileRider Init error: ${e.message}`);
     }
@@ -80,7 +81,7 @@ class MobileRider {
     try {
       this.injectPlayer(vid, this.cfg.skinid, asl, sid);
     } catch (e) {
-      window.lana?.log(`Failed to initialize the player: ${e.message}`)
+      window.lana?.log(`Failed to initialize the player: ${e.message}`);
     }
   }
 
@@ -89,7 +90,7 @@ class MobileRider {
     Object.keys(CONFIG.PLAYER.DEFAULT_OPTIONS).forEach((key) => {
       if (key in this.cfg) {
         const val = this.cfg[key];
-        overrides[key] = val === 'true' || val === true;
+        overrides[key] = String(val).toLowerCase() === 'true';
       }
     });
     return overrides;
@@ -104,6 +105,7 @@ class MobileRider {
 
   injectPlayer(vid, skin, asl = null, sid = null) {
     if (!this.wrap) return;
+
     let con = this.wrap.querySelector('.mobileRider_container');
     if (!con) {
       con = createTag('div', {
@@ -121,10 +123,16 @@ class MobileRider {
 
     window.__mr_player?.dispose();
     con.querySelector(`#${CONFIG.PLAYER.VIDEO_ID}`)?.remove();
-    const video = createTag('video', { id: CONFIG.PLAYER.VIDEO_ID, class: CONFIG.PLAYER.VIDEO_CLASS, controls: true });
+
+    const video = createTag('video', {
+      id: CONFIG.PLAYER.VIDEO_ID,
+      class: CONFIG.PLAYER.VIDEO_CLASS,
+      controls: true,
+    });
     con.appendChild(video);
 
     if (!video || !window.mobilerider) return;
+
     window.mobilerider.embed(video.id, vid, skin, {
       ...this.getPlayerOptions(),
       analytics: { provider: CONFIG.ANALYTICS.PROVIDER },
@@ -134,10 +142,7 @@ class MobileRider {
     });
 
     if (asl) this.initASL();
-    if (sid) {
-      const isActive = mobileRiderStore.get(sid);
-      if (isActive) this.onStreamEnd(sid);
-    }
+    if (sid && mobileRiderStore.get(sid)) this.onStreamEnd(sid);
     con.classList.remove('is-hidden');
   }
 
@@ -164,11 +169,10 @@ class MobileRider {
     return header;
   }
 
-  async initDrawer(vList) {
-    if (!vList?.length) return;
+  async initDrawer(videos) {
     try {
       const { default: createDrawer } = await import('./mobile-rider-drawer.js');
-  
+
       const renderItem = (v) => {
         const item = createTag('div', {
           class: 'drawer-item',
@@ -176,23 +180,23 @@ class MobileRider {
           role: 'button',
           tabindex: '0',
         });
-  
+
         if (v.thumbnail) {
           const thumbImg = createTag('div', { class: 'drawer-item-thumbnail' });
           thumbImg.appendChild(createTag('img', { src: v.thumbnail, alt: v.title || 'video thumbnail' }));
           item.appendChild(thumbImg);
         }
-  
+
         const vidCon = createTag('div', { class: 'drawer-item-content' });
         if (v.title) vidCon.appendChild(createTag('div', { class: 'drawer-item-title' }, v.title));
         if (v.description) vidCon.appendChild(createTag('div', { class: 'drawer-item-description' }, v.description));
         item.appendChild(vidCon);
-  
+
         return item;
       };
-  
+
       const drawer = createDrawer(this.root, {
-        items: vList,
+        items: videos,
         ariaLabel: 'Videos',
         renderItem,
         onItemClick: (_, v) => this.onDrawerClick(v),
@@ -200,13 +204,12 @@ class MobileRider {
 
       const itemsList = drawer?.itemsEl;
       if (itemsList?.firstChild) {
-        const header = this.drawerHeading();
-        itemsList.insertBefore(header, itemsList.firstChild);
+        itemsList.insertBefore(this.drawerHeading(), itemsList.firstChild);
       }
     } catch (e) {
       window.lana?.log(`Drawer load failed: ${e.message}`);
     }
-  }  
+  }
 
   async onDrawerClick(v) {
     try {
@@ -218,12 +221,27 @@ class MobileRider {
     }
   }
 
+  async getMediaStatus(id) {
+    try {
+      const res = await fetch(`${CONFIG.API.BASE_URL}/api/media-status?ids=${id}`);
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.message || 'Failed to get media status');
+      }
+      return await res.json();
+    } catch (e) {
+      window.lana?.log(`getMediaStatus error: ${e.message}`);
+      throw e;
+    }
+  }
+
   async checkLive(v) {
     if (!v?.videoid || !v?.sessionid) return false;
     try {
-      const active = await this.ctrl.isMediaActive(v.videoid);
-      this.setStatus(v.sessionid, active);
-      return active;
+      const { active } = await this.getMediaStatus(v.videoid);
+      const isActive = active.includes(v.videoid);
+      this.setStatus(v.sessionid, isActive);
+      return isActive;
     } catch (e) {
       window.lana?.log?.(`checkLive failed: ${e.message}`);
       return false;
@@ -235,24 +253,22 @@ class MobileRider {
   }
 
   initASL() {
-    const c = this.wrap?.querySelector('.mobileRider_container');
-    if (!c) return;
-    let tries = 0;
-    const max = CONFIG.ASL.MAX_CHECKS;
-    const int = CONFIG.ASL.CHECK_INTERVAL;
-    const id = CONFIG.ASL.BUTTON_ID;
-    const poll = () => {
-      const b = c.querySelector(`#${id}`);
-      if (b) return this.setupASL(b, c);
-      if (++tries < max) setTimeout(poll, int);
+    const con = this.wrap?.querySelector('.mobileRider_container');
+    if (!con) return;
+
+    let attempts = 0;
+    const check = () => {
+      const btn = con.querySelector(`#${CONFIG.ASL.BUTTON_ID}`);
+      if (btn) return this.setupASL(btn, con);
+      if (++attempts < CONFIG.ASL.MAX_CHECKS) setTimeout(check, CONFIG.ASL.CHECK_INTERVAL);
     };
-    poll();
+    check();
   }
 
-  setupASL(btn, c) {
+  setupASL(btn, con) {
     btn.addEventListener('click', () => {
-      if (!c.classList.contains(CONFIG.ASL.TOGGLE_CLASS)) {
-        c.classList.add(CONFIG.ASL.TOGGLE_CLASS);
+      if (!con.classList.contains(CONFIG.ASL.TOGGLE_CLASS)) {
+        con.classList.add(CONFIG.ASL.TOGGLE_CLASS);
         this.initASL();
       }
     });
@@ -264,11 +280,13 @@ class MobileRider {
       root = createTag('div', { class: 'mobile-rider-player' });
       this.el.appendChild(root);
     }
+
     let wrap = root.querySelector('.video-wrapper');
     if (!wrap) {
       wrap = createTag('div', { class: 'video-wrapper' });
       root.appendChild(wrap);
     }
+
     return { container: root, wrapper: wrap };
   }
 
@@ -280,7 +298,11 @@ class MobileRider {
       ])
     );
 
-    if (meta.concurrentenabled === 'true') meta.concurrentVideos = this.parseConcurrent(meta);
+    if (meta.concurrentenabled === 'true') {
+      meta.concurrentenabled = true;
+      meta.concurrentVideos = this.parseConcurrent(meta);
+    }
+
     return meta;
   }
 
