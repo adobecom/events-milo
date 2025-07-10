@@ -1,4 +1,4 @@
-import { getMobileRiderController } from './mobile-rider-controller.js';
+import MobileRiderController  from './mobile-rider-controller.js';
 
 const store = new Map();
 const channel = new BroadcastChannel('mobile-rider-store');
@@ -19,7 +19,7 @@ export const mobileRiderStore = {
 };
 
 export default function init(schedule, tabId) {
-  const controller = getMobileRiderController();
+  const controller = new MobileRiderController();
 
   const mobileRiderSchedules = schedule.filter((entry) => entry.mobileRider);
   mobileRiderSchedules.forEach((s) => {
