@@ -315,6 +315,6 @@ export async function getAndCreateAndAddAttendee(eventId, attendeeData) {
     ...attendeeData,
     registrationStatus,
   });
-  console.log('[getAndCreateAndAddAttendee] Adding attendee to event:', eventAttendeePayload);
+
   return addAttendeeToEvent(eventId, eventAttendeePayload);
 }
