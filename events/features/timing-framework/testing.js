@@ -13,6 +13,7 @@ export default class TestingManager {
           this.isTestMode = true;
           const currentTime = new Date().getTime();
           this.timeOffset = toggleTime - currentTime;
+          console.log('TestingManager: init', this.timeOffset);
         } else {
           window.lana?.log(`Invalid toggleTime provided for testing: ${testingData.toggleTime}`);
           this.isTestMode = false;
