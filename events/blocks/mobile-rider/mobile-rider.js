@@ -61,8 +61,8 @@ class MobileRider {
       this.root = container;
       this.wrap = wrapper;
 
-      const isConcurrent = this.cfg.concurEnbl;
-      const videos = isConcurrent ? this.cfg.concurVideos : [this.cfg];
+      const isConcurrent = this.cfg.concurrentenabled;
+      const videos = isConcurrent ? this.cfg.concurrentVideos : [this.cfg];
 
       const { videoid, aslid } = videos[0];
       if (!videoid) {
@@ -298,9 +298,9 @@ class MobileRider {
       ])
     );
 
-    if (meta.concurEnbl === 'true') {
-      meta.concurEnbl = true;
-      meta.concurVideos = this.parseConcurrent(meta);
+    if (meta.concurrentenabled === 'true') {
+      meta.concurrentenabled = true;
+      meta.concurrentVideos = this.parseConcurrent(meta);
     }
 
     return meta;
