@@ -50,7 +50,6 @@ class MobileRider {
     this.cfg = null;
     this.wrap = null;
     this.root = null;
-    this.mainStreamId = null;
     this.init();
   }
 
@@ -62,26 +61,25 @@ class MobileRider {
       this.root = container;
       this.wrap = wrapper;
 
-      const isConcurrent = this.cfg.concurrentenabled;
-      const videos = isConcurrent ? this.cfg.concurrentVideos : [this.cfg];
+      const isConcurrent = this.cfg.concurEnbl;
+      const videos = isConcurrent ? this.cfg.concurVideos : [this.cfg];
 
-      if (!videos?.[0]?.videoid) {
+      const { videoid, aslid } = videos[0];
+      if (!videoid) {
         window.lana?.log('Missing video-id in config.');
         return;
       }
 
-      const { videoid, aslid, sessionid } = videos[0];
-      this.mainStreamId = sessionid; // Store main sessionId
-      await this.loadPlayer(videoid, aslid, sessionid);
-      if (isConcurrent && videos.length > 1) await this.initDrawer(videos);
+      await this.loadPlayer(videoid, aslid);
+      if (isConcurrent) await this.initDrawer(videos);
     } catch (e) {
       window.lana?.log(`MobileRider Init error: ${e.message}`);
     }
   }
 
-  async loadPlayer(vid, asl, sid) {
+  async loadPlayer(vid, asl) {
     try {
-      this.injectPlayer(vid, this.cfg.skinid, asl, sid);
+      this.injectPlayer(vid, this.cfg.skinid, asl);
     } catch (e) {
       window.lana?.log(`Failed to initialize the player: ${e.message}`);
     }
@@ -105,7 +103,7 @@ class MobileRider {
     };
   }
 
-  injectPlayer(vid, skin, asl = null, sid = null) {
+  injectPlayer(vid, skin, asl = null) {
     if (!this.wrap) return;
 
     let con = this.wrap.querySelector('.mobileRider_container');
@@ -116,11 +114,10 @@ class MobileRider {
         'data-videoid': vid,
         'data-skinid': skin,
         'data-aslid': asl,
-        'data-sessionid': sid,
       });
       this.wrap.appendChild(con);
     } else {
-      Object.assign(con.dataset, { videoid: vid, skinid: skin, aslid: asl, sessionid: sid });
+      Object.assign(con.dataset, { videoid: vid, skinid: skin, aslid: asl });
     }
 
     window.__mr_player?.dispose();
@@ -140,19 +137,19 @@ class MobileRider {
       analytics: { provider: CONFIG.ANALYTICS.PROVIDER },
       identifier1: vid,
       identifier2: asl,
-      sessionId: sid,
+      sessionId: vid,
     });
 
     if (asl) this.initASL();
-    if (sid && mobileRiderStore.get(sid)) this.onStreamEnd(sid);
+    if (mobileRiderStore.get(vid)) this.onStreamEnd(vid);
+
     con.classList.remove('is-hidden');
   }
 
-  onStreamEnd(sid) {
+  onStreamEnd(vid) {
     window.__mr_player?.off('streamend');
     window.__mr_player?.on('streamend', () => {
-      const target = this.cfg.concurrentenabled ? this.mainStreamId : sid;
-      this.setStatus(target, false);
+      this.setStatus(vid, false);
       this.dispose();
     });
   }
@@ -218,7 +215,7 @@ class MobileRider {
     try {
       const live = await this.checkLive(v);
       if (!live) return window.lana?.log(`This stream is not currently live: ${v.videoid}`);
-      this.injectPlayer(v.videoid, this.cfg.skinid, v.aslid, v.sessionid);
+      this.injectPlayer(v.videoid, this.cfg.skinid, v.aslid);
     } catch (e) {
       window.lana?.log(`Drawer item click error: ${e.message}`);
     }
@@ -239,11 +236,11 @@ class MobileRider {
   }
 
   async checkLive(v) {
-    if (!v?.videoid || !v?.sessionid) return false;
+    if (!v?.videoid) return false;
     try {
       const { active } = await this.getMediaStatus(v.videoid);
       const isActive = active.includes(v.videoid);
-      this.setStatus(v.sessionid, isActive);
+      this.setStatus(v.videoid, isActive);
       return isActive;
     } catch (e) {
       window.lana?.log?.(`checkLive failed: ${e.message}`);
@@ -251,8 +248,8 @@ class MobileRider {
     }
   }
 
-  setStatus(sid, live) {
-    if (sid) mobileRiderStore.set(sid, live);
+  setStatus(id, live) {
+    if (id) mobileRiderStore.set(id, live);
   }
 
   initASL() {
@@ -301,9 +298,9 @@ class MobileRider {
       ])
     );
 
-    if (meta.concurrentenabled === 'true') {
-      meta.concurrentenabled = true;
-      meta.concurrentVideos = this.parseConcurrent(meta);
+    if (meta.concurEnbl === 'true') {
+      meta.concurEnbl = true;
+      meta.concurVideos = this.parseConcurrent(meta);
     }
 
     return meta;
@@ -322,7 +319,6 @@ class MobileRider {
       title: meta[`concurrenttitle${i}`] || '',
       description: meta[`concurrentdescription${i}`] || '',
       thumbnail: meta[`concurrentthumbnail${i}`] || '',
-      sessionid: meta[`concurrentsessionid${i}`] || '',
     }));
   }
 }
