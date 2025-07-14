@@ -1,7 +1,7 @@
 export default class TestingManager {
     constructor() {
       this.timeOffset = 0;
-      this.isTestMode = false;
+      this.isTestMode = true;
     }
   
     init(testingData) {
