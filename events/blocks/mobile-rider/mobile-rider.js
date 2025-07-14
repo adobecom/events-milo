@@ -50,6 +50,7 @@ class MobileRider {
     this.cfg = null;
     this.wrap = null;
     this.root = null;
+    this.mainStreamId = null;
     this.init();
   }
 
@@ -70,8 +71,9 @@ class MobileRider {
       }
 
       const { videoid, aslid, sessionid } = videos[0];
+      this.mainStreamId = sessionid; // Store main sessionId
       await this.loadPlayer(videoid, aslid, sessionid);
-      if (isConcurrent) await this.initDrawer(videos);
+      if (isConcurrent && videos.length > 1) await this.initDrawer(videos);
     } catch (e) {
       window.lana?.log(`MobileRider Init error: ${e.message}`);
     }
@@ -149,7 +151,8 @@ class MobileRider {
   onStreamEnd(sid) {
     window.__mr_player?.off('streamend');
     window.__mr_player?.on('streamend', () => {
-      this.setStatus(sid, false);
+      const target = this.cfg.concurrentenabled ? this.mainStreamId : sid;
+      this.setStatus(target, false);
       this.dispose();
     });
   }
