@@ -61,13 +61,13 @@
     
     <div class="test-section info">
         <h2>Test Overview</h2>
-        <p>This page tests multiple chrono-boxes with separate plugin stores and worker communication.</p>
-        <p>Each chrono-box should maintain its own isolated state.</p>
+        <p>This page tests multiple chrono-boxes with unified plugin stores and worker communication.</p>
+        <p>All chrono-boxes on the same page should share the same tabId and communicate via BroadcastChannel.</p>
     </div>
 
     <div class="test-section">
         <h2>Test Controls</h2>
-        <button onclick="runIsolationTest()">Run Isolation Test</button>
+        <button onclick="runIsolationTest()">Run Unified Tab Test</button>
         <button onclick="checkWorkerCommunication()">Check Worker Communication</button>
         <button onclick="clearResults()">Clear Results</button>
     </div>
@@ -128,7 +128,7 @@
         // Test functions
         window.runIsolationTest = async () => {
             const results = document.getElementById('test-results');
-            results.innerHTML = '<div class="info"><h3>Running Isolation Test...</h3></div>';
+            results.innerHTML = '<div class="info"><h3>Running Unified Tab Test...</h3></div>';
 
             try {
                 // Test 1: Import plugins
@@ -137,7 +137,7 @@
                 
                 results.innerHTML += `<div class="success"><p>✅ Plugins imported successfully</p></div>`;
 
-                // Test 2: Create separate stores
+                // Test 2: Create separate stores with shared tabId
                 const schedule1 = [
                     {
                         metadata: [{ key: 'video.url' }],
@@ -151,47 +151,48 @@
                     }
                 ];
 
-                const tabId1 = window.crypto.randomUUID();
-                const tabId2 = window.crypto.randomUUID();
+                // Clear any existing tabId to start fresh
+                sessionStorage.removeItem('chrono-box-tab-id');
 
-                const metadataStore1 = metadataPlugin(schedule1, tabId1);
-                const metadataStore2 = metadataPlugin(schedule2, tabId2);
-                const mobileRiderStore1 = mobileRiderPlugin(schedule1, tabId1);
-                const mobileRiderStore2 = mobileRiderPlugin(schedule2, tabId2);
+                const metadataStore1 = metadataPlugin(schedule1);
+                const metadataStore2 = metadataPlugin(schedule2);
+                const mobileRiderStore1 = mobileRiderPlugin(schedule1);
+                const mobileRiderStore2 = mobileRiderPlugin(schedule2);
 
-                results.innerHTML += `<div class="success"><p>✅ Created separate store instances</p></div>`;
+                results.innerHTML += `<div class="success"><p>✅ Created store instances</p></div>`;
 
-                // Test 3: Verify store isolation
-                metadataStore1.set('test.key', 'value-1', tabId1);
-                metadataStore2.set('test.key', 'value-2', tabId2);
-
-                const value1 = metadataStore1.get('test.key');
-                const value2 = metadataStore2.get('test.key');
-
-                if (value1 === 'value-1' && value2 === 'value-2') {
-                    results.innerHTML += `<div class="success"><p>✅ Store isolation verified - stores maintain separate data</p></div>`;
+                // Test 3: Verify stores share the same tabId
+                const tabId1 = sessionStorage.getItem('chrono-box-tab-id');
+                if (tabId1) {
+                    results.innerHTML += `<div class="success"><p>✅ Tab ID created and stored: ${tabId1}</p></div>`;
                 } else {
-                    results.innerHTML += `<div class="error"><p>❌ Store isolation failed - data is shared between stores</p></div>`;
+                    results.innerHTML += `<div class="error"><p>❌ Tab ID not found in sessionStorage</p></div>`;
                 }
 
-                // Test 4: Verify different tab IDs
-                if (tabId1 !== tabId2) {
-                    results.innerHTML += `<div class="success"><p>✅ Tab isolation verified - different tab IDs generated</p></div>`;
+                // Test 4: Verify stores can communicate via BroadcastChannel
+                metadataStore1.set('shared.key', 'value-from-store1');
+                const valueFromStore2 = metadataStore2.get('shared.key');
+                
+                if (valueFromStore2 === 'value-from-store1') {
+                    results.innerHTML += `<div class="success"><p>✅ Store communication verified - stores share data via BroadcastChannel</p></div>`;
                 } else {
-                    results.innerHTML += `<div class="error"><p>❌ Tab isolation failed - same tab ID generated</p></div>`;
+                    results.innerHTML += `<div class="error"><p>❌ Store communication failed - stores are not sharing data</p></div>`;
                 }
 
-                // Test 5: Verify separate BroadcastChannels
-                if (metadataStore1._channel !== metadataStore2._channel) {
-                    results.innerHTML += `<div class="success"><p>✅ BroadcastChannel isolation verified - separate channels created</p></div>`;
+                // Test 5: Verify mobile rider stores also share data
+                mobileRiderStore1.set('shared-session', true);
+                const sessionFromStore2 = mobileRiderStore2.get('shared-session');
+                
+                if (sessionFromStore2 === true) {
+                    results.innerHTML += `<div class="success"><p>✅ Mobile rider store communication verified</p></div>`;
                 } else {
-                    results.innerHTML += `<div class="error"><p>❌ BroadcastChannel isolation failed - same channel shared</p></div>`;
+                    results.innerHTML += `<div class="error"><p>❌ Mobile rider store communication failed</p></div>`;
                 }
 
-                results.innerHTML += `<div class="success"><h4>✅ Isolation Test Passed</h4></div>`;
+                results.innerHTML += `<div class="success"><h4>✅ Unified Tab Test Passed</h4></div>`;
 
             } catch (error) {
-                results.innerHTML += `<div class="error"><h4>❌ Isolation Test Failed</h4><p>${error.message}</p></div>`;
+                results.innerHTML += `<div class="error"><h4>❌ Unified Tab Test Failed</h4><p>${error.message}</p></div>`;
             }
         };
 
@@ -255,4 +256,4 @@
         }, 1000);
     </script>
 </body>
-</html>
+</html> 

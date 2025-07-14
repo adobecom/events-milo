@@ -1,4 +1,5 @@
 import { parseMetadataPath } from '../../../../scripts/utils.js';
+import { getCurrentTabId } from '../../worker.js';
 
 const store = new Map();
 const channel = new BroadcastChannel('metadata-store');
@@ -8,7 +9,8 @@ export const metadataStore = {
     return store.get(key);
   },
 
-  set(key, value, tabId) {
+  set(key, value) {
+    const tabId = getCurrentTabId();
     store.set(key, value);
     channel.postMessage({ key, value, tabId });
   },
@@ -18,12 +20,12 @@ export const metadataStore = {
   },
 };
 
-export default function init(schedule, tabId) {
+export default function init(schedule) {
   const allMetadataInSchedules = schedule.filter((entry) => entry.metadata);
   allMetadataInSchedules.forEach(({ metadata }) => {
     metadata.forEach((m) => {
       const value = parseMetadataPath(m.key);
-      metadataStore.set(m.key, value, tabId);
+      metadataStore.set(m.key, value);
     });
   });
 
