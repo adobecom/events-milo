@@ -7,7 +7,7 @@ export default async function init(block) {
 
   if (!videoId) return;
 
-  block.textContent = ''; // Clear authored content first
+  block.textContent = '';
   const streamEl = buildYouTubeStream(videoId, config, chatEnabled);
   block.append(streamEl);
 }
@@ -20,16 +20,16 @@ function buildYouTubeStream(videoId, config, showChat) {
     allowfullscreen: true,
   });
 
-  const video = createTag('div', { class: 'video' }, videoIframe);
-  const videoWrap = createTag('div', { class: 'youtube-video-container'}, video);
-  container.append(videoWrap);
+  const videoContainer = createTag('div', { class: 'iframe-container' }, videoIframe);
+  const videoWrapper = createTag('div', { class: 'youtube-video-container'}, videoContainer);
+  container.append(videoWrapper);
 
   if (showChat) {
     const chatIframe = createTag('iframe', {
       class: 'youtube-chat',
       src: `https://www.youtube.com/live_chat?v=${videoId}&embed_domain=${window.location.hostname}`,
     });
-    const chatContainer = createTag('div', { class: 'frame-container' }, chatIframe);
+    const chatContainer = createTag('div', { class: 'iframe-container' }, chatIframe);
     const chatWrap = createTag('div', { class: 'youtube-chat-container' }, chatContainer);
     container.append(chatWrap);
   }
