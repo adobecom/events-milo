@@ -44,14 +44,11 @@
 @media screen and (min-width: 1200px) {
   .youtube-video-container {
     width: 75%;
-    max-width: 75%;
-    flex: 1 1 auto;
-    min-height: auto;  
+    max-width: 75%; 
   }
 
   .youtube-chat-container {
     flex: 1 1 1%;
-    max-width: 100%;
     min-height: auto;
   }
 }
