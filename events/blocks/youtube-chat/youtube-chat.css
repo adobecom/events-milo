@@ -12,7 +12,7 @@
   min-height: auto;  
 }
 
-.video {
+.youtube-video-container .iframe-container {
   position: relative;
   padding-bottom: 56.25%;
   height: 0;
@@ -25,14 +25,15 @@
   min-height: 500px;
 }
 
-.frame-container {
+.youtube-chat-container .iframe-container {
   height: 100%;
   padding-bottom: 0;
   position: relative;
   width: 100%;
 }
 
-.frame-container iframe, .video iframe {
+.youtube-chat-container iframe,
+.youtube-video-container iframe {
   height: 100%;
   width: 100%;
   left: 0;
