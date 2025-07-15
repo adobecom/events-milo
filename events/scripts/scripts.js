@@ -72,7 +72,7 @@ export default function decorateArea(area = document) {
   autoUpdateContent(area, miloDeps, photosData);
 }
 
-const prodDomains = ['milo.adobe.com', 'business.adobe.com', 'www.adobe.com', 'news.adobe.com'];
+const prodDomains = ['milo.adobe.com', 'business.adobe.com', 'www.adobe.com', 'news.adobe.com', 'helpx.adobe.com'];
 
 // Add project-wide style path here.
 const STYLES = '';
