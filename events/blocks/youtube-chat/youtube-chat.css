@@ -6,8 +6,8 @@
 }
 
 .youtube-video-container {
-  width: 75%;
-  max-width: 75%;
+  width: 100%;
+  max-width: 100%;
   flex: 1 1 auto;
   min-height: auto;  
 }
