@@ -19,9 +19,10 @@
 }
 
 .youtube-chat-container {
-  flex: 1 1 1%;
+  width: 100%;
   max-width: 100%;
-  min-height: auto;
+  flex: 1 1 auto;
+  min-height: 500px;
 }
 
 .frame-container {
