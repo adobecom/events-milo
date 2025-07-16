@@ -42,9 +42,9 @@
 }
 
 @media screen and (min-width: 1200px) {
-  .youtube-video-container {
+  .youtube-stream:not(.single-column) .youtube-video-container {
     width: 75%;
-    max-width: 75%; 
+    max-width: 75%;
   }
 
   .youtube-chat-container {

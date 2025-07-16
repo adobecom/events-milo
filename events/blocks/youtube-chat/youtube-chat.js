@@ -13,7 +13,7 @@ export default async function init(block) {
 }
 
 function buildYouTubeStream(videoId, config, showChat) {
-  const container = createTag('div', { class: 'youtube-stream' });
+  const container = createTag('div', { class: `youtube-stream${!showChat ? ' single-column' : ''}` });
   const videoIframe = createTag('iframe', {
     class: 'youtube-video',
     src: buildEmbedUrl(videoId, config),
