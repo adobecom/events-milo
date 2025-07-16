@@ -1,5 +1,4 @@
 import { LIBS } from '../../scripts/utils.js';
-import { mobileRiderStore } from '../../features/timing-framework/plugins/mobile-rider/plugin.js';
 
 const { createTag, getConfig } = await import(`${LIBS}/utils/utils.js`);
 
@@ -50,12 +49,21 @@ class MobileRider {
     this.cfg = null;
     this.wrap = null;
     this.root = null;
+    this.store = null;
     this.init();
   }
 
   async init() {
     try {
       await loadScript();
+      if (this.el.closest('.chronobox')) {
+        try {
+          const { mobileRiderStore } = await import('../../features/timing-framework/plugins/mobile-rider/plugin.js');
+          this.store = mobileRiderStore;
+        } catch (e) {
+          window.lana?.log(`Failed to import mobileRiderStore: ${e.message}`);
+        }
+      }
       this.cfg = this.parseCfg();
       const { container, wrapper } = this.createDOM();
       this.root = container;
@@ -141,7 +149,7 @@ class MobileRider {
     });
 
     if (asl) this.initASL();
-    if (mobileRiderStore.get(vid)) this.onStreamEnd(vid);
+    if (this.store?.get(vid)) this.onStreamEnd(vid);
 
     con.classList.remove('is-hidden');
   }
@@ -213,8 +221,10 @@ class MobileRider {
 
   async onDrawerClick(v) {
     try {
-      const live = await this.checkLive(v);
-      if (!live) return window.lana?.log(`This stream is not currently live: ${v.videoid}`);
+      if (this.store) {
+        const live = await this.checkLive(v);
+        if (!live) return window.lana?.log(`This stream is not currently live: ${v.videoid}`);
+      }
       this.injectPlayer(v.videoid, this.cfg.skinid, v.aslid);
     } catch (e) {
       window.lana?.log(`Drawer item click error: ${e.message}`);
@@ -249,7 +259,7 @@ class MobileRider {
   }
 
   setStatus(id, live) {
-    if (id) mobileRiderStore.set(id, live);
+    if (id) this.store?.set(id, live);
   }
 
   initASL() {
