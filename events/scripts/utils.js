@@ -182,10 +182,16 @@ function toClassName(name) {
 
 export function getSusiOptions(conf) {
   const { env: { name: envName } } = conf;
+  const { href, hash } = window.location;
+
   const susiOptions = Object.keys(SUSI_OPTIONS).reduce((opts, key) => {
     opts[key] = SUSI_OPTIONS[key][envName] || SUSI_OPTIONS[key];
     return opts;
   }, {});
+
+  if (hash.includes('#rsvp-form')) {
+    susiOptions.redirect_uri = `${href}`;
+  }
 
   return susiOptions;
 }
@@ -220,22 +226,12 @@ export function readBlockConfig(block) {
 }
 
 /**
- * Parses a metadata path string and returns the corresponding value from the metadata.
- * Supports combinations of object property access (.) and array indexing (:).
- * Examples:
- * - attr (just accessing the attribute itself)
- * - attr.subattr (one level in object)
- * - attr:0 (attr is array after JSON.parse)
- * - attr.subattr:0.subsubattr
- * - attr:0.subattr
- * - attr:1.subattr:0
+ * Parses a regular metadata path without array processing.
  * @param {string} path - The metadata path to parse
- * @param {Object} extraData - Optional extra data to fall back to if metadata is not found
- * @returns {*} The parsed value from metadata
+ * @param {Object} extraData - Optional extra data
+ * @returns {*} The parsed value
  */
-export function parseMetadataPath(path, extraData = {}) {
-  if (!path) return '';
-
+function parseRegularPath(path, extraData = {}) {
   // Split the path into segments using both . and : as delimiters
   const segments = path.split(/[.:]/).filter(Boolean);
   const delimiters = path.match(/[.:]/g) || [];
@@ -280,4 +276,85 @@ export function parseMetadataPath(path, extraData = {}) {
   }
 
   return currentValue || extraData[path] || '';
+}
+
+/**
+ * Parses a metadata path string and returns the corresponding value from the metadata.
+ * Supports combinations of object property access (.) and array indexing (:).
+ * Also supports array iteration with @array(path)separator syntax.
+ * Examples:
+ * - attr (just accessing the attribute itself)
+ * - attr.subattr (one level in object)
+ * - attr:0 (attr is array after JSON.parse)
+ * - attr.subattr:0.subsubattr
+ * - attr:0.subattr
+ * - attr:1.subattr:0
+ * - @array(attr) (iterate over array with space separator)
+ * - @array(attr.subattr), (iterate over nested array with comma separator)
+ * - @array(attr.name) | (extract name attribute from objects with pipe separator)
+ * @param {string} path - The metadata path to parse
+ * @param {Object} extraData - Optional extra data to fall back to if metadata is not found
+ * @returns {*} The parsed value from metadata
+ */
+export function parseMetadataPath(path, extraData = {}) {
+  if (!path) return '';
+
+  // Check if this is an array iteration request
+  const arrayMatch = path.match(/^@array\(([^)]+)\)(.*)$/);
+  if (!arrayMatch) {
+    // Regular path parsing (no array processing)
+    return parseRegularPath(path, extraData);
+  }
+
+  // Array iteration - parse the inner path first, then post-process
+  const innerPath = arrayMatch[1];
+  const separator = arrayMatch[2] || ' ';
+
+  // Check if we need to extract a specific attribute from objects
+  const pathParts = innerPath.split('.');
+  const hasAttribute = pathParts.length > 1;
+
+  let result;
+  if (hasAttribute) {
+    // Extract the attribute from each object in the array
+    const attribute = pathParts[pathParts.length - 1];
+    const basePath = pathParts.slice(0, -1).join('.');
+    const baseArray = parseRegularPath(basePath, extraData);
+
+    if (Array.isArray(baseArray)) {
+      result = baseArray.map((item) => {
+        if (typeof item === 'object' && item !== null) {
+          return item[attribute] ?? '';
+        }
+        // If the item is a primitive, just use it as-is
+        return item;
+      });
+    } else {
+      // If base path doesn't return an array, try parsing the full path
+      result = parseRegularPath(innerPath, extraData);
+    }
+  } else {
+    // Parse the inner path using regular logic
+    result = parseRegularPath(innerPath, extraData);
+    // If result is not an array, but is an object with a single array property, use that array
+    if (!Array.isArray(result) && result && typeof result === 'object') {
+      const arrayProps = Object.keys(result).filter((k) => Array.isArray(result[k]));
+      if (arrayProps.length === 1) {
+        result = result[arrayProps[0]];
+      }
+    }
+  }
+
+  // Post-process: if result is an array, join it with separator
+  if (Array.isArray(result) && result.length > 0) {
+    return result.map((item) => {
+      if (typeof item === 'object' && item !== null) {
+        return JSON.stringify(item);
+      }
+      return String(item);
+    }).join(separator);
+  }
+
+  // If not an array, return empty string
+  return '';
 }

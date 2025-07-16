@@ -1,9 +1,10 @@
 import { getEventServiceEnv, LIBS } from './utils.js';
 import BlockMediator from './deps/block-mediator.min.js';
+import { getBaseAttendeePayload, getEventAttendeePayload } from './data-utils.js';
 
 const API_CONFIG = {
   esl: {
-    local: { host: 'http://localhost:8499' },
+    local: { host: 'https://wcms-events-service-layer-deploy-ethos102-stage-va-9c3ecd.stage.cloud.adobe.io' },
     dev: { host: 'https://wcms-events-service-layer-deploy-ethos102-stage-va-9c3ecd.stage.cloud.adobe.io' },
     dev02: { host: 'https://wcms-events-service-layer-deploy-ethos102-stage-va-d5dc93.stage.cloud.adobe.io' },
     stage: { host: 'https://events-service-layer-stage.adobe.io' },
@@ -11,7 +12,7 @@ const API_CONFIG = {
     prod: { host: 'https://events-service-layer.adobe.io' },
   },
   esp: {
-    local: { host: 'http://localhost:8500' },
+    local: { host: 'https://wcms-events-service-platform-deploy-ethos102-stage-caff5f.stage.cloud.adobe.io' },
     dev: { host: 'https://wcms-events-service-platform-deploy-ethos102-stage-caff5f.stage.cloud.adobe.io' },
     dev02: { host: 'https://wcms-events-service-platform-deploy-ethos102-stage-c81eb6.stage.cloud.adobe.io' },
     stage: { host: 'https://events-service-platform-stage-or2.adobe.io' },
@@ -192,13 +193,12 @@ export async function createAttendee(attendeeData) {
 export async function addAttendeeToEvent(eventId, attendee) {
   if (!eventId || !attendee) return false;
 
-  const { firstName, lastName, email, registrationStatus } = attendee;
   const { host } = API_CONFIG.esl[getEventServiceEnv()];
-  const raw = JSON.stringify({ firstName, lastName, email, registrationStatus });
+  const raw = JSON.stringify(attendee);
   const options = await constructRequestOptions('POST', raw);
 
   try {
-    const response = await fetch(`${host}/v1/events/${eventId}/attendees/me`, options);
+    const response = await fetch(`${host}/v1/events/${eventId}/attendees/${attendee.attendeeId}`, options);
     const data = await response.json();
 
     if (!response.ok) {
@@ -285,38 +285,21 @@ export async function getAndCreateAndAddAttendee(eventId, attendeeData) {
   let registrationStatus = 'registered';
 
   if (profile.account_type === 'guest') {
-    const payload = { ...attendeeData };
-
-    // filter out empty keys
-    const cleanPayload = Object.keys(payload).reduce((acc, key) => {
-      if (payload[key]) acc[key] = payload[key];
-      return acc;
-    }, {});
-
-    attendee = await createAttendee(cleanPayload);
+    // Use BaseAttendee filter for creating new attendee
+    const filteredPayload = getBaseAttendeePayload(attendeeData);
+    attendee = await createAttendee(filteredPayload);
   } else {
     const attendeeResp = await getAttendee();
 
     if (!attendeeResp.ok && attendeeResp.status === 404) {
-      const payload = { ...attendeeData };
-
-      // filter out empty keys
-      const cleanPayload = Object.keys(payload).reduce((acc, key) => {
-        if (payload[key]) acc[key] = payload[key];
-        return acc;
-      }, {});
-
-      attendee = await createAttendee(cleanPayload);
+      // Use BaseAttendee filter for creating new attendee
+      const filteredPayload = getBaseAttendeePayload(attendeeData);
+      attendee = await createAttendee(filteredPayload);
     } else if (attendeeResp.data?.attendeeId) {
+      // Use BaseAttendee filter for updating existing attendee
       const payload = { ...attendeeResp.data, ...attendeeData };
-
-      // filter out empty keys
-      const cleanPayload = Object.keys(payload).reduce((acc, key) => {
-        if (payload[key]) acc[key] = payload[key];
-        return acc;
-      }, {});
-
-      attendee = await updateAttendee(cleanPayload);
+      const filteredPayload = getBaseAttendeePayload(payload);
+      attendee = await updateAttendee(filteredPayload);
     }
   }
 
@@ -325,5 +308,13 @@ export async function getAndCreateAndAddAttendee(eventId, attendeeData) {
   const newAttendeeData = attendee.data;
 
   if (eventObj.data.isFull) registrationStatus = 'waitlisted';
-  return addAttendeeToEvent(eventId, { ...newAttendeeData, registrationStatus });
+
+  // Use EventAttendee filter for adding attendee to event
+  const eventAttendeePayload = getEventAttendeePayload({
+    ...newAttendeeData,
+    ...attendeeData,
+    registrationStatus,
+  });
+
+  return addAttendeeToEvent(eventId, eventAttendeePayload);
 }
