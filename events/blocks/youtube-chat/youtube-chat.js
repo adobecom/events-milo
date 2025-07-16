@@ -2,8 +2,8 @@ import { createTag, readBlockConfig } from '../../scripts/utils.js';
 
 export default async function init(block) {
   const config = readBlockConfig(block);
-  const videoId = config['video-id'];
-  const chatEnabled = config['chat-id'];
+  const videoId = config['videoId'];
+  const chatEnabled = config['chatId'];
 
   if (!videoId) return;
 
