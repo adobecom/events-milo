@@ -6,11 +6,15 @@ const { createTag, getConfig } = await import(`${LIBS}/utils/utils.js`);
 function decorateImage(card, photo) {
   if (!photo) return;
 
-  const { sharepointUrl, imageUrl } = photo;
+  const { sharepointUrl, imageUrl, altText } = photo;
   const imgElement = createTag('img', {
     src: sharepointUrl || imageUrl,
     class: 'card-image',
   });
+
+  if (altText) {
+    imgElement.setAttribute('alt', altText);
+  }
 
   const imgContainer = createTag('div', { class: 'card-image-container' });
   imgContainer.append(imgElement);
@@ -62,22 +66,42 @@ export function createSocialIcon(svg, platform) {
 }
 
 async function decorateSocialIcons(cardContainer, socialLinks) {
-  const SUPPORTED_SOCIAL = ['instagram', 'facebook', 'twitter', 'linkedin', 'youtube', 'pinterest', 'discord', 'behance', 'web', 'x', 'tiktok'];
+  // Define platform detection patterns using pure regex - no predefined lists needed
+  const PLATFORM_PATTERNS = {
+    instagram: /^(?:www\.)?(?:instagram\.[a-z]{2,}(?:\.[a-z]{2,})?|instagr\.am)$/,
+    facebook: /^(?:www\.)?(?:facebook\.[a-z]{2,}(?:\.[a-z]{2,})?|fb\.com)$/,
+    twitter: /^(?:www\.)?(?:twitter\.com|t\.co|tweetdeck\.twitter\.com)$/,
+    linkedin: /^(?:www\.)?(?:linkedin\.[a-z]{2,}(?:\.[a-z]{2,})?|lnkd\.in)$/,
+    youtube: /^(?:www\.)?(?:youtube\.[a-z]{2,}(?:\.[a-z]{2,})?|youtu\.be|m\.youtube\.com)$/,
+    pinterest: /^(?:www\.)?(?:pinterest\.[a-z]{2,}(?:\.[a-z]{2,})?|pin\.it)$/,
+    discord: /^(?:www\.)?(?:discord\.com|discord\.gg)$/,
+    behance: /^(?:www\.)?behance\.net$/,
+    x: /^(?:www\.)?(?:x\.com|twitter\.com)$/, // x.com and legacy twitter.com
+    tiktok: /^(?:www\.)?(?:tiktok\.[a-z]{2,}(?:\.[a-z]{2,})?|vm\.tiktok\.com)$/,
+  };
+
+  const SUPPORTED_PLATFORMS = [...Object.keys(PLATFORM_PATTERNS), 'web'];
+
   const svgPath = `${getConfig().codeRoot || '/events'}/icons/social-icons.svg`;
   const socialList = createTag('ul', { class: 'card-social-icons' });
 
-  const svgEls = await getSVGsfromFile(svgPath, SUPPORTED_SOCIAL);
+  const svgEls = await getSVGsfromFile(svgPath, SUPPORTED_PLATFORMS);
   if (!svgEls || svgEls.length === 0) return;
   socialLinks.forEach((social) => {
     const { link } = social;
 
     if (!link) return;
 
-    let platform = '';
+    let platform = 'web'; // Default fallback
     try {
       const url = new URL(link);
       const hostname = url.hostname.toLowerCase();
-      platform = SUPPORTED_SOCIAL.find((p) => hostname.includes(`${p}.`)) || 'web';
+
+      // Find the platform by testing against regex patterns
+      const matchedPlatform = Object.entries(PLATFORM_PATTERNS).find(
+        ([, pattern]) => pattern.test(hostname),
+      );
+      platform = matchedPlatform ? matchedPlatform[0] : 'web';
     } catch (error) {
       platform = 'web';
     }
