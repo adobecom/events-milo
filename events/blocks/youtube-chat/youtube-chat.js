@@ -2,21 +2,20 @@ import { createTag, readBlockConfig } from '../../scripts/utils.js';
 
 export default async function init(block) {
   const config = readBlockConfig(block);
-  const videoId = config['videoId'];
-  const chatEnabled = config['chatId'];
+  const { videoid, chatid } = config;
 
-  if (!videoId) return;
+  if (!videoid) return;
 
   block.textContent = '';
-  const streamEl = buildYouTubeStream(videoId, config, chatEnabled);
+  const streamEl = buildYouTubeStream(videoid, config, chatid);
   block.append(streamEl);
 }
 
-function buildYouTubeStream(videoId, config, showChat) {
+function buildYouTubeStream(videoid, config, showChat) {
   const container = createTag('div', { class: `youtube-stream${!showChat ? ' single-column' : ''}` });
   const videoIframe = createTag('iframe', {
     class: 'youtube-video',
-    src: buildEmbedUrl(videoId, config),
+    src: buildEmbedUrl(videoid, config),
     allowfullscreen: true,
   });
 
@@ -27,7 +26,7 @@ function buildYouTubeStream(videoId, config, showChat) {
   if (showChat) {
     const chatIframe = createTag('iframe', {
       class: 'youtube-chat',
-      src: `https://www.youtube.com/live_chat?v=${videoId}&embed_domain=${window.location.hostname}`,
+      src: `https://www.youtube.com/live_chat?v=${videoid}&embed_domain=${window.location.hostname}`,
     });
     const chatContainer = createTag('div', { class: 'iframe-container' }, chatIframe);
     const chatWrap = createTag('div', { class: 'youtube-chat-container' }, chatContainer);
@@ -38,8 +37,8 @@ function buildYouTubeStream(videoId, config, showChat) {
   return container;
 }
 
-function buildEmbedUrl(videoId, config) {
-  const base = `https://www.youtube.com/embed/${videoId}`;
+function buildEmbedUrl(videoid, config) {
+  const base = `https://www.youtube.com/embed/${videoid}`;
   const params = new URLSearchParams();
 
   const options = {
