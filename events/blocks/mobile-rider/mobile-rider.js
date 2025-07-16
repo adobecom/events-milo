@@ -55,15 +55,19 @@ class MobileRider {
 
   async init() {
     try {
-      await loadScript();
-      if (this.el.closest('.chrono-box')) {
-        try {
-          const { mobileRiderStore } = await import('../../features/timing-framework/plugins/mobile-rider/plugin.js');
-          this.store = mobileRiderStore;
-        } catch (e) {
-          window.lana?.log(`Failed to import mobileRiderStore: ${e.message}`);
-        }
-      }
+      const scriptPromise = loadScript();
+      const storePromise = this.el.closest('.chrono-box')
+        ? import('../../features/timing-framework/plugins/mobile-rider/plugin.js')
+            .then(({ mobileRiderStore }) => {
+              this.store = mobileRiderStore;
+            })
+            .catch((e) => {
+              window.lana?.log(`Failed to import mobileRiderStore: ${e.message}`);
+            })
+        : null;
+    
+      await scriptPromise;
+      if (storePromise) await storePromise;
       this.cfg = this.parseCfg();
       const { container, wrapper } = this.createDOM();
       this.root = container;
