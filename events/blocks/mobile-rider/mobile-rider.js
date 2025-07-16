@@ -56,7 +56,7 @@ class MobileRider {
   async init() {
     try {
       await loadScript();
-      if (this.el.closest('.chronobox')) {
+      if (this.el.closest('.chrono-box')) {
         try {
           const { mobileRiderStore } = await import('../../features/timing-framework/plugins/mobile-rider/plugin.js');
           this.store = mobileRiderStore;
