@@ -5,8 +5,8 @@ const { createTag, getConfig } = await import(`${LIBS}/utils/utils.js`);
 const CONFIG = {
   ANALYTICS: { PROVIDER: 'adobe' },
   SCRIPTS: {
-    dev: '//assets.mobilerider.com/p/player-adobe-dev/player.min.js',
-    prod: '//assets.mobilerider.com/p/adobe/player.min.js',
+    DEV_URL: '//assets.mobilerider.com/p/player-adobe-dev/player.min.js',
+    PROD_URL: '//assets.mobilerider.com/p/adobe/player.min.js',
   },
   PLAYER: {
     DEFAULT_OPTIONS: { autoplay: true, controls: true, muted: true },
@@ -21,7 +21,8 @@ const CONFIG = {
     MAX_CHECKS: 50,
   },
   API: {
-    BASE_URL: 'https://overlay-admin-dev.mobilerider.com',
+    PROD_URL: 'https://overlay-admin.mobilerider.com',
+    DEV_URL: 'https://overlay-admin-dev.mobilerider.com',
   },
 };
 
@@ -34,7 +35,7 @@ async function loadScript() {
   scriptPromise = new Promise(async (res) => {
     const env = (await getConfig()).env || 'prod';
     const isProd = env === 'prod';
-    const src = isProd ? CONFIG.SCRIPTS.prod : CONFIG.SCRIPTS.dev;
+    const src = isProd ? CONFIG.SCRIPTS.PROD_URL : CONFIG.SCRIPTS.DEV_URL;
     const s = createTag('script', { src });
     s.onload = res;
     document.head.appendChild(s);
@@ -50,6 +51,7 @@ class MobileRider {
     this.wrap = null;
     this.root = null;
     this.store = null;
+    this.mainID = null; // Track the main video ID for concurrent streams
     this.init();
   }
 
@@ -82,8 +84,13 @@ class MobileRider {
         return;
       }
 
+      // Set mainID for concurrent streams
+      if (isConcurrent && this.store) {
+        this.mainID = videos[0].videoid;
+      }
+
       await this.loadPlayer(videoid, aslid);
-      if (isConcurrent) await this.initDrawer(videos);
+      if (isConcurrent && videos.length > 1) await this.initDrawer(videos);
     } catch (e) {
       window.lana?.log(`MobileRider Init error: ${e.message}`);
     }
@@ -142,7 +149,7 @@ class MobileRider {
     });
     con.appendChild(video);
 
-    if (!video || !window.mobilerider) return;
+    if (!window.mobilerider) return;
 
     window.mobilerider.embed(video.id, vid, skin, {
       ...this.getPlayerOptions(),
@@ -153,7 +160,7 @@ class MobileRider {
     });
 
     if (asl) this.initASL();
-    if (this.store?.get(vid)) this.onStreamEnd(vid);
+    if (this.mainID && this.store?.get(this.mainID)) this.onStreamEnd(vid);
 
     con.classList.remove('is-hidden');
   }
@@ -237,7 +244,10 @@ class MobileRider {
 
   async getMediaStatus(id) {
     try {
-      const res = await fetch(`${CONFIG.API.BASE_URL}/api/media-status?ids=${id}`);
+      const env = (await getConfig()).env || 'prod';
+      const isLowerEnv = env !== 'prod';
+      const baseUrl = isLowerEnv ? CONFIG.API.DEV_URL : CONFIG.API.PROD_URL;
+      const res = await fetch(`${baseUrl}/api/media-status?ids=${id}`);
       if (!res.ok) {
         const err = await res.json();
         throw new Error(err.message || 'Failed to get media status');
@@ -252,8 +262,13 @@ class MobileRider {
   async checkLive(v) {
     if (!v?.videoid) return false;
     try {
-      const { active } = await this.getMediaStatus(v.videoid);
+      // Use mainID if available, otherwise use the provided video ID
+      const videoIDToCheck = this.mainID || v.videoid;
+      
+      const { active } = await this.getMediaStatus(videoIDToCheck);
       const isActive = active.includes(v.videoid);
+      
+      // Only update store if status has actually changed
       this.setStatus(v.videoid, isActive);
       return isActive;
     } catch (e) {
@@ -263,7 +278,20 @@ class MobileRider {
   }
 
   setStatus(id, live) {
-    if (id) this.store?.set(id, live);
+    if (!id || !this.store || !this.mainID) return;
+    
+    try {
+      // Get current status from store
+      const currentStatus = this.store.get(this.mainID);
+      
+      // Only update store if status has actually changed
+      if (currentStatus !== live) {
+        this.store.set(this.mainID, live);
+        window.lana?.log?.(`Status updated for ${this.mainID}: ${live}`);
+      }
+    } catch (e) {
+      window.lana?.log?.(`setStatus error for ${this.mainID}: ${e.message}`);
+    }
   }
 
   initASL() {
@@ -339,8 +367,9 @@ class MobileRider {
 
 export default function init(el) {
   try {
-    new MobileRider(el);
+    return new MobileRider(el);
   } catch (e) {
     window.lana?.log(`Mobile Rider init failed: ${e.message}`);
+    return null;
   }
 }
