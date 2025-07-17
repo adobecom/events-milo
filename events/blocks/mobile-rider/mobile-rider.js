@@ -51,7 +51,7 @@ class MobileRider {
     this.wrap = null;
     this.root = null;
     this.store = null;
-    this.mainID = null; // Track the main video ID for concurrent streams
+    this.mainID = null;
     this.init();
   }
 
