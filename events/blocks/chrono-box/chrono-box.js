@@ -173,6 +173,6 @@ export default async function init(el) {
 
   setTimeout(() => {
     console.log('setting video');
-    metadataStore.set('video', 'https://www.youtube.com/watch?v=dQw4w9WgXcQ');
+    metadataStore.set('marketo-next', 'https://www.youtube.com/watch?v=dQw4w9WgXcQ');
   }, 10000);
 }
