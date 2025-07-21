@@ -387,7 +387,7 @@ worker.postMessage({
 When creating new plugins, the tabId is automatically handled internally:
 
 ```javascript
-import { getCurrentTabId } from '../../worker.js';
+import { getCurrentTabId } from '../../../../scripts/utils.js';
 
 export const yourPluginStore = {
   get(key) {
