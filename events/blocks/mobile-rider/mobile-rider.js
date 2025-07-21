@@ -189,8 +189,8 @@ class MobileRider {
   }
 
   drawerHeading() {
-    const title = this.cfg.drawerTitle || 'Now Playing';
-    const subtitle = this.cfg.drawerSubtitle || 'Select a live session';
+    const title = this.cfg.drawertitle || 'Now Playing';
+    const subtitle = this.cfg.drawersubtitle || 'Select a live session';
     
     const header = createTag('div', { class: 'relatedContent-NowPlaying' });
     header.innerHTML = `
