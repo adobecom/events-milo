@@ -1,5 +1,5 @@
 import MobileRiderController from './mobile-rider-controller.js';
-import { getCurrentTabId } from '../../worker.js';
+import { getCurrentTabId } from '../../../../scripts/utils.js';
 
 const store = new Map();
 const channel = new BroadcastChannel('mobile-rider-store');
