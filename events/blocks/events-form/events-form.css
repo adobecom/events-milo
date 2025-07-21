@@ -246,6 +246,7 @@
   position: relative;
   inline-size: 14px;
   block-size: 14px;
+  min-width: 14px;
 }
 
 .events-form .check-item-button::before {

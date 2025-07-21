@@ -1,7 +1,7 @@
 import { LIBS, getMetadata, getSusiOptions } from '../../scripts/utils.js';
 import { deleteAttendeeFromEvent, getAndCreateAndAddAttendee, getAttendee, getEvent } from '../../scripts/esp-controller.js';
 import BlockMediator from '../../scripts/deps/block-mediator.min.js';
-import { miloReplaceKey, signIn } from '../../scripts/content-update.js';
+import autoUpdateContent, { miloReplaceKey, signIn } from '../../scripts/content-update.js';
 import { dictionaryManager } from '../../scripts/dictionary-manager.js';
 
 const { createTag, getConfig } = await import(`${LIBS}/utils/utils.js`);
@@ -151,6 +151,18 @@ function constructPayload(form) {
     }
 
     if (fe.value) payload[fe.id] = fe.value;
+  });
+
+  // Post-process checkbox groups to convert single-option groups to booleans
+  Object.keys(payload).forEach((key) => {
+    const fieldWrapper = form.querySelector(`[data-field-id="${key}"]`);
+    if (fieldWrapper && (fieldWrapper.dataset.type === 'checkbox' || fieldWrapper.dataset.type === 'checkbox-group')) {
+      const checkboxes = fieldWrapper.querySelectorAll('input[type="checkbox"]');
+      if (checkboxes.length === 1) {
+        // Single option checkbox - convert to boolean
+        payload[key] = payload[key] && payload[key].length > 0;
+      }
+    }
   });
 
   return payload;
@@ -393,10 +405,24 @@ function applyRules(form, rules) {
         force = (payload[key] !== value);
         break;
       case RULE_OPERATORS.includes:
-        force = (payload[key].split(';').map((s) => s.trim()).includes(value));
+        // Handle both boolean and array values
+        if (typeof payload[key] === 'boolean') {
+          force = payload[key] === true;
+        } else if (Array.isArray(payload[key])) {
+          force = payload[key].includes(value);
+        } else if (typeof payload[key] === 'string') {
+          force = payload[key].split(';').map((s) => s.trim()).includes(value);
+        }
         break;
       case RULE_OPERATORS.excludes:
-        force = (!payload[key].split(';').map((s) => s.trim()).includes(value));
+        // Handle both boolean and array values
+        if (typeof payload[key] === 'boolean') {
+          force = payload[key] === false;
+        } else if (Array.isArray(payload[key])) {
+          force = !payload[key].includes(value);
+        } else if (typeof payload[key] === 'string') {
+          force = (!payload[key].split(';').map((s) => s.trim()).includes(value));
+        }
         break;
       case RULE_OPERATORS.lessThan:
         force = processRule(tf, operator, payload[key], value, (a, b) => a < b);
@@ -795,6 +821,8 @@ async function createForm(bp, formData) {
       }
     });
   });
+
+  autoUpdateContent(formEl, { getConfig, miloLibs: LIBS });
 
   return {
     formEl,
