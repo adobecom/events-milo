@@ -1,8 +1,5 @@
 import { createTag } from '../../scripts/utils.js';
 
-// Import drawer styles
-import './drawer.css';
-
 class Drawer {
   constructor(root, cfg = {}) {
     if (!root) throw new Error('Drawer needs a root element.');

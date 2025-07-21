@@ -188,6 +188,17 @@ class MobileRider {
     window.__mr_stream_published = null;
   }
 
+  loadDrawerCSS() {
+    // Check if drawer CSS is already loaded
+    if (document.querySelector('link[href*="drawer.css"]')) return;
+    
+    // Load drawer CSS dynamically
+    const link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = '/events/blocks/mobile-rider/drawer.css';
+    document.head.appendChild(link);
+  }
+
   drawerHeading() {
     const title = this.cfg.drawertitle || 'Now Playing';
     const subtitle = this.cfg.drawersubtitle || 'Select a live session';
@@ -202,6 +213,8 @@ class MobileRider {
 
   async initDrawer(videos) {
     try {
+      // Load drawer CSS dynamically
+      this.loadDrawerCSS();
       const { default: createDrawer } = await import('./drawer.js');
 
       const renderItem = (v) => {
