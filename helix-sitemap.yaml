@@ -5,7 +5,7 @@ sitemaps:
     languages:
       default:
         source: /events/query-index.json
-        destination: /events/create-now/sitemap.xml
+        destination: /events/sitemap.xml
         hreflang: en
         alternate: /{path}
       de:
@@ -13,17 +13,47 @@ sitemaps:
         destination: /de/events/create-now/sitemap.xml
         hreflang: de
         alternate: /{path}
+      fr:
+        source: /fr/events/query-index.json
+        destination: /fr/events/create-now/sitemap.xml
+        hreflang: fr
+        alternate: /{path}
+      es:
+        source: /es/events/query-index.json
+        destination: /es/events/create-now/sitemap.xml
+        hreflang: es
+        alternate: /{path}
+      th_en:
+        source: /th_en/events/query-index.json
+        destination: /th_en/events/create-now/sitemap.xml
+        hreflang: th
+        alternate: /{path}
   
   seo-templates:
     origin: https://www.adobe.com
     languages:
       default:
         source: /events/default/metadata.json?sheet=sitemap
-        destination: /events/create-now/events-sitemap.xml
+        destination: /events/events-sitemap.xml
         hreflang: en
         alternate: /{path}
       de:
         source: /de/events/default/metadata.json?sheet=sitemap
         destination: /de/events/create-now/events-sitemap.xml
         hreflang: de
+        alternate: /{path}
+      fr:
+        source: /fr/events/default/metadata.json?sheet=sitemap
+        destination: /fr/events/create-now/events-sitemap.xml
+        hreflang: fr
+        alternate: /{path}
+      es:
+        source: /es/events/default/metadata.json?sheet=sitemap
+        destination: /es/events/create-now/events-sitemap.xml
+        hreflang: es
+        alternate: /{path}
+      th_en:
+        source: /th_en/events/default/metadata.json?sheet=sitemap
+        destination: /th_en/events/create-now/events-sitemap.xml
+        hreflang: th
         alternate: /{path}

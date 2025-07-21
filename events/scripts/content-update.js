@@ -201,7 +201,7 @@ async function handleRSVPBtnBasedOnProfile(rsvpBtn, miloLibs, profile) {
     if (!allowGuestReg) {
       rsvpBtn.el.addEventListener('click', (e) => {
         e.preventDefault();
-        signIn(getSusiOptions(getConfig()));
+        signIn({ ...getSusiOptions(getConfig()), redirect_uri: `${e.target.href}` });
       });
     }
   }
@@ -284,29 +284,6 @@ function autoUpdateLinks(scope, miloLibs) {
     },
   };
 
-  const templateLoadCallbacks = {
-    webinar: (a, templateId) => {
-      a.href = templateId;
-    },
-    inperson: (a, templateId) => {
-      const params = new URLSearchParams(document.location.search);
-      const testTiming = params.get('timing');
-      let timeSuffix = '';
-
-      if (testTiming) {
-        timeSuffix = +testTiming > +getMetadata('local-end-time-millis') ? '-post' : '-pre';
-      } else {
-        const currentDate = new Date();
-        const currentTimestamp = currentDate.getTime();
-        timeSuffix = currentTimestamp > +getMetadata('local-end-time-millis') ? '-post' : '-pre';
-      }
-
-      a.href = `${templateId}${timeSuffix}`;
-      const timingClass = `timing${timeSuffix}-event`;
-      document.body.classList.add(timingClass);
-    },
-  };
-
   scope.querySelectorAll('a[href*="#"]').forEach(async (a) => {
     try {
       const url = new URL(a.href);
@@ -342,12 +319,7 @@ function autoUpdateLinks(scope, miloLibs) {
         }
 
         if (templateId) {
-          const eventType = getMetadata('event-type');
-          if (eventType && templateLoadCallbacks[eventType.toLowerCase()]) {
-            templateLoadCallbacks[eventType.toLowerCase()](a, templateId);
-          } else {
-            window.lana?.log(`Error: Failed to find template ID for event ${getMetadata('event-id')} due to missing event type`);
-          }
+          a.href = templateId;
         } else {
           window.lana?.log(`Error: Failed to find template ID for event ${getMetadata('event-id')}`);
         }
@@ -531,8 +503,8 @@ function injectFragments(parent) {
 
 export async function getNonProdData(env) {
   const isPreviewMode = new URLSearchParams(window.location.search).get('previewMode')
-  || window.location.hostname.includes('.hlx.')
-  || window.location.hostname.includes('.aem.');
+  || window.location.hostname.includes('.hlx.page')
+  || window.location.hostname.includes('.aem.page');
 
   const localeMatch = window.location.pathname.match(/^(\/[^/]+)?\/events\//);
   const localePath = localeMatch?.[1] || '';
