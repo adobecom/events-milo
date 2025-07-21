@@ -1,19 +1,5 @@
 import TestingManager from './testing.js';
 
-/**
- * Gets the current tabId from sessionStorage
- * This function is used by plugins that are not part of the worker context
- * @returns {string} The current tabId
- * @throws {Error} If tabId is not found in sessionStorage
- */
-export function getCurrentTabId() {
-  const tabId = sessionStorage.getItem('chrono-box-tab-id');
-  if (!tabId) {
-    throw new Error('tabId not found in sessionStorage. Ensure chrono-box is initialized first.');
-  }
-  return tabId;
-}
-
 class TimingWorker {
   constructor() {
     this.tabId = null;
@@ -86,6 +72,7 @@ class TimingWorker {
    */
   static async getCurrentTimeFromAPI() {
     try {
+      // FIXME: get current time from Akamai API
       const response = await fetch('https://worldtimeapi.org/api/ip');
       const data = await response.json();
       return new Date(data.datetime).getTime();

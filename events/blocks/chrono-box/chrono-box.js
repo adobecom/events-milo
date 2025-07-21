@@ -57,7 +57,15 @@ async function initPlugins(schedule) {
 
 function setScheduleToScheduleWorker(schedule, plugins, tabId) {
   const scheduleLinkedList = buildScheduleDoubleLinkedList(schedule);
-  const worker = new Worker('/events/features/timing-framework/worker.js', { type: 'module' });
+
+  // Add error handling for worker creation
+  let worker;
+  try {
+    worker = new Worker('/events/features/timing-framework/worker.js', { type: 'module' });
+  } catch (error) {
+    window.lana?.log(`Error creating worker: ${JSON.stringify(error)}`);
+    throw error;
+  }
 
   // Get testing data from URL params
   const params = new URLSearchParams(document.location.search);
@@ -75,12 +83,19 @@ function setScheduleToScheduleWorker(schedule, plugins, tabId) {
     ]),
   );
 
-  worker.postMessage({
+  const messageData = {
     schedule: scheduleLinkedList,
     plugins: pluginStates,
     testing,
     tabId,
-  });
+  };
+
+  try {
+    worker.postMessage(messageData);
+  } catch (error) {
+    window.lana?.log(`Error posting message to worker: ${JSON.stringify(error)}`);
+    throw error;
+  }
 
   return worker;
 }

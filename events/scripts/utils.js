@@ -287,3 +287,11 @@ export function parseMetadataPath(path, extraData = {}) {
 
   return currentValue || extraData[path] || '';
 }
+
+export function getCurrentTabId() {
+  const tabId = sessionStorage.getItem('chrono-box-tab-id');
+  if (!tabId) {
+    throw new Error('tabId not found in sessionStorage. Ensure chrono-box is initialized first.');
+  }
+  return tabId;
+}
