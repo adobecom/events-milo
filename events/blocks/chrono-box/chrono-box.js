@@ -1,3 +1,4 @@
+import { metadataStore } from '../../features/timing-framework/plugins/metadata/plugin.js';
 import { readBlockConfig, LIBS, getMetadata } from '../../scripts/utils.js';
 
 function buildScheduleDoubleLinkedList(entries) {
@@ -154,4 +155,9 @@ export default async function init(el) {
       el.classList.add('error');
     });
   };
+
+  setTimeout(() => {
+    console.log('setting video');
+    metadataStore.set('video', 'https://www.youtube.com/watch?v=dQw4w9WgXcQ');
+  }, 10000);
 }
