@@ -207,7 +207,6 @@ describe('autoUpdateContent - Array Iteration', () => {
       // eslint-disable-next-line no-cond-assign
       while ((match = META_REG.exec(testText)) !== null) {
         matches.push(match);
-        match = META_REG.exec(testText);
       }
 
       console.log('META_REG matches:', matches);
