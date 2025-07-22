@@ -208,7 +208,8 @@ async function handleRSVPBtnBasedOnProfile(rsvpBtn, miloLibs, profile) {
 }
 
 export async function validatePageAndRedirect(miloLibs) {
-  const { getConfig, loadLana } = await import(`${miloLibs}/utils/utils.js`);
+  document.body.classList.add('validating-page');
+  const { getConfig, loadLana, getLocale } = await import(`${miloLibs}/utils/utils.js`);
   const env = getEventServiceEnv();
   const pagePublished = getMetadata('published') === 'true' || getMetadata('status') === 'live';
   const invalidStagePage = env === 'stage' && window.location.hostname === 'www.stage.adobe.com' && !getMetadata('event-id');
@@ -216,25 +217,28 @@ export async function validatePageAndRedirect(miloLibs) {
 
   const organicHitUnpublishedOnProd = env === 'prod' && !pagePublished && !isPreviewMode;
   const purposefulHitOnProdPreview = env === 'prod' && isPreviewMode;
+  const { prefix } = getLocale(getConfig().locales);
+  const error404Location = `${prefix}/error-pages/404`;
 
   if (organicHitUnpublishedOnProd || invalidStagePage) {
     await loadLana({ clientId: 'events-milo' });
     await window.lana?.log(`Error: 404 page hit on ${env}: ${window.location.href}`);
-    window.location.replace('/404');
+
+    window.location.replace(error404Location);
+    return;
   }
 
   if (purposefulHitOnProdPreview) {
-    document.body.style.display = 'none';
     BlockMediator.subscribe('imsProfile', ({ newValue }) => {
       if (newValue?.noProfile || newValue?.account_type === 'guest') {
         signIn(getSusiOptions(getConfig()));
       } else if (!newValue.email?.toLowerCase().endsWith('@adobe.com')) {
-        window.location.replace('/404');
-      } else {
-        document.body.removeAttribute('style');
+        window.location.replace(error404Location);
       }
     });
   }
+
+  document.body.classList.remove('validating-page');
 }
 
 function autoUpdateLinks(scope, miloLibs) {
