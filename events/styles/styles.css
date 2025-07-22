@@ -102,3 +102,7 @@ fieldset {
     font-size: var(--type-body-xl-size);
   }
 }
+
+body.validating-page {
+  display: none;
+}
