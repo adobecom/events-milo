@@ -15,6 +15,12 @@ class RSVPStateManager {
 
   // Debounced update function
   async debouncedUpdate(rsvpBtn, miloLibs) {
+    const eventId = this.getParsedMetadata('event-id');
+    const eventInfo = await getEvent(eventId);
+    if (!eventInfo.ok) {
+      window.lana?.log(`Error: Failed to fetch event info for event ${eventId} while updating RSVP state`);
+      return;
+    }
     // Use the href hash as the unique identifier
     const key = rsvpBtn.el.href.split('#')[1] || 'default';
     // Clear existing timer
@@ -24,7 +30,7 @@ class RSVPStateManager {
     // Set new timer
     const timer = setTimeout(async () => {
       this.debounceTimers.delete(key);
-      await this.performUpdate(rsvpBtn, miloLibs);
+      await this.performUpdate(rsvpBtn, miloLibs, eventInfo);
     }, this.DEBOUNCE_DELAY);
     this.debounceTimers.set(key, timer);
   }
@@ -41,9 +47,8 @@ class RSVPStateManager {
   }
 
   // Main update logic (always fetches event info fresh)
-  async performUpdate(rsvpBtn, miloLibs) {
+  async performUpdate(rsvpBtn, miloLibs, eventInfo) {
     const rsvpData = BlockMediator.get('rsvpData');
-    const eventId = this.getParsedMetadata('event-id');
     // Fast path: Handle RSVP state first
     if (rsvpData) {
       if (rsvpData.registrationStatus === 'registered') {
@@ -54,20 +59,17 @@ class RSVPStateManager {
       }
     }
     // Always fetch event info fresh
-    const eventInfo = await getEvent(eventId);
     const allowWaitlisting = this.getParsedMetadata('allow-wait-listing', 'true') === 'true';
     let eventFull = false;
     let waitlistEnabled = allowWaitlisting;
-    if (eventInfo.ok) {
-      const {
-        isFull,
-        allowWaitlisting: eventAllowWaitlisting,
-        attendeeCount,
-        attendeeLimit,
-      } = eventInfo.data;
-      eventFull = isFull || (!eventAllowWaitlisting && attendeeCount >= attendeeLimit);
-      waitlistEnabled = eventAllowWaitlisting;
-    }
+    const {
+      isFull,
+      allowWaitlisting: eventAllowWaitlisting,
+      attendeeCount,
+      attendeeLimit,
+    } = eventInfo.data;
+    eventFull = isFull || (!eventAllowWaitlisting && attendeeCount >= attendeeLimit);
+    waitlistEnabled = eventAllowWaitlisting;
     if (eventFull) {
       if (waitlistEnabled) {
         return setCtaState('toWaitlist', rsvpBtn, miloLibs);
