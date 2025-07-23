@@ -1,4 +1,4 @@
-import { metadataStore } from '../../features/timing-framework/plugins/metadata/plugin.js';
+// import { metadataStore } from '../../features/timing-framework/plugins/metadata/plugin.js';
 import { readBlockConfig, LIBS, getMetadata } from '../../scripts/utils.js';
 
 function buildScheduleDoubleLinkedList(entries) {
@@ -171,8 +171,66 @@ export default async function init(el) {
     });
   };
 
-  setTimeout(() => {
-    console.log('setting video');
-    metadataStore.set('marketo-next', 'https://www.youtube.com/watch?v=dQw4w9WgXcQ');
-  }, 10000);
+  setMetadata('adobe-connect-url', 'https://newadmin.dev.adobeconnect.com/gbajaj?guestname=Participant&proto=true');
+
+  // setTimeout(() => {
+  //   console.log('setting video');
+  //   metadataStore.set('marketo-next', 'https://www.youtube.com/watch?v=dQw4w9WgXcQ');
+  // }, 10000);
+
+  function mczMarketoFormAdobeConnectEvent() {
+    if (window.mcz_marketoForm_pref?.form?.success?.type === 'adobe_connect') {
+      const eventUrl = window.mcz_marketoForm_pref?.form?.success?.content;
+      setMetadata('adobe-connect-url', eventUrl);
+      // window.join_url = eventUrl;
+    }
+  
+    // if (document.querySelector(".marketo-form-wrapper")) {
+    //   document.querySelector(".marketo-form-wrapper").classList.add("hide");
+    // }
+    // // console.log("adobe_connect_event in Events", eventUrl);
+  
+    // const joinButton = document.querySelector('.adobe-connect button[daa-ll*="Join"]');
+    // if (joinButton) {
+    //   document.querySelector('.adobe-connect button[daa-ll*="Join"]').click();
+    // }
+  }
+  
+  // Debounce function to limit rapid calls
+  function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+      const later = () => {
+        clearTimeout(timeout);
+        func(...args);
+      };
+      clearTimeout(timeout);
+      timeout = setTimeout(later, wait);
+    };
+  }
+  
+  // Debounced callback for observer
+  const debouncedCallback = debounce(() => {
+    const status = el.getAttribute('data-mcz-dl-status');
+    console.log(
+      'Attribute "data-mcz-dl-status" changed to',
+      el.getAttribute('data-mcz-dl-status'),
+    );
+    if (status === 'active') {
+      mczMarketoFormAdobeConnectEvent();
+    }
+  }, 300); // 300ms debounce delay
+  
+  const observer = new MutationObserver((mutationsList) => {
+    mutationsList.forEach((mutation) => {
+      if (mutation.type === 'attributes') {
+        debouncedCallback();
+      }
+    });
+  });
+  
+  observer.observe(el, {
+    attributes: true, // Observe attribute changes
+    attributeFilter: ['data-mcz-dl-status'], // Optional: filter specific attributes
+  });
 }
