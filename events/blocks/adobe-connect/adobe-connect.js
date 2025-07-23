@@ -43,9 +43,9 @@ export default async function init(el) {
   el.setAttribute('data-mcz-dl-status', 'loading');
 
   h2.remove();
-  const button = createTag('button', { class: 'hidden' }, 'Join the event', { parent: el });
+  // const button = createTag('button', { class: 'hidden' }, 'Join the event', { parent: el });
 
-  button.addEventListener('click', () => {
+  // button.addEventListener('click', () => {
     const searchParams = getSearchParamsFromCurrentUrl();
 
     if (validateUrl(window.join_url)) {
@@ -79,9 +79,9 @@ export default async function init(el) {
       overlay.remove();
     }, 7000);
     
-    button.remove();
-    document.body.querySelector('#webinar-marketo-form')?.remove();
-  });
+    // button.remove();
+    // document.body.querySelector('#webinar-marketo-form')?.remove();
+  // });
 
   function mcz_marketoForm_adobe_connect_event() {
    
