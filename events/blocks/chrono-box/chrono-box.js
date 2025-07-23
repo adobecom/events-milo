@@ -1,5 +1,5 @@
 // import { metadataStore } from '../../features/timing-framework/plugins/metadata/plugin.js';
-import { readBlockConfig, LIBS, getMetadata } from '../../scripts/utils.js';
+import { readBlockConfig, LIBS, getMetadata, setMetadata } from '../../scripts/utils.js';
 
 function buildScheduleDoubleLinkedList(entries) {
   if (!entries.length) return null;
@@ -170,8 +170,8 @@ export default async function init(el) {
       el.classList.add('error');
     });
   };
-
   setMetadata('adobe-connect-url', 'https://newadmin.dev.adobeconnect.com/gbajaj?guestname=Participant&proto=true');
+
 
   // setTimeout(() => {
   //   console.log('setting video');
