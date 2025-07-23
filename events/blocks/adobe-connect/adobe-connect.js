@@ -37,6 +37,83 @@ function getSearchParamsFromCurrentUrl() {
   return searchParams;
 }
 
+function createOverlay(rowBlock) {
+  // Show the overlay div if it exists and is hidden
+  if (rowBlock.classList.contains('hidden')) {
+    rowBlock.classList.remove('hidden');
+  }
+
+  // Overlay container
+  const elements = {
+    overlay: rowBlock.querySelector(':scope > div:nth-of-type(1)'),
+    heading: rowBlock.querySelector(':scope > div:nth-of-type(1) > h2:nth-of-type(1)'),
+    subheading: rowBlock.querySelector(':scope > div:nth-of-type(1) > p:nth-of-type(1)'),
+    bestViewedInLandscape: rowBlock.querySelector(':scope > div:nth-of-type(1) > p:nth-of-type(2)'),
+    rotateYourPhone: rowBlock.querySelector(':scope > div:nth-of-type(1) > p:nth-of-type(3)'),
+    youAreAllSet: rowBlock.querySelector(':scope > div:nth-of-type(1) > h2:nth-of-type(2)'),
+    continueBtn: rowBlock.querySelector(':scope > div:nth-of-type(1) > p:nth-of-type(4) > a'),
+  };
+
+  const overlay = rowBlock.querySelector(':scope > div:nth-of-type(1)');
+  overlay.classList.add('iframe-overlay');
+
+  // Close button (top right)
+  const closeBtn = createTag(
+    'img',
+    {
+      class: 'overlay-close-btn',
+      'aria-label': 'Close overlay',
+      src: '/events/blocks/adobe-connect/asset/Frame.svg',
+      alt: 'Close overlay',
+    },
+  );
+  overlay.insertAdjacentElement('beforeend', closeBtn);
+  closeBtn.addEventListener('click', () => overlay.remove());
+
+  // Heading
+  elements.heading.classList.add('overlay-heading');
+
+  // subheading
+  elements.subheading.classList.add('overlay-subheading');
+
+  // Illustration (SVG)
+  const rotateImg = createTag('img', {
+    class: 'overlay-illustration',
+    src: '/events/blocks/adobe-connect/asset/Rotate.svg',
+    alt: 'Phone rotation illustration',
+  });
+  elements.subheading.insertAdjacentElement('afterend', rotateImg);
+
+  elements.bestViewedInLandscape.classList.add('overlay-landscape');
+  elements.rotateYourPhone.classList.add('overlay-rotate-msg');
+  // Message container
+  const messageContainer = createTag('div', { class: 'overlay-message-container' }, [elements.bestViewedInLandscape, elements.rotateYourPhone]);
+  rotateImg.insertAdjacentElement('afterend', messageContainer);
+
+  elements.continueBtn.classList.add('overlay-continue-btn');
+  elements.continueBtn.addEventListener('click', (event) => {
+    event.preventDefault();
+    overlay.remove();
+  });
+
+  // Message for landscape mode
+  elements.youAreAllSet.classList.add('overlay-heading-yrs');
+
+  return overlay;
+}
+
+function isMobileDevice() {
+  return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+}
+
+function isPortraitMode() {
+  return window.innerHeight > window.innerWidth;
+}
+
+function shouldShowOverlay() {
+  return isMobileDevice() && isPortraitMode();
+}
+
 export default async function init(el) {
   const h2 = el.querySelector('h2');
   let url = h2?.textContent;
@@ -44,6 +121,12 @@ export default async function init(el) {
 
   h2.remove();
   const button = createTag('button', { class: 'hidden' }, 'Join the event', { parent: el });
+
+  //Hide the overlay div if it exists
+  const overlayElem = el.querySelector(':scope > div:nth-of-type(2)');
+  if (overlayElem) {
+    overlayElem.classList.add('hidden');
+  }
 
   button.addEventListener('click', () => {
     const searchParams = getSearchParamsFromCurrentUrl();
@@ -53,17 +136,12 @@ export default async function init(el) {
       console.log("join_url in Window", window.join_url);
     }
     url = addSearchParams(url, searchParams);
-    
-    // Create overlay
-    const overlay = createTag('div', {
-      class: 'iframe-overlay',
-      style: 'position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255, 255, 255, 0.9); display: flex; align-items: center; justify-content: center; z-index: 1000;',
-    }, '', { parent: el });
-    
-    // Create loading text
-    createTag('div', {
-      style: 'font-size: 1.2em; color: #333;',
-    }, 'Loading event...', { parent: overlay });
+
+    if (overlayElem && shouldShowOverlay()) {
+      createOverlay(overlayElem);
+    } else if (overlayElem) {
+      overlayElem.remove();
+    }
     
     // Create iframe
     createTag('iframe', {
