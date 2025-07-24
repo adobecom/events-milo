@@ -63,7 +63,7 @@ function createOverlay(rowBlock) {
     {
       class: 'overlay-close-btn',
       'aria-label': 'Close overlay',
-      src: '/events/blocks/adobe-connect/asset/Frame.svg',
+      src: '/events/blocks/adobe-connect/asset/Cross.svg',
       alt: 'Close overlay',
     },
   );
