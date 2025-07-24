@@ -74,13 +74,8 @@ function setScheduleToScheduleWorker(schedule, plugins, tabId) {
 
   // Convert plugin instances to their serializable state
   const pluginStates = Object.fromEntries(
-    Array.from(plugins.entries()).map(([name, plugin]) => [
-      name,
-      {
-        type: name,
-        data: plugin.getAll ? plugin.getAll() : plugin,
-      },
-    ]),
+    Array.from(plugins.entries())
+      .map(([n, p]) => [n, { type: n, data: p.getAll ? p.getAll() : p }]),
   );
 
   const messageData = {

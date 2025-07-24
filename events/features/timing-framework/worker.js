@@ -89,12 +89,15 @@ class TimingWorker {
    */
   static getStartScheduleItemByToggleTime(scheduleRoot) {
     const currentTime = new Date().getTime();
+
     let pointer = scheduleRoot;
     let start = null;
 
     while (pointer) {
       const { toggleTime: t } = pointer;
-      const toggleTimePassed = typeof t !== 'number' || currentTime > t;
+      // Convert toggleTime to number if it's a string, like in shouldTriggerNextSchedule
+      const numericToggleTime = typeof t === 'string' ? parseInt(t, 10) : t;
+      const toggleTimePassed = typeof numericToggleTime !== 'number' || currentTime > numericToggleTime;
 
       if (!toggleTimePassed) break;
 
@@ -121,9 +124,11 @@ class TimingWorker {
    */
   getCurrentTime() {
     const currentTime = new Date().getTime();
-    return this.testingManager.isTesting()
+    const adjustedTime = this.testingManager.isTesting()
       ? this.testingManager.adjustTime(currentTime)
       : currentTime;
+
+    return adjustedTime;
   }
 
   /**
@@ -166,6 +171,7 @@ class TimingWorker {
             || (typeof value === 'object' && Object.keys(value).length === 0);
           const isAnyVal = !expectedValue && !isEmpty;
           const matchesExpectedValue = expectedValue && value === expectedValue;
+
           return isAnyVal || matchesExpectedValue;
         });
         return allConditionMet;
@@ -175,7 +181,11 @@ class TimingWorker {
     // If no plugins are blocking, check toggleTime
     const { toggleTime } = scheduleItem;
     if (toggleTime) {
-      return this.getCurrentTime() > toggleTime;
+      const currentTime = this.getCurrentTime();
+      // Convert toggleTime to number if it's a string
+      const numericToggleTime = typeof toggleTime === 'string' ? parseInt(toggleTime, 10) : toggleTime;
+      const timePassed = currentTime > numericToggleTime;
+      return timePassed;
     }
 
     return true;
