@@ -177,7 +177,7 @@ export default async function init(el) {
     if (window.mcz_marketoForm_pref?.form?.success?.type === 'adobe_connect') {
       const eventUrl = window.mcz_marketoForm_pref?.form?.success?.content;
       setMetadata('adobe-connect-url', eventUrl);
-      metadataStore.set('marketo-next', '');
+      metadataStore.set('marketo-next', 'adobe-connect');
     }
   }
   
