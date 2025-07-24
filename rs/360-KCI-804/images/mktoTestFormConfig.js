@@ -50,7 +50,7 @@ if (
   var BASE_URL = "https://engage.marketo.com";
   var MUNCHKIN_ID = "360-KCI-804";
   var resourceLocation = ".chrono-box";
-  var resourceWatch = '.chrono-box';
+  var resourceWatch = 'main .section .chrono-box';
   let mczFrm_mkto_testing_loader = () => {
     let cssFast = `
    button[daa-ll="Join the event-1--"] {
@@ -307,8 +307,10 @@ if (
     mczFrm_sendMessage("reg_submitted", "root.program_profile");
     
     const resource = document.querySelector(resourceWatch);
-    if(resource) {
+    if (resource) {
       resource.setAttribute('data-mcz-dl-status', 'active');
+    } else {
+      console.log('resourceWatch not found', resourceWatch);
     }
   };
 
