@@ -851,17 +851,21 @@ if (
   //*
   //*
   let maxTries = 1000;
-  let checkResourceLocation = async () => {
+  let checkResourceLocation = () => {
     if (maxTries <= 0) {
       console.log("maxTries reached", maxTries);
       return;
     }
     maxTries--;
     if (document.querySelector(resourceWatch)) {
-      mczFrm_mkto_testing_loader();
+      setTimeout(() => {
+        mczFrm_mkto_testing_loader();
+      }, 5000);
     } else {
-      await new Promise((resolve) => setTimeout(resolve, 25));
-      checkResourceLocation();
+      // await new Promise((resolve) => setTimeout(resolve, 25));
+      setTimeout(() => {
+        checkResourceLocation();
+      }, 500);
     }
   };
   checkResourceLocation();
