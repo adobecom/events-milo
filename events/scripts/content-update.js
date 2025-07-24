@@ -541,7 +541,7 @@ export async function getNonProdData(env) {
   const firstSegmentWhiteList = ['events', 'resources'];
   const possibleFirstSegmentString = firstSegmentWhiteList.join('|');
   const localeMatch = window.location.pathname.match(new RegExp(`^(/[^/]+)?/(${possibleFirstSegmentString})/`));
-  // console.log(localeMatch); // Remove or comment out debug log
+
   const localePath = localeMatch?.[1] || '';
   const templateFolder = TEMPLATE_FOLDER_MAP[localeMatch?.[2]] || '';
   const resp = await fetch(
