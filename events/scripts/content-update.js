@@ -1,4 +1,4 @@
-import { ICON_REG, META_REG } from './constances.js';
+import { ICON_REG, META_REG, TEMPLATE_FOLDER_MAP } from './constances.js';
 import BlockMediator from './deps/block-mediator.min.js';
 import { getEvent } from './esp-controller.js';
 import {
@@ -538,15 +538,23 @@ export async function getNonProdData(env) {
   || window.location.hostname.includes('.hlx.page')
   || window.location.hostname.includes('.aem.page');
 
-  const localeMatch = window.location.pathname.match(/^(\/[^/]+)?\/events\//);
+  const firstSegmentWhiteList = ['events', 'resources'];
+  const possibleFirstSegmentString = firstSegmentWhiteList.join('|');
+  const localeMatch = window.location.pathname.match(new RegExp(`^(/[^/]+)?/(${possibleFirstSegmentString})/`));
+  // console.log(localeMatch); // Remove or comment out debug log
   const localePath = localeMatch?.[1] || '';
-  const resp = await fetch(`${localePath}/events/default/${env === 'prod' ? '' : `${env}/`}metadata${isPreviewMode ? '-preview' : ''}.json`, {
-    headers: {
-      'Content-Type': 'application/json',
-      'Cache-Control': 'no-cache',
-      Pragma: 'no-cache',
+  const templateFolder = TEMPLATE_FOLDER_MAP[localeMatch?.[2]] || '';
+  const resp = await fetch(
+    `${localePath}${templateFolder}/default/${env === 'prod' ? '' : `${env}/`}metadata${isPreviewMode ? '-preview' : ''}.json`,
+    {
+      headers: {
+        'Content-Type': 'application/json',
+        'Cache-Control': 'no-cache',
+        Pragma: 'no-cache',
+      },
     },
-  });
+  );
+
   if (resp.ok) {
     const json = await resp.json();
     let { pathname } = window.location;
