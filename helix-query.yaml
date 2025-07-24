@@ -4,6 +4,7 @@ indices:
   website: &website
     include:
       - '/events/**'
+      - '/resources/events/**'
     target: /events/query-index.xlsx
     properties:
       title:
@@ -31,30 +32,33 @@ indices:
     <<: *website
     include:
       - '/de/events/**'
+      - '/de/resources/events/**'
     target: /de/events/query-index.xlsx
 
   fr:
     <<: *website
     include:
       - '/fr/events/**'
+      - '/fr/resources/events/**'
     target: /fr/events/query-index.xlsx
 
   uk:
     <<: *website
     include:
       - '/uk/events/**'
+      - '/uk/resources/events/**'
     target: /uk/events/query-index.xlsx
 
   es:
     <<: *website
     include:
       - '/es/events/**'
+      - '/es/resources/events/**'
     target: /es/events/query-index.xlsx
 
   th_en:
     <<: *website
     include:
       - '/th_en/events/**'
+      - '/th_en/resources/events/**'
     target: /th_en/events/query-index.xlsx
-
-  
