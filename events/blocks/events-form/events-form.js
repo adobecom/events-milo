@@ -1,7 +1,7 @@
 import { LIBS, getMetadata, getSusiOptions } from '../../scripts/utils.js';
 import { deleteAttendeeFromEvent, getAndCreateAndAddAttendee, getAttendee, getEvent } from '../../scripts/esp-controller.js';
 import BlockMediator from '../../scripts/deps/block-mediator.min.js';
-import { miloReplaceKey, signIn } from '../../scripts/content-update.js';
+import autoUpdateContent, { miloReplaceKey, signIn } from '../../scripts/content-update.js';
 import { dictionaryManager } from '../../scripts/dictionary-manager.js';
 
 const { createTag, getConfig } = await import(`${LIBS}/utils/utils.js`);
@@ -151,6 +151,18 @@ function constructPayload(form) {
     }
 
     if (fe.value) payload[fe.id] = fe.value;
+  });
+
+  // Post-process checkbox groups to convert single-option groups to booleans
+  Object.keys(payload).forEach((key) => {
+    const fieldWrapper = form.querySelector(`[data-field-id="${key}"]`);
+    if (fieldWrapper && (fieldWrapper.dataset.type === 'checkbox' || fieldWrapper.dataset.type === 'checkbox-group')) {
+      const checkboxes = fieldWrapper.querySelectorAll('input[type="checkbox"]');
+      if (checkboxes.length === 1) {
+        // Single option checkbox - convert to boolean
+        payload[key] = payload[key] && payload[key].length > 0;
+      }
+    }
   });
 
   return payload;
@@ -393,10 +405,24 @@ function applyRules(form, rules) {
         force = (payload[key] !== value);
         break;
       case RULE_OPERATORS.includes:
-        force = (payload[key].split(';').map((s) => s.trim()).includes(value));
+        // Handle both boolean and array values
+        if (typeof payload[key] === 'boolean') {
+          force = payload[key] === true;
+        } else if (Array.isArray(payload[key])) {
+          force = payload[key].includes(value);
+        } else if (typeof payload[key] === 'string') {
+          force = payload[key].split(';').map((s) => s.trim()).includes(value);
+        }
         break;
       case RULE_OPERATORS.excludes:
-        force = (!payload[key].split(';').map((s) => s.trim()).includes(value));
+        // Handle both boolean and array values
+        if (typeof payload[key] === 'boolean') {
+          force = payload[key] === false;
+        } else if (Array.isArray(payload[key])) {
+          force = !payload[key].includes(value);
+        } else if (typeof payload[key] === 'string') {
+          force = (!payload[key].split(';').map((s) => s.trim()).includes(value));
+        }
         break;
       case RULE_OPERATORS.lessThan:
         force = processRule(tf, operator, payload[key], value, (a, b) => a < b);
@@ -796,6 +822,8 @@ async function createForm(bp, formData) {
     });
   });
 
+  autoUpdateContent(formEl, { getConfig, miloLibs: LIBS });
+
   return {
     formEl,
     sanitizeList,
@@ -966,6 +994,21 @@ async function decorateToastArea() {
   return toastArea;
 }
 
+function getFormLink(block, bp) {
+  const legacyLink = block.querySelector(':scope > div:nth-of-type(2) a[href$=".json"]');
+
+  const cloudType = getMetadata('cloud-type');
+  const form = createTag('a', { href: `/events/default/rsvp-form-configs/${cloudType.toLowerCase()}.json` });
+
+  if (legacyLink) {
+    legacyLink.href = form.href;
+    return legacyLink;
+  }
+
+  bp.formContainer.append(form);
+  return form;
+}
+
 export default async function decorate(block, formData = null) {
   block.classList.add('loading');
   const toastArea = await decorateToastArea();
@@ -975,11 +1018,12 @@ export default async function decorate(block, formData = null) {
     toastArea,
     eventHero: block.querySelector(':scope > div:nth-of-type(1)'),
     formContainer: block.querySelector(':scope > div:nth-of-type(2)'),
-    form: block.querySelector(':scope > div:nth-of-type(2) a[href$=".json"]'),
     terms: block.querySelector(':scope > div:nth-of-type(3)'),
     rsvpSuccessScreen: block.querySelector(':scope > div:nth-of-type(4)'),
     waitlistSuccessScreen: block.querySelector(':scope > div:nth-of-type(5)'),
   };
+
+  bp.form = getFormLink(block, bp);
 
   await onProfile(bp, formData);
 }

@@ -1,7 +1,7 @@
 import { readFile } from '@web/test-runner-commands';
 import { expect } from '@esm-bundle/chai';
 import sinon from 'sinon';
-import { LIBS } from '../../../events/scripts/utils.js';
+import { LIBS, setMetadata } from '../../../events/scripts/utils.js';
 import BlockMediator from '../../../events/scripts/deps/block-mediator.min.js';
 
 const {
@@ -182,5 +182,361 @@ describe('getNonProdData', () => {
     expect(data).to.not.be.null;
     expect(data).to.have.property('url', '/');
     fetchStub.restore();
+  });
+});
+
+describe('autoUpdateContent - Array Iteration', () => {
+  let container;
+
+  beforeEach(() => {
+    container = document.createElement('div');
+    document.body.appendChild(container);
+  });
+
+  afterEach(() => {
+    document.body.removeChild(container);
+  });
+
+  describe('@array syntax', () => {
+    it('should debug META_REG pattern', () => {
+      // Test what META_REG captures
+      const META_REG = /\[\[(.*?)\]\]/g;
+      const testText = 'Contact us: [[@array(contacts),]]';
+      const matches = [];
+      let match;
+      // eslint-disable-next-line no-cond-assign
+      while ((match = META_REG.exec(testText)) !== null) {
+        matches.push(match);
+      }
+
+      console.log('META_REG matches:', matches);
+      expect(matches.length).to.be.greaterThan(0);
+      expect(matches[0][1]).to.equal('@array(contacts),');
+    });
+
+    it('should process @array(contacts) with English commas', () => {
+      // Set up test metadata
+      setMetadata('contacts', JSON.stringify(['John Doe', 'Jane Smith', 'Bob Johnson']));
+      setMetadata('event-id', 'test-event'); // Required for autoUpdateContent to run
+
+      // Create test HTML with @array syntax
+      container.innerHTML = '<p>Contact us: [[@array(contacts),]]</p>';
+
+      // Mock miloDeps
+      const miloDeps = {
+        getConfig: () => ({ locale: { ietf: 'en-US' } }),
+        miloLibs: '/libs',
+      };
+
+      // Call autoUpdateContent
+      autoUpdateContent(container, miloDeps, {});
+
+      // Debug: log the actual content
+      console.log('Actual content:', container.textContent);
+      console.log('Expected content:', 'Contact us: John Doe,Jane Smith,Bob Johnson');
+
+      // Verify the result - comma is used exactly as provided
+      expect(container.textContent).to.equal('Contact us: John Doe,Jane Smith,Bob Johnson');
+    });
+
+    it('should process @array(contacts) with custom separator', () => {
+      // Set up test metadata
+      setMetadata('contacts', JSON.stringify(['John Doe', 'Jane Smith', 'Bob Johnson']));
+      setMetadata('event-id', 'test-event');
+
+      // Create test HTML with custom separator
+      container.innerHTML = '<p>Contact us: [[@array(contacts) | ]]</p>';
+
+      // Mock miloDeps
+      const miloDeps = {
+        getConfig: () => ({ locale: { ietf: 'en-US' } }),
+        miloLibs: '/libs',
+      };
+
+      // Call autoUpdateContent
+      autoUpdateContent(container, miloDeps, {});
+
+      // Verify the result uses custom separator
+      expect(container.textContent).to.equal('Contact us: John Doe | Jane Smith | Bob Johnson');
+    });
+
+    it('should process @array(contacts) with no separator (defaults to space)', () => {
+      // Set up test metadata
+      setMetadata('contacts', JSON.stringify(['John Doe', 'Jane Smith', 'Bob Johnson']));
+      setMetadata('event-id', 'test-event');
+
+      // Create test HTML with no separator
+      container.innerHTML = '<p>Contact us: [[@array(contacts)]]</p>';
+
+      // Mock miloDeps
+      const miloDeps = {
+        getConfig: () => ({ locale: { ietf: 'en-US' } }),
+        miloLibs: '/libs',
+      };
+
+      // Call autoUpdateContent
+      autoUpdateContent(container, miloDeps, {});
+
+      // Verify the result uses space as default separator
+      expect(container.textContent).to.equal('Contact us: John Doe Jane Smith Bob Johnson');
+    });
+
+    it('should process @array(contacts) with Japanese separators for comma', () => {
+      // Set up test metadata
+      setMetadata('contacts', JSON.stringify(['田中太郎', '佐藤花子', '鈴木一郎']));
+      setMetadata('event-id', 'test-event');
+
+      // Create test HTML with @array syntax
+      container.innerHTML = '<p>連絡先: [[@array(contacts),]]</p>';
+
+      // Mock miloDeps with Japanese locale
+      const miloDeps = {
+        getConfig: () => ({ locale: { ietf: 'ja-JP' } }),
+        miloLibs: '/libs',
+      };
+
+      // Call autoUpdateContent
+      autoUpdateContent(container, miloDeps, {});
+
+      // Verify the result uses the comma as provided (no locale-specific handling)
+      expect(container.textContent).to.equal('連絡先: 田中太郎,佐藤花子,鈴木一郎');
+    });
+
+    it('should process @array(contacts) with Chinese separators for comma', () => {
+      // Set up test metadata
+      setMetadata('contacts', JSON.stringify(['张三', '李四', '王五']));
+      setMetadata('event-id', 'test-event');
+
+      // Create test HTML with @array syntax
+      container.innerHTML = '<p>联系人: [[@array(contacts),]]</p>';
+
+      // Mock miloDeps with Chinese locale
+      const miloDeps = {
+        getConfig: () => ({ locale: { ietf: 'zh-CN' } }),
+        miloLibs: '/libs',
+      };
+
+      // Call autoUpdateContent
+      autoUpdateContent(container, miloDeps, {});
+
+      // Verify the result uses the comma as provided (no locale-specific handling)
+      expect(container.textContent).to.equal('联系人: 张三,李四,王五');
+    });
+
+    it('should handle empty arrays gracefully', () => {
+      // Set up test metadata with empty array
+      setMetadata('contacts', JSON.stringify([]));
+      setMetadata('event-id', 'test-event');
+
+      // Create test HTML with @array syntax
+      container.innerHTML = '<p>Contact us: [[@array(contacts),]]</p>';
+
+      // Mock miloDeps
+      const miloDeps = {
+        getConfig: () => ({ locale: { ietf: 'en-US' } }),
+        miloLibs: '/libs',
+      };
+
+      // Call autoUpdateContent
+      autoUpdateContent(container, miloDeps, {});
+
+      // Verify the result is empty
+      expect(container.textContent).to.equal('Contact us: ');
+    });
+
+    it('should handle non-array metadata gracefully', () => {
+      // Set up test metadata with non-array
+      setMetadata('contacts', 'John Doe');
+      setMetadata('event-id', 'test-event');
+
+      // Create test HTML with @array syntax
+      container.innerHTML = '<p>Contact us: [[@array(contacts),]]</p>';
+
+      // Mock miloDeps
+      const miloDeps = {
+        getConfig: () => ({ locale: { ietf: 'en-US' } }),
+        miloLibs: '/libs',
+      };
+
+      // Call autoUpdateContent
+      autoUpdateContent(container, miloDeps, {});
+
+      // Verify the result is empty (non-array returns empty string)
+      expect(container.textContent).to.equal('Contact us: ');
+    });
+
+    it('should fallback to English commas for unsupported locales', () => {
+      // Set up test metadata
+      setMetadata('contacts', JSON.stringify(['John Doe', 'Jane Smith']));
+      setMetadata('event-id', 'test-event');
+
+      // Create test HTML with @array syntax
+      container.innerHTML = '<p>Contact us: [[@array(contacts),]]</p>';
+
+      // Mock miloDeps with unsupported locale
+      const miloDeps = {
+        getConfig: () => ({ locale: { ietf: 'xx-XX' } }),
+        miloLibs: '/libs',
+      };
+
+      // Call autoUpdateContent
+      autoUpdateContent(container, miloDeps, {});
+
+      // Verify the result uses the comma as provided (no locale-specific handling)
+      expect(container.textContent).to.equal('Contact us: John Doe,Jane Smith');
+    });
+
+    it('should work with nested metadata paths', () => {
+      // Set up test metadata with nested structure
+      setMetadata('event-data', JSON.stringify({
+        contacts: ['John Doe', 'Jane Smith'],
+        other: 'data',
+      }));
+      setMetadata('event-id', 'test-event');
+
+      // Create test HTML with nested @array syntax
+      container.innerHTML = '<p>Contact us: [[@array(event-data.contacts),]]</p>';
+
+      // Mock miloDeps
+      const miloDeps = {
+        getConfig: () => ({ locale: { ietf: 'en-US' } }),
+        miloLibs: '/libs',
+      };
+
+      // Call autoUpdateContent
+      autoUpdateContent(container, miloDeps, {});
+
+      // Verify the result
+      expect(container.textContent).to.equal('Contact us: John Doe,Jane Smith');
+    });
+
+    it('should extract object attributes from array', () => {
+      // Set up test metadata with array of objects
+      setMetadata('speakers', JSON.stringify([
+        { name: 'Dr. Alice Brown', title: 'Senior Researcher' },
+        { name: 'Prof. Charlie Wilson', title: 'Professor' },
+        { name: 'Jane Smith', title: 'Engineer' },
+      ]));
+      setMetadata('event-id', 'test-event');
+
+      // Create test HTML with attribute extraction
+      container.innerHTML = '<p>Speakers: [[@array(speakers.name),]]</p>';
+
+      // Mock miloDeps
+      const miloDeps = {
+        getConfig: () => ({ locale: { ietf: 'en-US' } }),
+        miloLibs: '/libs',
+      };
+
+      // Call autoUpdateContent
+      autoUpdateContent(container, miloDeps, {});
+
+      // Debug: log the actual content
+      console.log('Actual content:', container.textContent);
+      console.log('Expected content:', 'Speakers: Dr. Alice Brown,Prof. Charlie Wilson,Jane Smith');
+
+      // Verify the result extracts the 'name' attribute
+      expect(container.textContent).to.equal('Speakers: Dr. Alice Brown,Prof. Charlie Wilson,Jane Smith');
+    });
+
+    it('should extract object attributes with custom separator', () => {
+      // Set up test metadata with array of objects
+      setMetadata('speakers', JSON.stringify([
+        { name: 'Dr. Alice Brown', title: 'Senior Researcher' },
+        { name: 'Prof. Charlie Wilson', title: 'Professor' },
+      ]));
+      setMetadata('event-id', 'test-event');
+
+      // Create test HTML with attribute extraction and custom separator
+      container.innerHTML = '<p>Speakers: [[@array(speakers.name) | ]]</p>';
+
+      // Mock miloDeps
+      const miloDeps = {
+        getConfig: () => ({ locale: { ietf: 'en-US' } }),
+        miloLibs: '/libs',
+      };
+
+      // Call autoUpdateContent
+      autoUpdateContent(container, miloDeps, {});
+
+      // Verify the result uses custom separator
+      expect(container.textContent).to.equal('Speakers: Dr. Alice Brown | Prof. Charlie Wilson');
+    });
+
+    it('should handle nested arrays with object attributes', () => {
+      // Set up test metadata with nested structure containing objects
+      setMetadata('event-data', JSON.stringify({
+        speakers: [
+          { name: 'Dr. Alice Brown', title: 'Senior Researcher' },
+          { name: 'Prof. Charlie Wilson', title: 'Professor' },
+        ],
+        other: 'data',
+      }));
+      setMetadata('event-id', 'test-event');
+
+      // Create test HTML with nested array and attribute extraction
+      container.innerHTML = '<p>Speakers: [[@array(event-data.speakers.name),]]</p>';
+
+      // Mock miloDeps
+      const miloDeps = {
+        getConfig: () => ({ locale: { ietf: 'en-US' } }),
+        miloLibs: '/libs',
+      };
+
+      // Call autoUpdateContent
+      autoUpdateContent(container, miloDeps, {});
+
+      // Verify the result
+      expect(container.textContent).to.equal('Speakers: Dr. Alice Brown,Prof. Charlie Wilson');
+    });
+
+    it('should handle objects without attribute specification', () => {
+      // Set up test metadata with array of objects
+      setMetadata('speakers', JSON.stringify([
+        { name: 'Dr. Alice Brown', title: 'Senior Researcher' },
+        { name: 'Prof. Charlie Wilson', title: 'Professor' },
+      ]));
+      setMetadata('event-id', 'test-event');
+
+      // Create test HTML without attribute specification
+      container.innerHTML = '<p>Speakers: [[@array(speakers),]]</p>';
+
+      // Mock miloDeps
+      const miloDeps = {
+        getConfig: () => ({ locale: { ietf: 'en-US' } }),
+        miloLibs: '/libs',
+      };
+
+      // Call autoUpdateContent
+      autoUpdateContent(container, miloDeps, {});
+
+      // Verify the result converts objects to JSON strings
+      expect(container.textContent).to.include('Speakers: {"name":"Dr. Alice Brown","title":"Senior Researcher"},{"name":"Prof. Charlie Wilson","title":"Professor"}');
+    });
+
+    it('should handle missing attributes gracefully', () => {
+      // Set up test metadata with array of objects
+      setMetadata('speakers', JSON.stringify([
+        { name: 'Dr. Alice Brown', title: 'Senior Researcher' },
+        { name: 'Prof. Charlie Wilson' }, // Missing title
+        { title: 'Engineer' }, // Missing name
+      ]));
+      setMetadata('event-id', 'test-event');
+
+      // Create test HTML with attribute extraction
+      container.innerHTML = '<p>Speakers: [[@array(speakers.name),]]</p>';
+
+      // Mock miloDeps
+      const miloDeps = {
+        getConfig: () => ({ locale: { ietf: 'en-US' } }),
+        miloLibs: '/libs',
+      };
+
+      // Call autoUpdateContent
+      autoUpdateContent(container, miloDeps, {});
+
+      // Verify the result handles missing attributes
+      expect(container.textContent).to.equal('Speakers: Dr. Alice Brown,Prof. Charlie Wilson,');
+    });
   });
 });

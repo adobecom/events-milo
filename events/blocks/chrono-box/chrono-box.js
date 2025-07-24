@@ -1,4 +1,5 @@
-import { readBlockConfig, LIBS, getMetadata } from '../../scripts/utils.js';
+import { metadataStore } from '../../features/timing-framework/plugins/metadata/plugin.js';
+import { readBlockConfig, LIBS, getMetadata, setMetadata } from '../../scripts/utils.js';
 
 function buildScheduleDoubleLinkedList(entries) {
   if (!entries.length) return null;
@@ -32,34 +33,70 @@ function getSchedule(scheduleId) {
   return thisSchedule;
 }
 
-function conditionsPreCheck(schedule) {
-  const conditions = {};
-  const allMetadataConditionSchedules = schedule.filter((entry) => entry.conditions?.some((condition) => condition.source === 'metadata'));
-  allMetadataConditionSchedules.forEach((s) => {
-    s.conditions.forEach((condition) => {
-      const { key } = condition;
+async function initPlugins(schedule) {
+  const SUPPORTED_PLUGINS = ['mobile-rider', 'metadata'];
+  const pluginsNeeded = SUPPORTED_PLUGINS.filter((plugin) => schedule.some((item) => item[plugin]));
+  const plugins = await Promise.all(pluginsNeeded.map((plugin) => import(`../../features/timing-framework/plugins/${plugin}/plugin.js`)));
 
-      const metadata = getMetadata(key);
+  // Get or create a global tabId that's shared across all chrono-boxes on this page
+  // This ensures that multiple chrono-boxes on the same page use the same tabId,
+  // allowing their plugin stores to communicate via BroadcastChannel correctly
+  let tabId = sessionStorage.getItem('chrono-box-tab-id');
+  if (!tabId) {
+    tabId = crypto.randomUUID();
+    sessionStorage.setItem('chrono-box-tab-id', tabId);
+  }
 
-      if (metadata) {
-        conditions[key] = metadata;
-      }
-    });
-  });
+  const pluginsModules = new Map();
+  await Promise.all(plugins.map(async (plugin, index) => {
+    const pluginName = pluginsNeeded[index].replace('-', '');
+    pluginsModules.set(pluginName, await plugin.default(schedule));
+  }));
 
-  return conditions;
+  return { plugins: pluginsModules, tabId };
 }
 
-function setScheduleToScheduleWorker(schedule) {
+function setScheduleToScheduleWorker(schedule, plugins, tabId) {
   const scheduleLinkedList = buildScheduleDoubleLinkedList(schedule);
-  const worker = new Worker('/events/features/timing-framework/worker.js');
-  const conditions = conditionsPreCheck(schedule);
 
-  worker.postMessage({
-    message: 'schedule',
+  // Add error handling for worker creation
+  let worker;
+  try {
+    worker = new Worker('/events/features/timing-framework/worker.js', { type: 'module' });
+  } catch (error) {
+    window.lana?.log(`Error creating worker: ${JSON.stringify(error)}`);
+    throw error;
+  }
+
+  // Get testing data from URL params
+  const params = new URLSearchParams(document.location.search);
+  const testTiming = params.get('timing');
+  const testing = testTiming ? { toggleTime: testTiming } : null;
+
+  // Convert plugin instances to their serializable state
+  const pluginStates = Object.fromEntries(
+    Array.from(plugins.entries()).map(([name, plugin]) => [
+      name,
+      {
+        type: name,
+        data: plugin.getAll ? plugin.getAll() : plugin,
+      },
+    ]),
+  );
+
+  const messageData = {
     schedule: scheduleLinkedList,
-    conditions,
-  });
+    plugins: pluginStates,
+    testing,
+    tabId,
+  };
+
+  try {
+    worker.postMessage(messageData);
+  } catch (error) {
+    window.lana?.log(`Error posting message to worker: ${JSON.stringify(error)}`);
+    throw error;
+  }
 
   return worker;
 }
@@ -71,6 +108,8 @@ export default async function init(el) {
     import(`${LIBS}/features/spectrum-web-components/dist/theme.js`),
     import(`${LIBS}/features/spectrum-web-components/dist/progress-circle.js`),
   ]);
+
+  el.setAttribute('data-mcz-dl-status', 'loading');
 
   const blockConfig = readBlockConfig(el);
   const scheduleId = blockConfig?.['schedule-id'];
@@ -93,16 +132,12 @@ export default async function init(el) {
 
   el.innerHTML = '';
 
-  const worker = setScheduleToScheduleWorker(thisSchedule);
-
-  el.addEventListener('worker-message', (e) => {
-    const { schedule, conditions } = e.detail.data;
-
-    worker.postMessage({
-      schedule,
-      conditions,
-    });
-  });
+  const pluginsOutputs = await initPlugins(thisSchedule);
+  const worker = setScheduleToScheduleWorker(
+    thisSchedule,
+    pluginsOutputs.plugins,
+    pluginsOutputs.tabId,
+  );
 
   worker.onmessage = (event) => {
     const { pathToFragment } = event.data;
@@ -123,6 +158,64 @@ export default async function init(el) {
       spTheme.remove();
       el.removeAttribute('style');
       el.classList.remove('loading');
+    }).catch((error) => {
+      // Handle fragment loading errors
+      window.lana?.log(`Error loading fragment ${pathToFragment}: ${JSON.stringify(error)}`);
+
+      // Remove loading state
+      spTheme.remove();
+      el.removeAttribute('style');
+      el.classList.remove('loading');
+
+      // Show error state to user
+      el.innerHTML = '<div class="error-message">Unable to load content. Please refresh the page.</div>';
+      el.classList.add('error');
     });
   };
+
+  function mczMarketoFormAdobeConnectEvent() {
+    if (window.mcz_marketoForm_pref?.form?.success?.type === 'adobe_connect') {
+      const eventUrl = window.mcz_marketoForm_pref?.form?.success?.content;
+      setMetadata('adobe-connect-url', eventUrl);
+      metadataStore.set('marketo-next', '');
+    }
+  }
+  
+  // Debounce function to limit rapid calls
+  function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+      const later = () => {
+        clearTimeout(timeout);
+        func(...args);
+      };
+      clearTimeout(timeout);
+      timeout = setTimeout(later, wait);
+    };
+  }
+  
+  // Debounced callback for observer
+  const debouncedCallback = debounce(() => {
+    const status = el.getAttribute('data-mcz-dl-status');
+    console.log(
+      'Attribute "data-mcz-dl-status" changed to',
+      el.getAttribute('data-mcz-dl-status'),
+    );
+    if (status === 'active') {
+      mczMarketoFormAdobeConnectEvent();
+    }
+  }, 300); // 300ms debounce delay
+  
+  const observer = new MutationObserver((mutationsList) => {
+    mutationsList.forEach((mutation) => {
+      if (mutation.type === 'attributes') {
+        debouncedCallback();
+      }
+    });
+  });
+  
+  observer.observe(el, {
+    attributes: true, // Observe attribute changes
+    attributeFilter: ['data-mcz-dl-status'], // Optional: filter specific attributes
+  });
 }
