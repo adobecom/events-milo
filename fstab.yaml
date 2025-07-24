@@ -13,3 +13,10 @@ folders:
   /uk/events: /uk/events/default
   /es/events: /es/events/default
   /th_en/events: /th_en/events/default
+
+  /resources/events: /resources/events/default
+  /de/resources/events: /de/resources/events/default
+  /fr/resources/events: /fr/resources/events/default
+  /uk/resources/events: /uk/resources/events/default
+  /es/resources/events: /es/resources/events/default
+  /th_en/resources/events: /th_en/resources/events/default
