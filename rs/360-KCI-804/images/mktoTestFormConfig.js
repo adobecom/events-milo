@@ -305,6 +305,11 @@ if (
     }
     console.log("adobe_connect_event", final_url);
     mczFrm_sendMessage("reg_submitted", "root.program_profile");
+    
+    const resource = document.querySelector(resourceWatch);
+    if(resource) {
+      resource.setAttribute('data-mcz-dl-status', 'active');
+    }
   };
 
   //
