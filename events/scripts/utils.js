@@ -86,6 +86,24 @@ export function setMetadata(name, value, doc = document) {
   }
 }
 
+export function getSeriesContentRoot() {
+  const seriesJSONString = getMetadata('series');
+  if (!seriesJSONString) return '';
+
+  let series;
+  try {
+    const seriesJSON = JSON.parse(seriesJSONString);
+    series = seriesJSON.series;
+  } catch (e) {
+    window.lana?.log(`Error while parsing series metadata:\n${JSON.stringify(e, null, 2)}`);
+    return '';
+  }
+
+  if (!series) return '';
+
+  return series.contentRoot || '/events';
+}
+
 export function handlize(str) {
   return str.toLowerCase().trim().replaceAll(' ', '-');
 }
