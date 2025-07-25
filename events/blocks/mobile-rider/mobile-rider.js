@@ -125,10 +125,10 @@ class MobileRider {
   injectPlayer(vid, skin, asl = null) {
     if (!this.wrap) return;
 
-    let con = this.wrap.querySelector('.mobileRider_container');
+    let con = this.wrap.querySelector('.mobile-rider-container');
     if (!con) {
       con = createTag('div', {
-        class: 'mobileRider_container is-hidden',
+        class: 'mobile-rider-container is-hidden',
         id: CONFIG.PLAYER.CONTAINER_ID,
         'data-videoid': vid,
         'data-skinid': skin,
@@ -203,10 +203,10 @@ class MobileRider {
     const title = this.cfg.drawertitle || 'Now Playing';
     const subtitle = this.cfg.drawersubtitle || 'Select a live session';
     
-    const header = createTag('div', { class: 'relatedContent-NowPlaying' });
+    const header = createTag('div', { class: 'now-playing-header' });
     header.innerHTML = `
-      <p class="relatedContent-NowPlaying-Text">${title}</p>
-      <span class="relatedContent-NowPlaying-sideText">${subtitle}</span>
+      <p class="now-playing-title">${title}</p>
+      <span class="now-playing-subtitle">${subtitle}</span>
     `;
     return header;
   }
@@ -327,7 +327,7 @@ class MobileRider {
   }  
 
   initASL() {
-    const con = this.wrap?.querySelector('.mobileRider_container');
+    const con = this.wrap?.querySelector('.mobile-rider-container');
     if (!con) return;
 
     let attempts = 0;

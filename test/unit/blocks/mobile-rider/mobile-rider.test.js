@@ -213,7 +213,7 @@ describe('Mobile Rider Module', () => {
       it('should inject player with correct attributes', () => {
         riderInstance.injectPlayer('test-video', 'test-skin', 'test-asl');
         
-        const container = riderInstance.wrap.querySelector('.mobileRider_container');
+        const container = riderInstance.wrap.querySelector('.mobile-rider-container');
         expect(container).to.not.be.null;
         expect(container.getAttribute('data-videoid')).to.equal('test-video');
         expect(container.getAttribute('data-skinid')).to.equal('test-skin');
@@ -337,7 +337,7 @@ describe('Mobile Rider Module', () => {
       it('should create drawer heading with correct content', () => {
         const header = riderInstance.drawerHeading();
         
-        expect(header.classList.contains('relatedContent-NowPlaying')).to.be.true;
+        expect(header.classList.contains('now-playing-header')).to.be.true;
         expect(header.innerHTML).to.include('Now Playing');
         expect(header.innerHTML).to.include('Select a live session');
       });

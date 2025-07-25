@@ -13,17 +13,17 @@
   display: none;
 }
 
-.mobileRider_container.is-hidden {
+.mobile-rider .mobile-rider-container.is-hidden {
   display: none;
 }
 
-.mobileRider_container.isASL {
+.mobile-rider .mobile-rider-container.isASL {
   position: relative;
   width: 100%;
   padding-bottom: 56.25%;
 }
 
-.mobileRider_container video {
+.mobile-rider .mobile-rider-container video {
   position: absolute;
   top: 0;
   left: 0;
