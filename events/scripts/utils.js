@@ -88,20 +88,24 @@ export function setMetadata(name, value, doc = document) {
 
 export function getSeriesContentRoot() {
   const seriesJSONString = getMetadata('series');
-  if (!seriesJSONString) return '';
+  if (!seriesJSONString) return 'events';
 
-  let series;
+  let seriesJSON;
   try {
-    const seriesJSON = JSON.parse(seriesJSONString);
-    series = seriesJSON.series;
+    seriesJSON = JSON.parse(seriesJSONString);
   } catch (e) {
     window.lana?.log(`Error while parsing series metadata:\n${JSON.stringify(e, null, 2)}`);
-    return '';
+    return 'events';
   }
 
-  if (!series) return '';
+  // Handle both structures: direct series object or nested series object
+  const series = seriesJSON.series || seriesJSON;
 
-  return series.contentRoot || '/events';
+  if (!series) return 'events';
+
+  const contentRoot = series.contentRoot || '/events';
+  // Remove leading slash to avoid double slashes when used in template literals
+  return contentRoot.startsWith('/') ? contentRoot.slice(1) : contentRoot;
 }
 
 export function handlize(str) {
