@@ -67,3 +67,37 @@ sitemaps:
         destination: /uk/events/create-now/events-sitemap.xml
         hreflang: en-GB
         alternate: /uk/{path}
+
+  business-events:
+    origin: https://business.adobe.com
+    languages:
+      default:
+        source: /resources/events/default/metadata.json?sheet=sitemap
+        destination: /resources/events/events-sitemap.xml
+        hreflang: en
+        alternate: /{path}
+      de:
+        source: /de/resources/events/default/metadata.json?sheet=sitemap
+        destination: /de/resources/events/events-sitemap.xml
+        hreflang: de
+        alternate: /de/{path}
+      fr:
+        source: /fr/resources/events/default/metadata.json?sheet=sitemap
+        destination: /fr/resources/events/events-sitemap.xml
+        hreflang: fr
+        alternate: /fr/{path}
+      es:
+        source: /es/resources/events/default/metadata.json?sheet=sitemap
+        destination: /es/resources/events/events-sitemap.xml
+        hreflang: es
+        alternate: /es/{path}
+      th_en:
+        source: /th_en/resources/events/default/metadata.json?sheet=sitemap
+        destination: /th_en/resources/events/events-sitemap.xml
+        hreflang: th-EN
+        alternate: /th_en/{path}
+      uk:
+        source: /uk/resources/events/default/metadata.json?sheet=sitemap
+        destination: /uk/resources/events/events-sitemap.xml
+        hreflang: en-GB
+        alternate: /uk/{path}

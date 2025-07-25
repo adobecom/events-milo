@@ -10,6 +10,7 @@ import {
   getSusiOptions,
   getEventServiceEnv,
   parseMetadataPath,
+  getSeriesContentRoot,
 } from './utils.js';
 
 const preserveFormatKeys = [
@@ -509,8 +510,8 @@ function injectFragments(parent) {
         if (bladesToShow.length >= 4) {
           createTag(
             'a',
-            { href: '/events/fragments/product-blades/explore-creative-cloud' },
-            '/events/fragments/product-blades/explore-creative-cloud',
+            { href: `/${getSeriesContentRoot()}/fragments/product-blades/explore-creative-cloud` },
+            `/${getSeriesContentRoot()}/fragments/product-blades/explore-creative-cloud`,
             { parent: bladesDiv },
           );
         } else {
@@ -524,7 +525,7 @@ function injectFragments(parent) {
           });
 
           bladesToShow.forEach((p) => {
-            const fragmentLink = `/events/fragments/product-blades/${p}`;
+            const fragmentLink = `/${getSeriesContentRoot()}/fragments/product-blades/${p}`;
             createTag('a', { href: fragmentLink }, fragmentLink, { parent: bladesDiv });
           });
         }
@@ -538,15 +539,21 @@ export async function getNonProdData(env) {
   || window.location.hostname.includes('.hlx.page')
   || window.location.hostname.includes('.aem.page');
 
-  const localeMatch = window.location.pathname.match(/^(\/[^/]+)?\/events\//);
+  const contentRoot = getSeriesContentRoot();
+  const localeMatch = window.location.pathname.match(new RegExp(`^(/[^/]+)?/(${contentRoot})/`));
+
   const localePath = localeMatch?.[1] || '';
-  const resp = await fetch(`${localePath}/events/default/${env === 'prod' ? '' : `${env}/`}metadata${isPreviewMode ? '-preview' : ''}.json`, {
-    headers: {
-      'Content-Type': 'application/json',
-      'Cache-Control': 'no-cache',
-      Pragma: 'no-cache',
+  const resp = await fetch(
+    `${localePath}/${contentRoot}/default/${env === 'prod' ? '' : `${env}/`}metadata${isPreviewMode ? '-preview' : ''}.json`,
+    {
+      headers: {
+        'Content-Type': 'application/json',
+        'Cache-Control': 'no-cache',
+        Pragma: 'no-cache',
+      },
     },
-  });
+  );
+
   if (resp.ok) {
     const json = await resp.json();
     let { pathname } = window.location;

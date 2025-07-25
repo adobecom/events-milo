@@ -86,6 +86,28 @@ export function setMetadata(name, value, doc = document) {
   }
 }
 
+export function getSeriesContentRoot() {
+  const seriesJSONString = getMetadata('series');
+  if (!seriesJSONString) return 'events';
+
+  let seriesJSON;
+  try {
+    seriesJSON = JSON.parse(seriesJSONString);
+  } catch (e) {
+    window.lana?.log(`Error while parsing series metadata:\n${JSON.stringify(e, null, 2)}`);
+    return 'events';
+  }
+
+  // Handle both structures: direct series object or nested series object
+  const series = seriesJSON.series || seriesJSON;
+
+  if (!series) return 'events';
+
+  const contentRoot = series.contentRoot || '/events';
+  // Remove leading slash to avoid double slashes when used in template literals
+  return contentRoot.startsWith('/') ? contentRoot.slice(1) : contentRoot;
+}
+
 export function handlize(str) {
   return str.toLowerCase().trim().replaceAll(' ', '-');
 }

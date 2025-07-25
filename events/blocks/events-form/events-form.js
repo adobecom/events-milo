@@ -1,4 +1,4 @@
-import { LIBS, getMetadata, getSusiOptions } from '../../scripts/utils.js';
+import { LIBS, getMetadata, getSeriesContentRoot, getSusiOptions } from '../../scripts/utils.js';
 import { deleteAttendeeFromEvent, getAndCreateAndAddAttendee, getAttendee, getEvent } from '../../scripts/esp-controller.js';
 import BlockMediator from '../../scripts/deps/block-mediator.min.js';
 import autoUpdateContent, { miloReplaceKey, signIn } from '../../scripts/content-update.js';
@@ -650,7 +650,7 @@ async function addConsentSuite(form) {
 
   fieldWrapper.append(label, countrySelect);
 
-  const consentStringsIndex = await fetch('/events/fragments/consents/consent-query-index.json').then((r) => r.json());
+  const consentStringsIndex = await fetch(`/${getSeriesContentRoot()}/fragments/consents/consent-query-index.json`).then((r) => r.json());
 
   if (consentStringsIndex) {
     const { data } = consentStringsIndex;
@@ -998,7 +998,7 @@ function getFormLink(block, bp) {
   const legacyLink = block.querySelector(':scope > div:nth-of-type(2) a[href$=".json"]');
 
   const cloudType = getMetadata('cloud-type');
-  const form = createTag('a', { href: `/events/default/rsvp-form-configs/${cloudType.toLowerCase()}.json` });
+  const form = createTag('a', { href: `/${getSeriesContentRoot()}/default/rsvp-form-configs/${cloudType.toLowerCase()}.json` });
 
   if (legacyLink) {
     legacyLink.href = form.href;

@@ -36,4 +36,22 @@
   <sitemap>
     <loc>https://www.adobe.com/uk/events/create-now/events-sitemap.xml</loc>
   </sitemap>
+  <sitemap>
+    <loc>https://business.adobe.com/resources/events/events-sitemap.xml</loc>
+  </sitemap>
+  <sitemap>
+    <loc>https://business.adobe.com/de/resources/events/events-sitemap.xml</loc>
+  </sitemap>
+  <sitemap>
+    <loc>https://business.adobe.com/fr/resources/events/events-sitemap.xml</loc>
+  </sitemap>
+  <sitemap>
+    <loc>https://business.adobe.com/es/resources/events/events-sitemap.xml</loc>
+  </sitemap>
+  <sitemap>
+    <loc>https://business.adobe.com/th_en/resources/events/events-sitemap.xml</loc>
+  </sitemap>
+  <sitemap>
+    <loc>https://business.adobe.com/uk/resources/events/events-sitemap.xml</loc>
+  </sitemap>
 </sitemapindex>
