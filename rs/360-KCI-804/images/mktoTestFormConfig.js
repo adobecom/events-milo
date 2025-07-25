@@ -49,9 +49,9 @@ if (
 
   var BASE_URL = "https://engage.marketo.com";
   var MUNCHKIN_ID = "360-KCI-804";
-  var resourceLocation = ".chrono-box";
-  var resourceWatch = 'main .section .chrono-box';
-  let mczFrm_mkto_testing_loader = () => {
+  // var resourceLocation = ".chrono-box";
+  // var resourceWatch = 'main .section .chrono-box';
+  var mczFrm_mkto_testing_loader = () => {
     let cssFast = `
    button[daa-ll="Join the event-1--"] {
      visibility: hidden !important;
@@ -850,26 +850,26 @@ if (
   //*
   //*
   //*
-  let maxTries = 1000;
-  let checkResourceLocation = () => {
-    if (maxTries <= 0) {
-      console.log("maxTries reached", maxTries);
-      return;
-    }
-    maxTries--;
-    if (document.querySelector(resourceWatch)) {
-      setTimeout(() => {
-        mczFrm_mkto_testing_loader();
-      }, 5000);
-    } else {
-      // await new Promise((resolve) => setTimeout(resolve, 25));
-      setTimeout(() => {
-        checkResourceLocation();
-      }, 500);
-    }
-  };
-  checkResourceLocation();
 }
 
 // ##
 // ##
+
+let maxTries = 1000;
+export function checkResourceLocation(el, resourceWatch, resourceLocation) {
+  if (maxTries <= 0) {
+    console.log("maxTries reached", maxTries);
+    return;
+  }
+  maxTries--;
+  if (document.querySelector(resourceWatch)) {
+    setTimeout(() => {
+      mczFrm_mkto_testing_loader();
+    }, 5000);
+  } else {
+    // await new Promise((resolve) => setTimeout(resolve, 25));
+    setTimeout(() => {
+      checkResourceLocation(el, resourceWatch, resourceLocation);
+    }, 500);
+  }
+};
