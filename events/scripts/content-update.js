@@ -510,8 +510,8 @@ function injectFragments(parent) {
         if (bladesToShow.length >= 4) {
           createTag(
             'a',
-            { href: '/events/fragments/product-blades/explore-creative-cloud' },
-            '/events/fragments/product-blades/explore-creative-cloud',
+            { href: `/${getSeriesContentRoot()}/fragments/product-blades/explore-creative-cloud` },
+            `/${getSeriesContentRoot()}/fragments/product-blades/explore-creative-cloud`,
             { parent: bladesDiv },
           );
         } else {
@@ -525,7 +525,7 @@ function injectFragments(parent) {
           });
 
           bladesToShow.forEach((p) => {
-            const fragmentLink = `/events/fragments/product-blades/${p}`;
+            const fragmentLink = `/${getSeriesContentRoot()}/fragments/product-blades/${p}`;
             createTag('a', { href: fragmentLink }, fragmentLink, { parent: bladesDiv });
           });
         }
