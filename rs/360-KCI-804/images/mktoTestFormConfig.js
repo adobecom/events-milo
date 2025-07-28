@@ -49,9 +49,7 @@ if (
 
   var BASE_URL = "https://engage.marketo.com";
   var MUNCHKIN_ID = "360-KCI-804";
-  // var resourceLocation = ".chrono-box";
-  // var resourceWatch = "main .section .chrono-box";
-  let mczFrm_mkto_testing_loader = (el, resourceWatch, resourceLocation) => {
+  let mczFrm_mkto_testing_loader = (el, resourceLocation) => {
     let cssFast = `
    button[daa-ll="Join the event-1--"] {
      visibility: hidden !important;
@@ -313,6 +311,15 @@ if (
       document.querySelector('.adobe-connect button[daa-ll*="Join"]').click();
     }
     console.log("adobe_connect_event", final_url);
+
+    // To lookup a resource which has attribute 'data-mcz-dl-status'. 
+    // Required for loading adobe connect player
+    const resource = document.querySelector('[data-mcz-dl-status]');
+    if (resource) {
+      resource.setAttribute('data-mcz-dl-status', 'active');
+    } else {
+      console.log('no resource with attribute data-mcz-dl-status found');
+    }
   };
 
   //
@@ -939,7 +946,7 @@ export function CheckResourceLocation(el, resourceWatch, resourceLocation) {
     if (document.querySelector(resourceWatch)) {
       setTimeout(() => {
         console.log("Resource found, loading...");
-        mczFrm_mkto_testing_loader(el, resourceWatch, resourceLocation);
+        mczFrm_mkto_testing_loader(el, resourceLocation);
       }, 1000);
     } else {
       setTimeout(() => {
