@@ -5,11 +5,14 @@ export default async function init(block) {
   const videoId = config['videoid'];
   const chatEnabled = config.chatenabled?.toLowerCase() === 'true';
 
-  if (!videoId) return;
+  if (!videoId) {
+    window.lana?.log('YouTube Chat Block: Invalid or missing video ID.');
+    block.remove();
+    return;
+  }
 
   block.textContent = '';
-  const streamElement = buildYouTubeStream(videoId, config, chatEnabled);
-  block.append(streamElement);
+  block.append(buildYouTubeStream(videoId, config, chatEnabled));
 }
 
 function buildYouTubeStream(videoId, config, showChat) {
@@ -18,10 +21,7 @@ function buildYouTubeStream(videoId, config, showChat) {
   });
 
   container.append(createVideoSection(videoId, config));
-
-  if (showChat) {
-    container.append(createChatSection(videoId));
-  }
+  if (showChat) container.append(createChatSection(videoId));
 
   return container;
 }
@@ -31,20 +31,24 @@ function createVideoSection(videoId, config) {
     class: 'youtube-video',
     src: buildEmbedUrl(videoId, config),
     allowfullscreen: true,
+    title: `YouTube video player`,
+    loading: 'lazy',
   });
 
-  const iframeWrapper = createTag('div', { class: 'iframe-container' }, iframe);
-  return createTag('div', { class: 'youtube-video-container' }, iframeWrapper);
+  const wrapper = createTag('div', { class: 'iframe-container' }, iframe);
+  return createTag('div', { class: 'youtube-video-container' }, wrapper);
 }
 
 function createChatSection(videoId) {
   const chatIframe = createTag('iframe', {
     class: 'youtube-chat',
     src: `https://www.youtube.com/live_chat?v=${videoId}&embed_domain=${window.location.hostname}`,
+    title: `YouTube live chat`,
+    loading: 'lazy',
   });
 
-  const chatWrapper = createTag('div', { class: 'iframe-container' }, chatIframe);
-  return createTag('div', { class: 'youtube-chat-container' }, chatWrapper);
+  const wrapper = createTag('div', { class: 'iframe-container' }, chatIframe);
+  return createTag('div', { class: 'youtube-chat-container' }, wrapper);
 }
 
 function buildEmbedUrl(videoId, config) {
