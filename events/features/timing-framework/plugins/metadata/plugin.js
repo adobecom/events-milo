@@ -19,6 +19,20 @@ export const metadataStore = {
   },
 };
 
+// Listen for custom events from other blocks
+function setupCustomEventListeners() {
+  // Listen for marketo-form completion events
+  document.addEventListener('marketo-form-completed', (event) => {
+    const { detail } = event;
+
+    // Update metadata store based on event type
+    if (detail.type === 'adobe_connect' && detail.url) {
+      metadataStore.set('adobe-connect-url', detail.url);
+      console.log('Metadata updated from marketo-form-completed event:', detail);
+    }
+  });
+}
+
 export default function init(schedule) {
   const allMetadataInSchedules = schedule.filter((entry) => entry.metadata);
   allMetadataInSchedules.forEach(({ metadata }) => {
@@ -27,6 +41,9 @@ export default function init(schedule) {
       metadataStore.set(m.key, value);
     });
   });
+
+  // Set up event listeners for custom events
+  setupCustomEventListeners();
 
   return metadataStore;
 }

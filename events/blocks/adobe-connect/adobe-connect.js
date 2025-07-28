@@ -2,15 +2,6 @@ import { LIBS, getMetadata } from '../../scripts/utils.js';
 
 const { createTag } = await import(`${LIBS}/utils/utils.js`);
 
-function validateUrl(url) {
-  try {
-    new URL(url);
-    return true;
-  } catch (_) {
-    return false;
-  }
-}
-
 function addParams(searchParams, params, key, value) {
   if (params.has(key)) {
     searchParams[key] = params.get(key);
@@ -40,7 +31,6 @@ function getSearchParamsFromCurrentUrl() {
 export default async function init(el) {
   const h2 = el.querySelector('h2');
   let url = h2?.textContent;
-  el.setAttribute('data-mcz-dl-status', 'loading');
 
   h2.remove();
 
@@ -53,10 +43,6 @@ export default async function init(el) {
     return;
   }
 
-  // if (validateUrl(window.join_url)) {
-  //   url = window.join_url;
-  //   console.log("join_url in Window", window.join_url);
-  // }
   url = addSearchParams(url, searchParams);
   
   // Create overlay
