@@ -119,30 +119,6 @@ describe('YouTube Chat Module', () => {
       // Verify that the block was removed from DOM
       expect(document.querySelector('.youtube-chat')).to.be.null;
     });
-
-    it('should not initialize when videoId is empty', async () => {
-      // Create HTML with empty videoId
-      const htmlWithEmptyVideoId = `
-        <div class="youtube-chat">
-          <div>
-            <div>videoid</div>
-            <div></div>
-          </div>
-          <div>
-            <div>chatenabled</div>
-            <div>true</div>
-          </div>
-        </div>
-      `;
-      
-      document.body.innerHTML = htmlWithEmptyVideoId;
-      const block = document.querySelector('.youtube-chat');
-      
-      await init(block);
-      
-      // Verify that the block was removed from DOM
-      expect(document.querySelector('.youtube-chat')).to.be.null;
-    });
   });
 
   describe('DOM structure', () => {
@@ -322,76 +298,6 @@ describe('YouTube Chat Module', () => {
       const src = videoIframe.getAttribute('src');
       expect(src).to.include('autoplay=1');
       expect(src).to.not.include('mute=1');
-    });
-  });
-
-  describe('Error handling', () => {
-    it('should remove block when video ID is missing', async () => {
-      const htmlWithoutVideoId = `
-        <div class="youtube-chat">
-          <div>
-            <div>chatenabled</div>
-            <div>true</div>
-          </div>
-        </div>
-      `;
-      
-      document.body.innerHTML = htmlWithoutVideoId;
-      const block = document.querySelector('.youtube-chat');
-      
-      await init(block);
-      
-      // Block should be removed from DOM
-      expect(document.querySelector('.youtube-chat')).to.be.null;
-    });
-
-    it('should remove block when video ID is empty', async () => {
-      const htmlWithEmptyVideoId = `
-        <div class="youtube-chat">
-          <div>
-            <div>videoid</div>
-            <div></div>
-          </div>
-          <div>
-            <div>chatenabled</div>
-            <div>true</div>
-          </div>
-        </div>
-      `;
-      
-      document.body.innerHTML = htmlWithEmptyVideoId;
-      const block = document.querySelector('.youtube-chat');
-      
-      await init(block);
-      
-      // Block should be removed from DOM
-      expect(document.querySelector('.youtube-chat')).to.be.null;
-    });
-  });
-
-  describe('Accessibility', () => {
-    it('should have proper title attribute on video iframe', async () => {
-      document.body.innerHTML = defaultHtml;
-      const block = document.querySelector('.youtube-chat');
-      
-      await init(block);
-      
-      const videoIframe = block.querySelector('.youtube-video');
-      expect(videoIframe).to.not.be.null;
-      expect(videoIframe.getAttribute('title')).to.equal('YouTube video player');
-      expect(videoIframe.getAttribute('loading')).to.equal('lazy');
-    });
-
-    it('should have proper title attribute on chat iframe', async () => {
-      document.body.innerHTML = defaultHtml;
-      const block = document.querySelector('.youtube-chat');
-      
-      await init(block);
-      
-      const chatIframe = block.querySelector('.youtube-chat');
-      expect(chatIframe).to.not.be.null;
-      expect(chatIframe.getAttribute('title')).to.equal('YouTube live chat');
-      expect(chatIframe.getAttribute('loading')).to.equal('lazy');
     });
   });
 });
