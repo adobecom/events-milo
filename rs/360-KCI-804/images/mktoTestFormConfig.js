@@ -49,7 +49,7 @@ if (
 
   var BASE_URL = "https://engage.marketo.com";
   var MUNCHKIN_ID = "360-KCI-804";
-  let mczFrm_mkto_testing_loader = (el, resourceLocation) => {
+  var mczFrm_mkto_testing_loader = (el, resourceLocation) => {
     let cssFast = `
    button[daa-ll="Join the event-1--"] {
      visibility: hidden !important;
