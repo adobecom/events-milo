@@ -31,7 +31,7 @@ function createVideoSection(videoId, config) {
     class: 'youtube-video',
     src: buildEmbedUrl(videoId, config),
     allowfullscreen: true,
-    title: config.title || 'YouTube video player',
+    title: config.videotitle || 'YouTube video player',
     loading: 'lazy',
   });
 
