@@ -3,39 +3,48 @@ import { createTag, readBlockConfig } from '../../scripts/utils.js';
 export default async function init(block) {
   const config = readBlockConfig(block);
   const videoId = config['videoid'];
-  const chatEnabled = !!config.chatenabled && config.chatenabled !== 'false';
+  const chatEnabled = config.chatenabled?.toLowerCase() === 'true';
 
   if (!videoId) return;
 
   block.textContent = '';
-  const streamEl = buildYouTubeStream(videoId, config, chatEnabled);
-  block.append(streamEl);
+  const streamElement = buildYouTubeStream(videoId, config, chatEnabled);
+  block.append(streamElement);
 }
 
 function buildYouTubeStream(videoId, config, showChat) {
-  const container = createTag('div', { class: `youtube-stream${!showChat ? ' single-column' : ''}` });
-  const videoIframe = createTag('iframe', {
+  const container = createTag('div', {
+    class: `youtube-stream${!showChat ? ' single-column' : ''}`,
+  });
+
+  container.append(createVideoSection(videoId, config));
+
+  if (showChat) {
+    container.append(createChatSection(videoId));
+  }
+
+  return container;
+}
+
+function createVideoSection(videoId, config) {
+  const iframe = createTag('iframe', {
     class: 'youtube-video',
     src: buildEmbedUrl(videoId, config),
     allowfullscreen: true,
   });
 
-  const videoContainer = createTag('div', { class: 'iframe-container' }, videoIframe);
-  const videoWrapper = createTag('div', { class: 'youtube-video-container'}, videoContainer);
-  container.append(videoWrapper);
+  const iframeWrapper = createTag('div', { class: 'iframe-container' }, iframe);
+  return createTag('div', { class: 'youtube-video-container' }, iframeWrapper);
+}
 
-  if (showChat) {
-    const chatIframe = createTag('iframe', {
-      class: 'youtube-chat',
-      src: `https://www.youtube.com/live_chat?v=${videoId}&embed_domain=${window.location.hostname}`,
-    });
-    const chatContainer = createTag('div', { class: 'iframe-container' }, chatIframe);
-    const chatWrap = createTag('div', { class: 'youtube-chat-container' }, chatContainer);
-    container.append(chatWrap);
-  }
-  
+function createChatSection(videoId) {
+  const chatIframe = createTag('iframe', {
+    class: 'youtube-chat',
+    src: `https://www.youtube.com/live_chat?v=${videoId}&embed_domain=${window.location.hostname}`,
+  });
 
-  return container;
+  const chatWrapper = createTag('div', { class: 'iframe-container' }, chatIframe);
+  return createTag('div', { class: 'youtube-chat-container' }, chatWrapper);
 }
 
 function buildEmbedUrl(videoId, config) {
@@ -50,10 +59,11 @@ function buildEmbedUrl(videoId, config) {
     'show-suggestions-after-video-ends': 'rel',
   };
 
-  Object.entries(options).forEach(([key, param]) => {
-    if (config[key] === 'true') params.append(param, '1');
-  });
+  for (const [key, param] of Object.entries(options)) {
+    if (config[key]?.toLowerCase?.() === 'true') {
+      params.append(param, '1');
+    }
+  }
 
-  const query = params.toString();
-  return query ? `${base}?${query}` : base;
+  return params.toString() ? `${base}?${params}` : base;
 }
