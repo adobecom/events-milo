@@ -50,8 +50,8 @@ if (
   var BASE_URL = "https://engage.marketo.com";
   var MUNCHKIN_ID = "360-KCI-804";
   // var resourceLocation = ".chrono-box";
-  // var resourceWatch = 'main .section .chrono-box';
-  var mczFrm_mkto_testing_loader = () => {
+  // var resourceWatch = "main .section .chrono-box";
+  let mczFrm_mkto_testing_loader = (el, resourceWatch, resourceLocation) => {
     let cssFast = `
    button[daa-ll="Join the event-1--"] {
      visibility: hidden !important;
@@ -297,6 +297,15 @@ if (
       final_url = event_url.trim();
     }
 
+    let adobe_connect_status =
+      window.mcz_marketoForm_pref?.program?.event?.adobe_connect?.status || null;
+    if (adobe_connect_status == null) {
+      adobe_connect_status = {};
+    }
+    adobe_connect_status.overall = "active";
+
+    mczFrm_saveSnapshot();
+
     if (document.querySelector(".marketo-form-wrapper")) {
       document.querySelector(".marketo-form-wrapper").classList.add("hide");
     }
@@ -304,14 +313,6 @@ if (
       document.querySelector('.adobe-connect button[daa-ll*="Join"]').click();
     }
     console.log("adobe_connect_event", final_url);
-    mczFrm_sendMessage("reg_submitted", "root.program_profile");
-    
-    const resource = document.querySelector(resourceWatch);
-    if (resource) {
-      resource.setAttribute('data-mcz-dl-status', 'active');
-    } else {
-      console.log('resourceWatch not found', resourceWatch);
-    }
   };
 
   //
@@ -337,17 +338,23 @@ if (
   }
 
   function mczFrm_currentMarketoTime() {
-    let serverTimeOffset;
-    let serverTimeRaw = mcz_marketoForm_pref?.program?.marketo_asset?.time?.systemDateTime || null;
+    let serverTimeOffset = mcz_marketoForm_pref?.program?.marketo_asset?.time?.offset || null;
     try {
-      if (serverTimeRaw) {
-        let serverTimeInitial = new Date(serverTimeRaw).getTime();
-        if (!isNaN(serverTimeInitial)) {
-          let clientTimeInitial = new Date().getTime();
-          serverTimeOffset = serverTimeInitial - clientTimeInitial;
+      if (serverTimeOffset == null) {
+        let serverTimeRaw =
+          mcz_marketoForm_pref?.program?.marketo_asset?.time?.systemDateTime || null;
+        if (serverTimeRaw) {
+          let serverTimeInitial = new Date(serverTimeRaw).getTime();
+          if (!isNaN(serverTimeInitial)) {
+            let clientTimeInitial = new Date().getTime() + serverTimeOffset;
+            serverTimeOffset = serverTimeInitial - clientTimeInitial;
+            mcz_marketoForm_pref.program.marketo_asset.time.offset = serverTimeOffset;
+          }
+        } else {
+          serverTimeOffset = 0;
         }
       } else {
-        serverTimeOffset = 0;
+        serverTimeOffset = parseInt(serverTimeOffset) || 0;
       }
     } catch (e) {
       console.warn("Error getting server time offset", e);
@@ -372,10 +379,11 @@ if (
     }
 
     let adobe_connect_status = base?.program?.event?.adobe_connect?.status || null;
-
     if (adobe_connect_status == null) {
       adobe_connect_status = {};
     }
+
+    general_status = adobe_connect_status.overall || "register";
 
     let endDate = new Date(endDateTime);
     let startDate = new Date(startDateTime);
@@ -399,7 +407,6 @@ if (
     adobe_connect_status.has_started = false;
     adobe_connect_status.is_reg_open = false;
     adobe_connect_status.is_reg_closed = false;
-    general_status = "register";
 
     if (timeUntilInterval) {
       clearInterval(timeUntilInterval);
@@ -472,7 +479,7 @@ if (
         adobe_connect_status.has_ended = false;
         adobe_connect_status.is_reg_open = true;
         adobe_connect_status.is_reg_closed = false;
-        general_status = "live";
+        general_status = "active";
         stillReview = false;
       }
     }
@@ -485,7 +492,7 @@ if (
         adobe_connect_status.has_started = true;
         adobe_connect_status.is_reg_open = false;
         adobe_connect_status.is_reg_closed = true;
-        general_status = "live";
+        general_status = "active";
         stillReview = false;
       }
     }
@@ -565,7 +572,7 @@ if (
     let munchkinId = MUNCHKIN_ID || "360-KCI-804";
     addMunchkin(munchkinId, pageFromEventId, mktToken);
     let programIDOnly = pageFromEventId.replace(/[^0-9]/g, "");
-    let programfromStorage = await mczFrm_aquireFromStorage(`ev__${programIDOnly}`);
+    let programfromStorage = await mczFrm_aquireFromStorage(`pr_${programIDOnly}_`);
     if (programfromStorage) {
       console.log("MCZ Form, Updating DL from storage:", programfromStorage);
       mczFrm_updateDL(programfromStorage);
@@ -699,10 +706,46 @@ if (
         localStorage.setItem(saveAlias, dataStr);
       }
 
+      console.log("MCZ RefData: Saved message:", message);
+
       mczFrm_saveRefs(saveAlias, refStorageKey);
     } catch (storageError) {
       console.warn("Storage error:", storageError);
     }
+  }
+
+  async function mczFrm_saveSnapshot(target_path = "root.program") {
+    let snapshot = {};
+    let base = window?.mcz_marketoForm_pref || null;
+    if (base == null) {
+      console.log("No base found, skipping snapshot.");
+      return;
+    }
+
+    let pageFromEventId = base?.program?.event?.id || "";
+    let programIDOnly = pageFromEventId?.replace(/[^0-9]/g, "") || "";
+    if (programIDOnly == "") {
+      console.log("No event id found, skipping snapshot.");
+      return;
+    }
+
+    if (target_path == "root.program_profile") {
+      snapshot = base.program_profile;
+    } else if (target_path == "root.profile") {
+      snapshot = base.profile;
+    } else if (target_path == "root.form") {
+      snapshot = base.form;
+    } else if (target_path == "root.program") {
+      snapshot = base.program;
+    } else if (target_path == "root.program.event") {
+      snapshot = base.program.event;
+    }
+
+    mczFrm_saveMsg({
+      alias: `pr_${programIDOnly}_`,
+      location: "local",
+      data: JSON.parse(JSON.stringify(snapshot)),
+    });
   }
 
   window.addEventListener("message", (event) => {
@@ -738,6 +781,32 @@ if (
     }
   });
 
+  function crawlAndUpdateObject(thisObject = null, targetObject = null) {
+    if (thisObject == null || targetObject == null) {
+      console.warn("No object to crawl or update");
+      return;
+    }
+    let this_data = JSON.parse(JSON.stringify(thisObject));
+    for (let key in this_data) {
+      if (targetObject.hasOwnProperty(key)) {
+        if (this_data[key] != null && this_data[key] != "" && this_data[key] != 0) {
+          if (typeof this_data[key] == "object") {
+            crawlAndUpdateObject(this_data[key], targetObject[key]);
+          } else {
+            if (
+              targetObject[key] == null ||
+              targetObject[key] == "" ||
+              targetObject[key] == 0 ||
+              targetObject[key] == "NULL"
+            ) {
+              targetObject[key] = this_data[key];
+            }
+          }
+        }
+      }
+    }
+  }
+
   function mczFrm_updateDL(data = null) {
     if (data == null) {
       return;
@@ -752,17 +821,23 @@ if (
     let this_data = JSON.parse(JSON.stringify(data?.data));
     if (targetPath == "root.program_profile") {
       window.mcz_marketoForm_pref.program_profile = this_data;
+      //crawlAndUpdateObject(this_data, window.mcz_marketoForm_pref.program_profile);
     } else if (targetPath == "root.profile") {
-      window.mcz_marketoForm_pref.profile = this_data;
+      //window.mcz_marketoForm_pref.profile = this_data;
+      crawlAndUpdateObject(this_data, window.mcz_marketoForm_pref.profile);
     } else if (targetPath == "root.form") {
       window.mcz_marketoForm_pref.form = this_data;
+      //crawlAndUpdateObject(this_data, window.mcz_marketoForm_pref.form);
     } else if (targetPath == "root.profile.acc") {
       window.mcz_marketoForm_pref.profile.acc = this_data;
+      //crawlAndUpdateObject(this_data, window.mcz_marketoForm_pref.profile.acc);
     } else if (targetPath == "root.program") {
       window.mcz_marketoForm_pref.program = this_data;
+      //crawlAndUpdateObject(this_data, window.mcz_marketoForm_pref.program);
       program_type = this_data?.type || "default";
     } else if (targetPath == "root.program.event") {
       window.mcz_marketoForm_pref.program.event = this_data;
+      //crawlAndUpdateObject(this_data, window.mcz_marketoForm_pref.program.event);
       program_type = this_data?.type || "default";
     }
 
@@ -771,7 +846,7 @@ if (
       if (window.mcz_marketoForm_pref?.program?.event?.type == "adobe_connect") {
         program_type = "adobe_connect";
         program_status =
-          window.mcz_marketoForm_pref?.program?.event?.adobe_connect?.status?.overall || "default";
+          window.mcz_marketoForm_pref?.program?.event?.adobe_connect?.status?.overall || "pending";
       }
     }
 
@@ -797,23 +872,24 @@ if (
     mczFrm_statusLbls(program_type, program_status);
   }
 
-  function mczFrm_sendMessage(msgName = null, targetPath = "root.program", data = {}) {
+  function mczFrm_sendMessage(targetPath = "root.program", data = {}) {
     let iframe = document.getElementById("mcz-marketo-program-iframe");
     if (iframe) {
-      let message = {
-        type: "mcz_marketoForm_pref_sync",
-        data: {
+      if (JSON.stringify(data) == "{}") {
+        data = {
+          type: "mcz_marketoForm_pref_sync",
           target_path: targetPath,
-          data: data,
-        },
-      };
+        };
+      }
 
-      iframe.contentWindow.postMessage(message, "https://engage.adobe.com");
+      iframe.contentWindow.postMessage(data, "https://engage.adobe.com");
     } else {
       console.warn("No iframe found");
     }
   }
 
+  window.mczFrm_sendMessage = mczFrm_sendMessage;
+
   //*
   //*
   //*
@@ -850,26 +926,25 @@ if (
   //*
   //*
   //*
-}
 
 // ##
 // ##
-
 let maxTries = 1000;
-export function checkResourceLocation(el, resourceWatch, resourceLocation) {
+export function CheckResourceLocation(el, resourceWatch, resourceLocation) {
   if (maxTries <= 0) {
     console.log("maxTries reached", maxTries);
     return;
   }
   maxTries--;
-  if (document.querySelector(resourceWatch)) {
-    setTimeout(() => {
-      mczFrm_mkto_testing_loader();
-    }, 5000);
-  } else {
-    // await new Promise((resolve) => setTimeout(resolve, 25));
-    setTimeout(() => {
-      checkResourceLocation(el, resourceWatch, resourceLocation);
-    }, 500);
-  }
+    if (document.querySelector(resourceWatch)) {
+      setTimeout(() => {
+        console.log("Resource found, loading...");
+        mczFrm_mkto_testing_loader(el, resourceWatch, resourceLocation);
+      }, 1000);
+    } else {
+      setTimeout(() => {
+        console.log("Resource not found, checking again...");
+        checkResourceLocation(el, resourceWatch, resourceLocation);
+      }, 20);
+    }
 };
