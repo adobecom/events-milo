@@ -933,6 +933,7 @@ if (
   //*
   //*
   //*
+}
 
 // ##
 // ##
@@ -951,7 +952,7 @@ export function CheckResourceLocation(el, resourceWatch, resourceLocation) {
     } else {
       setTimeout(() => {
         console.log("Resource not found, checking again...");
-        checkResourceLocation(el, resourceWatch, resourceLocation);
+        CheckResourceLocation(el, resourceWatch, resourceLocation);
       }, 20);
     }
 };
