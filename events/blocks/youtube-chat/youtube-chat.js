@@ -1,73 +1,89 @@
 import { createTag, readBlockConfig } from '../../scripts/utils.js';
 
-export default async function init(block) {
-  const config = readBlockConfig(block);
-  const videoId = config['videoid'];
-  const chatEnabled = config['chatenabled']?.toLowerCase() === 'true';
-
-  if (!videoId) {
-    window.lana?.log('YouTube Chat Block: Invalid or missing video ID.');
-    block.remove();
-    return;
+export default class YouTubeChat {
+  constructor() {
+    this.config = null;
+    this.videoId = null;
+    this.chatEnabled = false;
   }
 
-  block.textContent = '';
-  block.append(buildYouTubeStream(videoId, config, chatEnabled));
-}
+  async init(block) {
+    this.config = readBlockConfig(block);
+    this.videoId = this.config['videoid'];
+    this.chatEnabled = this.config['chatenabled']?.toLowerCase() === 'true';
 
-function buildYouTubeStream(videoId, config, showChat) {
-  const container = createTag('div', {
-    class: `youtube-stream${!showChat ? ' single-column' : ''}`,
-  });
-
-  container.append(createVideoSection(videoId, config));
-  if (showChat) container.append(createChatSection(videoId));
-
-  return container;
-}
-
-function createVideoSection(videoId, config) {
-  const iframe = createTag('iframe', {
-    class: 'youtube-video',
-    src: buildEmbedUrl(videoId, config),
-    allowfullscreen: true,
-    title: config.videotitle || 'YouTube video player',
-    loading: 'lazy',
-  });
-
-  const wrapper = createTag('div', { class: 'iframe-container' }, iframe);
-  return createTag('div', { class: 'youtube-video-container' }, wrapper);
-}
-
-function createChatSection(videoId) {
-  const chatIframe = createTag('iframe', {
-    class: 'youtube-chat',
-    src: `https://www.youtube.com/live_chat?v=${videoId}&embed_domain=${window.location.hostname}`,
-    title: `YouTube live chat`,
-    loading: 'lazy',
-  });
-
-  const wrapper = createTag('div', { class: 'iframe-container' }, chatIframe);
-  return createTag('div', { class: 'youtube-chat-container' }, wrapper);
-}
-
-function buildEmbedUrl(videoId, config) {
-  const base = `https://www.youtube.com/embed/${videoId}`;
-  const params = new URLSearchParams();
-
-  const options = {
-    autoplay: 'autoplay',
-    mute: 'mute',
-    'show-controls': 'controls',
-    'show-player-title-actions': 'modestbranding',
-    'show-suggestions-after-video-ends': 'rel',
-  };
-
-  for (const [key, param] of Object.entries(options)) {
-    if (config[key]?.toLowerCase?.() === 'true') {
-      params.append(param, '1');
+    if (!this.videoId) {
+      window.lana?.log('YouTube Chat Block: Invalid or missing video ID.');
+      block.remove();
+      return;
     }
+
+    block.textContent = '';
+    block.append(this.buildYouTubeStream());
   }
 
-  return params.toString() ? `${base}?${params}` : base;
+  buildYouTubeStream() {
+    const container = createTag('div', {
+      class: `youtube-stream${!this.chatEnabled ? ' single-column' : ''}`,
+    });
+
+    container.append(this.createVideoSection());
+    if (this.chatEnabled) {
+      container.append(this.createChatSection());
+    }
+
+    return container;
+  }
+
+  createVideoSection() {
+    const iframe = createTag('iframe', {
+      class: 'youtube-video',
+      src: this.buildEmbedUrl(),
+      allowfullscreen: true,
+      title: this.config.videotitle || 'YouTube video player',
+      loading: 'lazy',
+    });
+
+    const wrapper = createTag('div', { class: 'iframe-container' }, iframe);
+    return createTag('div', { class: 'youtube-video-container' }, wrapper);
+  }
+
+  createChatSection() {
+    const chatIframe = createTag('iframe', {
+      class: 'youtube-chat',
+      src: `https://www.youtube.com/live_chat?v=${this.videoId}&embed_domain=${window.location.hostname}`,
+      title: 'YouTube live chat',
+      loading: 'lazy',
+    });
+
+    const wrapper = createTag('div', { class: 'iframe-container' }, chatIframe);
+    return createTag('div', { class: 'youtube-chat-container' }, wrapper);
+  }
+
+  buildEmbedUrl() {
+    const base = `https://www.youtube.com/embed/${this.videoId}`;
+    const params = new URLSearchParams();
+
+    const options = {
+      autoplay: 'autoplay',
+      mute: 'mute',
+      'show-controls': 'controls',
+      'show-player-title-actions': 'modestbranding',
+      'show-suggestions-after-video-ends': 'rel',
+    };
+
+    for (const [key, param] of Object.entries(options)) {
+      if (this.config[key]?.toLowerCase?.() === 'true') {
+        params.append(param, '1');
+      }
+    }
+
+    return params.toString() ? `${base}?${params}` : base;
+  }
+}
+
+// Maintain backward compatibility with existing API
+export async function init(block) {
+  const youtubeChat = new YouTubeChat();
+  await youtubeChat.init(block);
 }
