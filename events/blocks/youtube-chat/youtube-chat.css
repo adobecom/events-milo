@@ -1,0 +1,54 @@
+.youtube-chat .youtube-stream {
+  display: flex;
+  max-width: 100%;
+  margin: 0 auto;
+  flex-wrap: wrap;
+}
+
+.youtube-chat .youtube-video-container {
+  width: 100%;
+  max-width: 100%;
+  flex: 1 1 auto;
+  min-height: auto;  
+}
+
+.youtube-chat .youtube-video-container .iframe-container {
+  position: relative;
+  padding-bottom: 56.25%;
+  height: 0;
+}
+
+.youtube-chat .youtube-chat-container {
+  width: 100%;
+  max-width: 100%;
+  flex: 1 1 auto;
+  min-height: 500px;
+}
+
+.youtube-chat .youtube-chat-container .iframe-container {
+  height: 100%;
+  padding-bottom: 0;
+  position: relative;
+  width: 100%;
+}
+
+.youtube-chat .youtube-chat-container iframe,
+.youtube-chat .youtube-video-container iframe {
+  height: 100%;
+  width: 100%;
+  left: 0;
+  top: 0;
+  position: absolute;
+}
+
+@media screen and (min-width: 1200px) {
+  .youtube-chat .youtube-stream:not(.single-column) .youtube-video-container {
+      width: 75%;
+      max-width: 75%;
+  }
+
+  .youtube-chat .youtube-chat-container {
+      flex: 1 1 1%;
+      min-height: auto;
+  }
+}
