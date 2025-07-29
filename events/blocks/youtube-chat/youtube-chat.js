@@ -1,6 +1,6 @@
 import { createTag, readBlockConfig } from '../../scripts/utils.js';
 
-export default class YouTubeChat {
+export class YouTubeChat {
   constructor() {
     this.config = null;
     this.videoId = null;
@@ -83,7 +83,9 @@ export default class YouTubeChat {
 }
 
 // Maintain backward compatibility with existing API
-export async function init(block) {
+async function init(block) {
   const youtubeChat = new YouTubeChat();
   await youtubeChat.init(block);
 }
+
+export default init;

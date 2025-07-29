@@ -1,7 +1,7 @@
 import { expect } from '@esm-bundle/chai';
 import sinon from 'sinon';
 import { readFile } from '@web/test-runner-commands';
-import YouTubeChat, { init } from '../../../../events/blocks/youtube-chat/youtube-chat.js';
+import init, { YouTubeChat } from '../../../../events/blocks/youtube-chat/youtube-chat.js';
 
 const defaultHtml = await readFile({ path: './mocks/default.html' });
 
