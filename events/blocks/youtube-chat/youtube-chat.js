@@ -32,7 +32,6 @@ function createVideoSection(videoId, config) {
     src: buildEmbedUrl(videoId, config),
     allowfullscreen: true,
     title: config.videotitle || 'YouTube video player',
-    loading: 'lazy',
   });
 
   const wrapper = createTag('div', { class: 'iframe-container' }, iframe);
@@ -44,7 +43,6 @@ function createChatSection(videoId) {
     class: 'youtube-chat',
     src: `https://www.youtube.com/live_chat?v=${videoId}&embed_domain=${window.location.hostname}`,
     title: `YouTube live chat`,
-    loading: 'lazy',
   });
 
   const wrapper = createTag('div', { class: 'iframe-container' }, chatIframe);
