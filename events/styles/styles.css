@@ -106,3 +106,29 @@ fieldset {
 body.validating-page {
   display: none;
 }
+
+.text-block[class*="column-text"] table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.text-block[class*="column-text"] table td:last-child {
+  text-align: right;
+}
+
+.text-block.column-text-spacing-xs table {
+  margin: var(--spacing-xs) 0;
+}
+
+.text-block.column-text-spacing-s table {
+  margin: var(--spacing-s) 0;
+}
+
+.text-block.column-icon-spacing-xs table td:last-child a:not(:last-child) {
+  padding-right: var(--spacing-xs);
+}
+
+.text-block.column-icon-spacing-xxs table td:last-child a:not(:last-child) {
+  padding-right: var(--spacing-xxs);
+}
