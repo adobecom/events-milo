@@ -41,7 +41,6 @@ export class YouTubeChat {
       src: this.buildEmbedUrl(),
       allowfullscreen: true,
       title: this.config.videotitle || 'YouTube video player',
-      loading: 'lazy',
     });
 
     const wrapper = createTag('div', { class: 'iframe-container' }, iframe);
@@ -53,7 +52,6 @@ export class YouTubeChat {
       class: 'youtube-chat',
       src: `https://www.youtube.com/live_chat?v=${this.videoId}&embed_domain=${window.location.hostname}`,
       title: 'YouTube live chat',
-      loading: 'lazy',
     });
 
     const wrapper = createTag('div', { class: 'iframe-container' }, chatIframe);
