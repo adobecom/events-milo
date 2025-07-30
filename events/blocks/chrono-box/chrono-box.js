@@ -109,8 +109,6 @@ export default async function init(el) {
     import(`${LIBS}/features/spectrum-web-components/dist/progress-circle.js`),
   ]);
 
-  el.setAttribute('data-mcz-dl-status', 'loading');
-
   const blockConfig = readBlockConfig(el);
   const scheduleId = blockConfig?.['schedule-id'];
   let staticSchedule;

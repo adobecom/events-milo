@@ -1,8 +1,14 @@
 import { CheckResourceLocation } from '../../../rs/360-KCI-804/images/mktoTestFormConfig.js';
 
+import { setMetadata } from '../../../scripts/utils.js';
+
+import { metadataStore } from '../../../features/timing-framework/plugins/metadata/plugin.js';
+
 export default async function init(el) {
   const rows = Array.from(el.children);
   const resourceLocation = `#${rows[0].textContent.trim().toLowerCase()}`;
+  // suggestion to use getElementbyId
+  const key = rows[1].textContent.trim().toLowerCase();
 
   const resourceWatch = 'main .section .chrono-box';
 
@@ -15,21 +21,8 @@ export default async function init(el) {
   function mczMarketoFormAdobeConnectEvent() {
     if (window.mcz_marketoForm_pref?.form?.success?.type === 'adobe_connect') {
       const eventUrl = window.mcz_marketoForm_pref?.form?.success?.content;
-
-      // Dispatch custom event for any systems that want to listen
-      const customEvent = new CustomEvent('marketo-form-completed', {
-        detail: {
-          type: 'adobe_connect',
-          url: eventUrl,
-          formData: window.mcz_marketoForm_pref?.form || {},
-          timestamp: Date.now(),
-        },
-        bubbles: true,
-        cancelable: false,
-      });
-
-      // Dispatch on document for global listening
-      document.dispatchEvent(customEvent);
+      setMetadata('adobe-connect-url', eventUrl);
+      metadataStore.set(key, 'adobe-connect');
 
       console.log('Marketo form completed - Adobe Connect URL:', eventUrl);
     }
