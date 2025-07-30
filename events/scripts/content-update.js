@@ -148,7 +148,6 @@ function createTag(tag, attributes, html, options = {}) {
 }
 
 export async function updateRSVPButtonState(rsvpBtn, miloLibs) {
-  const rsvpData = BlockMediator.get('rsvpData');
   const eventInfo = await getEvent(getMetadata('event-id'));
   let eventFull = false;
   let waitlistEnabled = getMetadata('allow-wait-listing') === 'true';
@@ -160,6 +159,7 @@ export async function updateRSVPButtonState(rsvpBtn, miloLibs) {
     waitlistEnabled = allowWaitlisting;
   }
 
+  const rsvpData = BlockMediator.get('rsvpData');
   if (!rsvpData) {
     if (eventFull) {
       if (waitlistEnabled) {
