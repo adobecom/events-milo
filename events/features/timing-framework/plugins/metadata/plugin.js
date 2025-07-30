@@ -19,7 +19,6 @@ export const metadataStore = {
   },
 };
 
-
 export default function init(schedule) {
   const allMetadataInSchedules = schedule.filter((entry) => entry.metadata);
   allMetadataInSchedules.forEach(({ metadata }) => {

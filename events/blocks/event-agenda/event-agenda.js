@@ -17,21 +17,12 @@ export function convertToLocaleTimeFormat(time, locale) {
   return formatter.format(date);
 }
 
-// const agenda = [
-//   {
-//     description: 'test2',
-//     title: 'test1',
-//     startTime: '08:00:00',
-//   },
-// ];
-
 export default async function init(el) {
   if (getMetadata('show-agenda-post-event') !== 'true' && document.body.classList.contains('timing-post-event')) {
     el.remove();
     return;
   }
 
-  // createTag('iframe', { src: 'https://livekitqe.dev.adobeconnect.com/event-demo?guestname=Participant', frameborder: '0', allowfullscreen: 'true', class: 'fullwidth' }, '', { parent: el });
   const container = createTag('div', { class: 'agenda-container' }, '', { parent: el });
   const agendaItemsCol = createTag('div', { class: 'agenda-items' }, '', { parent: container });
 
@@ -53,7 +44,6 @@ export default async function init(el) {
 
   try {
     agendaArray = JSON.parse(agendaMeta);
-    // agendaArray = agenda;
   } catch (error) {
     window.lana?.log(`Failed to parse agenda metadata:\n${JSON.stringify(error, null, 2)}`);
     el.remove();
@@ -61,10 +51,7 @@ export default async function init(el) {
   }
 
   if (agendaArray.length <= 0) {
-    const h2 = el.querySelector('h2');
-    h2.remove();
-    agendaItemsCol.remove();
-    // el.remove();
+    el.remove();
     return;
   }
 
