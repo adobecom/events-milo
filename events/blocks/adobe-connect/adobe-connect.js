@@ -142,9 +142,4 @@ export default async function init(el) {
     class: 'fullwidth',
     style: 'position: relative; z-index: 1;',
   }, '', { parent: el });
-
-  // Remove overlay after 7 seconds
-  setTimeout(() => {
-    overlay.remove();
-  }, 7000);
 }
