@@ -165,6 +165,7 @@
     padding: 40px 56px 40px calc((100% - var(--grid-container-width) - 80px) / 2);
   }
 }
+
 @media (min-width: 1440px) {
   .event-agenda .agenda-items-with-image {
     padding-left: calc((100% - var(--grid-container-width)) / 2)
