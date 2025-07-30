@@ -80,7 +80,6 @@ export class YouTubeChat {
   }
 }
 
-// Maintain backward compatibility with existing API
 export default async function init(block) {
   const youtubeChat = new YouTubeChat();
   await youtubeChat.init(block);
