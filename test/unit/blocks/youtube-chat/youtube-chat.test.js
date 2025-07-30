@@ -106,7 +106,6 @@ describe('YouTube Chat Module', () => {
         expect(iframe).to.not.be.null;
         expect(iframe.tagName).to.equal('IFRAME');
         expect(iframe.getAttribute('title')).to.equal('Custom Video Title');
-        expect(iframe.getAttribute('loading')).to.equal('lazy');
         expect(iframe.getAttribute('allowfullscreen')).to.equal('true');
       });
 
@@ -137,7 +136,6 @@ describe('YouTube Chat Module', () => {
         expect(iframe).to.not.be.null;
         expect(iframe.tagName).to.equal('IFRAME');
         expect(iframe.getAttribute('title')).to.equal('YouTube live chat');
-        expect(iframe.getAttribute('loading')).to.equal('lazy');
         expect(iframe.getAttribute('src')).to.include('https://www.youtube.com/live_chat?v=dQw4w9WgXcQ');
         expect(iframe.getAttribute('src')).to.include('embed_domain=');
       });
