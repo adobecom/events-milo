@@ -1,8 +1,8 @@
 import { CheckResourceLocation } from '../../../rs/360-KCI-804/images/mktoTestFormConfig.js';
 
-import { setMetadata } from '../../../scripts/utils.js';
+import { setMetadata } from '../../scripts/utils.js';
 
-import { metadataStore } from '../../../features/timing-framework/plugins/metadata/plugin.js';
+import { metadataStore } from '../../features/timing-framework/plugins/metadata/plugin.js';
 
 export default async function init(el) {
   const rows = Array.from(el.children);
