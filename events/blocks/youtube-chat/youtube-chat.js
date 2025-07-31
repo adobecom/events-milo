@@ -5,6 +5,8 @@ export class YouTubeChat {
     this.config = null;
     this.videoId = null;
     this.chatEnabled = false;
+    this.isLoaded = false;
+    this.isMobile = navigator.userAgent.includes('Mobi');
   }
 
   async init(block) {
@@ -18,8 +20,31 @@ export class YouTubeChat {
       return;
     }
 
+    // Preconnect to YouTube domains for better performance
+    this.warmConnections();
+
     block.textContent = '';
     block.append(this.buildYouTubeStream());
+  }
+
+  warmConnections() {
+    if (YouTubeChat.preconnected) return;
+    YouTubeChat.preconnected = true;
+    
+    const domains = [
+      'www.youtube-nocookie.com',
+      'www.youtube.com',
+      'www.google.com',
+      'googleads.g.doubleclick.net',
+      'static.doubleclick.net',
+    ];
+    
+    domains.forEach((url) => {
+      const link = document.createElement('link');
+      link.rel = 'preconnect';
+      link.href = `https://${url}`;
+      document.head.appendChild(link);
+    });
   }
 
   buildYouTubeStream() {
@@ -36,18 +61,114 @@ export class YouTubeChat {
   }
 
   createVideoSection() {
+    const videoContainer = createTag('div', { class: 'youtube-video-container' });
+    const wrapper = createTag('div', { class: 'iframe-container' });
+    
+    // Check if autoplay is enabled
+    const autoplayEnabled = this.config.autoplay?.toLowerCase() === 'true';
+    
+    if (autoplayEnabled) {
+      // For autoplay, create the iframe directly but with optimized loading
+      const iframe = createTag('iframe', {
+        class: 'youtube-video',
+        src: this.buildEmbedUrl(),
+        allowfullscreen: true,
+        title: this.config.videotitle || 'YouTube video player',
+        allow: 'accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture',
+        loading: 'lazy', // Use lazy loading for better performance
+      });
+      
+      wrapper.append(iframe);
+      this.isLoaded = true;
+      
+      // Load chat immediately if enabled
+      if (this.chatEnabled) {
+        this.loadChat();
+      }
+    } else {
+      // For non-autoplay, use lite-youtube approach
+      const liteYT = createTag('lite-youtube', {
+        videoid: this.videoId,
+        playlabel: this.config.videotitle || 'YouTube video player',
+        params: this.buildParamsString(),
+      });
+      
+      // Set background image for thumbnail
+      liteYT.style.backgroundImage = `url("https://i.ytimg.com/vi/${this.videoId}/hqdefault.jpg")`;
+      liteYT.style.backgroundSize = 'cover';
+      liteYT.style.backgroundPosition = 'center';
+      
+      // Create play button
+      const playBtnEl = createTag('button', { type: 'button', class: 'lty-playbtn' });
+      const playBtnLabelEl = createTag('span', { class: 'lyt-visually-hidden' });
+      playBtnLabelEl.textContent = this.config.videotitle || 'YouTube video player';
+      playBtnEl.append(playBtnLabelEl);
+      liteYT.append(playBtnEl);
+      
+      // Add click handler to load actual player and chat
+      liteYT.addEventListener('click', () => this.loadYouTubePlayer(liteYT));
+      
+      wrapper.append(liteYT);
+    }
+    
+    videoContainer.append(wrapper);
+    return videoContainer;
+  }
+
+  buildParamsString() {
+    const params = new URLSearchParams();
+    
+    const options = {
+      autoplay: 'autoplay',
+      mute: 'mute',
+      'show-controls': 'controls',
+      'show-player-title-actions': 'modestbranding',
+      'show-suggestions-after-video-ends': 'rel',
+    };
+
+    for (const [key, param] of Object.entries(options)) {
+      if (this.config[key]?.toLowerCase?.() === 'true') {
+        params.append(param, '1');
+      }
+    }
+
+    // Add mobile-specific params
+    if (this.isMobile) {
+      params.append('mute', '1');
+    }
+
+    return params.toString();
+  }
+
+  async loadYouTubePlayer(liteYT) {
+    if (this.isLoaded) return;
+    
+    this.isLoaded = true;
+    liteYT.classList.add('lyt-activated');
+    
+    // Create and load the actual iframe
     const iframe = createTag('iframe', {
       class: 'youtube-video',
       src: this.buildEmbedUrl(),
       allowfullscreen: true,
       title: this.config.videotitle || 'YouTube video player',
+      allow: 'accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture',
     });
-
-    const wrapper = createTag('div', { class: 'iframe-container' }, iframe);
-    return createTag('div', { class: 'youtube-video-container' }, wrapper);
+    
+    // Replace lite-youtube with iframe
+    liteYT.insertAdjacentElement('afterend', iframe);
+    liteYT.remove();
+    
+    // Load chat if enabled
+    if (this.chatEnabled) {
+      this.loadChat();
+    }
   }
 
-  createChatSection() {
+  loadChat() {
+    const chatContainer = document.querySelector('.youtube-chat-container');
+    if (!chatContainer) return;
+    
     const chatIframe = createTag('iframe', {
       class: 'youtube-chat',
       src: `https://www.youtube.com/live_chat?v=${this.videoId}&embed_domain=${window.location.hostname}`,
@@ -55,11 +176,27 @@ export class YouTubeChat {
     });
 
     const wrapper = createTag('div', { class: 'iframe-container' }, chatIframe);
-    return createTag('div', { class: 'youtube-chat-container' }, wrapper);
+    chatContainer.innerHTML = '';
+    chatContainer.append(wrapper);
+  }
+
+  createChatSection() {
+    // Initially create an empty chat container
+    const chatContainer = createTag('div', { class: 'youtube-chat-container' });
+    const wrapper = createTag('div', { class: 'iframe-container' });
+    
+    // Add placeholder for chat
+    const chatPlaceholder = createTag('div', { 
+      class: 'youtube-chat-placeholder' 
+    }, 'Chat will load when video is played');
+    
+    wrapper.append(chatPlaceholder);
+    chatContainer.append(wrapper);
+    return chatContainer;
   }
 
   buildEmbedUrl() {
-    const base = `https://www.youtube.com/embed/${this.videoId}`;
+    const base = `https://www.youtube-nocookie.com/embed/${this.videoId}`;
     const params = new URLSearchParams();
 
     const options = {
@@ -74,6 +211,11 @@ export class YouTubeChat {
       if (this.config[key]?.toLowerCase?.() === 'true') {
         params.append(param, '1');
       }
+    }
+
+    // Add mobile-specific params
+    if (this.isMobile) {
+      params.append('mute', '1');
     }
 
     return params.toString() ? `${base}?${params}` : base;
