@@ -87,8 +87,11 @@ class TimingWorker {
    * @returns {Object}
    * @description Returns the first schedule item that should be shown based on toggleTime
    */
-  static getStartScheduleItemByToggleTime(scheduleRoot) {
+  getStartScheduleItemByToggleTime(scheduleRoot) {
     const currentTime = new Date().getTime();
+    const adjustedTime = this.testingManager.isTesting()
+      ? this.testingManager.adjustTime(currentTime)
+      : currentTime;
 
     let pointer = scheduleRoot;
     let start = null;
@@ -97,7 +100,7 @@ class TimingWorker {
       const { toggleTime: t } = pointer;
       // Convert toggleTime to number if it's a string, like in shouldTriggerNextSchedule
       const numericToggleTime = typeof t === 'string' ? parseInt(t, 10) : t;
-      const toggleTimePassed = typeof numericToggleTime !== 'number' || currentTime > numericToggleTime;
+      const toggleTimePassed = typeof numericToggleTime !== 'number' || adjustedTime > numericToggleTime;
 
       if (!toggleTimePassed) break;
 
@@ -261,7 +264,7 @@ class TimingWorker {
     }
 
     if (schedule) {
-      this.nextScheduleItem = TimingWorker.getStartScheduleItemByToggleTime(schedule);
+      this.nextScheduleItem = this.getStartScheduleItemByToggleTime(schedule);
       this.currentScheduleItem = this.nextScheduleItem?.prev || schedule;
       this.previouslySentItem = null;
     }
