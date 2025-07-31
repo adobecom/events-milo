@@ -8,16 +8,385 @@ sitemaps:
         destination: /events/create-now/sitemap.xml
         hreflang: en
         alternate: /{path}
+      # Tier 1 locales
       de:
         source: /de/events/query-index.json
         destination: /de/events/create-now/sitemap.xml
         hreflang: de
         alternate: /de/{path}
+      fr:
+        source: /fr/events/query-index.json
+        destination: /fr/events/create-now/sitemap.xml
+        hreflang: fr
+        alternate: /fr/{path}
+      jp:
+        source: /jp/events/query-index.json
+        destination: /jp/events/create-now/sitemap.xml
+        hreflang: ja
+        alternate: /jp/{path}
       uk:
         source: /uk/events/query-index.json
         destination: /uk/events/create-now/sitemap.xml
         hreflang: en-GB
         alternate: /uk/{path}
+      # Tier 2 locales
+      dk:
+        source: /dk/events/query-index.json
+        destination: /dk/events/create-now/sitemap.xml
+        hreflang: da
+        alternate: /dk/{path}
+      es:
+        source: /es/events/query-index.json
+        destination: /es/events/create-now/sitemap.xml
+        hreflang: es
+        alternate: /es/{path}
+      fi:
+        source: /fi/events/query-index.json
+        destination: /fi/events/create-now/sitemap.xml
+        hreflang: fi
+        alternate: /fi/{path}
+      it:
+        source: /it/events/query-index.json
+        destination: /it/events/create-now/sitemap.xml
+        hreflang: it
+        alternate: /it/{path}
+      nl:
+        source: /nl/events/query-index.json
+        destination: /nl/events/create-now/sitemap.xml
+        hreflang: nl
+        alternate: /nl/{path}
+      no:
+        source: /no/events/query-index.json
+        destination: /no/events/create-now/sitemap.xml
+        hreflang: no
+        alternate: /no/{path}
+      se:
+        source: /se/events/query-index.json
+        destination: /se/events/create-now/sitemap.xml
+        hreflang: sv
+        alternate: /se/{path}
+      # Tier 3 locales
+      au:
+        source: /au/events/query-index.json
+        destination: /au/events/create-now/sitemap.xml
+        hreflang: en-AU
+        alternate: /au/{path}
+      br:
+        source: /br/events/query-index.json
+        destination: /br/events/create-now/sitemap.xml
+        hreflang: pt-BR
+        alternate: /br/{path}
+      cn:
+        source: /cn/events/query-index.json
+        destination: /cn/events/create-now/sitemap.xml
+        hreflang: zh-CN
+        alternate: /cn/{path}
+      kr:
+        source: /kr/events/query-index.json
+        destination: /kr/events/create-now/sitemap.xml
+        hreflang: ko
+        alternate: /kr/{path}
+      la:
+        source: /la/events/query-index.json
+        destination: /la/events/create-now/sitemap.xml
+        hreflang: es-419
+        alternate: /la/{path}
+      mx:
+        source: /mx/events/query-index.json
+        destination: /mx/events/create-now/sitemap.xml
+        hreflang: es-MX
+        alternate: /mx/{path}
+      tw:
+        source: /tw/events/query-index.json
+        destination: /tw/events/create-now/sitemap.xml
+        hreflang: zh-TW
+        alternate: /tw/{path}
+      # Tier 4 locales
+      ae_ar:
+        source: /ae_ar/events/query-index.json
+        destination: /ae_ar/events/create-now/sitemap.xml
+        hreflang: ar-AE
+        alternate: /ae_ar/{path}
+      ae_en:
+        source: /ae_en/events/query-index.json
+        destination: /ae_en/events/create-now/sitemap.xml
+        hreflang: en-AE
+        alternate: /ae_en/{path}
+      africa:
+        source: /africa/events/query-index.json
+        destination: /africa/events/create-now/sitemap.xml
+        hreflang: en-ZA
+        alternate: /africa/{path}
+      ar:
+        source: /ar/events/query-index.json
+        destination: /ar/events/create-now/sitemap.xml
+        hreflang: es-AR
+        alternate: /ar/{path}
+      at:
+        source: /at/events/query-index.json
+        destination: /at/events/create-now/sitemap.xml
+        hreflang: de-AT
+        alternate: /at/{path}
+      be_en:
+        source: /be_en/events/query-index.json
+        destination: /be_en/events/create-now/sitemap.xml
+        hreflang: en-BE
+        alternate: /be_en/{path}
+      be_fr:
+        source: /be_fr/events/query-index.json
+        destination: /be_fr/events/create-now/sitemap.xml
+        hreflang: fr-BE
+        alternate: /be_fr/{path}
+      be_nl:
+        source: /be_nl/events/query-index.json
+        destination: /be_nl/events/create-now/sitemap.xml
+        hreflang: nl-BE
+        alternate: /be_nl/{path}
+      bg:
+        source: /bg/events/query-index.json
+        destination: /bg/events/create-now/sitemap.xml
+        hreflang: bg
+        alternate: /bg/{path}
+      ca:
+        source: /ca/events/query-index.json
+        destination: /ca/events/create-now/sitemap.xml
+        hreflang: en-CA
+        alternate: /ca/{path}
+      ca_fr:
+        source: /ca_fr/events/query-index.json
+        destination: /ca_fr/events/create-now/sitemap.xml
+        hreflang: fr-CA
+        alternate: /ca_fr/{path}
+      ch_de:
+        source: /ch_de/events/query-index.json
+        destination: /ch_de/events/create-now/sitemap.xml
+        hreflang: de-CH
+        alternate: /ch_de/{path}
+      ch_fr:
+        source: /ch_fr/events/query-index.json
+        destination: /ch_fr/events/create-now/sitemap.xml
+        hreflang: fr-CH
+        alternate: /ch_fr/{path}
+      ch_it:
+        source: /ch_it/events/query-index.json
+        destination: /ch_it/events/create-now/sitemap.xml
+        hreflang: it-CH
+        alternate: /ch_it/{path}
+      cl:
+        source: /cl/events/query-index.json
+        destination: /cl/events/create-now/sitemap.xml
+        hreflang: es-CL
+        alternate: /cl/{path}
+      co:
+        source: /co/events/query-index.json
+        destination: /co/events/create-now/sitemap.xml
+        hreflang: es-CO
+        alternate: /co/{path}
+      cz:
+        source: /cz/events/query-index.json
+        destination: /cz/events/create-now/sitemap.xml
+        hreflang: cs
+        alternate: /cz/{path}
+      ee:
+        source: /ee/events/query-index.json
+        destination: /ee/events/create-now/sitemap.xml
+        hreflang: et
+        alternate: /ee/{path}
+      gr_en:
+        source: /gr_en/events/query-index.json
+        destination: /gr_en/events/create-now/sitemap.xml
+        hreflang: en-GR
+        alternate: /gr_en/{path}
+      hk_en:
+        source: /hk_en/events/query-index.json
+        destination: /hk_en/events/create-now/sitemap.xml
+        hreflang: en-HK
+        alternate: /hk_en/{path}
+      hk_zh:
+        source: /hk_zh/events/query-index.json
+        destination: /hk_zh/events/create-now/sitemap.xml
+        hreflang: zh-HK
+        alternate: /hk_zh/{path}
+      hu:
+        source: /hu/events/query-index.json
+        destination: /hu/events/create-now/sitemap.xml
+        hreflang: hu
+        alternate: /hu/{path}
+      id_en:
+        source: /id_en/events/query-index.json
+        destination: /id_en/events/create-now/sitemap.xml
+        hreflang: en-ID
+        alternate: /id_en/{path}
+      id_id:
+        source: /id_id/events/query-index.json
+        destination: /id_id/events/create-now/sitemap.xml
+        hreflang: id
+        alternate: /id_id/{path}
+      ie:
+        source: /ie/events/query-index.json
+        destination: /ie/events/create-now/sitemap.xml
+        hreflang: en-IE
+        alternate: /ie/{path}
+      il_en:
+        source: /il_en/events/query-index.json
+        destination: /il_en/events/create-now/sitemap.xml
+        hreflang: en-IL
+        alternate: /il_en/{path}
+      il_he:
+        source: /il_he/events/query-index.json
+        destination: /il_he/events/create-now/sitemap.xml
+        hreflang: he
+        alternate: /il_he/{path}
+      in:
+        source: /in/events/query-index.json
+        destination: /in/events/create-now/sitemap.xml
+        hreflang: en-IN
+        alternate: /in/{path}
+      in_hi:
+        source: /in_hi/events/query-index.json
+        destination: /in_hi/events/create-now/sitemap.xml
+        hreflang: hi
+        alternate: /in_hi/{path}
+      lt:
+        source: /lt/events/query-index.json
+        destination: /lt/events/create-now/sitemap.xml
+        hreflang: lt
+        alternate: /lt/{path}
+      lu_de:
+        source: /lu_de/events/query-index.json
+        destination: /lu_de/events/create-now/sitemap.xml
+        hreflang: de-LU
+        alternate: /lu_de/{path}
+      lu_en:
+        source: /lu_en/events/query-index.json
+        destination: /lu_en/events/create-now/sitemap.xml
+        hreflang: en-LU
+        alternate: /lu_en/{path}
+      lu_fr:
+        source: /lu_fr/events/query-index.json
+        destination: /lu_fr/events/create-now/sitemap.xml
+        hreflang: fr-LU
+        alternate: /lu_fr/{path}
+      lv:
+        source: /lv/events/query-index.json
+        destination: /lv/events/create-now/sitemap.xml
+        hreflang: lv
+        alternate: /lv/{path}
+      mena_ar:
+        source: /mena_ar/events/query-index.json
+        destination: /mena_ar/events/create-now/sitemap.xml
+        hreflang: ar
+        alternate: /mena_ar/{path}
+      mena_en:
+        source: /mena_en/events/query-index.json
+        destination: /mena_en/events/create-now/sitemap.xml
+        hreflang: en
+        alternate: /mena_en/{path}
+      my_en:
+        source: /my_en/events/query-index.json
+        destination: /my_en/events/create-now/sitemap.xml
+        hreflang: en-MY
+        alternate: /my_en/{path}
+      my_ms:
+        source: /my_ms/events/query-index.json
+        destination: /my_ms/events/create-now/sitemap.xml
+        hreflang: ms
+        alternate: /my_ms/{path}
+      nz:
+        source: /nz/events/query-index.json
+        destination: /nz/events/create-now/sitemap.xml
+        hreflang: en-NZ
+        alternate: /nz/{path}
+      pe:
+        source: /pe/events/query-index.json
+        destination: /pe/events/create-now/sitemap.xml
+        hreflang: es-PE
+        alternate: /pe/{path}
+      ph_en:
+        source: /ph_en/events/query-index.json
+        destination: /ph_en/events/create-now/sitemap.xml
+        hreflang: en-PH
+        alternate: /ph_en/{path}
+      ph_fil:
+        source: /ph_fil/events/query-index.json
+        destination: /ph_fil/events/create-now/sitemap.xml
+        hreflang: fil
+        alternate: /ph_fil/{path}
+      pl:
+        source: /pl/events/query-index.json
+        destination: /pl/events/create-now/sitemap.xml
+        hreflang: pl
+        alternate: /pl/{path}
+      pt:
+        source: /pt/events/query-index.json
+        destination: /pt/events/create-now/sitemap.xml
+        hreflang: pt
+        alternate: /pt/{path}
+      ro:
+        source: /ro/events/query-index.json
+        destination: /ro/events/create-now/sitemap.xml
+        hreflang: ro
+        alternate: /ro/{path}
+      ru:
+        source: /ru/events/query-index.json
+        destination: /ru/events/create-now/sitemap.xml
+        hreflang: ru
+        alternate: /ru/{path}
+      sa_ar:
+        source: /sa_ar/events/query-index.json
+        destination: /sa_ar/events/create-now/sitemap.xml
+        hreflang: ar-SA
+        alternate: /sa_ar/{path}
+      sa_en:
+        source: /sa_en/events/query-index.json
+        destination: /sa_en/events/create-now/sitemap.xml
+        hreflang: en-SA
+        alternate: /sa_en/{path}
+      sg:
+        source: /sg/events/query-index.json
+        destination: /sg/events/create-now/sitemap.xml
+        hreflang: en-SG
+        alternate: /sg/{path}
+      si:
+        source: /si/events/query-index.json
+        destination: /si/events/create-now/sitemap.xml
+        hreflang: sl
+        alternate: /si/{path}
+      sk:
+        source: /sk/events/query-index.json
+        destination: /sk/events/create-now/sitemap.xml
+        hreflang: sk
+        alternate: /sk/{path}
+      th_en:
+        source: /th_en/events/query-index.json
+        destination: /th_en/events/create-now/sitemap.xml
+        hreflang: en-TH
+        alternate: /th_en/{path}
+      th_th:
+        source: /th_th/events/query-index.json
+        destination: /th_th/events/create-now/sitemap.xml
+        hreflang: th
+        alternate: /th_th/{path}
+      tr:
+        source: /tr/events/query-index.json
+        destination: /tr/events/create-now/sitemap.xml
+        hreflang: tr
+        alternate: /tr/{path}
+      ua:
+        source: /ua/events/query-index.json
+        destination: /ua/events/create-now/sitemap.xml
+        hreflang: uk
+        alternate: /ua/{path}
+      vn_en:
+        source: /vn_en/events/query-index.json
+        destination: /vn_en/events/create-now/sitemap.xml
+        hreflang: en-VN
+        alternate: /vn_en/{path}
+      vn_vi:
+        source: /vn_vi/events/query-index.json
+        destination: /vn_vi/events/create-now/sitemap.xml
+        hreflang: vi
+        alternate: /vn_vi/{path}
   
   seo-templates:
     origin: https://www.adobe.com
@@ -27,13 +396,382 @@ sitemaps:
         destination: /events/create-now/events-sitemap.xml
         hreflang: en
         alternate: /{path}
+      # Tier 1 locales
       de:
         source: /de/events/default/metadata.json?sheet=sitemap
         destination: /de/events/create-now/events-sitemap.xml
         hreflang: de
         alternate: /de/{path}
+      fr:
+        source: /fr/events/default/metadata.json?sheet=sitemap
+        destination: /fr/events/create-now/events-sitemap.xml
+        hreflang: fr
+        alternate: /fr/{path}
+      jp:
+        source: /jp/events/default/metadata.json?sheet=sitemap
+        destination: /jp/events/create-now/events-sitemap.xml
+        hreflang: ja
+        alternate: /jp/{path}
       uk:
         source: /uk/events/default/metadata.json?sheet=sitemap
         destination: /uk/events/create-now/events-sitemap.xml
         hreflang: en-GB
         alternate: /uk/{path}
+      # Tier 2 locales
+      dk:
+        source: /dk/events/default/metadata.json?sheet=sitemap
+        destination: /dk/events/create-now/events-sitemap.xml
+        hreflang: da
+        alternate: /dk/{path}
+      es:
+        source: /es/events/default/metadata.json?sheet=sitemap
+        destination: /es/events/create-now/events-sitemap.xml
+        hreflang: es
+        alternate: /es/{path}
+      fi:
+        source: /fi/events/default/metadata.json?sheet=sitemap
+        destination: /fi/events/create-now/events-sitemap.xml
+        hreflang: fi
+        alternate: /fi/{path}
+      it:
+        source: /it/events/default/metadata.json?sheet=sitemap
+        destination: /it/events/create-now/events-sitemap.xml
+        hreflang: it
+        alternate: /it/{path}
+      nl:
+        source: /nl/events/default/metadata.json?sheet=sitemap
+        destination: /nl/events/create-now/events-sitemap.xml
+        hreflang: nl
+        alternate: /nl/{path}
+      no:
+        source: /no/events/default/metadata.json?sheet=sitemap
+        destination: /no/events/create-now/events-sitemap.xml
+        hreflang: no
+        alternate: /no/{path}
+      se:
+        source: /se/events/default/metadata.json?sheet=sitemap
+        destination: /se/events/create-now/events-sitemap.xml
+        hreflang: sv
+        alternate: /se/{path}
+      # Tier 3 locales
+      au:
+        source: /au/events/default/metadata.json?sheet=sitemap
+        destination: /au/events/create-now/events-sitemap.xml
+        hreflang: en-AU
+        alternate: /au/{path}
+      br:
+        source: /br/events/default/metadata.json?sheet=sitemap
+        destination: /br/events/create-now/events-sitemap.xml
+        hreflang: pt-BR
+        alternate: /br/{path}
+      cn:
+        source: /cn/events/default/metadata.json?sheet=sitemap
+        destination: /cn/events/create-now/events-sitemap.xml
+        hreflang: zh-CN
+        alternate: /cn/{path}
+      kr:
+        source: /kr/events/default/metadata.json?sheet=sitemap
+        destination: /kr/events/create-now/events-sitemap.xml
+        hreflang: ko
+        alternate: /kr/{path}
+      la:
+        source: /la/events/default/metadata.json?sheet=sitemap
+        destination: /la/events/create-now/events-sitemap.xml
+        hreflang: es-419
+        alternate: /la/{path}
+      mx:
+        source: /mx/events/default/metadata.json?sheet=sitemap
+        destination: /mx/events/create-now/events-sitemap.xml
+        hreflang: es-MX
+        alternate: /mx/{path}
+      tw:
+        source: /tw/events/default/metadata.json?sheet=sitemap
+        destination: /tw/events/create-now/events-sitemap.xml
+        hreflang: zh-TW
+        alternate: /tw/{path}
+      # Tier 4 locales
+      ae_ar:
+        source: /ae_ar/events/default/metadata.json?sheet=sitemap
+        destination: /ae_ar/events/create-now/events-sitemap.xml
+        hreflang: ar-AE
+        alternate: /ae_ar/{path}
+      ae_en:
+        source: /ae_en/events/default/metadata.json?sheet=sitemap
+        destination: /ae_en/events/create-now/events-sitemap.xml
+        hreflang: en-AE
+        alternate: /ae_en/{path}
+      africa:
+        source: /africa/events/default/metadata.json?sheet=sitemap
+        destination: /africa/events/create-now/events-sitemap.xml
+        hreflang: en-ZA
+        alternate: /africa/{path}
+      ar:
+        source: /ar/events/default/metadata.json?sheet=sitemap
+        destination: /ar/events/create-now/events-sitemap.xml
+        hreflang: es-AR
+        alternate: /ar/{path}
+      at:
+        source: /at/events/default/metadata.json?sheet=sitemap
+        destination: /at/events/create-now/events-sitemap.xml
+        hreflang: de-AT
+        alternate: /at/{path}
+      be_en:
+        source: /be_en/events/default/metadata.json?sheet=sitemap
+        destination: /be_en/events/create-now/events-sitemap.xml
+        hreflang: en-BE
+        alternate: /be_en/{path}
+      be_fr:
+        source: /be_fr/events/default/metadata.json?sheet=sitemap
+        destination: /be_fr/events/create-now/events-sitemap.xml
+        hreflang: fr-BE
+        alternate: /be_fr/{path}
+      be_nl:
+        source: /be_nl/events/default/metadata.json?sheet=sitemap
+        destination: /be_nl/events/create-now/events-sitemap.xml
+        hreflang: nl-BE
+        alternate: /be_nl/{path}
+      bg:
+        source: /bg/events/default/metadata.json?sheet=sitemap
+        destination: /bg/events/create-now/events-sitemap.xml
+        hreflang: bg
+        alternate: /bg/{path}
+      ca:
+        source: /ca/events/default/metadata.json?sheet=sitemap
+        destination: /ca/events/create-now/events-sitemap.xml
+        hreflang: en-CA
+        alternate: /ca/{path}
+      ca_fr:
+        source: /ca_fr/events/default/metadata.json?sheet=sitemap
+        destination: /ca_fr/events/create-now/events-sitemap.xml
+        hreflang: fr-CA
+        alternate: /ca_fr/{path}
+      ch_de:
+        source: /ch_de/events/default/metadata.json?sheet=sitemap
+        destination: /ch_de/events/create-now/events-sitemap.xml
+        hreflang: de-CH
+        alternate: /ch_de/{path}
+      ch_fr:
+        source: /ch_fr/events/default/metadata.json?sheet=sitemap
+        destination: /ch_fr/events/create-now/events-sitemap.xml
+        hreflang: fr-CH
+        alternate: /ch_fr/{path}
+      ch_it:
+        source: /ch_it/events/default/metadata.json?sheet=sitemap
+        destination: /ch_it/events/create-now/events-sitemap.xml
+        hreflang: it-CH
+        alternate: /ch_it/{path}
+      cl:
+        source: /cl/events/default/metadata.json?sheet=sitemap
+        destination: /cl/events/create-now/events-sitemap.xml
+        hreflang: es-CL
+        alternate: /cl/{path}
+      co:
+        source: /co/events/default/metadata.json?sheet=sitemap
+        destination: /co/events/create-now/events-sitemap.xml
+        hreflang: es-CO
+        alternate: /co/{path}
+      cz:
+        source: /cz/events/default/metadata.json?sheet=sitemap
+        destination: /cz/events/create-now/events-sitemap.xml
+        hreflang: cs
+        alternate: /cz/{path}
+      ee:
+        source: /ee/events/default/metadata.json?sheet=sitemap
+        destination: /ee/events/create-now/events-sitemap.xml
+        hreflang: et
+        alternate: /ee/{path}
+      gr_en:
+        source: /gr_en/events/default/metadata.json?sheet=sitemap
+        destination: /gr_en/events/create-now/events-sitemap.xml
+        hreflang: en-GR
+        alternate: /gr_en/{path}
+      hk_en:
+        source: /hk_en/events/default/metadata.json?sheet=sitemap
+        destination: /hk_en/events/create-now/events-sitemap.xml
+        hreflang: en-HK
+        alternate: /hk_en/{path}
+      hk_zh:
+        source: /hk_zh/events/default/metadata.json?sheet=sitemap
+        destination: /hk_zh/events/create-now/events-sitemap.xml
+        hreflang: zh-HK
+        alternate: /hk_zh/{path}
+      hu:
+        source: /hu/events/default/metadata.json?sheet=sitemap
+        destination: /hu/events/create-now/events-sitemap.xml
+        hreflang: hu
+        alternate: /hu/{path}
+      id_en:
+        source: /id_en/events/default/metadata.json?sheet=sitemap
+        destination: /id_en/events/create-now/events-sitemap.xml
+        hreflang: en-ID
+        alternate: /id_en/{path}
+      id_id:
+        source: /id_id/events/default/metadata.json?sheet=sitemap
+        destination: /id_id/events/create-now/events-sitemap.xml
+        hreflang: id
+        alternate: /id_id/{path}
+      ie:
+        source: /ie/events/default/metadata.json?sheet=sitemap
+        destination: /ie/events/create-now/events-sitemap.xml
+        hreflang: en-IE
+        alternate: /ie/{path}
+      il_en:
+        source: /il_en/events/default/metadata.json?sheet=sitemap
+        destination: /il_en/events/create-now/events-sitemap.xml
+        hreflang: en-IL
+        alternate: /il_en/{path}
+      il_he:
+        source: /il_he/events/default/metadata.json?sheet=sitemap
+        destination: /il_he/events/create-now/events-sitemap.xml
+        hreflang: he
+        alternate: /il_he/{path}
+      in:
+        source: /in/events/default/metadata.json?sheet=sitemap
+        destination: /in/events/create-now/events-sitemap.xml
+        hreflang: en-IN
+        alternate: /in/{path}
+      in_hi:
+        source: /in_hi/events/default/metadata.json?sheet=sitemap
+        destination: /in_hi/events/create-now/events-sitemap.xml
+        hreflang: hi
+        alternate: /in_hi/{path}
+      lt:
+        source: /lt/events/default/metadata.json?sheet=sitemap
+        destination: /lt/events/create-now/events-sitemap.xml
+        hreflang: lt
+        alternate: /lt/{path}
+      lu_de:
+        source: /lu_de/events/default/metadata.json?sheet=sitemap
+        destination: /lu_de/events/create-now/events-sitemap.xml
+        hreflang: de-LU
+        alternate: /lu_de/{path}
+      lu_en:
+        source: /lu_en/events/default/metadata.json?sheet=sitemap
+        destination: /lu_en/events/create-now/events-sitemap.xml
+        hreflang: en-LU
+        alternate: /lu_en/{path}
+      lu_fr:
+        source: /lu_fr/events/default/metadata.json?sheet=sitemap
+        destination: /lu_fr/events/create-now/events-sitemap.xml
+        hreflang: fr-LU
+        alternate: /lu_fr/{path}
+      lv:
+        source: /lv/events/default/metadata.json?sheet=sitemap
+        destination: /lv/events/create-now/events-sitemap.xml
+        hreflang: lv
+        alternate: /lv/{path}
+      mena_ar:
+        source: /mena_ar/events/default/metadata.json?sheet=sitemap
+        destination: /mena_ar/events/create-now/events-sitemap.xml
+        hreflang: ar
+        alternate: /mena_ar/{path}
+      mena_en:
+        source: /mena_en/events/default/metadata.json?sheet=sitemap
+        destination: /mena_en/events/create-now/events-sitemap.xml
+        hreflang: en
+        alternate: /mena_en/{path}
+      my_en:
+        source: /my_en/events/default/metadata.json?sheet=sitemap
+        destination: /my_en/events/create-now/events-sitemap.xml
+        hreflang: en-MY
+        alternate: /my_en/{path}
+      my_ms:
+        source: /my_ms/events/default/metadata.json?sheet=sitemap
+        destination: /my_ms/events/create-now/events-sitemap.xml
+        hreflang: ms
+        alternate: /my_ms/{path}
+      nz:
+        source: /nz/events/default/metadata.json?sheet=sitemap
+        destination: /nz/events/create-now/events-sitemap.xml
+        hreflang: en-NZ
+        alternate: /nz/{path}
+      pe:
+        source: /pe/events/default/metadata.json?sheet=sitemap
+        destination: /pe/events/create-now/events-sitemap.xml
+        hreflang: es-PE
+        alternate: /pe/{path}
+      ph_en:
+        source: /ph_en/events/default/metadata.json?sheet=sitemap
+        destination: /ph_en/events/create-now/events-sitemap.xml
+        hreflang: en-PH
+        alternate: /ph_en/{path}
+      ph_fil:
+        source: /ph_fil/events/default/metadata.json?sheet=sitemap
+        destination: /ph_fil/events/create-now/events-sitemap.xml
+        hreflang: fil
+        alternate: /ph_fil/{path}
+      pl:
+        source: /pl/events/default/metadata.json?sheet=sitemap
+        destination: /pl/events/create-now/events-sitemap.xml
+        hreflang: pl
+        alternate: /pl/{path}
+      pt:
+        source: /pt/events/default/metadata.json?sheet=sitemap
+        destination: /pt/events/create-now/events-sitemap.xml
+        hreflang: pt
+        alternate: /pt/{path}
+      ro:
+        source: /ro/events/default/metadata.json?sheet=sitemap
+        destination: /ro/events/create-now/events-sitemap.xml
+        hreflang: ro
+        alternate: /ro/{path}
+      ru:
+        source: /ru/events/default/metadata.json?sheet=sitemap
+        destination: /ru/events/create-now/events-sitemap.xml
+        hreflang: ru
+        alternate: /ru/{path}
+      sa_ar:
+        source: /sa_ar/events/default/metadata.json?sheet=sitemap
+        destination: /sa_ar/events/create-now/events-sitemap.xml
+        hreflang: ar-SA
+        alternate: /sa_ar/{path}
+      sa_en:
+        source: /sa_en/events/default/metadata.json?sheet=sitemap
+        destination: /sa_en/events/create-now/events-sitemap.xml
+        hreflang: en-SA
+        alternate: /sa_en/{path}
+      sg:
+        source: /sg/events/default/metadata.json?sheet=sitemap
+        destination: /sg/events/create-now/events-sitemap.xml
+        hreflang: en-SG
+        alternate: /sg/{path}
+      si:
+        source: /si/events/default/metadata.json?sheet=sitemap
+        destination: /si/events/create-now/events-sitemap.xml
+        hreflang: sl
+        alternate: /si/{path}
+      sk:
+        source: /sk/events/default/metadata.json?sheet=sitemap
+        destination: /sk/events/create-now/events-sitemap.xml
+        hreflang: sk
+        alternate: /sk/{path}
+      th_en:
+        source: /th_en/events/default/metadata.json?sheet=sitemap
+        destination: /th_en/events/create-now/events-sitemap.xml
+        hreflang: en-TH
+        alternate: /th_en/{path}
+      th_th:
+        source: /th_th/events/default/metadata.json?sheet=sitemap
+        destination: /th_th/events/create-now/events-sitemap.xml
+        hreflang: th
+        alternate: /th_th/{path}
+      tr:
+        source: /tr/events/default/metadata.json?sheet=sitemap
+        destination: /tr/events/create-now/events-sitemap.xml
+        hreflang: tr
+        alternate: /tr/{path}
+      ua:
+        source: /ua/events/default/metadata.json?sheet=sitemap
+        destination: /ua/events/create-now/events-sitemap.xml
+        hreflang: uk
+        alternate: /ua/{path}
+      vn_en:
+        source: /vn_en/events/default/metadata.json?sheet=sitemap
+        destination: /vn_en/events/create-now/events-sitemap.xml
+        hreflang: en-VN
+        alternate: /vn_en/{path}
+      vn_vi:
+        source: /vn_vi/events/default/metadata.json?sheet=sitemap
+        destination: /vn_vi/events/create-now/events-sitemap.xml
+        hreflang: vi
+        alternate: /vn_vi/{path}
