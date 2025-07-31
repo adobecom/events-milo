@@ -2,6 +2,7 @@ import { LIBS, getMetadata } from '../../scripts/utils.js';
 
 const { createTag } = await import(`${LIBS}/utils/utils.js`);
 
+ //TODO: remove post validation with marketo integration.
 function addParams(searchParams, params, key, value) {
   if (params.has(key)) {
     searchParams[key] = params.get(key);
@@ -10,6 +11,7 @@ function addParams(searchParams, params, key, value) {
   }
 }
 
+ //TODO: remove post validation with marketo integration.
 function addSearchParams(url, searchParams) {
   const urlObj = new URL(url);
   for (const [key, value] of Object.entries(searchParams)) {
@@ -18,6 +20,7 @@ function addSearchParams(url, searchParams) {
   return urlObj.toString();
 }
 
+ //TODO: remove post validation with marketo integration.
 function getSearchParamsFromCurrentUrl() {
   const params = new URL(window.location.href).searchParams;
   const searchParams = {};
@@ -117,7 +120,7 @@ export default async function init(el) {
     overlayElem.classList.add('hidden');
   }
 
-  const searchParams = getSearchParamsFromCurrentUrl();
+  
 
   if (getMetadata('adobe-connect-url')) {
     url = getMetadata('adobe-connect-url');
@@ -126,6 +129,8 @@ export default async function init(el) {
     return;
   }
 
+  //TODO: remove post validation with marketo integration.
+  const searchParams = getSearchParamsFromCurrentUrl();
   url = addSearchParams(url, searchParams);
 
   if (overlayElem && shouldShowOverlay()) {

@@ -1,8 +1,5 @@
 import { CheckResourceLocation } from '../../../rs/360-KCI-804/images/mktoTestFormConfig.js';
-
 import { setMetadata } from '../../scripts/utils.js';
-
-import { metadataStore } from '../../features/timing-framework/plugins/metadata/plugin.js';
 
 export default async function init(el) {
   const rows = Array.from(el.children);
@@ -18,8 +15,10 @@ export default async function init(el) {
 
   await CheckResourceLocation(el, resourceWatch, resourceLocation);
 
-  function mczMarketoFormAdobeConnectEvent() {
+  async function mczMarketoFormAdobeConnectEvent() {
     if (window.mcz_marketoForm_pref?.form?.success?.type === 'adobe_connect') {
+      const { metadataStore } = await import('../../features/timing-framework/plugins/metadata/plugin.js');
+
       const eventUrl = window.mcz_marketoForm_pref?.form?.success?.content;
       setMetadata('adobe-connect-url', eventUrl);
       metadataStore.set(key, 'adobe-connect');
@@ -44,6 +43,8 @@ export default async function init(el) {
   // Debounced callback for observer
   const debouncedCallback = debounce(() => {
     const status = el.getAttribute('data-mcz-dl-status');
+
+    // TODO: remove this console.log post validation with marketo integration.
     console.log(
       'Attribute "data-mcz-dl-status" changed to',
       el.getAttribute('data-mcz-dl-status'),
