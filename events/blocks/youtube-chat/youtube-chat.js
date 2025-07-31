@@ -146,10 +146,10 @@ export class YouTubeChat {
     this.isLoaded = true;
     liteYT.classList.add('lyt-activated');
     
-    // Create and load the actual iframe
+    // Create and load the actual iframe with autoplay enabled
     const iframe = createTag('iframe', {
       class: 'youtube-video',
-      src: this.buildEmbedUrl(),
+      src: this.buildEmbedUrlWithAutoplay(),
       allowfullscreen: true,
       title: this.config.videotitle || 'YouTube video player',
       allow: 'accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture',
@@ -219,6 +219,34 @@ export class YouTubeChat {
     }
 
     return params.toString() ? `${base}?${params}` : base;
+  }
+
+  buildEmbedUrlWithAutoplay() {
+    const base = `https://www.youtube-nocookie.com/embed/${this.videoId}`;
+    const params = new URLSearchParams();
+
+    // Always add autoplay and mute for click-to-play scenarios
+    params.append('autoplay', '1');
+    params.append('mute', '1'); // Required for autoplay to work
+
+    const options = {
+      'show-controls': 'controls',
+      'show-player-title-actions': 'modestbranding',
+      'show-suggestions-after-video-ends': 'rel',
+    };
+
+    for (const [key, param] of Object.entries(options)) {
+      if (this.config[key]?.toLowerCase?.() === 'true') {
+        params.append(param, '1');
+      }
+    }
+
+    // Add mobile-specific params
+    if (this.isMobile) {
+      params.append('mute', '1');
+    }
+
+    return `${base}?${params}`;
   }
 }
 

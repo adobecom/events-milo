@@ -244,6 +244,8 @@ describe('YouTube Chat Module', () => {
         expect(iframe).to.not.be.null;
         expect(iframe.tagName).to.equal('IFRAME');
         expect(iframe.getAttribute('src')).to.include('https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ');
+        expect(iframe.getAttribute('src')).to.include('autoplay=1');
+        expect(iframe.getAttribute('src')).to.include('mute=1');
       });
 
       it('should not load player twice', async () => {
@@ -257,6 +259,39 @@ describe('YouTube Chat Module', () => {
         const secondIframe = liteYT.nextElementSibling;
         
         expect(firstIframe).to.equal(secondIframe);
+      });
+    });
+
+    describe('buildEmbedUrlWithAutoplay', () => {
+      beforeEach(() => {
+        youtubeChat.videoId = 'dQw4w9WgXcQ';
+      });
+
+      it('should build URL with autoplay and mute enabled', () => {
+        youtubeChat.config = {
+          'show-controls': 'true',
+          'show-player-title-actions': 'true',
+          'show-suggestions-after-video-ends': 'false'
+        };
+
+        const url = youtubeChat.buildEmbedUrlWithAutoplay();
+        expect(url).to.include('https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ');
+        expect(url).to.include('autoplay=1');
+        expect(url).to.include('mute=1');
+        expect(url).to.include('controls=1');
+        expect(url).to.include('modestbranding=1');
+        expect(url).to.not.include('rel=1');
+      });
+
+      it('should always include autoplay and mute regardless of config', () => {
+        youtubeChat.config = {
+          autoplay: 'false',
+          mute: 'false'
+        };
+
+        const url = youtubeChat.buildEmbedUrlWithAutoplay();
+        expect(url).to.include('autoplay=1');
+        expect(url).to.include('mute=1');
       });
     });
 
