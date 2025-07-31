@@ -45,10 +45,7 @@ export default async function init(el) {
     const status = el.getAttribute('data-mcz-dl-status');
 
     // TODO: remove this console.log post validation with marketo integration.
-    console.log(
-      'Attribute "data-mcz-dl-status" changed to',
-      el.getAttribute('data-mcz-dl-status'),
-    );
+    console.log('Attribute "data-mcz-dl-status" changed to', status);
     if (status === 'active') {
       mczMarketoFormAdobeConnectEvent();
     }
