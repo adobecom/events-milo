@@ -1,5 +1,31 @@
 import { createTag, readBlockConfig } from '../../scripts/utils.js';
 
+// Constants
+const CONFIG = {
+  ASPECT_RATIO: 56.25, // 16:9 aspect ratio
+  PRELOAD_DOMAINS: [
+    'www.youtube-nocookie.com',
+    'www.youtube.com',
+    'www.google.com',
+    'googleads.g.doubleclick.net',
+    'static.doubleclick.net',
+  ],
+  YOUTUBE_EMBED_BASE: 'https://www.youtube-nocookie.com/embed',
+  YOUTUBE_CHAT_BASE: 'https://www.youtube.com/live_chat',
+  THUMBNAIL_BASE: 'https://i.ytimg.com/vi',
+  PLAYER_OPTIONS: {
+    autoplay: 'autoplay',
+    mute: 'mute',
+    'show-controls': 'controls',
+    'show-player-title-actions': 'modestbranding',
+    'show-suggestions-after-video-ends': 'rel',
+  },
+  IFRAME_ATTRIBUTES: {
+    allowfullscreen: true,
+    allow: 'accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture',
+  },
+};
+
 export class YouTubeChat {
   constructor() {
     this.config = null;
@@ -7,22 +33,28 @@ export class YouTubeChat {
     this.chatEnabled = false;
     this.isLoaded = false;
     this.isMobile = navigator.userAgent.includes('Mobi');
+    this.pendingChatSection = null;
   }
 
   async init(block) {
-    this.config = readBlockConfig(block);
-    this.videoId = this.config['videoid'];
-    this.chatEnabled = this.config['chatenabled']?.toLowerCase() === 'true';
+    try {
+      this.config = readBlockConfig(block);
+      this.videoId = this.config['videoid'];
+      this.chatEnabled = this.config['chatenabled']?.toLowerCase() === 'true';
 
-    if (!this.videoId) {
-      window.lana?.log('YouTube Chat Block: Invalid or missing video ID.');
+      if (!this.videoId) {
+        throw new Error('Invalid or missing video ID.');
+      }
+
+      this.warmConnections();
+      this.renderBlock(block);
+    } catch (error) {
+      window.lana?.log(`YouTube Chat Block: ${error.message}`);
       block.remove();
-      return;
     }
+  }
 
-    // Preconnect to YouTube domains for better performance
-    this.warmConnections();
-
+  renderBlock(block) {
     block.textContent = '';
     block.append(this.buildYouTubeStream());
   }
@@ -31,24 +63,16 @@ export class YouTubeChat {
     if (YouTubeChat.preconnected) return;
     YouTubeChat.preconnected = true;
     
-    const domains = [
-      'www.youtube-nocookie.com',
-      'www.youtube.com',
-      'www.google.com',
-      'googleads.g.doubleclick.net',
-      'static.doubleclick.net',
-    ];
-    
-    domains.forEach((url) => {
+    CONFIG.PRELOAD_DOMAINS.forEach((domain) => {
       const link = document.createElement('link');
       link.rel = 'preconnect';
-      link.href = `https://${url}`;
+      link.href = `https://${domain}`;
       document.head.appendChild(link);
     });
   }
 
   buildYouTubeStream() {
-    const autoplayEnabled = this.config.autoplay?.toLowerCase() === 'true';
+    const autoplayEnabled = this.isAutoplayEnabled();
     const shouldShowChatInitially = this.chatEnabled && autoplayEnabled;
     
     const container = createTag('div', {
@@ -56,91 +80,89 @@ export class YouTubeChat {
     });
 
     container.append(this.createVideoSection());
-    
-    // Only add chat section immediately if autoplay is enabled
+    this.handleChatSection(container, autoplayEnabled);
+
+    return container;
+  }
+
+  handleChatSection(container, autoplayEnabled) {
     if (this.chatEnabled && autoplayEnabled) {
       container.append(this.createChatSection());
     } else if (this.chatEnabled && !autoplayEnabled) {
-      // For non-autoplay, create chat section but don't append yet
       this.pendingChatSection = this.createChatSection();
     }
-
-    return container;
   }
 
   createVideoSection() {
     const videoContainer = createTag('div', { class: 'youtube-video-container' });
     const wrapper = createTag('div', { class: 'iframe-container' });
     
-    // Check if autoplay is enabled
-    const autoplayEnabled = this.config.autoplay?.toLowerCase() === 'true';
+    const autoplayEnabled = this.isAutoplayEnabled();
     
     if (autoplayEnabled) {
-      // For autoplay, create the iframe directly but with optimized loading
-      const iframe = createTag('iframe', {
-        class: 'youtube-video',
-        src: this.buildEmbedUrl(),
-        allowfullscreen: true,
-        title: this.config.videotitle || 'YouTube video player',
-        allow: 'accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture',
-        loading: 'lazy', // Use lazy loading for better performance
-      });
-      
-      wrapper.append(iframe);
-      this.isLoaded = true;
-      
-      // Load chat immediately if enabled - add a small delay to ensure iframe is ready
-      if (this.chatEnabled) {
-        setTimeout(() => this.loadChat(), 100);
-      }
+      this.createAutoplayVideo(wrapper);
     } else {
-      // For non-autoplay, use lite-youtube approach
-      const liteYT = createTag('lite-youtube', {
-        videoid: this.videoId,
-        playlabel: this.config.videotitle || 'YouTube video player',
-        params: this.buildParamsString(),
-      });
-      
-      // Set background image for thumbnail
-      liteYT.style.backgroundImage = `url("https://i.ytimg.com/vi/${this.videoId}/hqdefault.jpg")`;
-      liteYT.style.backgroundSize = 'cover';
-      liteYT.style.backgroundPosition = 'center';
-      
-      // Create play button
-      const playBtnEl = createTag('button', { type: 'button', class: 'lty-playbtn' });
-      const playBtnLabelEl = createTag('span', { class: 'lyt-visually-hidden' });
-      playBtnLabelEl.textContent = this.config.videotitle || 'YouTube video player';
-      playBtnEl.append(playBtnLabelEl);
-      liteYT.append(playBtnEl);
-      
-      // Add click handler to load actual player and chat
-      liteYT.addEventListener('click', () => this.loadYouTubePlayer(liteYT));
-      
-      wrapper.append(liteYT);
+      this.createLiteYouTubeVideo(wrapper);
     }
     
     videoContainer.append(wrapper);
     return videoContainer;
   }
 
+  createAutoplayVideo(wrapper) {
+    const iframe = createTag('iframe', {
+      class: 'youtube-video',
+      src: this.buildEmbedUrl(),
+      title: this.config.videotitle || 'YouTube video player',
+      loading: 'lazy',
+      ...CONFIG.IFRAME_ATTRIBUTES,
+    });
+    
+    wrapper.append(iframe);
+    this.isLoaded = true;
+    
+    if (this.chatEnabled) {
+      setTimeout(() => this.loadChat(), 100);
+    }
+  }
+
+  createLiteYouTubeVideo(wrapper) {
+    const liteYT = createTag('lite-youtube', {
+      videoid: this.videoId,
+      playlabel: this.config.videotitle || 'YouTube video player',
+      params: this.buildParamsString(),
+    });
+    
+    this.setupLiteYouTubeThumbnail(liteYT);
+    this.setupLiteYouTubePlayButton(liteYT);
+    liteYT.addEventListener('click', () => this.loadYouTubePlayer(liteYT));
+    
+    wrapper.append(liteYT);
+  }
+
+  setupLiteYouTubeThumbnail(liteYT) {
+    liteYT.style.backgroundImage = `url("${CONFIG.THUMBNAIL_BASE}/${this.videoId}/hqdefault.jpg")`;
+    liteYT.style.backgroundSize = 'cover';
+    liteYT.style.backgroundPosition = 'center';
+  }
+
+  setupLiteYouTubePlayButton(liteYT) {
+    const playBtnEl = createTag('button', { type: 'button', class: 'lty-playbtn' });
+    const playBtnLabelEl = createTag('span', { class: 'lyt-visually-hidden' });
+    playBtnLabelEl.textContent = this.config.videotitle || 'YouTube video player';
+    playBtnEl.append(playBtnLabelEl);
+    liteYT.append(playBtnEl);
+  }
+
   buildParamsString() {
     const params = new URLSearchParams();
     
-    const options = {
-      autoplay: 'autoplay',
-      mute: 'mute',
-      'show-controls': 'controls',
-      'show-player-title-actions': 'modestbranding',
-      'show-suggestions-after-video-ends': 'rel',
-    };
-
-    for (const [key, param] of Object.entries(options)) {
+    Object.entries(CONFIG.PLAYER_OPTIONS).forEach(([key, param]) => {
       if (this.config[key]?.toLowerCase?.() === 'true') {
         params.append(param, '1');
       }
-    }
+    });
 
-    // Add mobile-specific params
     if (this.isMobile) {
       params.append('mute', '1');
     }
@@ -154,34 +176,35 @@ export class YouTubeChat {
     this.isLoaded = true;
     liteYT.classList.add('lyt-activated');
     
-    // Add chat section to container if it was pending (non-autoplay mode)
+    this.addPendingChatSection(liteYT);
+    this.replaceLiteYouTubeWithIframe(liteYT);
+    
+    if (this.chatEnabled) {
+      this.loadChat();
+    }
+  }
+
+  addPendingChatSection(liteYT) {
     if (this.pendingChatSection) {
       const container = liteYT.closest('.youtube-stream');
       if (container) {
         container.append(this.pendingChatSection);
-        // Remove single-column class to show split layout
         container.classList.remove('single-column');
       }
       this.pendingChatSection = null;
     }
-    
-    // Create and load the actual iframe with autoplay enabled
+  }
+
+  replaceLiteYouTubeWithIframe(liteYT) {
     const iframe = createTag('iframe', {
       class: 'youtube-video',
       src: this.buildEmbedUrlWithAutoplay(),
-      allowfullscreen: true,
       title: this.config.videotitle || 'YouTube video player',
-      allow: 'accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture',
+      ...CONFIG.IFRAME_ATTRIBUTES,
     });
     
-    // Replace lite-youtube with iframe
     liteYT.insertAdjacentElement('afterend', iframe);
     liteYT.remove();
-    
-    // Load chat if enabled
-    if (this.chatEnabled) {
-      this.loadChat();
-    }
   }
 
   loadChat() {
@@ -190,7 +213,7 @@ export class YouTubeChat {
     
     const chatIframe = createTag('iframe', {
       class: 'youtube-chat',
-      src: `https://www.youtube.com/live_chat?v=${this.videoId}&embed_domain=${window.location.hostname}`,
+      src: `${CONFIG.YOUTUBE_CHAT_BASE}?v=${this.videoId}&embed_domain=${window.location.hostname}`,
       title: 'YouTube live chat',
     });
 
@@ -200,85 +223,60 @@ export class YouTubeChat {
   }
 
   createChatSection() {
-    // Initially create an empty chat container
     const chatContainer = createTag('div', { class: 'youtube-chat-container' });
     const wrapper = createTag('div', { class: 'iframe-container' });
     
-    // Check if autoplay is enabled
-    const autoplayEnabled = this.config.autoplay?.toLowerCase() === 'true';
+    const autoplayEnabled = this.isAutoplayEnabled();
+    const placeholderText = autoplayEnabled ? 'Loading chat...' : 'Chat will load when video is played';
     
-    if (autoplayEnabled) {
-      // For autoplay, show placeholder that will be replaced by actual chat
-      const chatPlaceholder = createTag('div', { 
-        class: 'youtube-chat-placeholder' 
-      }, 'Loading chat...');
-      
-      wrapper.append(chatPlaceholder);
-    } else {
-      // For non-autoplay, show placeholder for when chat loads
-      const chatPlaceholder = createTag('div', { 
-        class: 'youtube-chat-placeholder' 
-      }, 'Chat will load when video is played');
-      
-      wrapper.append(chatPlaceholder);
-    }
+    const chatPlaceholder = createTag('div', { 
+      class: 'youtube-chat-placeholder' 
+    }, placeholderText);
     
+    wrapper.append(chatPlaceholder);
     chatContainer.append(wrapper);
     return chatContainer;
   }
 
   buildEmbedUrl() {
-    const base = `https://www.youtube-nocookie.com/embed/${this.videoId}`;
-    const params = new URLSearchParams();
-
-    const options = {
-      autoplay: 'autoplay',
-      mute: 'mute',
-      'show-controls': 'controls',
-      'show-player-title-actions': 'modestbranding',
-      'show-suggestions-after-video-ends': 'rel',
-    };
-
-    for (const [key, param] of Object.entries(options)) {
-      if (this.config[key]?.toLowerCase?.() === 'true') {
-        params.append(param, '1');
-      }
-    }
-
-    // Add mobile-specific params
-    if (this.isMobile) {
-      params.append('mute', '1');
-    }
-
-    return params.toString() ? `${base}?${params}` : base;
+    const base = `${CONFIG.YOUTUBE_EMBED_BASE}/${this.videoId}`;
+    const params = this.buildUrlParams();
+    return params ? `${base}?${params}` : base;
   }
 
   buildEmbedUrlWithAutoplay() {
-    const base = `https://www.youtube-nocookie.com/embed/${this.videoId}`;
+    const base = `${CONFIG.YOUTUBE_EMBED_BASE}/${this.videoId}`;
     const params = new URLSearchParams();
-
+    
     // Always add autoplay and mute for click-to-play scenarios
     params.append('autoplay', '1');
-    params.append('mute', '1'); // Required for autoplay to work
+    params.append('mute', '1');
+    
+    this.addPlayerOptionsToParams(params);
+    
+    return `${base}?${params}`;
+  }
 
-    const options = {
-      'show-controls': 'controls',
-      'show-player-title-actions': 'modestbranding',
-      'show-suggestions-after-video-ends': 'rel',
-    };
+  buildUrlParams() {
+    const params = new URLSearchParams();
+    this.addPlayerOptionsToParams(params);
+    return params.toString();
+  }
 
-    for (const [key, param] of Object.entries(options)) {
+  addPlayerOptionsToParams(params) {
+    Object.entries(CONFIG.PLAYER_OPTIONS).forEach(([key, param]) => {
       if (this.config[key]?.toLowerCase?.() === 'true') {
         params.append(param, '1');
       }
-    }
+    });
 
-    // Add mobile-specific params
     if (this.isMobile) {
       params.append('mute', '1');
     }
+  }
 
-    return `${base}?${params}`;
+  isAutoplayEnabled() {
+    return this.config.autoplay?.toLowerCase() === 'true';
   }
 }
 
