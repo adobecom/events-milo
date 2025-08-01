@@ -81,9 +81,9 @@ export class YouTubeChat {
       wrapper.append(iframe);
       this.isLoaded = true;
       
-      // Load chat immediately if enabled
+      // Load chat immediately if enabled - add a small delay to ensure iframe is ready
       if (this.chatEnabled) {
-        this.loadChat();
+        setTimeout(() => this.loadChat(), 100);
       }
     } else {
       // For non-autoplay, use lite-youtube approach
@@ -146,6 +146,11 @@ export class YouTubeChat {
     this.isLoaded = true;
     liteYT.classList.add('lyt-activated');
     
+    // Show chat container if it was hidden (non-autoplay mode)
+    if (this.chatContainer) {
+      this.chatContainer.style.display = 'block';
+    }
+    
     // Create and load the actual iframe with autoplay enabled
     const iframe = createTag('iframe', {
       class: 'youtube-video',
@@ -185,12 +190,28 @@ export class YouTubeChat {
     const chatContainer = createTag('div', { class: 'youtube-chat-container' });
     const wrapper = createTag('div', { class: 'iframe-container' });
     
-    // Add placeholder for chat
-    const chatPlaceholder = createTag('div', { 
-      class: 'youtube-chat-placeholder' 
-    }, 'Chat will load when video is played');
+    // Check if autoplay is enabled
+    const autoplayEnabled = this.config.autoplay?.toLowerCase() === 'true';
     
-    wrapper.append(chatPlaceholder);
+    if (autoplayEnabled) {
+      // For autoplay, show placeholder that will be replaced by actual chat
+      const chatPlaceholder = createTag('div', { 
+        class: 'youtube-chat-placeholder' 
+      }, 'Loading chat...');
+      
+      wrapper.append(chatPlaceholder);
+    } else {
+      // For non-autoplay, hide chat initially
+      chatContainer.style.display = 'none';
+      this.chatContainer = chatContainer; // Store reference for later showing
+      
+      const chatPlaceholder = createTag('div', { 
+        class: 'youtube-chat-placeholder' 
+      }, 'Chat will load when video is played');
+      
+      wrapper.append(chatPlaceholder);
+    }
+    
     chatContainer.append(wrapper);
     return chatContainer;
   }
