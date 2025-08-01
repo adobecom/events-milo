@@ -2,7 +2,6 @@ import { ICON_REG, META_REG } from './constances.js';
 import BlockMediator from './deps/block-mediator.min.js';
 import { getEvent } from './esp-controller.js';
 import {
-  handlize,
   getMetadata,
   setMetadata,
   getIcon,
@@ -123,28 +122,6 @@ async function setCtaState(targetState, rsvpBtn, miloLibs) {
   };
 
   await stateTrigger[targetState]();
-}
-
-function createTag(tag, attributes, html, options = {}) {
-  const el = document.createElement(tag);
-  if (html) {
-    if (html instanceof HTMLElement
-      || html instanceof SVGElement
-      || html instanceof DocumentFragment) {
-      el.append(html);
-    } else if (Array.isArray(html)) {
-      el.append(...html);
-    } else {
-      el.insertAdjacentHTML('beforeend', html);
-    }
-  }
-  if (attributes) {
-    Object.entries(attributes).forEach(([key, val]) => {
-      el.setAttribute(key, val);
-    });
-  }
-  options.parent?.append(el);
-  return el;
 }
 
 export async function updateRSVPButtonState(rsvpBtn, miloLibs) {
@@ -485,54 +462,6 @@ function updateTextContent(child, matchCallback) {
   }
 }
 
-function injectFragments(parent) {
-  const productBlades = parent.querySelector('.event-product-blades');
-
-  if (productBlades) {
-    const relatedProducts = getMetadata('related-products');
-    if (relatedProducts) {
-      let products;
-
-      try {
-        products = JSON.parse(relatedProducts);
-      } catch (e) {
-        window.lana?.log('Invalid JSON metadata for product blades:', e);
-      }
-
-      if (products) {
-        const bladesToShow = products
-          .filter((p) => p.showProductBlade)
-          .map((o) => handlize(o.name));
-        const relatedPairs = { 'lightroom-photoshop': ['photoshop', 'lightroom'] };
-        const bladesDiv = productBlades.querySelector(':scope > div > div');
-
-        if (bladesToShow.length >= 4) {
-          createTag(
-            'a',
-            { href: '/events/fragments/product-blades/explore-creative-cloud' },
-            '/events/fragments/product-blades/explore-creative-cloud',
-            { parent: bladesDiv },
-          );
-        } else {
-          Object.entries(relatedPairs).forEach(([joinedName, [p1, p2]]) => {
-            const [i1, i2] = [bladesToShow.indexOf(p1), bladesToShow.indexOf(p2)];
-
-            if (i1 >= 0 && i2 >= 0) {
-              bladesToShow.splice(Math.min(i1, i2), 1, joinedName);
-              bladesToShow.splice(Math.max(i1, i2), 1);
-            }
-          });
-
-          bladesToShow.forEach((p) => {
-            const fragmentLink = `/events/fragments/product-blades/${p}`;
-            createTag('a', { href: fragmentLink }, fragmentLink, { parent: bladesDiv });
-          });
-        }
-      }
-    }
-  }
-}
-
 export async function getNonProdData(env) {
   const isPreviewMode = new URLSearchParams(window.location.search).get('previewMode')
   || window.location.hostname.includes('.hlx.page')
@@ -730,7 +659,6 @@ export default function autoUpdateContent(parent, miloDeps, extraData) {
 
   // handle link replacement. To keep when switching to metadata based rendering
   autoUpdateLinks(parent, miloLibs);
-  injectFragments(parent);
   decorateProfileCardsZPattern(parent);
   if (getEventServiceEnv() !== 'prod') updateExtraMetaTags(parent);
 }
