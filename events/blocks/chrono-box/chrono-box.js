@@ -32,6 +32,71 @@ function getSchedule(scheduleId) {
   return thisSchedule;
 }
 
+/**
+ * Determines the initial schedule item to show based on current time and testing parameters
+ * @param {Array} schedule - The schedule array
+ * @param {Object} testing - Testing configuration
+ * @returns {Object} The initial schedule item
+ */
+export function getInitialScheduleItem(schedule, testing = null) {
+  if (!schedule || !schedule.length) return null;
+
+  const currentTime = new Date().getTime();
+  let adjustedTime = currentTime;
+
+  // Apply testing time adjustment if in testing mode
+  if (testing?.toggleTime) {
+    const testTime = parseInt(testing.toggleTime, 10);
+    if (!Number.isNaN(testTime)) {
+      adjustedTime = testTime;
+    }
+  }
+
+  // Find the first item that should be shown based on toggleTime
+  let initialItem = schedule[0]; // Default to first item
+
+  schedule.some((item) => {
+    const { toggleTime } = item;
+    if (toggleTime) {
+      const numericToggleTime = typeof toggleTime === 'string' ? parseInt(toggleTime, 10) : toggleTime;
+      if (typeof numericToggleTime === 'number' && adjustedTime > numericToggleTime) {
+        initialItem = item;
+        return false; // Continue to next item
+      }
+      return true; // Stop at first item that hasn't passed its toggle time
+    }
+    // If no toggleTime, this item should be shown
+    initialItem = item;
+    return true; // Stop here
+  });
+
+  return initialItem;
+}
+
+/**
+ * Loads and renders a fragment immediately
+ * @param {HTMLElement} el - The container element
+ * @param {Object} scheduleItem - The schedule item to load
+ * @returns {Promise} Promise that resolves when fragment is loaded
+ */
+async function loadInitialFragment(el, scheduleItem) {
+  const [{ default: loadFragment }, { createTag, getLocale, getConfig }] = await Promise.all([
+    import(`${LIBS}/blocks/fragment/fragment.js`),
+    import(`${LIBS}/utils/utils.js`),
+  ]);
+
+  const { pathToFragment } = scheduleItem;
+  const { prefix } = getLocale(getConfig().locales);
+
+  const a = createTag('a', { href: `${prefix}${pathToFragment}` }, '', { parent: el });
+
+  try {
+    await loadFragment(a);
+  } catch (error) {
+    window.lana?.log(`Error loading initial fragment ${pathToFragment}: ${JSON.stringify(error)}`);
+  }
+}
+
 async function initPlugins(schedule) {
   const SUPPORTED_PLUGINS = ['mobile-rider', 'metadata'];
   const pluginsNeeded = SUPPORTED_PLUGINS.filter((plugin) => schedule.some((item) => item[plugin]));
@@ -124,6 +189,18 @@ export default async function init(el) {
 
   el.innerHTML = '';
 
+  // Get testing data from URL params
+  const params = new URLSearchParams(document.location.search);
+  const testTiming = params.get('timing');
+  const testing = testTiming ? { toggleTime: testTiming } : null;
+
+  // Determine and load the initial fragment immediately
+  const initialScheduleItem = getInitialScheduleItem(thisSchedule, testing);
+  if (initialScheduleItem) {
+    await loadInitialFragment(el, initialScheduleItem);
+  }
+
+  // Initialize plugins and start the worker for subsequent updates
   const pluginsOutputs = await initPlugins(thisSchedule);
   const worker = setScheduleToScheduleWorker(
     thisSchedule,
