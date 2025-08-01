@@ -53,8 +53,14 @@ export class YouTubeChat {
     });
 
     container.append(this.createVideoSection());
-    if (this.chatEnabled) {
+    
+    // Only add chat section immediately if autoplay is enabled
+    const autoplayEnabled = this.config.autoplay?.toLowerCase() === 'true';
+    if (this.chatEnabled && autoplayEnabled) {
       container.append(this.createChatSection());
+    } else if (this.chatEnabled && !autoplayEnabled) {
+      // For non-autoplay, create chat section but don't append yet
+      this.pendingChatSection = this.createChatSection();
     }
 
     return container;
@@ -146,9 +152,15 @@ export class YouTubeChat {
     this.isLoaded = true;
     liteYT.classList.add('lyt-activated');
     
-    // Show chat container if it was hidden (non-autoplay mode)
-    if (this.chatContainer) {
-      this.chatContainer.style.display = 'block';
+    // Add chat section to container if it was pending (non-autoplay mode)
+    if (this.pendingChatSection) {
+      const container = liteYT.closest('.youtube-stream');
+      if (container) {
+        container.append(this.pendingChatSection);
+        // Remove single-column class to show split layout
+        container.classList.remove('single-column');
+      }
+      this.pendingChatSection = null;
     }
     
     // Create and load the actual iframe with autoplay enabled
@@ -201,10 +213,7 @@ export class YouTubeChat {
       
       wrapper.append(chatPlaceholder);
     } else {
-      // For non-autoplay, hide chat initially
-      chatContainer.style.display = 'none';
-      this.chatContainer = chatContainer; // Store reference for later showing
-      
+      // For non-autoplay, show placeholder for when chat loads
       const chatPlaceholder = createTag('div', { 
         class: 'youtube-chat-placeholder' 
       }, 'Chat will load when video is played');
