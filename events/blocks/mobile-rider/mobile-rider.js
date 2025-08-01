@@ -5,7 +5,7 @@ const { createTag, getConfig } = await import(`${LIBS}/utils/utils.js`);
 const CONFIG = {
   ANALYTICS: { PROVIDER: 'adobe' },
   SCRIPTS: {
-    DEV_URL: '//assets.mobilerider.com/p/player-adobe-dev/player.min.js',
+    DEV_URL: '//assets.mobilerider.com/p/player-adobe-integration/player.min.js',
     PROD_URL: '//assets.mobilerider.com/p/adobe/player.min.js',
   },
   PLAYER: {
