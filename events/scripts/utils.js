@@ -278,6 +278,14 @@ function parseRegularPath(path, extraData = {}) {
   return currentValue || extraData[path] || '';
 }
 
+export function getCurrentTabId() {
+  const tabId = sessionStorage.getItem('chrono-box-tab-id');
+  if (!tabId) {
+    throw new Error('tabId not found in sessionStorage. Ensure chrono-box is initialized first.');
+  }
+  return tabId;
+}
+
 /**
  * Parses a metadata path string and returns the corresponding value from the metadata.
  * Supports combinations of object property access (.) and array indexing (:).
