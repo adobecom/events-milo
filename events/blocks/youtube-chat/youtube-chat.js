@@ -48,14 +48,16 @@ export class YouTubeChat {
   }
 
   buildYouTubeStream() {
+    const autoplayEnabled = this.config.autoplay?.toLowerCase() === 'true';
+    const shouldShowChatInitially = this.chatEnabled && autoplayEnabled;
+    
     const container = createTag('div', {
-      class: `youtube-stream${!this.chatEnabled ? ' single-column' : ''}`,
+      class: `youtube-stream${!shouldShowChatInitially ? ' single-column' : ''}`,
     });
 
     container.append(this.createVideoSection());
     
     // Only add chat section immediately if autoplay is enabled
-    const autoplayEnabled = this.config.autoplay?.toLowerCase() === 'true';
     if (this.chatEnabled && autoplayEnabled) {
       container.append(this.createChatSection());
     } else if (this.chatEnabled && !autoplayEnabled) {
