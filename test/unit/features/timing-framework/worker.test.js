@@ -46,7 +46,7 @@ describe('TimingWorker', () => {
         next: null,
       };
 
-      const result = TimingWorker.getStartScheduleItemByToggleTime(schedule);
+      const result = worker.getStartScheduleItemByToggleTime(schedule);
       expect(result).to.equal(schedule);
     });
 
@@ -63,8 +63,43 @@ describe('TimingWorker', () => {
         },
       };
 
-      const result = TimingWorker.getStartScheduleItemByToggleTime(schedule);
+      const result = worker.getStartScheduleItemByToggleTime(schedule);
       expect(result).to.equal(schedule.next);
+    });
+
+    it('should use testing time when in testing mode', () => {
+      const now = Date.now();
+      const schedule = {
+        toggleTime: now + 1000, // Future time
+        next: null,
+      };
+
+      // Set up testing mode with a time offset that makes the current time
+      // appear to be in the future
+      worker.testingManager.init({ toggleTime: now + 2000 });
+
+      const result = worker.getStartScheduleItemByToggleTime(schedule);
+      // Should return the schedule item because the testing time is in the future
+      expect(result).to.equal(schedule);
+    });
+
+    it('should use testing time when in testing mode - past time', () => {
+      const now = Date.now();
+      const schedule = {
+        toggleTime: now - 1000, // Past time
+        next: {
+          toggleTime: now + 1000, // Future time
+          next: null,
+        },
+      };
+
+      // Set up testing mode with a time offset that makes the current time
+      // appear to be in the past
+      worker.testingManager.init({ toggleTime: now - 2000 });
+
+      const result = worker.getStartScheduleItemByToggleTime(schedule);
+      // Should return the first item because the testing time is in the past
+      expect(result).to.equal(schedule);
     });
   });
 
