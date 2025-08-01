@@ -8,14 +8,16 @@ async function getPromotionalContent() {
       promotionalItems = JSON.parse(eventPromotionalItemsMetadata);
     } catch (error) {
       window.lana?.log(`Error parsing promotional items: ${JSON.stringify(error)}`);
+      return promotionalItems;
     }
   }
-
-  const { data } = await fetch('/events/default/promotional-content.json').then((res) => res.json());
+  const { getConfig, getLocale } = await import(`${LIBS}/utils/utils.js`);
+  const { prefix } = getLocale(getConfig().locales);
+  const { data } = await fetch(`${prefix}/events/default/promotional-content.json`).then((res) => res.json());
 
   if (!data) {
-    window.lana?.log('No promotional content found');
-    return promotionalItems;
+    window.lana?.log(`Error: No promotional content found in ${prefix}/events/default/promotional-content.json`);
+    return [];
   }
 
   const rehydratedPromotionalItems = data.map((item) => {
@@ -48,7 +50,7 @@ export default async function init(el) {
     import(`${LIBS}/utils/utils.js`),
   ]);
 
-  const fragmentPromotionalItems = promotionalItems.map(async (item) => {
+  const fragmentPromotionalItemsPromises = promotionalItems.map(async (item) => {
     const fragmentPath = item['fragment-path'];
     if (!fragmentPath) return;
 
@@ -56,6 +58,6 @@ export default async function init(el) {
     await loadFragment(fragmentLink);
   });
 
-  await Promise.all(fragmentPromotionalItems);
+  await Promise.all(fragmentPromotionalItemsPromises);
   addMediaReversedClass(el);
 }
