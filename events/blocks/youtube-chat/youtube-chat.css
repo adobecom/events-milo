@@ -14,8 +14,9 @@
 
 .youtube-chat .youtube-video-container .iframe-container {
   position: relative;
-  padding-bottom: 56.25%;
+  padding-bottom: 56.25%; /* 16:9 aspect ratio */
   height: 0;
+  width: 100%;
 }
 
 /* Lite YouTube styles */
@@ -112,12 +113,13 @@ lite-youtube.lyt-activated > .lty-playbtn {
 }
 
 @media screen and (min-width: 1200px) {
+  /* Only apply split layout when not in single-column mode */
   .youtube-chat .youtube-stream:not(.single-column) .youtube-video-container {
       width: 75%;
       max-width: 75%;
   }
 
-  .youtube-chat .youtube-chat-container {
+  .youtube-chat .youtube-stream:not(.single-column) .youtube-chat-container {
       flex: 1 1 1%;
       min-height: auto;
   }
