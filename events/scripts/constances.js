@@ -6,3 +6,10 @@ export const SUSI_OPTIONS = {
     prod: 'v:2,s,bg:milo,b719a8b0-6ba6-11ef-933e-7f38920b05fd',
   },
 };
+export const REDIRECT_MAP = {
+  CreativeCloud: { pathname: '/error-pages/404' },
+  ExprienceCloud: {
+    origin: 'https://business.adobe.com',
+    pathname: '/resources/404.html',
+  },
+};

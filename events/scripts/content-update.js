@@ -1,6 +1,6 @@
-import { ICON_REG, META_REG } from './constances.js';
+import { ICON_REG, META_REG, REDIRECT_MAP } from './constances.js';
 import BlockMediator from './deps/block-mediator.min.js';
-import { getEvent } from './esp-controller.js';
+import { getEvent, getSeries } from './esp-controller.js';
 import {
   handlize,
   getMetadata,
@@ -209,7 +209,28 @@ async function handleRSVPBtnBasedOnProfile(rsvpBtn, miloLibs, profile) {
 
 export async function validatePageAndRedirect(miloLibs) {
   document.body.classList.add('validating-page');
-  const { getConfig, loadLana, getLocale } = await import(`${miloLibs}/utils/utils.js`);
+  const pathSegments = window.location.pathname.split('/');
+  const eventsIndex = pathSegments.findIndex((segment) => segment === 'events');
+  const seriesSegmentInUrl = eventsIndex !== -1 && eventsIndex + 1 < pathSegments.length
+    ? pathSegments[eventsIndex + 1]
+    : null;
+  const [series, { getConfig, loadLana, getLocale }] = await Promise.all([
+    getSeries(),
+    import(`${miloLibs}/utils/utils.js`),
+  ]);
+
+  let cloudType404 = REDIRECT_MAP.CreativeCloud;
+
+  if (series.ok) {
+    const seriesData = series.data;
+    if (seriesData && Array.isArray(seriesData)) {
+      const matchedSeries = seriesData.find((s) => handlize(s.name) === seriesSegmentInUrl);
+      if (matchedSeries) {
+        cloudType404 = REDIRECT_MAP[matchedSeries.cloudType];
+      }
+    }
+  }
+
   const env = getEventServiceEnv();
   const pagePublished = getMetadata('published') === 'true' || getMetadata('status') === 'live';
   const invalidStagePage = env === 'stage' && window.location.hostname === 'www.stage.adobe.com' && !getMetadata('event-id');
@@ -218,7 +239,7 @@ export async function validatePageAndRedirect(miloLibs) {
   const organicHitUnpublishedOnProd = env === 'prod' && !pagePublished && !isPreviewMode;
   const purposefulHitOnProdPreview = env === 'prod' && isPreviewMode;
   const { prefix } = getLocale(getConfig().locales);
-  const error404Location = `${prefix}/error-pages/404`;
+  const error404Location = `${cloudType404.origin || ''}${prefix}${cloudType404.pathname}`;
 
   if (organicHitUnpublishedOnProd || invalidStagePage) {
     await loadLana({ clientId: 'events-milo' });
