@@ -192,7 +192,14 @@ export class YouTubeChat {
         container.classList.remove('single-column');
       }
       this.pendingChatSection = null;
+    } else if (this.chatEnabled) {
+      // If chat is enabled but no pending section, still remove single-column to show split layout
+      const container = liteYT.closest('.youtube-stream');
+      if (container) {
+        container.classList.remove('single-column');
+      }
     }
+    // If no chat is enabled, keep single-column class (100% width)
   }
 
   replaceLiteYouTubeWithIframe(liteYT) {

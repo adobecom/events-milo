@@ -124,7 +124,16 @@ lite-youtube.lyt-activated > .lty-playbtn {
 }
 
 @media screen and (min-width: 1200px) {
-  /* Only apply split layout when not in single-column mode */
+  /* Initial state: lite-youtube at 100% width */
+  .youtube-chat .youtube-stream .youtube-video-container {
+      width: 100%;
+      max-width: 100%;
+      /* Maintain the same aspect ratio and height */
+      height: 0;
+      padding-bottom: 56.25%; /* 16:9 aspect ratio */
+  }
+
+  /* When in split layout (after clicking play with chat), show 75% video + 25% chat */
   .youtube-chat .youtube-stream:not(.single-column) .youtube-video-container {
       width: 75%;
       max-width: 75%;
