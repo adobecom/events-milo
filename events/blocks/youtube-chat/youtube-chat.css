@@ -3,7 +3,6 @@
   max-width: 100%;
   margin: 0 auto;
   flex-wrap: wrap;
-  /* Smooth transition for layout changes */
   transition: all 0.3s ease-in-out;
 }
 
@@ -12,11 +11,9 @@
   max-width: 100%;
   flex: 1 1 auto;
   min-height: auto;
-  /* Ensure consistent height for smooth transitions */
   height: 0;
-  padding-bottom: 56.25%; /* 16:9 aspect ratio */
+  padding-bottom: 56.25%; /* 16:9 aspect ratio (9/16 = 0.5625) */
   position: relative;
-  /* Smooth transition for width changes */
   transition: width 0.3s ease-in-out, max-width 0.3s ease-in-out;
 }
 
@@ -28,7 +25,6 @@
   height: 100%;
 }
 
-/* Lite YouTube styles */
 lite-youtube {
   top: 0;
   left: 0;
@@ -54,7 +50,7 @@ lite-youtube > .lty-playbtn {
   background-color: transparent;
   background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 68 48"><path d="M66.52 7.74c-.78-2.93-2.49-5.41-5.42-6.19C55.79.13 34 0 34 0S12.21.13 6.9 1.55c-2.93.78-4.63 3.26-5.42 6.19C.06 13.05 0 24 0 24s.06 10.95 1.48 16.26c.78 2.93 2.49 5.41 5.42 6.19C12.21 47.87 34 48 34 48s21.79-.13 27.1-1.55c2.93-.78 4.64-3.26 5.42-6.19C67.94 34.95 68 24 68 24s-.06-10.95-1.48-16.26z" fill="red"/><path d="M45 24 27 14v20" fill="white"/></svg>');
   filter: grayscale(100%);
-  transition: filter .1s cubic-bezier(0, 0, 0.2, 1);
+  transition: filter 0.1s cubic-bezier(0, 0, 0.2, 1);
   border: none;
 }
 
@@ -83,7 +79,6 @@ lite-youtube.lyt-activated > .lty-playbtn {
   width: 1px;
 }
 
-/* Chat placeholder styles */
 .youtube-chat .youtube-chat-placeholder {
   position: absolute;
   top: 50%;
@@ -103,7 +98,6 @@ lite-youtube.lyt-activated > .lty-playbtn {
   max-width: 100%;
   flex: 1 1 auto;
   min-height: 500px;
-  /* Smooth transition for layout changes */
   transition: all 0.3s ease-in-out;
 }
 
@@ -123,47 +117,41 @@ lite-youtube.lyt-activated > .lty-playbtn {
   position: absolute;
 }
 
-@media screen and (min-width: 1200px) {
-  /* When chat is disabled: use full 16:9 aspect ratio */
+@media screen and (min-width: var(--breakpoint-xl)) {
   .youtube-chat .youtube-stream:not(.has-chat) .youtube-video-container {
-      width: 100%;
-      max-width: 100%;
-      height: 0;
-      padding-bottom: 56.25%; /* Full 16:9 aspect ratio */
+    width: 100%;
+    max-width: 100%;
+    height: 0;
+    padding-bottom: 56.25%;
   }
 
-  /* When chat is enabled: use compact height for split layout */
   .youtube-chat .youtube-stream.has-chat .youtube-video-container {
-      width: 100%;
-      max-width: 100%;
-      /* Use height equivalent to 75% width for consistent sizing */
-      height: 0;
-      padding-bottom: 42.1875%; /* 56.25% * 0.75 = height for 75% width */
+    width: 100%;
+    max-width: 100%;
+    height: 0;
+    padding-bottom: 42.1875%;
   }
 
-  /* When chat is enabled and NOT single-column (autoplay scenario or after click): show 75% video + 25% chat */
   .youtube-chat .youtube-stream.has-chat:not(.single-column) .youtube-video-container {
-      width: 75%;
-      max-width: 75%;
-      /* Maintain the same compact height as initial state */
-      height: 0;
-      padding-bottom: 42.1875%; /* Same compact height as initial lite-youtube */
+    width: 75%;
+    max-width: 75%;
+    height: 0;
+    padding-bottom: 42.1875%;
   }
 
   .youtube-chat .youtube-stream.has-chat:not(.single-column) .youtube-chat-container {
-      flex: 1 1 1%;
-      min-height: 0 !important; /* Override base min-height to allow aspect ratio */
-      /* Ensure chat container matches video height exactly */
-      height: 0;
-      padding-bottom: 42.1875%; /* Match video compact height exactly */
-      position: relative;
+    flex: 1 1 1%;
+    min-height: 0 !important;
+    height: 0;
+    padding-bottom: 42.1875%;
+    position: relative;
   }
-  
+
   .youtube-chat .youtube-stream.has-chat:not(.single-column) .youtube-chat-container .iframe-container {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
   }
 }
