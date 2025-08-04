@@ -75,8 +75,10 @@ export class YouTubeChat {
     const autoplayEnabled = this.isAutoplayEnabled();
     const shouldShowChatInitially = this.chatEnabled && autoplayEnabled;
     
+    // Always start with single-column class (100% width)
+    // Will be removed when chat is loaded
     const container = createTag('div', {
-      class: `youtube-stream${!shouldShowChatInitially ? ' single-column' : ''}`,
+      class: 'youtube-stream single-column',
     });
 
     container.append(this.createVideoSection());
