@@ -40,17 +40,17 @@ describe('TimingWorker', () => {
   });
 
   describe('getStartScheduleItemByToggleTime', () => {
-    it('should return the first item if no toggleTime has passed', () => {
+    it('should return the first item if no toggleTime has passed', async () => {
       const schedule = {
         toggleTime: Date.now() + 1000,
         next: null,
       };
 
-      const result = worker.getStartScheduleItemByToggleTime(schedule);
+      const result = await worker.getStartScheduleItemByToggleTime(schedule);
       expect(result).to.equal(schedule);
     });
 
-    it('should return the last passed item if toggleTime has passed', () => {
+    it('should return the last passed item if toggleTime has passed', async () => {
       const now = Date.now();
       const schedule = {
         toggleTime: now - 2000,
@@ -63,11 +63,11 @@ describe('TimingWorker', () => {
         },
       };
 
-      const result = worker.getStartScheduleItemByToggleTime(schedule);
+      const result = await worker.getStartScheduleItemByToggleTime(schedule);
       expect(result).to.equal(schedule.next);
     });
 
-    it('should use testing time when in testing mode', () => {
+    it('should use testing time when in testing mode', async () => {
       const now = Date.now();
       const schedule = {
         toggleTime: now + 1000, // Future time
@@ -78,12 +78,12 @@ describe('TimingWorker', () => {
       // appear to be in the future
       worker.testingManager.init({ toggleTime: now + 2000 });
 
-      const result = worker.getStartScheduleItemByToggleTime(schedule);
+      const result = await worker.getStartScheduleItemByToggleTime(schedule);
       // Should return the schedule item because the testing time is in the future
       expect(result).to.equal(schedule);
     });
 
-    it('should use testing time when in testing mode - past time', () => {
+    it('should use testing time when in testing mode - past time', async () => {
       const now = Date.now();
       const schedule = {
         toggleTime: now - 1000, // Past time
@@ -97,7 +97,7 @@ describe('TimingWorker', () => {
       // appear to be in the past
       worker.testingManager.init({ toggleTime: now - 2000 });
 
-      const result = worker.getStartScheduleItemByToggleTime(schedule);
+      const result = await worker.getStartScheduleItemByToggleTime(schedule);
       // Should return the first item because the testing time is in the past
       expect(result).to.equal(schedule);
     });
@@ -211,7 +211,7 @@ describe('TimingWorker', () => {
   });
 
   describe('handleMessage', () => {
-    it('should set up plugins and channels', () => {
+    it('should set up plugins and channels', async () => {
       const plugins = {
         metadata: {
           type: 'metadata',
@@ -223,7 +223,7 @@ describe('TimingWorker', () => {
         },
       };
 
-      worker.handleMessage({
+      await worker.handleMessage({
         data: {
           tabId: 'test-tab-id',
           plugins,
@@ -232,7 +232,127 @@ describe('TimingWorker', () => {
       });
 
       expect(worker.plugins.size).to.equal(2);
-      expect(worker.channels.size).to.equal(2);
+      expect(worker.channels.size).to.equal(3); // metadata, mobileRider, timeCache
+    });
+  });
+
+  describe('getAuthoritativeTime', () => {
+    beforeEach(() => {
+      // Reset the worker's time management properties
+      worker.cachedApiTime = null;
+      worker.lastApiCall = 0;
+    });
+
+    it('should return cached API time if valid', async () => {
+      const now = Date.now();
+      const apiTime = now - 1000; // API time is 1 second behind
+      worker.cachedApiTime = { time: apiTime, timestamp: now - 30000 }; // 30 seconds ago
+
+      const result = await worker.getAuthoritativeTime();
+      expect(result).to.be.closeTo(apiTime + 30000, 100); // Allow 100ms tolerance
+    });
+
+    it('should call API if cache is expired', async () => {
+      const now = Date.now();
+      const apiTime = now - 1000;
+      worker.cachedApiTime = { time: apiTime, timestamp: now - 700000 }; // 700 seconds ago (expired)
+      worker.lastApiCall = now - 400000; // 400 seconds ago
+
+      // Mock successful API response
+      mockFetch.resolves({
+        text: () => Promise.resolve(Math.floor(apiTime / 1000).toString()),
+      });
+
+      const result = await worker.getAuthoritativeTime();
+      expect(mockFetch.called).to.be.true;
+      // The result should be close to the API time, but we need to account for the time elapsed during the test
+      expect(result).to.be.closeTo(apiTime, 1000);
+    });
+
+    it('should not call API if rate limit not reached', async () => {
+      const now = Date.now();
+      worker.lastApiCall = now - 100000; // 100 seconds ago (rate limit not reached for 5 min interval)
+
+      const result = await worker.getAuthoritativeTime();
+      expect(mockFetch.called).to.be.false;
+      expect(result).to.be.closeTo(now, 100);
+    });
+
+    it('should fall back to local time if API fails', async () => {
+      const now = Date.now();
+      worker.lastApiCall = now - 40000; // 40 seconds ago
+
+      // Mock failed API response
+      mockFetch.rejects(new Error('Network error'));
+
+      const result = await worker.getAuthoritativeTime();
+      expect(result).to.be.closeTo(now, 100);
+    });
+
+    it('should use cached time if API returns null', async () => {
+      const now = Date.now();
+      const apiTime = now - 1000;
+      worker.cachedApiTime = { time: apiTime, timestamp: now - 30000 };
+      worker.lastApiCall = now - 40000;
+
+      // Mock API returning null
+      mockFetch.resolves({
+        text: () => Promise.resolve('invalid'),
+      });
+
+      const result = await worker.getAuthoritativeTime();
+      expect(result).to.be.closeTo(apiTime + 30000, 100);
+    });
+
+    it('should implement progressive backoff on failures', async () => {
+      const now = Date.now();
+      worker.lastApiCall = now - 400000; // 400 seconds ago
+      worker.consecutiveFailures = 0; // Start with no failures
+
+      // Mock failed API response
+      mockFetch.rejects(new Error('Network error'));
+
+      await worker.getAuthoritativeTime();
+      expect(worker.consecutiveFailures).to.equal(1);
+    });
+
+    it('should reset failure count on successful API call', async () => {
+      const now = Date.now();
+      const apiTime = now - 1000;
+      worker.lastApiCall = now - 400000; // 400 seconds ago
+      worker.consecutiveFailures = 0; // Start with no failures to ensure API call happens
+
+      // Mock successful API response
+      mockFetch.resolves({
+        text: () => Promise.resolve(Math.floor(apiTime / 1000).toString()),
+      });
+
+      await worker.getAuthoritativeTime();
+      expect(worker.consecutiveFailures).to.equal(0);
+    });
+
+    it('should broadcast time updates to other tabs', async () => {
+      const now = Date.now();
+      const apiTime = now - 1000;
+      worker.lastApiCall = now - 400000; // 400 seconds ago
+
+      // Mock successful API response
+      mockFetch.resolves({
+        text: () => Promise.resolve(Math.floor(apiTime / 1000).toString()),
+      });
+
+      // Mock the time cache channel
+      const mockChannel = {
+        postMessage: sinon.stub(),
+      };
+      worker.channels.set('timeCache', mockChannel);
+
+      await worker.getAuthoritativeTime();
+      expect(mockChannel.postMessage.called).to.be.true;
+      expect(mockChannel.postMessage.firstCall.args[0]).to.deep.equal({
+        type: 'time-update',
+        data: worker.cachedApiTime,
+      });
     });
   });
 
