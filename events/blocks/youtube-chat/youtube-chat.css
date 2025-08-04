@@ -124,8 +124,16 @@ lite-youtube.lyt-activated > .lty-playbtn {
 }
 
 @media screen and (min-width: 1200px) {
-  /* Initial state: lite-youtube at 100% width but with 75% width height */
-  .youtube-chat .youtube-stream .youtube-video-container {
+  /* When chat is disabled: use full 16:9 aspect ratio */
+  .youtube-chat .youtube-stream:not(.has-chat) .youtube-video-container {
+      width: 100%;
+      max-width: 100%;
+      height: 0;
+      padding-bottom: 56.25%; /* Full 16:9 aspect ratio */
+  }
+
+  /* When chat is enabled: use compact height for split layout */
+  .youtube-chat .youtube-stream.has-chat .youtube-video-container {
       width: 100%;
       max-width: 100%;
       /* Use height equivalent to 75% width for consistent sizing */
@@ -134,7 +142,7 @@ lite-youtube.lyt-activated > .lty-playbtn {
   }
 
   /* When in split layout (after clicking play with chat), show 75% video + 25% chat */
-  .youtube-chat .youtube-stream:not(.single-column) .youtube-video-container {
+  .youtube-chat .youtube-stream.has-chat:not(.single-column) .youtube-video-container {
       width: 75%;
       max-width: 75%;
       /* Maintain the same compact height as initial state */
@@ -142,7 +150,7 @@ lite-youtube.lyt-activated > .lty-playbtn {
       padding-bottom: 42.1875%; /* Same compact height as initial lite-youtube */
   }
 
-  .youtube-chat .youtube-stream:not(.single-column) .youtube-chat-container {
+  .youtube-chat .youtube-stream.has-chat:not(.single-column) .youtube-chat-container {
       flex: 1 1 1%;
       min-height: 0 !important; /* Override base min-height to allow aspect ratio */
       /* Ensure chat container matches video height exactly */
@@ -151,7 +159,7 @@ lite-youtube.lyt-activated > .lty-playbtn {
       position: relative;
   }
   
-  .youtube-chat .youtube-stream:not(.single-column) .youtube-chat-container .iframe-container {
+  .youtube-chat .youtube-stream.has-chat:not(.single-column) .youtube-chat-container .iframe-container {
       position: absolute;
       top: 0;
       left: 0;
