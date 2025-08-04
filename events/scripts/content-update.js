@@ -1,6 +1,6 @@
-import { ICON_REG, META_REG, REDIRECT_MAP } from './constances.js';
+import { ICON_REG, META_REG, SERIES_404_MAP_PATH } from './constances.js';
 import BlockMediator from './deps/block-mediator.min.js';
-import { getEvent, getSeries } from './esp-controller.js';
+import { getEvent } from './esp-controller.js';
 import {
   handlize,
   getMetadata,
@@ -207,6 +207,36 @@ async function handleRSVPBtnBasedOnProfile(rsvpBtn, miloLibs, profile) {
   }
 }
 
+async function getSeries404(seriesSegmentInUrl) {
+  const series404Map = await fetch(SERIES_404_MAP_PATH).then((res) => res.json());
+
+  if (series404Map) {
+    const { data } = series404Map;
+    const series404 = data.find((s) => s['series-name'] === seriesSegmentInUrl);
+
+    if (series404) {
+      return {
+        origin: series404.origin,
+        path: series404.path,
+      };
+    }
+
+    const default404 = data.find((s) => s['series-name'] === 'default');
+
+    if (default404) {
+      return {
+        origin: default404.origin,
+        path: default404.path,
+      };
+    }
+  }
+
+  return {
+    origin: '',
+    path: '/error-pages/404',
+  };
+}
+
 export async function validatePageAndRedirect(miloLibs) {
   document.body.classList.add('validating-page');
   const pathSegments = window.location.pathname.split('/');
@@ -214,22 +244,10 @@ export async function validatePageAndRedirect(miloLibs) {
   const seriesSegmentInUrl = eventsIndex !== -1 && eventsIndex + 1 < pathSegments.length
     ? pathSegments[eventsIndex + 1]
     : null;
-  const [series, { getConfig, loadLana, getLocale }] = await Promise.all([
-    getSeries(),
+  const [series404, { getConfig, loadLana, getLocale }] = await Promise.all([
+    getSeries404(seriesSegmentInUrl),
     import(`${miloLibs}/utils/utils.js`),
   ]);
-
-  let cloudType404 = REDIRECT_MAP.CreativeCloud;
-
-  if (series.ok) {
-    const seriesData = series.data;
-    if (seriesData && Array.isArray(seriesData)) {
-      const matchedSeries = seriesData.find((s) => handlize(s.name) === seriesSegmentInUrl);
-      if (matchedSeries) {
-        cloudType404 = REDIRECT_MAP[matchedSeries.cloudType];
-      }
-    }
-  }
 
   const env = getEventServiceEnv();
   const pagePublished = getMetadata('published') === 'true' || getMetadata('status') === 'live';
@@ -239,7 +257,7 @@ export async function validatePageAndRedirect(miloLibs) {
   const organicHitUnpublishedOnProd = env === 'prod' && !pagePublished && !isPreviewMode;
   const purposefulHitOnProdPreview = env === 'prod' && isPreviewMode;
   const { prefix } = getLocale(getConfig().locales);
-  const error404Location = `${cloudType404.origin || ''}${prefix}${cloudType404.pathname}`;
+  const error404Location = `${series404.origin || ''}${prefix}${series404.path}`;
 
   if (organicHitUnpublishedOnProd || invalidStagePage) {
     await loadLana({ clientId: 'events-milo' });

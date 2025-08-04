@@ -167,25 +167,6 @@ export async function getAttendee() {
   }
 }
 
-export async function getSeries() {
-  const { host } = API_CONFIG.esp[getEventServiceEnv()];
-  const options = await constructRequestOptions('GET', null, false);
-
-  try {
-    const response = await fetch(`${host}/v1/series`, options);
-
-    if (!response.ok) {
-      window.lana?.log(`Error: Failed to get series. Status: ${JSON.stringify(response)}`);
-      return { ok: response.ok, status: response.status, error: response.status };
-    }
-
-    return { ok: true, data: await response.json() };
-  } catch (error) {
-    window.lana?.log(`Error: Failed to get series: ${JSON.stringify(error)}`);
-    return { ok: false, status: 'Network Error', error: error.message };
-  }
-}
-
 export async function createAttendee(attendeeData) {
   if (!attendeeData) return false;
 
