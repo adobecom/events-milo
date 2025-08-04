@@ -208,9 +208,10 @@ async function handleRSVPBtnBasedOnProfile(rsvpBtn, miloLibs, profile) {
 }
 
 async function getSeries404(seriesSegmentInUrl) {
-  const series404Map = await fetch(SERIES_404_MAP_PATH).then((res) => res.json());
+  const series404MapResp = await fetch(SERIES_404_MAP_PATH)
 
-  if (series404Map) {
+  if (series404MapResp.ok) {
+    const series404Map = await series404MapResp.json();
     const { data } = series404Map;
     const series404 = data.find((s) => s['series-name'] === seriesSegmentInUrl);
 
@@ -233,7 +234,7 @@ async function getSeries404(seriesSegmentInUrl) {
 
   return {
     origin: '',
-    path: '/error-pages/404',
+    pathname: '/error-pages/404',
   };
 }
 
