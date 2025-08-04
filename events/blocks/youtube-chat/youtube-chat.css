@@ -141,7 +141,7 @@ lite-youtube.lyt-activated > .lty-playbtn {
       padding-bottom: 42.1875%; /* 56.25% * 0.75 = height for 75% width */
   }
 
-  /* When in split layout (after clicking play with chat), show 75% video + 25% chat */
+  /* When chat is enabled and NOT single-column (autoplay scenario or after click): show 75% video + 25% chat */
   .youtube-chat .youtube-stream.has-chat:not(.single-column) .youtube-video-container {
       width: 75%;
       max-width: 75%;

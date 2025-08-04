@@ -87,10 +87,18 @@ export class YouTubeChat {
   }
 
   buildContainerClasses() {
-    const baseClasses = ['youtube-stream', 'single-column'];
+    const baseClasses = ['youtube-stream'];
+    
+    // Only add single-column class if chat is disabled OR if chat is enabled but autoplay is disabled
+    const shouldBeSingleColumn = !this.chatEnabled || (this.chatEnabled && !this.isAutoplayEnabled());
+    if (shouldBeSingleColumn) {
+      baseClasses.push('single-column');
+    }
+    
     if (this.chatEnabled) {
       baseClasses.push('has-chat');
     }
+    
     return baseClasses.join(' ');
   }
 
