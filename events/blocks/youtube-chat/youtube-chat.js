@@ -21,7 +21,7 @@ const CONFIG = {
   },
   IFRAME_ATTRIBUTES: {
     allowfullscreen: true,
-    allow: 'accelerometer; autoplay; encrypted-media; gyroscope;',
+    allow: 'accelerometer; autoplay; encrypted-media; gyroscope',
   },
   DEFAULT_TITLE: 'YouTube video player',
   CHAT_LOAD_DELAY: 100,
