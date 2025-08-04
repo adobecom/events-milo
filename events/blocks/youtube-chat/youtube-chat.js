@@ -19,10 +19,6 @@ const CONFIG = {
     'show-player-title-actions': 'modestbranding',
     'show-suggestions-after-video-ends': 'rel',
   },
-  IFRAME_ATTRIBUTES: {
-    allowfullscreen: true,
-    allow: 'accelerometer; autoplay; encrypted-media; gyroscope',
-  },
   DEFAULT_TITLE: 'YouTube video player',
   CHAT_LOAD_DELAY: 100,
   CSS_CLASSES: {
@@ -193,7 +189,6 @@ export class YouTubeChat {
       src,
       title: this.getVideoTitle(),
       loading: 'lazy',
-      ...CONFIG.IFRAME_ATTRIBUTES,
     });
   }
 
