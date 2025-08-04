@@ -117,7 +117,7 @@ lite-youtube.lyt-activated > .lty-playbtn {
   position: absolute;
 }
 
-@media screen and (min-width: var(--breakpoint-xl)) {
+@media screen and (min-width: 1200px) {
   .youtube-chat .youtube-stream:not(.has-chat) .youtube-video-container {
     width: 100%;
     max-width: 100%;
