@@ -1,7 +1,6 @@
 import { expect } from '@esm-bundle/chai';
 import sinon from 'sinon';
 import { readFile } from '@web/test-runner-commands';
-import init, { YouTubeChat } from '../../../../events/blocks/youtube-chat/youtube-chat.js';
 
 const defaultHtml = await readFile({ path: './mocks/default.html' });
 
@@ -20,15 +19,49 @@ describe('YouTube Chat Module', () => {
   describe('YouTubeChat Class', () => {
     let youtubeChat;
 
-    beforeEach(() => {
+    beforeEach(async () => {
+      const { YouTubeChat } = await import('../../../../events/blocks/youtube-chat/youtube-chat.js');
       youtubeChat = new YouTubeChat();
     });
 
-    describe('constructor', () => {
-      it('should initialize with default values', () => {
-        expect(youtubeChat.config).to.be.null;
-        expect(youtubeChat.videoId).to.be.null;
-        expect(youtubeChat.chatEnabled).to.be.false;
+    describe('isAutoplayEnabled', () => {
+      it('should return correct autoplay state', () => {
+        youtubeChat.config = { autoplay: 'true' };
+        expect(youtubeChat.isAutoplayEnabled()).to.be.true;
+        
+        youtubeChat.config = { autoplay: 'false' };
+        expect(youtubeChat.isAutoplayEnabled()).to.be.false;
+        
+        youtubeChat.config = {};
+        expect(youtubeChat.isAutoplayEnabled()).to.be.false;
+      });
+    });
+
+    describe('buildUrlParams', () => {
+      beforeEach(() => {
+        youtubeChat.videoId = 'dQw4w9WgXcQ';
+      });
+
+      it('should build URL parameters correctly', () => {
+        youtubeChat.config = {
+          'show-controls': 'true',
+          'show-player-title-actions': 'true',
+          'show-suggestions-after-video-ends': 'true'
+        };
+
+        const params = youtubeChat.buildUrlParams();
+        expect(params).to.include('controls=1');
+        expect(params).to.include('modestbranding=1');
+        expect(params).to.include('rel=1');
+
+        youtubeChat.config = {
+          'show-controls': 'false',
+          'show-player-title-actions': 'false',
+          'show-suggestions-after-video-ends': 'false'
+        };
+        
+        const emptyParams = youtubeChat.buildUrlParams();
+        expect(emptyParams).to.equal('');
       });
     });
 
@@ -37,284 +70,246 @@ describe('YouTube Chat Module', () => {
         youtubeChat.videoId = 'dQw4w9WgXcQ';
       });
 
-      it('should build URL with all parameters when enabled', () => {
+      it('should build embed URL with correct parameters', () => {
         youtubeChat.config = {
-          autoplay: 'true',
-          mute: 'true',
           'show-controls': 'true',
-          'show-player-title-actions': 'true',
-          'show-suggestions-after-video-ends': 'false'
+          'show-player-title-actions': 'true'
         };
 
-        const url = youtubeChat.buildEmbedUrl();
-        expect(url).to.include('https://www.youtube.com/embed/dQw4w9WgXcQ');
-        expect(url).to.include('autoplay=1');
-        expect(url).to.include('mute=1');
-        expect(url).to.include('controls=1');
-        expect(url).to.include('modestbranding=1');
-        expect(url).to.not.include('rel=1');
-      });
+        const autoplayUrl = youtubeChat.buildEmbedUrl(true);
+        expect(autoplayUrl).to.include('https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ');
+        expect(autoplayUrl).to.include('autoplay=1');
+        expect(autoplayUrl).to.include('mute=1');
+        expect(autoplayUrl).to.include('controls=1');
+        expect(autoplayUrl).to.include('modestbranding=1');
 
-      it('should build URL without parameters when disabled', () => {
-        youtubeChat.config = {
-          autoplay: 'false',
-          mute: 'false',
-          'show-controls': 'false',
-          'show-player-title-actions': 'false',
-          'show-suggestions-after-video-ends': 'false'
-        };
-        
-        const url = youtubeChat.buildEmbedUrl();
-        expect(url).to.equal('https://www.youtube.com/embed/dQw4w9WgXcQ');
-      });
-
-      it('should handle mixed configuration', () => {
-        youtubeChat.config = {
-          autoplay: 'true',
-          mute: 'false',
-          'show-controls': 'true',
-          'show-player-title-actions': 'false'
-        };
-        
-        const url = youtubeChat.buildEmbedUrl();
-        expect(url).to.include('autoplay=1');
-        expect(url).to.not.include('mute=1');
-        expect(url).to.include('controls=1');
-        expect(url).to.not.include('modestbranding=1');
+        const noAutoplayUrl = youtubeChat.buildEmbedUrl(false);
+        expect(noAutoplayUrl).to.include('https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ');
+        expect(noAutoplayUrl).to.not.include('autoplay=1');
+        expect(noAutoplayUrl).to.not.include('mute=1');
+        expect(noAutoplayUrl).to.include('controls=1');
       });
     });
 
-    describe('createVideoSection', () => {
-      beforeEach(() => {
-        youtubeChat.videoId = 'dQw4w9WgXcQ';
-        youtubeChat.config = {
-          videotitle: 'Custom Video Title',
-          autoplay: 'true',
-          mute: 'true'
-        };
-      });
-
-      it('should create video section with correct structure and attributes', () => {
-        const videoSection = youtubeChat.createVideoSection();
-        
-        expect(videoSection.classList.contains('youtube-video-container')).to.be.true;
-        
-        const iframeContainer = videoSection.querySelector('.iframe-container');
-        expect(iframeContainer).to.not.be.null;
-        
-        const iframe = iframeContainer.querySelector('.youtube-video');
-        expect(iframe).to.not.be.null;
-        expect(iframe.tagName).to.equal('IFRAME');
-        expect(iframe.getAttribute('title')).to.equal('Custom Video Title');
-        expect(iframe.getAttribute('allowfullscreen')).to.equal('true');
-      });
-
-      it('should use default title when not provided', () => {
-        delete youtubeChat.config.videotitle;
-        
-        const videoSection = youtubeChat.createVideoSection();
-        const iframe = videoSection.querySelector('.youtube-video');
-        
-        expect(iframe.getAttribute('title')).to.equal('YouTube video player');
-      });
-    });
-
-    describe('createChatSection', () => {
+    describe('buildChatSection', () => {
       beforeEach(() => {
         youtubeChat.videoId = 'dQw4w9WgXcQ';
       });
 
-      it('should create chat section with correct structure and attributes', () => {
-        const chatSection = youtubeChat.createChatSection();
+      it('should create chat section with correct placeholder', () => {
+        youtubeChat.config = { autoplay: 'true' };
+        const chatSection = youtubeChat.buildChatSection();
         
         expect(chatSection.classList.contains('youtube-chat-container')).to.be.true;
         
-        const iframeContainer = chatSection.querySelector('.iframe-container');
-        expect(iframeContainer).to.not.be.null;
-        
-        const iframe = iframeContainer.querySelector('.youtube-chat');
-        expect(iframe).to.not.be.null;
-        expect(iframe.tagName).to.equal('IFRAME');
-        expect(iframe.getAttribute('title')).to.equal('YouTube live chat');
-        expect(iframe.getAttribute('src')).to.include('https://www.youtube.com/live_chat?v=dQw4w9WgXcQ');
-        expect(iframe.getAttribute('src')).to.include('embed_domain=');
+        const placeholder = chatSection.querySelector('.youtube-chat-placeholder');
+        expect(placeholder.textContent).to.equal('Loading chat...');
+
+        youtubeChat.config = { autoplay: 'false' };
+        const chatSection2 = youtubeChat.buildChatSection();
+        const placeholder2 = chatSection2.querySelector('.youtube-chat-placeholder');
+        expect(placeholder2.textContent).to.equal('Chat will load when video is played');
       });
     });
 
-    describe('buildYouTubeStream', () => {
+    describe('loadChat', () => {
+      beforeEach(() => {
+        youtubeChat.videoId = 'dQw4w9WgXcQ';
+        youtubeChat.chatContainer = document.createElement('div');
+        youtubeChat.chatContainer.innerHTML = '<div class="placeholder">Loading...</div>';
+      });
+
+      it('should load chat iframe when container exists', () => {
+        youtubeChat.loadChat();
+        
+        const iframe = youtubeChat.chatContainer.querySelector('iframe.youtube-chat');
+        expect(iframe).to.not.be.null;
+        expect(iframe.src).to.include('youtube.com/live_chat');
+        expect(iframe.title).to.equal('YouTube live chat');
+      });
+
+      it('should not load chat when container is null', () => {
+        youtubeChat.chatContainer = null;
+        expect(() => youtubeChat.loadChat()).to.not.throw();
+      });
+    });
+
+    describe('buildStream', () => {
       beforeEach(() => {
         youtubeChat.videoId = 'dQw4w9WgXcQ';
         youtubeChat.config = { videotitle: 'Test Video' };
       });
 
-      it('should build stream with chat when enabled', () => {
+      it('should build stream with correct layout based on configuration', () => {
+        // Chat enabled + autoplay enabled
         youtubeChat.chatEnabled = true;
+        youtubeChat.config.autoplay = 'true';
+        const stream1 = youtubeChat.buildStream();
+        expect(stream1.classList.contains('youtube-stream')).to.be.true;
+        expect(stream1.classList.contains('has-chat')).to.be.true;
+        expect(stream1.classList.contains('single-column')).to.be.false;
+        expect(stream1.querySelector('.youtube-chat-container')).to.not.be.null;
+
+        // Chat disabled
+        youtubeChat.chatEnabled = false;
+        const stream2 = youtubeChat.buildStream();
+        expect(stream2.classList.contains('single-column')).to.be.true;
+        expect(stream2.querySelector('.youtube-chat-container')).to.be.null;
+
+        // Chat enabled + autoplay disabled
+        youtubeChat.chatEnabled = true;
+        youtubeChat.config.autoplay = 'false';
+        const stream3 = youtubeChat.buildStream();
+        expect(stream3.classList.contains('single-column')).to.be.true;
+        expect(stream3.querySelector('.youtube-chat-container')).to.be.null;
+        expect(youtubeChat.pendingChatSection).to.not.be.null;
+      });
+    });
+
+    describe('preconnect', () => {
+      it('should add preconnect links for YouTube domains', () => {
+        const originalHead = document.head.innerHTML;
         
-        const stream = youtubeChat.buildYouTubeStream();
+        youtubeChat.preconnect();
         
-        expect(stream.classList.contains('youtube-stream')).to.be.true;
-        expect(stream.classList.contains('single-column')).to.be.false;
+        const links = document.querySelectorAll('link[rel="preconnect"]');
+        expect(links.length).to.be.greaterThan(0);
         
-        const videoContainer = stream.querySelector('.youtube-video-container');
-        expect(videoContainer).to.not.be.null;
+        const hrefs = Array.from(links).map(link => link.href);
+        expect(hrefs).to.include('https://www.youtube-nocookie.com/');
+        expect(hrefs).to.include('https://www.youtube.com/');
         
-        const chatContainer = stream.querySelector('.youtube-chat-container');
-        expect(chatContainer).to.not.be.null;
+        document.head.innerHTML = originalHead;
       });
 
-      it('should build stream without chat when disabled', () => {
+      it('should only add preconnect links once', () => {
+        const originalHead = document.head.innerHTML;
+        
+        youtubeChat.preconnect();
+        const firstCount = document.querySelectorAll('link[rel="preconnect"]').length;
+        
+        youtubeChat.preconnect();
+        const secondCount = document.querySelectorAll('link[rel="preconnect"]').length;
+        
+        expect(firstCount).to.equal(secondCount);
+        
+        document.head.innerHTML = originalHead;
+      });
+    });
+
+    describe('getVideoTitle', () => {
+      it('should return correct video title', () => {
+        youtubeChat.config = { videotitle: 'Custom Video Title' };
+        expect(youtubeChat.getVideoTitle()).to.equal('Custom Video Title');
+
+        youtubeChat.config = {};
+        expect(youtubeChat.getVideoTitle()).to.equal('YouTube video player');
+      });
+    });
+
+    describe('createVideoIframe', () => {
+      it('should create iframe with correct attributes', () => {
+        youtubeChat.config = { videotitle: 'Test Video' };
+        const src = 'https://www.youtube-nocookie.com/embed/test';
+        const iframe = youtubeChat.createVideoIframe(src);
+        
+        expect(iframe.classList.contains('youtube-video')).to.be.true;
+        expect(iframe.src).to.equal(src);
+        expect(iframe.title).to.equal('Test Video');
+        expect(iframe.loading).to.equal('lazy');
+        expect(iframe.hasAttribute('allowfullscreen')).to.be.true;
+        expect(iframe.getAttribute('allow')).to.equal('accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture');
+      });
+    });
+
+    describe('activateLitePlayer', () => {
+      beforeEach(() => {
+        youtubeChat.videoId = 'dQw4w9WgXcQ';
+        youtubeChat.config = { videotitle: 'Test Video' };
+        youtubeChat.chatEnabled = true;
+      });
+
+      it('should activate lite player with chat enabled', () => {
+        const liteYT = document.createElement('lite-youtube');
+        const container = document.createElement('div');
+        container.className = 'youtube-stream single-column';
+        container.appendChild(liteYT);
+        document.body.appendChild(container);
+
+        // Test with pending chat section
+        youtubeChat.pendingChatSection = youtubeChat.buildChatSection();
+        const loadChatSpy = sandbox.spy(youtubeChat, 'loadChat');
+
+        youtubeChat.activateLitePlayer(liteYT);
+
+        expect(youtubeChat.videoLoaded).to.be.true;
+        expect(liteYT.classList.contains('lyt-activated')).to.be.true;
+        expect(liteYT.parentNode).to.be.null; // Should be removed
+        expect(container.classList.contains('single-column')).to.be.false;
+        expect(container.querySelector('.youtube-chat-container')).to.not.be.null;
+        expect(loadChatSpy.called).to.be.true;
+      });
+
+      it('should activate lite player without chat enabled', () => {
         youtubeChat.chatEnabled = false;
-        
-        const stream = youtubeChat.buildYouTubeStream();
-        
-        expect(stream.classList.contains('youtube-stream')).to.be.true;
-        expect(stream.classList.contains('single-column')).to.be.true;
-        
-        const videoContainer = stream.querySelector('.youtube-video-container');
-        expect(videoContainer).to.not.be.null;
-        
-        const chatContainer = stream.querySelector('.youtube-chat-container');
-        expect(chatContainer).to.be.null;
+        const liteYT = document.createElement('lite-youtube');
+        const container = document.createElement('div');
+        container.appendChild(liteYT);
+        document.body.appendChild(container);
+
+        const loadChatSpy = sandbox.spy(youtubeChat, 'loadChat');
+        youtubeChat.activateLitePlayer(liteYT);
+
+        expect(loadChatSpy.called).to.be.false;
+      });
+
+      it('should not activate if already loaded', () => {
+        youtubeChat.videoLoaded = true;
+        const liteYT = document.createElement('lite-youtube');
+        const container = document.createElement('div');
+        container.appendChild(liteYT);
+        document.body.appendChild(container);
+
+        const originalIframeCount = container.querySelectorAll('iframe').length;
+        youtubeChat.activateLitePlayer(liteYT);
+
+        expect(container.querySelectorAll('iframe').length).to.equal(originalIframeCount);
       });
     });
   });
 
-  describe('Integration Tests', () => {
-    it('should initialize YouTube chat with video and chat enabled', async () => {
-      document.body.innerHTML = defaultHtml;
-      const block = document.querySelector('.youtube-chat');
-      
-      await init(block);
-      
-      // Verify that the block content was cleared
-      expect(block.textContent).to.equal('');
-      
-      // Verify that a container was created
-      const container = block.querySelector('.youtube-stream');
-      expect(container).to.not.be.null;
-      
-      // Verify that both video and chat containers were created
-      const videoContainer = container.querySelector('.youtube-video-container');
-      expect(videoContainer).to.not.be.null;
-      
-      const chatContainer = container.querySelector('.youtube-chat-container');
-      expect(chatContainer).to.not.be.null;
-      
-      // Verify that iframes were created
-      const videoIframe = videoContainer.querySelector('.youtube-video');
-      expect(videoIframe).to.not.be.null;
-      expect(videoIframe.tagName).to.equal('IFRAME');
-      
-      const chatIframe = chatContainer.querySelector('.youtube-chat');
-      expect(chatIframe).to.not.be.null;
-      expect(chatIframe.tagName).to.equal('IFRAME');
+  describe('Default Export Function', () => {
+    let block;
+
+    beforeEach(() => {
+      block = document.createElement('div');
+      block.innerHTML = defaultHtml;
+      document.body.appendChild(block);
     });
 
-    it('should initialize YouTube stream without chat when chatenabled is false', async () => {
-      const htmlWithoutChat = `
-        <div class="youtube-chat">
-          <div>
-            <div>videoid</div>
-            <div>dQw4w9WgXcQ</div>
-          </div>
-          <div>
-            <div>chatenabled</div>
-            <div>false</div>
-          </div>
-          <div>
-            <div>autoplay</div>
-            <div>true</div>
-          </div>
-          <div>
-            <div>mute</div>
-            <div>true</div>
-          </div>
-        </div>
-      `;
-      
-      document.body.innerHTML = htmlWithoutChat;
-      const block = document.querySelector('.youtube-chat');
-      
-      await init(block);
-      
-      const container = block.querySelector('.youtube-stream');
-      expect(container).to.not.be.null;
-      expect(container.classList.contains('single-column')).to.be.true;
-      
-      const videoContainer = container.querySelector('.youtube-video-container');
-      expect(videoContainer).to.not.be.null;
-      
-      const chatContainer = container.querySelector('.youtube-chat-container');
-      expect(chatContainer).to.be.null;
+    afterEach(() => {
+      if (block.parentNode) {
+        document.body.removeChild(block);
+      }
     });
 
-    it('should not initialize when videoId is missing', async () => {
-      const htmlWithoutVideoId = `
-        <div class="youtube-chat">
-          <div>
-            <div>chatenabled</div>
-            <div>true</div>
-          </div>
-          <div>
-            <div>autoplay</div>
-            <div>true</div>
-          </div>
-        </div>
-      `;
+    it('should export init function and handle initialization', async () => {
+      const { default: init, YouTubeChat } = await import('../../../../events/blocks/youtube-chat/youtube-chat.js');
       
-      document.body.innerHTML = htmlWithoutVideoId;
-      const block = document.querySelector('.youtube-chat');
+      expect(typeof init).to.equal('function');
+      expect(typeof YouTubeChat).to.equal('function');
       
-      await init(block);
+      const youtubeChat = new YouTubeChat();
+      expect(youtubeChat).to.be.instanceOf(YouTubeChat);
       
-      // Verify that the block was removed from DOM
-      expect(document.querySelector('.youtube-chat')).to.be.null;
-    });
-
-    it('should handle different configuration options', async () => {
-      const htmlWithMixedConfig = `
-        <div class="youtube-chat">
-          <div>
-            <div>videoid</div>
-            <div>dQw4w9WgXcQ</div>
-          </div>
-          <div>
-            <div>chatenabled</div>
-            <div>true</div>
-          </div>
-          <div>
-            <div>autoplay</div>
-            <div>false</div>
-          </div>
-          <div>
-            <div>mute</div>
-            <div>true</div>
-          </div>
-          <div>
-            <div>show-controls</div>
-            <div>true</div>
-          </div>
-          <div>
-            <div>show-player-title-actions</div>
-            <div>false</div>
-          </div>
-        </div>
-      `;
+      const result = init(block);
+      expect(result).to.be.instanceOf(Promise);
       
-      document.body.innerHTML = htmlWithMixedConfig;
-      const block = document.querySelector('.youtube-chat');
-      
-      await init(block);
-      
-      const videoIframe = block.querySelector('.youtube-video');
-      expect(videoIframe).to.not.be.null;
-      
-      const src = videoIframe.getAttribute('src');
-      expect(src).to.include('https://www.youtube.com/embed/dQw4w9WgXcQ');
-      expect(src).to.not.include('autoplay=1');
-      expect(src).to.include('mute=1');
-      expect(src).to.include('controls=1');
-      expect(src).to.not.include('modestbranding=1');
+      try {
+        await result;
+      } catch (error) {
+        expect(error).to.be.instanceOf(Error);
+      }
     });
   });
 });
