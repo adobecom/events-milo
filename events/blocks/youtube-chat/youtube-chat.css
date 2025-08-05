@@ -138,4 +138,12 @@ lite-youtube .lty-playbtn:focus {
     padding-bottom: 42.1875%;
     position: relative;
   }
+
+  .youtube-chat .youtube-stream.has-chat:not(.single-column) .youtube-chat-container .iframe-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+  }
 }
