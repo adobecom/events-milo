@@ -54,21 +54,13 @@ lite-youtube > .lty-playbtn {
   border: none;
 }
 
+/* Play button hover/focus states */
 lite-youtube:hover > .lty-playbtn,
 lite-youtube .lty-playbtn:focus {
   filter: none;
 }
 
-lite-youtube.lyt-activated {
-  cursor: unset;
-}
-
-lite-youtube.lyt-activated::before,
-lite-youtube.lyt-activated > .lty-playbtn {
-  opacity: 0;
-  pointer-events: none;
-}
-
+/* Screen reader only text */
 .lyt-visually-hidden {
   clip: rect(0 0 0 0);
   clip-path: inset(50%);
@@ -125,14 +117,7 @@ lite-youtube.lyt-activated > .lty-playbtn {
     padding-bottom: 56.25%;
   }
 
-  .youtube-chat .youtube-stream.has-chat .youtube-video-container {
-    width: 100%;
-    max-width: 100%;
-    height: 0;
-    padding-bottom: 42.1875%;
-  }
-
-  .youtube-chat .youtube-stream.has-chat:not(.single-column) .youtube-video-container {
+.youtube-chat .youtube-stream.has-chat:not(.single-column) .youtube-video-container {
     width: 75%;
     max-width: 75%;
     height: 0;
