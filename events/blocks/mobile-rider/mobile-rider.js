@@ -247,7 +247,9 @@ class MobileRider {
   async checkLive(v) {
     if (!v.videoid) return false;
     try {
-      const status = await this.getMediaStatus(v.videoid);
+      // Use mainID if available, otherwise use the video's videoid
+      const idToCheck = this.mainID || v.videoid;
+      const status = await this.getMediaStatus(idToCheck);
       const isLive = status.active?.includes(v.videoid) || false;
       this.setStatus(v.videoid, isLive);
       return isLive;
