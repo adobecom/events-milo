@@ -54,7 +54,6 @@ lite-youtube > .lty-playbtn {
   border: none;
 }
 
-/* Play button hover/focus states */
 lite-youtube:hover > .lty-playbtn,
 lite-youtube .lty-playbtn:focus {
   filter: none;

@@ -1,6 +1,5 @@
 import { createTag, readBlockConfig } from '../../scripts/utils.js';
 
-// Constants
 const CONFIG = {
   PRELOAD_DOMAINS: [
     'www.youtube-nocookie.com',
@@ -32,150 +31,127 @@ export class YouTubeChat {
     this.config = null;
     this.videoId = null;
     this.chatEnabled = false;
-    this.isLoaded = false;
+    this.videoLoaded = false;
     this.pendingChatSection = null;
     this.chatContainer = null;
   }
-
-  // ===== INITIALIZATION METHODS =====
 
   async init(block) {
     try {
       this.config = readBlockConfig(block);
       this.videoId = this.config['videoid'];
-      this.chatEnabled = this.config['chatenabled']?.toLowerCase() === 'true';
+      this.chatEnabled = this.config.chatenabled?.toLowerCase() === 'true';
 
-      if (!this.videoId) {
-        throw new Error('Invalid or missing video ID.');
-      }
+      if (!this.videoId) throw new Error('Invalid or missing video ID.');
 
-      this.warmConnections();
-      this.renderBlock(block);
-    } catch (error) {
-      this.handleError(error, block);
+      this.preconnect();
+      block.textContent = '';
+      block.append(this.buildStream());
+    } catch (err) {
+      window.lana?.log(`YouTube Chat Block: ${err.message}`);
+      block.remove();
     }
   }
 
-  handleError(error, block) {
-    window.lana?.log(`YouTube Chat Block: ${error.message}`);
-    block.remove();
-  }
-
-  renderBlock(block) {
-    block.textContent = '';
-    block.append(this.buildYouTubeStream());
-  }
-
-  warmConnections() {
+  preconnect() {
     if (YouTubeChat.preconnected) return;
     YouTubeChat.preconnected = true;
-    
-    CONFIG.PRELOAD_DOMAINS.forEach((domain) => {
-      const link = document.createElement('link');
-      link.rel = 'preconnect';
-      link.href = `https://${domain}`;
+
+    CONFIG.PRELOAD_DOMAINS.forEach(domain => {
+      const link = createTag('link', { rel: 'preconnect', href: `https://${domain}` });
       document.head.appendChild(link);
     });
   }
 
-  // ===== DOM BUILDING METHODS =====
-
-  buildYouTubeStream() {
-    const autoplayEnabled = this.isAutoplayEnabled();
-    
+  buildStream() {
+    const autoplay = this.isAutoplayEnabled();
     const container = createTag('div', {
-      class: this.buildContainerClasses(),
+      class: `youtube-stream${!this.chatEnabled || !autoplay ? ' single-column' : ''}${this.chatEnabled ? ' has-chat' : ''}`.trim(),
     });
 
-    container.append(this.createVideoSection());
-    this.handleChatSection(container, autoplayEnabled);
+    container.append(this.buildVideoSection(autoplay));
+    if (this.chatEnabled && autoplay) container.append(this.buildChatSection());
+    if (this.chatEnabled && !autoplay) this.pendingChatSection = this.buildChatSection();
 
     return container;
   }
 
-  buildContainerClasses() {
-    const baseClasses = ['youtube-stream'];
-    
-    // Only add single-column class if chat is disabled OR if chat is enabled but autoplay is disabled
-    const shouldBeSingleColumn = !this.chatEnabled || (this.chatEnabled && !this.isAutoplayEnabled());
-    if (shouldBeSingleColumn) {
-      baseClasses.push('single-column');
-    }
-    
-    if (this.chatEnabled) {
-      baseClasses.push('has-chat');
-    }
-    
-    return baseClasses.join(' ');
-  }
-
-  handleChatSection(container, autoplayEnabled) {
-    if (this.chatEnabled && autoplayEnabled) {
-      container.append(this.createChatSection());
-    } else if (this.chatEnabled && !autoplayEnabled) {
-      this.pendingChatSection = this.createChatSection();
-    }
-  }
-
-  createVideoSection() {
-    const videoContainer = createTag('div', { class: 'youtube-video-container' });
+  buildVideoSection(autoplay) {
+    const container = createTag('div', { class: 'youtube-video-container' });
     const wrapper = createTag('div', { class: 'iframe-container' });
-    
-    const autoplayEnabled = this.isAutoplayEnabled();
-    
-    if (autoplayEnabled) {
-      this.createAutoplayVideo(wrapper);
-    } else {
-      this.createLiteYouTubeVideo(wrapper);
-    }
-    
-    videoContainer.append(wrapper);
-    return videoContainer;
+
+    autoplay ? this.insertAutoplayIframe(wrapper) : this.insertLitePlayer(wrapper);
+    container.append(wrapper);
+    return container;
   }
 
-  // ===== VIDEO CREATION METHODS =====
-
-  createAutoplayVideo(wrapper) {
-    const iframe = this.createVideoIframe(this.buildEmbedUrl());
+  insertAutoplayIframe(wrapper) {
+    const iframe = this.createVideoIframe(this.buildEmbedUrl(true));
     wrapper.append(iframe);
-    this.isLoaded = true;
-    
-    if (this.chatEnabled) {
-      setTimeout(() => this.loadChat(), CONFIG.CHAT_LOAD_DELAY);
-    }
+    this.videoLoaded = true;
+    if (this.chatEnabled) setTimeout(() => this.loadChat(), CONFIG.CHAT_LOAD_DELAY);
   }
 
-  createLiteYouTubeVideo(wrapper) {
-    const liteYT = this.createLiteYouTubeElement();
-    wrapper.append(liteYT);
-  }
-
-  createLiteYouTubeElement() {
+  insertLitePlayer(wrapper) {
     const liteYT = createTag('lite-youtube', {
       videoid: this.videoId,
       playlabel: this.getVideoTitle(),
       params: this.buildUrlParams(),
     });
-    
-    this.setupLiteYouTubeThumbnail(liteYT);
-    this.setupLiteYouTubePlayButton(liteYT);
-    liteYT.addEventListener('click', () => this.loadYouTubePlayer(liteYT));
-    
-    return liteYT;
-  }
 
-  setupLiteYouTubeThumbnail(liteYT) {
     liteYT.style.backgroundImage = `url("${CONFIG.THUMBNAIL_BASE}/${this.videoId}/hqdefault.jpg")`;
     liteYT.style.backgroundSize = 'cover';
     liteYT.style.backgroundPosition = 'center';
+
+    const playBtn = createTag('button', { type: 'button', class: 'lty-playbtn' });
+    const label = createTag('span', { class: 'lyt-visually-hidden' });
+    label.textContent = this.getVideoTitle();
+    playBtn.append(label);
+    liteYT.append(playBtn);
+
+    liteYT.addEventListener('click', () => this.activateLitePlayer(liteYT));
+    wrapper.append(liteYT);
   }
 
-  setupLiteYouTubePlayButton(liteYT) {
-    const playBtnEl = createTag('button', { type: 'button', class: 'lty-playbtn' });
-    const playBtnLabelEl = createTag('span', { class: 'lyt-visually-hidden' });
-    playBtnLabelEl.textContent = this.getVideoTitle();
-    playBtnEl.append(playBtnLabelEl);
-    liteYT.append(playBtnEl);
+  activateLitePlayer(liteYT) {
+    if (this.videoLoaded) return;
+    this.videoLoaded = true;
+    liteYT.classList.add('lyt-activated');
+
+    const container = liteYT.closest('.youtube-stream');
+    if (this.pendingChatSection && container) {
+      container.append(this.pendingChatSection);
+      container.classList.remove('single-column');
+    }
+
+    const iframe = this.createVideoIframe(this.buildEmbedUrl(true));
+    liteYT.insertAdjacentElement('afterend', iframe);
+    liteYT.remove();
+
+    if (this.chatEnabled) this.loadChat();
+  }
+
+  buildChatSection() {
+    this.chatContainer = createTag('div', { class: 'youtube-chat-container' });
+    const wrapper = createTag('div', { class: 'iframe-container' });
+    const msg = this.isAutoplayEnabled() ? 'Loading chat...' : 'Chat will load when video is played';
+    const placeholder = createTag('div', { class: 'youtube-chat-placeholder' }, msg);
+    wrapper.append(placeholder);
+    this.chatContainer.append(wrapper);
+    return this.chatContainer;
+  }
+
+  loadChat() {
+    if (!this.chatContainer) return;
+    const iframe = createTag('iframe', {
+      class: 'youtube-chat',
+      src: `${CONFIG.YOUTUBE_CHAT_BASE}?v=${this.videoId}&embed_domain=${window.location.hostname}`,
+      title: 'YouTube live chat',
+    });
+
+    const wrapper = createTag('div', { class: 'iframe-container' }, iframe);
+    this.chatContainer.innerHTML = '';
+    this.chatContainer.append(wrapper);
   }
 
   createVideoIframe(src) {
@@ -188,137 +164,40 @@ export class YouTubeChat {
     });
   }
 
-  // ===== CHAT CREATION METHODS =====
-
-  createChatSection() {
-    const chatContainer = createTag('div', { class: 'youtube-chat-container' });
-    const wrapper = createTag('div', { class: 'iframe-container' });
-    
-    const placeholderText = this.getChatPlaceholderText();
-    const chatPlaceholder = createTag('div', { 
-      class: 'youtube-chat-placeholder' 
-    }, placeholderText);
-    
-    wrapper.append(chatPlaceholder);
-    chatContainer.append(wrapper);
-    
-    // Store reference for later use
-    this.chatContainer = chatContainer;
-    
-    return chatContainer;
-  }
-
-  loadChat() {
-    if (!this.chatContainer) return;
-    
-    const chatIframe = this.createChatIframe();
-    const wrapper = createTag('div', { class: 'iframe-container' }, chatIframe);
-    this.chatContainer.innerHTML = '';
-    this.chatContainer.append(wrapper);
-  }
-
-  createChatIframe() {
-    return createTag('iframe', {
-      class: 'youtube-chat',
-      src: this.buildChatUrl(),
-      title: 'YouTube live chat',
-    });
-  }
-
-  // ===== PLAYER INTERACTION METHODS =====
-
-  async loadYouTubePlayer(liteYT) {
-    if (this.isLoaded) return;
-    
-    this.isLoaded = true;
-    liteYT.classList.add('lyt-activated');
-    
-    this.addPendingChatSection(liteYT);
-    this.replaceLiteYouTubeWithIframe(liteYT);
-    
-    if (this.chatEnabled) {
-      this.loadChat();
-    }
-  }
-
-  addPendingChatSection(liteYT) {
-    const container = liteYT.closest('.youtube-stream');
-    if (!container) return;
-
-    if (this.pendingChatSection) {
-      container.append(this.pendingChatSection);
-      container.classList.remove('single-column');
-      this.pendingChatSection = null;
-    } else if (this.chatEnabled) {
-      // If chat is enabled but no pending section, still remove single-column to show split layout
-      container.classList.remove('single-column');
-    }
-    // If no chat is enabled, keep single-column class (100% width)
-  }
-
-  replaceLiteYouTubeWithIframe(liteYT) {
-    const iframe = this.createVideoIframe(this.buildEmbedUrlWithAutoplay());
-    liteYT.insertAdjacentElement('afterend', iframe);
-    liteYT.remove();
-  }
-
-  // ===== UTILITY METHODS =====
-
   getVideoTitle() {
     return this.config.videotitle || CONFIG.DEFAULT_TITLE;
-  }
-
-  getChatPlaceholderText() {
-    const autoplayEnabled = this.isAutoplayEnabled();
-    return autoplayEnabled ? 'Loading chat...' : 'Chat will load when video is played';
   }
 
   isAutoplayEnabled() {
     return this.config.autoplay?.toLowerCase() === 'true';
   }
 
-  // ===== URL BUILDING METHODS =====
-
-  buildEmbedUrl() {
-    const base = `${CONFIG.YOUTUBE_EMBED_BASE}/${this.videoId}`;
-    const params = this.buildUrlParams();
-    return params ? `${base}?${params}` : base;
-  }
-
-  buildEmbedUrlWithAutoplay() {
+  buildEmbedUrl(autoplay = false) {
     const base = `${CONFIG.YOUTUBE_EMBED_BASE}/${this.videoId}`;
     const params = new URLSearchParams();
-    
-    // Always add autoplay and mute for click-to-play scenarios
-    params.append('autoplay', '1');
-    params.append('mute', '1');
-    
-    this.addPlayerOptionsToParams(params);
-    
-    return `${base}?${params}`;
-  }
 
-  buildUrlParams() {
-    const params = new URLSearchParams();
-    this.addPlayerOptionsToParams(params);
-    return params.toString();
-  }
+    if (autoplay) {
+      params.append('autoplay', '1');
+      params.append('mute', '1');
+    }
 
-  buildChatUrl() {
-    return `${CONFIG.YOUTUBE_CHAT_BASE}?v=${this.videoId}&embed_domain=${window.location.hostname}`;
-  }
-
-  addPlayerOptionsToParams(params) {
     Object.entries(CONFIG.PLAYER_OPTIONS).forEach(([key, param]) => {
       if (this.config[key]?.toLowerCase?.() === 'true') {
         params.append(param, '1');
       }
     });
 
-    // Always add mute=1 for autoplay to work in all browsers
-    if (this.isAutoplayEnabled()) {
-      params.append('mute', '1');
-    }
+    return `${base}?${params}`;
+  }
+
+  buildUrlParams() {
+    const params = new URLSearchParams();
+    Object.entries(CONFIG.PLAYER_OPTIONS).forEach(([key, param]) => {
+      if (this.config[key]?.toLowerCase?.() === 'true') {
+        params.append(param, '1');
+      }
+    });
+    return params.toString();
   }
 }
 
