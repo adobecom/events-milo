@@ -12,7 +12,7 @@
   flex: 1 1 auto;
   min-height: auto;
   height: 0;
-  padding-bottom: 56.25%; /* 16:9 aspect ratio (9/16 = 0.5625) */
+  padding-bottom: 56.25%;
   position: relative;
   transition: width 0.3s ease-in-out, max-width 0.3s ease-in-out;
 }

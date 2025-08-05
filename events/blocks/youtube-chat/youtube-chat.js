@@ -39,7 +39,7 @@ export class YouTubeChat {
   async init(block) {
     try {
       this.config = readBlockConfig(block);
-      this.videoId = this.config['videoid'];
+      this.videoId = this.config.videoid;
       this.chatEnabled = this.config.chatenabled?.toLowerCase() === 'true';
 
       if (!this.videoId) throw new Error('Invalid or missing video ID.');
