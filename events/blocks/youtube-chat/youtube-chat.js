@@ -1,4 +1,4 @@
-import { createTag, readBlockConfig } from '../../scripts/utils.js';
+import { createTag, readBlockConfig, loadLink } from '../../scripts/utils.js';
 
 const CONFIG = {
   PRELOAD_DOMAINS: [
@@ -58,8 +58,7 @@ export class YouTubeChat {
     YouTubeChat.preconnected = true;
 
     CONFIG.PRELOAD_DOMAINS.forEach(domain => {
-      const link = createTag('link', { rel: 'preconnect', href: `https://${domain}` });
-      document.head.appendChild(link);
+      loadLink(`https://${domain}`, { rel: 'preconnect' });
     });
   }
 
