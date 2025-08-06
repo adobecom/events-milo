@@ -29,7 +29,7 @@ const CONFIG = {
 let scriptPromise = null;
 
 async function loadScript() {
-  if (window.mobilerider) return;
+  if (window.mobilerider) return null;
   if (scriptPromise) return scriptPromise;
 
   scriptPromise = new Promise(async (res) => {
@@ -60,14 +60,14 @@ class MobileRider {
       const scriptPromise = loadScript();
       const storePromise = this.el.closest('.chrono-box')
         ? import('../../features/timing-framework/plugins/mobile-rider/plugin.js')
-            .then(({ mobileRiderStore }) => {
-              this.store = mobileRiderStore;
-            })
-            .catch((e) => {
-              window.lana?.log(`Failed to import mobileRiderStore: ${e.message}`);
-            })
+          .then(({ mobileRiderStore }) => {
+            this.store = mobileRiderStore;
+          })
+          .catch((e) => {
+            window.lana?.log(`Failed to import mobileRiderStore: ${e.message}`);
+          })
         : null;
-    
+
       await scriptPromise;
       if (storePromise) await storePromise;
       this.cfg = this.parseCfg();
@@ -162,12 +162,12 @@ class MobileRider {
     if (asl) this.initASL();
     // Check store existence first, then check mainID or vid in store
     if (this.store) {
-        const key = this.mainID && this.store.get(this.mainID) !== undefined
+      const key = this.mainID && this.store.get(this.mainID) !== undefined
         ? this.mainID
         : this.store.get(vid) !== undefined
           ? vid
           : null;
-      
+
       if (key) this.onStreamEnd(vid);
     }
 
@@ -191,7 +191,7 @@ class MobileRider {
   loadDrawerCSS() {
     // Check if drawer CSS is already loaded
     if (document.querySelector('link[href*="drawer.css"]')) return;
-    
+
     // Load drawer CSS dynamically
     const link = document.createElement('link');
     link.rel = 'stylesheet';
@@ -202,7 +202,7 @@ class MobileRider {
   drawerHeading() {
     const title = this.cfg.drawertitle || 'Now Playing';
     const subtitle = this.cfg.drawersubtitle || 'Select a live session';
-    
+
     const header = createTag('div', { class: 'now-playing-header' });
     header.innerHTML = `
       <p class="now-playing-title">${title}</p>
@@ -289,10 +289,10 @@ class MobileRider {
     try {
       // Use mainID if available, otherwise use the provided video ID
       const videoIDToCheck = this.mainID || v.videoid;
-      
+
       const { active } = await this.getMediaStatus(videoIDToCheck);
       const isActive = active.includes(v.videoid);
-      
+
       // Only update store if status has actually changed
       this.setStatus(v.videoid, isActive);
       return isActive;
@@ -304,18 +304,18 @@ class MobileRider {
 
   setStatus(id, live) {
     if (!id || !this.store) return;
-  
+
     try {
       let storeKey = null;
-  
+
       if (this.mainID && this.store.get(this.mainID) !== undefined) {
         storeKey = this.mainID;
       } else if (this.store.get(id) !== undefined) {
         storeKey = id;
       }
-  
+
       if (!storeKey) return;
-  
+
       const currentStatus = this.store.get(storeKey);
       if (currentStatus !== live) {
         this.store.set(storeKey, live);
@@ -324,7 +324,7 @@ class MobileRider {
     } catch (e) {
       window.lana?.log?.(`setStatus error for ${this.mainID || id}: ${e.message}`);
     }
-  }  
+  }
 
   initASL() {
     const con = this.wrap?.querySelector('.mobile-rider-container');
@@ -366,10 +366,10 @@ class MobileRider {
 
   parseCfg() {
     const meta = Object.fromEntries(
-      [...this.el.querySelectorAll(':scope > div > div:first-child')].map(div => [
+      [...this.el.querySelectorAll(':scope > div > div:first-child')].map((div) => [
         div.textContent.trim().toLowerCase().replace(/ /g, '-'),
-        div.nextElementSibling?.textContent?.trim() || ''
-      ])
+        div.nextElementSibling?.textContent?.trim() || '',
+      ]),
     );
 
     if (meta.concurrentenabled === 'true') {
@@ -382,12 +382,12 @@ class MobileRider {
 
   parseConcurrent(meta) {
     const keys = Object.keys(meta)
-      .filter(k => k.startsWith('concurrentvideoid'))
-      .map(k => k.replace('concurrentvideoid', ''));
+      .filter((k) => k.startsWith('concurrentvideoid'))
+      .map((k) => k.replace('concurrentvideoid', ''));
 
     const uniq = [...new Set(keys)].sort((a, b) => Number(a) - Number(b));
 
-    return uniq.map(i => ({
+    return uniq.map((i) => ({
       videoid: meta[`concurrentvideoid${i}`] || '',
       aslid: meta[`concurrentaslid${i}`] || '',
       title: meta[`concurrenttitle${i}`] || '',

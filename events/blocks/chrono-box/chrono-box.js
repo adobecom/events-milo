@@ -1,4 +1,4 @@
-import { readBlockConfig, LIBS, getMetadata, parseMetadataPath } from '../../scripts/utils.js';
+import { readBlockConfig, LIBS, getMetadata } from '../../scripts/utils.js';
 
 function buildScheduleDoubleLinkedList(entries) {
   if (!entries.length) return null;
@@ -32,37 +32,71 @@ function getSchedule(scheduleId) {
   return thisSchedule;
 }
 
-function conditionsPreCheck(schedule) {
-  const conditions = {};
-  const allMetadataConditionSchedules = schedule.filter((entry) => entry.conditions?.some((condition) => condition.source === 'metadata'));
-  allMetadataConditionSchedules.forEach((s) => {
-    s.conditions.forEach((condition) => {
-      const { key } = condition;
-      const metadata = parseMetadataPath(key);
-      if (metadata) {
-        conditions[key] = metadata;
-      }
-    });
-  });
-  return conditions;
+async function initPlugins(schedule) {
+  const SUPPORTED_PLUGINS = ['mobile-rider', 'metadata'];
+  const pluginsNeeded = SUPPORTED_PLUGINS.filter((plugin) => schedule.some((item) => item[plugin]));
+  const plugins = await Promise.all(pluginsNeeded.map((plugin) => import(`../../features/timing-framework/plugins/${plugin}/plugin.js`)));
+
+  // Get or create a global tabId that's shared across all chrono-boxes on this page
+  // This ensures that multiple chrono-boxes on the same page use the same tabId,
+  // allowing their plugin stores to communicate via BroadcastChannel correctly
+  let tabId = sessionStorage.getItem('chrono-box-tab-id');
+  if (!tabId) {
+    tabId = crypto.randomUUID();
+    sessionStorage.setItem('chrono-box-tab-id', tabId);
+  }
+
+  const pluginsModules = new Map();
+  await Promise.all(plugins.map(async (plugin, index) => {
+    const pluginName = pluginsNeeded[index].replace('-', '');
+    pluginsModules.set(pluginName, await plugin.default(schedule));
+  }));
+
+  return { plugins: pluginsModules, tabId };
 }
 
-function setScheduleToScheduleWorker(schedule) {
+function setScheduleToScheduleWorker(schedule, plugins, tabId) {
   const scheduleLinkedList = buildScheduleDoubleLinkedList(schedule);
-  const worker = new Worker('/events/features/timing-framework/worker.js');
-  const conditions = conditionsPreCheck(schedule);
 
-  worker.postMessage({
-    message: 'schedule',
+  // Add error handling for worker creation
+  let worker;
+  try {
+    worker = new Worker('/events/features/timing-framework/worker.js', { type: 'module' });
+  } catch (error) {
+    window.lana?.log(`Error creating worker: ${JSON.stringify(error)}`);
+    throw error;
+  }
+
+  // Get testing data from URL params
+  const params = new URLSearchParams(document.location.search);
+  const testTiming = params.get('timing');
+  const testing = testTiming ? { toggleTime: testTiming } : null;
+
+  // Convert plugin instances to their serializable state
+  const pluginStates = Object.fromEntries(
+    Array.from(plugins.entries())
+      .map(([n, p]) => [n, { type: n, data: p.getAll ? p.getAll() : p }]),
+  );
+
+  const messageData = {
     schedule: scheduleLinkedList,
-    conditions,
-  });
+    plugins: pluginStates,
+    testing,
+    tabId,
+  };
+
+  try {
+    worker.postMessage(messageData);
+  } catch (error) {
+    window.lana?.log(`Error posting message to worker: ${JSON.stringify(error)}`);
+    throw error;
+  }
 
   return worker;
 }
 
 export default async function init(el) {
-  const [{ default: loadFragment }, { createTag }] = await Promise.all([
+  const [{ default: loadFragment }, { createTag, getLocale, getConfig }] = await Promise.all([
     import(`${LIBS}/blocks/fragment/fragment.js`),
     import(`${LIBS}/utils/utils.js`),
     import(`${LIBS}/features/spectrum-web-components/dist/theme.js`),
@@ -90,20 +124,16 @@ export default async function init(el) {
 
   el.innerHTML = '';
 
-  const worker = setScheduleToScheduleWorker(thisSchedule);
-
-  el.addEventListener('worker-message', (e) => {
-    const { schedule, conditions } = e.detail.data;
-
-    worker.postMessage({
-      schedule,
-      conditions,
-    });
-  });
+  const pluginsOutputs = await initPlugins(thisSchedule);
+  const worker = setScheduleToScheduleWorker(
+    thisSchedule,
+    pluginsOutputs.plugins,
+    pluginsOutputs.tabId,
+  );
 
   worker.onmessage = (event) => {
     const { pathToFragment } = event.data;
-
+    const { prefix } = getLocale(getConfig().locales);
     el.style.height = `${el.clientHeight}px`;
 
     // load sp progress circle
@@ -113,13 +143,25 @@ export default async function init(el) {
     el.classList.add('loading');
     el.append(spTheme);
 
-    const a = createTag('a', { href: pathToFragment }, '', { parent: el });
+    const a = createTag('a', { href: `${prefix}${pathToFragment}` }, '', { parent: el });
 
     loadFragment(a).then(() => {
       // set el height to current height
       spTheme.remove();
       el.removeAttribute('style');
       el.classList.remove('loading');
+    }).catch((error) => {
+      // Handle fragment loading errors
+      window.lana?.log(`Error loading fragment ${pathToFragment}: ${JSON.stringify(error)}`);
+
+      // Remove loading state
+      spTheme.remove();
+      el.removeAttribute('style');
+      el.classList.remove('loading');
+
+      // Show error state to user
+      el.innerHTML = '<div class="error-message">Unable to load content. Please refresh the page.</div>';
+      el.classList.add('error');
     });
   };
 }
