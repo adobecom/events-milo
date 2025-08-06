@@ -117,6 +117,11 @@ class TimingWorker {
   async getAuthoritativeTime() {
     const now = Date.now();
 
+    // If in testing mode, skip API calls and use local time
+    if (this.testingManager.isTesting()) {
+      return now;
+    }
+
     // If we have a valid cached API time, use it
     if (this.cachedApiTime && (now - this.cachedApiTime.timestamp) < this.cacheTtl) {
       const timeSinceCache = now - this.cachedApiTime.timestamp;
