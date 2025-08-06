@@ -1,4 +1,4 @@
-import { ICON_REG, META_REG } from './constances.js';
+import { ICON_REG, META_REG, SERIES_404_MAP_PATH } from './constances.js';
 import BlockMediator from './deps/block-mediator.min.js';
 import { getEvent } from './esp-controller.js';
 import {
@@ -148,7 +148,6 @@ function createTag(tag, attributes, html, options = {}) {
 }
 
 export async function updateRSVPButtonState(rsvpBtn, miloLibs) {
-  const rsvpData = BlockMediator.get('rsvpData');
   const eventInfo = await getEvent(getMetadata('event-id'));
   let eventFull = false;
   let waitlistEnabled = getMetadata('allow-wait-listing') === 'true';
@@ -160,6 +159,7 @@ export async function updateRSVPButtonState(rsvpBtn, miloLibs) {
     waitlistEnabled = allowWaitlisting;
   }
 
+  const rsvpData = BlockMediator.get('rsvpData');
   if (!rsvpData) {
     if (eventFull) {
       if (waitlistEnabled) {
@@ -207,8 +207,49 @@ async function handleRSVPBtnBasedOnProfile(rsvpBtn, miloLibs, profile) {
   }
 }
 
+async function getSeries404(seriesSegmentInUrl) {
+  const series404MapResp = await fetch(SERIES_404_MAP_PATH)
+
+  if (series404MapResp.ok) {
+    const series404Map = await series404MapResp.json();
+    const { data } = series404Map;
+    const series404 = data.find((s) => s['series-name'] === seriesSegmentInUrl);
+
+    if (series404) {
+      return {
+        origin: series404.origin,
+        path: series404.path,
+      };
+    }
+
+    const default404 = data.find((s) => s['series-name'] === 'default');
+
+    if (default404) {
+      return {
+        origin: default404.origin,
+        path: default404.path,
+      };
+    }
+  }
+
+  return {
+    origin: '',
+    path: '/error-pages/404',
+  };
+}
+
 export async function validatePageAndRedirect(miloLibs) {
-  const { getConfig, loadLana } = await import(`${miloLibs}/utils/utils.js`);
+  document.body.classList.add('validating-page');
+  const pathSegments = window.location.pathname.split('/');
+  const eventsIndex = pathSegments.findIndex((segment) => segment === 'events');
+  const seriesSegmentInUrl = eventsIndex !== -1 && eventsIndex + 1 < pathSegments.length
+    ? pathSegments[eventsIndex + 1]
+    : null;
+  const [series404, { getConfig, loadLana, getLocale }] = await Promise.all([
+    getSeries404(seriesSegmentInUrl),
+    import(`${miloLibs}/utils/utils.js`),
+  ]);
+
   const env = getEventServiceEnv();
   const pagePublished = getMetadata('published') === 'true' || getMetadata('status') === 'live';
   const invalidStagePage = env === 'stage' && window.location.hostname === 'www.stage.adobe.com' && !getMetadata('event-id');
@@ -216,25 +257,28 @@ export async function validatePageAndRedirect(miloLibs) {
 
   const organicHitUnpublishedOnProd = env === 'prod' && !pagePublished && !isPreviewMode;
   const purposefulHitOnProdPreview = env === 'prod' && isPreviewMode;
+  const { prefix } = getLocale(getConfig().locales);
+  const error404Location = `${series404.origin || ''}${prefix}${series404.path}`;
 
   if (organicHitUnpublishedOnProd || invalidStagePage) {
     await loadLana({ clientId: 'events-milo' });
     await window.lana?.log(`Error: 404 page hit on ${env}: ${window.location.href}`);
-    window.location.replace('/404');
+
+    window.location.replace(error404Location);
+    return;
   }
 
   if (purposefulHitOnProdPreview) {
-    document.body.style.display = 'none';
     BlockMediator.subscribe('imsProfile', ({ newValue }) => {
       if (newValue?.noProfile || newValue?.account_type === 'guest') {
         signIn(getSusiOptions(getConfig()));
       } else if (!newValue.email?.toLowerCase().endsWith('@adobe.com')) {
-        window.location.replace('/404');
-      } else {
-        document.body.removeAttribute('style');
+        window.location.replace(error404Location);
       }
     });
   }
+
+  document.body.classList.remove('validating-page');
 }
 
 function autoUpdateLinks(scope, miloLibs) {
