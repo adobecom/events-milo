@@ -1,6 +1,9 @@
+/* eslint-disable no-underscore-dangle */
 import { expect } from '@esm-bundle/chai';
 import sinon from 'sinon';
 import init from '../../../../events/blocks/mobile-rider/mobile-rider.js';
+
+/* global globalThis */
 
 const defaultHtml = `
 <div class="mobile-rider">
@@ -36,33 +39,11 @@ const defaultHtml = `
 `;
 
 describe('Mobile Rider Module', () => {
-  let createTagStub;
-  let getConfigStub;
   let mockFetch;
   let mockLana;
   let riderInstance = null;
 
   beforeEach(() => {
-    // Setup stubs
-    createTagStub = sinon.stub().callsFake((tag, attrs, text) => {
-      const element = document.createElement(tag);
-      if (attrs) {
-        Object.keys(attrs).forEach((key) => {
-          if (key === 'class') {
-            element.className = attrs[key];
-          } else {
-            element.setAttribute(key, attrs[key]);
-          }
-        });
-      }
-      if (text) {
-        element.textContent = text;
-      }
-      return element;
-    });
-
-    getConfigStub = sinon.stub().resolves({ env: 'test' });
-
     // Mock fetch
     mockFetch = sinon.stub(globalThis, 'fetch');
     mockFetch.resolves({
@@ -105,7 +86,9 @@ describe('Mobile Rider Module', () => {
       expect(riderInstance.el).to.equal(el);
 
       // Wait for async operations
-      await new Promise((resolve) => setTimeout(resolve, 50));
+      await new Promise((resolve) => {
+        setTimeout(resolve, 50);
+      });
 
       const player = el.querySelector('.mobile-rider-player');
       expect(player).to.not.be.null;
@@ -136,7 +119,9 @@ describe('Mobile Rider Module', () => {
 
       // Initialize and capture the instance
       riderInstance = init(el);
-      await new Promise((resolve) => setTimeout(resolve, 100));
+      await new Promise((resolve) => {
+        setTimeout(resolve, 100);
+      });
 
       // Ensure we have a valid instance
       expect(riderInstance).to.not.be.null;
@@ -426,17 +411,19 @@ describe('Mobile Rider Module', () => {
 
       it('should use correct URL based on environment', async () => {
         // Test dev environment
-        const getConfigStub = sinon.stub().resolves({ env: 'dev' });
-        riderInstance.getMediaStatus = async function (id) {
-          const env = (await getConfigStub()).env || 'prod';
+        const configStub = sinon.stub().resolves({ env: 'dev' });
+        riderInstance.getMediaStatus = async function getMediaStatus(id) {
+          const env = (await configStub()).env || 'prod';
           const isLowerEnv = env !== 'prod';
-          const baseUrl = isLowerEnv ? 'https://overlay-admin-dev.mobilerider.com' : 'https://overlay-admin.mobilerider.com';
+          const baseUrl = isLowerEnv
+            ? 'https://overlay-admin-dev.mobilerider.com'
+            : 'https://overlay-admin.mobilerider.com';
           const res = await fetch(`${baseUrl}/api/media-status?ids=${id}`);
           if (!res.ok) {
             const err = await res.json();
             throw new Error(err.message || 'Failed to get media status');
           }
-          return await res.json();
+          return res.json();
         };
 
         await riderInstance.getMediaStatus('test-video');
@@ -693,7 +680,9 @@ describe('Mobile Rider Module', () => {
       const instance = init(el);
 
       // Wait for async initialization
-      await new Promise((resolve) => setTimeout(resolve, 100));
+      await new Promise((resolve) => {
+        setTimeout(resolve, 100);
+      });
 
       expect(instance.cfg.concurrentenabled).to.be.true;
       expect(instance.cfg.concurrentVideos).to.have.lengthOf(2);
@@ -734,7 +723,9 @@ describe('Mobile Rider Module', () => {
       document.body.innerHTML = concurrentHtml;
       const el = document.querySelector('.mobile-rider');
       concurrentInstance = init(el);
-      await new Promise((resolve) => setTimeout(resolve, 100));
+      await new Promise((resolve) => {
+        setTimeout(resolve, 100);
+      });
     });
 
     it('should maintain mainID reference and use it for status checks', async () => {
@@ -776,8 +767,8 @@ describe('Mobile Rider Module', () => {
       };
       concurrentInstance.store = mockStore;
 
-      concurrentInstance.getMediaStatus = sinon.stub().resolves({ active: [], // Status changed to false
-      });
+      // Status changed to false
+      concurrentInstance.getMediaStatus = sinon.stub().resolves({ active: [] });
 
       const video = { videoid: 'video1' };
       await concurrentInstance.checkLive(video);
