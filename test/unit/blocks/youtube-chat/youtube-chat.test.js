@@ -28,10 +28,10 @@ describe('YouTube Chat Module', () => {
       it('should return correct autoplay state', () => {
         youtubeChat.config = { autoplay: 'true' };
         expect(youtubeChat.isAutoplayEnabled()).to.be.true;
-        
+
         youtubeChat.config = { autoplay: 'false' };
         expect(youtubeChat.isAutoplayEnabled()).to.be.false;
-        
+
         youtubeChat.config = {};
         expect(youtubeChat.isAutoplayEnabled()).to.be.false;
       });
@@ -46,7 +46,7 @@ describe('YouTube Chat Module', () => {
         youtubeChat.config = {
           'show-controls': 'true',
           'show-player-title-actions': 'true',
-          'show-suggestions-after-video-ends': 'true'
+          'show-suggestions-after-video-ends': 'true',
         };
 
         const params = youtubeChat.buildUrlParams();
@@ -57,9 +57,9 @@ describe('YouTube Chat Module', () => {
         youtubeChat.config = {
           'show-controls': 'false',
           'show-player-title-actions': 'false',
-          'show-suggestions-after-video-ends': 'false'
+          'show-suggestions-after-video-ends': 'false',
         };
-        
+
         const emptyParams = youtubeChat.buildUrlParams();
         expect(emptyParams).to.equal('');
       });
@@ -73,7 +73,7 @@ describe('YouTube Chat Module', () => {
       it('should build embed URL with correct parameters', () => {
         youtubeChat.config = {
           'show-controls': 'true',
-          'show-player-title-actions': 'true'
+          'show-player-title-actions': 'true',
         };
 
         const autoplayUrl = youtubeChat.buildEmbedUrl(true);
@@ -99,9 +99,9 @@ describe('YouTube Chat Module', () => {
       it('should create chat section with correct placeholder', () => {
         youtubeChat.config = { autoplay: 'true' };
         const chatSection = youtubeChat.buildChatSection();
-        
+
         expect(chatSection.classList.contains('youtube-chat-container')).to.be.true;
-        
+
         const placeholder = chatSection.querySelector('.youtube-chat-placeholder');
         expect(placeholder.textContent).to.equal('Loading chat...');
 
@@ -121,7 +121,7 @@ describe('YouTube Chat Module', () => {
 
       it('should load chat iframe when container exists', () => {
         youtubeChat.loadChat();
-        
+
         const iframe = youtubeChat.chatContainer.querySelector('iframe.youtube-chat');
         expect(iframe).to.not.be.null;
         expect(iframe.src).to.include('youtube.com/live_chat');
@@ -169,30 +169,30 @@ describe('YouTube Chat Module', () => {
     describe('preconnect', () => {
       it('should add preconnect links for YouTube domains', () => {
         const originalHead = document.head.innerHTML;
-        
+
         youtubeChat.preconnect();
-        
+
         const links = document.querySelectorAll('link[rel="preconnect"]');
         expect(links.length).to.be.greaterThan(0);
-        
-        const hrefs = Array.from(links).map(link => link.href);
+
+        const hrefs = Array.from(links).map((link) => link.href);
         expect(hrefs).to.include('https://www.youtube-nocookie.com/');
         expect(hrefs).to.include('https://www.youtube.com/');
-        
+
         document.head.innerHTML = originalHead;
       });
 
       it('should only add preconnect links once', () => {
         const originalHead = document.head.innerHTML;
-        
+
         youtubeChat.preconnect();
         const firstCount = document.querySelectorAll('link[rel="preconnect"]').length;
-        
+
         youtubeChat.preconnect();
         const secondCount = document.querySelectorAll('link[rel="preconnect"]').length;
-        
+
         expect(firstCount).to.equal(secondCount);
-        
+
         document.head.innerHTML = originalHead;
       });
     });
@@ -212,7 +212,7 @@ describe('YouTube Chat Module', () => {
         youtubeChat.config = { videotitle: 'Test Video' };
         const src = 'https://www.youtube-nocookie.com/embed/test';
         const iframe = youtubeChat.createVideoIframe(src);
-        
+
         expect(iframe.classList.contains('youtube-video')).to.be.true;
         expect(iframe.src).to.equal(src);
         expect(iframe.title).to.equal('Test Video');
@@ -295,16 +295,16 @@ describe('YouTube Chat Module', () => {
 
     it('should export init function and handle initialization', async () => {
       const { default: init, YouTubeChat } = await import('../../../../events/blocks/youtube-chat/youtube-chat.js');
-      
+
       expect(typeof init).to.equal('function');
       expect(typeof YouTubeChat).to.equal('function');
-      
+
       const youtubeChat = new YouTubeChat();
       expect(youtubeChat).to.be.instanceOf(YouTubeChat);
-      
+
       const result = init(block);
       expect(result).to.be.instanceOf(Promise);
-      
+
       try {
         await result;
       } catch (error) {
