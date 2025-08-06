@@ -49,7 +49,7 @@ class Drawer {
 
   async setActive(el, data) {
     this.itemsEl?.querySelectorAll('.drawer-item.current')
-      .forEach((i) => i.classList.remove('current'));
+      .forEach(i => i.classList.remove('current'));
     el.classList.add('current');
     try {
       await this.onClick(el, data);
@@ -60,10 +60,9 @@ class Drawer {
 
   setActiveById(id) {
     const el = this.itemsEl?.querySelector(`[data-id="${id}"]`);
-    if (el) this.setActive(el, this.items.find((i) => i.videoid === id));
+    if (el) this.setActive(el, this.items.find(i => i.videoid === id));
   }
 
-  // eslint-disable-next-line class-methods-use-this
   defaultClick() {
     window.lana?.log('Drawer Click ignored — no handler set.');
   }
@@ -73,7 +72,6 @@ export default function initDrawers(root, cfg) {
   try {
     return new Drawer(root, cfg);
   } catch (e) {
-    // eslint-disable-next-line no-console
     console.error('Drawer init failed:', e);
     return null;
   }

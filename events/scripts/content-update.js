@@ -208,7 +208,7 @@ async function handleRSVPBtnBasedOnProfile(rsvpBtn, miloLibs, profile) {
 }
 
 async function getSeries404(seriesSegmentInUrl) {
-  const series404MapResp = await fetch(SERIES_404_MAP_PATH);
+  const series404MapResp = await fetch(SERIES_404_MAP_PATH)
 
   if (series404MapResp.ok) {
     const series404Map = await series404MapResp.json();
