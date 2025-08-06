@@ -29,22 +29,19 @@ const CONFIG = {
 let scriptPromise = null;
 
 async function loadScript() {
-  if (window.mobilerider) return undefined;
+  if (window.mobilerider) return;
   if (scriptPromise) return scriptPromise;
 
-  const promise = new Promise((res) => {
-    getConfig().then((config) => {
-      const env = config.env || 'prod';
-      const isProd = env === 'prod';
-      const src = isProd ? CONFIG.SCRIPTS.PROD_URL : CONFIG.SCRIPTS.DEV_URL;
-      const s = createTag('script', { src });
-      s.onload = res;
-      document.head.appendChild(s);
-    });
+  scriptPromise = new Promise(async (res) => {
+    const env = (await getConfig()).env || 'prod';
+    const isProd = env === 'prod';
+    const src = isProd ? CONFIG.SCRIPTS.PROD_URL : CONFIG.SCRIPTS.DEV_URL;
+    const s = createTag('script', { src });
+    s.onload = res;
+    document.head.appendChild(s);
   });
 
-  scriptPromise = promise;
-  return promise;
+  return scriptPromise;
 }
 
 class MobileRider {
@@ -60,11 +57,18 @@ class MobileRider {
 
   async init() {
     try {
-      const scriptPromiseResult = loadScript();
-      // TODO: Implement store functionality when plugin is available
-      const storePromise = null;
-
-      await scriptPromiseResult;
+      const scriptPromise = loadScript();
+      const storePromise = this.el.closest('.chrono-box')
+        ? import('../../features/timing-framework/plugins/mobile-rider/plugin.js')
+            .then(({ mobileRiderStore }) => {
+              this.store = mobileRiderStore;
+            })
+            .catch((e) => {
+              window.lana?.log(`Failed to import mobileRiderStore: ${e.message}`);
+            })
+        : null;
+    
+      await scriptPromise;
       if (storePromise) await storePromise;
       this.cfg = this.parseCfg();
       const { container, wrapper } = this.createDOM();
@@ -94,8 +98,7 @@ class MobileRider {
 
   async loadPlayer(vid, asl) {
     try {
-      const skin = this.cfg.skinid;
-      await this.injectPlayer(vid, skin, asl);
+      this.injectPlayer(vid, this.cfg.skinid, asl);
     } catch (e) {
       window.lana?.log(`Failed to initialize the player: ${e.message}`);
     }
@@ -103,203 +106,240 @@ class MobileRider {
 
   extractPlayerOverrides() {
     const overrides = {};
-    if (this.cfg.autoplay !== undefined) {
-      overrides.autoplay = this.cfg.autoplay === 'true';
-    }
-    if (this.cfg.controls !== undefined) {
-      overrides.controls = this.cfg.controls === 'true';
-    }
-    if (this.cfg.muted !== undefined) {
-      overrides.muted = this.cfg.muted === 'true';
-    }
+    Object.keys(CONFIG.PLAYER.DEFAULT_OPTIONS).forEach((key) => {
+      if (key in this.cfg) {
+        const val = this.cfg[key];
+        overrides[key] = String(val).toLowerCase() === 'true';
+      }
+    });
     return overrides;
   }
 
   getPlayerOptions() {
-    return { ...CONFIG.PLAYER.DEFAULT_OPTIONS, ...this.extractPlayerOverrides() };
+    return {
+      ...CONFIG.PLAYER.DEFAULT_OPTIONS,
+      ...this.extractPlayerOverrides(),
+    };
   }
 
   injectPlayer(vid, skin, asl = null) {
-    const container = createTag('div', {
-      class: 'mobile-rider-container',
-      'data-videoid': vid,
-      'data-skinid': skin,
-      'data-aslid': asl,
-    });
+    if (!this.wrap) return;
+
+    let con = this.wrap.querySelector('.mobile-rider-container');
+    if (!con) {
+      con = createTag('div', {
+        class: 'mobile-rider-container is-hidden',
+        id: CONFIG.PLAYER.CONTAINER_ID,
+        'data-videoid': vid,
+        'data-skinid': skin,
+        'data-aslid': asl,
+      });
+      this.wrap.appendChild(con);
+    } else {
+      Object.assign(con.dataset, { videoid: vid, skinid: skin, aslid: asl });
+    }
+
+    window.__mr_player?.dispose();
+    con.querySelector(`#${CONFIG.PLAYER.VIDEO_ID}`)?.remove();
 
     const video = createTag('video', {
       id: CONFIG.PLAYER.VIDEO_ID,
       class: CONFIG.PLAYER.VIDEO_CLASS,
+      controls: true,
+    });
+    con.appendChild(video);
+
+    if (!window.mobilerider) return;
+
+    window.mobilerider.embed(video.id, vid, skin, {
+      ...this.getPlayerOptions(),
+      analytics: { provider: CONFIG.ANALYTICS.PROVIDER },
+      identifier1: vid,
+      identifier2: asl,
+      sessionId: vid,
     });
 
-    container.append(video);
-    this.wrap.append(container);
-
-    const options = this.getPlayerOptions();
-    window.mobilerider.embed(container, options);
-
-    // Handle stream end for concurrent streams
-    if (this.mainID && this.store) {
-      const mainExists = this.store.get(this.mainID);
-      const vidExists = this.store.get(vid);
-      const shouldCallOnStreamEnd = mainExists || vidExists;
-      if (shouldCallOnStreamEnd) {
-        this.onStreamEnd(vid);
-      }
+    if (asl) this.initASL();
+    // Check store existence first, then check mainID or vid in store
+    if (this.store) {
+        const key = this.mainID && this.store.get(this.mainID) !== undefined
+        ? this.mainID
+        : this.store.get(vid) !== undefined
+          ? vid
+          : null;
+      
+      if (key) this.onStreamEnd(vid);
     }
+
+    con.classList.remove('is-hidden');
   }
 
   onStreamEnd(vid) {
-    // eslint-disable-next-line no-underscore-dangle
     window.__mr_player?.off('streamend');
-    // eslint-disable-next-line no-underscore-dangle
     window.__mr_player?.on('streamend', () => {
-      this.store?.set(vid, false);
+      this.setStatus(vid, false);
+      this.dispose();
     });
   }
 
-  // eslint-disable-next-line class-methods-use-this
   dispose() {
-    // eslint-disable-next-line no-underscore-dangle
     window.__mr_player?.dispose();
-    // eslint-disable-next-line no-underscore-dangle
     window.__mr_player = null;
-    // eslint-disable-next-line no-underscore-dangle
     window.__mr_stream_published = null;
   }
 
-  // eslint-disable-next-line class-methods-use-this
   loadDrawerCSS() {
-    const link = createTag('link', {
-      rel: 'stylesheet',
-      href: '/events/blocks/mobile-rider/drawer.css',
-    });
-    document.head.append(link);
+    // Check if drawer CSS is already loaded
+    if (document.querySelector('link[href*="drawer.css"]')) return;
+    
+    // Load drawer CSS dynamically
+    const link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = '/events/blocks/mobile-rider/drawer.css';
+    document.head.appendChild(link);
   }
 
-  // eslint-disable-next-line class-methods-use-this
   drawerHeading() {
+    const title = this.cfg.drawertitle || 'Now Playing';
+    const subtitle = this.cfg.drawersubtitle || 'Select a live session';
+    
     const header = createTag('div', { class: 'now-playing-header' });
     header.innerHTML = `
-      <h3>Now Playing</h3>
-      <p>Select a live session</p>
+      <p class="now-playing-title">${title}</p>
+      <span class="now-playing-subtitle">${subtitle}</span>
     `;
     return header;
   }
 
   async initDrawer(videos) {
     try {
+      // Load drawer CSS dynamically
       this.loadDrawerCSS();
-      const drawerRoot = createTag('div', { class: 'drawer-root' });
-      this.root.append(drawerRoot);
+      const { default: createDrawer } = await import('./drawer.js');
 
       const renderItem = (v) => {
-        const item = createTag('div', { class: 'drawer-item' });
-        item.innerHTML = `
-          <div class="item-thumbnail">
-            <img src="${v.thumbnail || ''}" alt="${v.title || ''}" />
-          </div>
-          <div class="item-content">
-            <h4>${v.title || ''}</h4>
-            <p>${v.description || ''}</p>
-          </div>
-        `;
+        const item = createTag('div', {
+          class: 'drawer-item',
+          'data-id': v.videoid,
+          role: 'button',
+          tabindex: '0',
+        });
+
+        if (v.thumbnail) {
+          const thumbImg = createTag('div', { class: 'drawer-item-thumbnail' });
+          thumbImg.appendChild(createTag('img', { src: v.thumbnail, alt: v.title || 'video thumbnail' }));
+          item.appendChild(thumbImg);
+        }
+
+        const vidCon = createTag('div', { class: 'drawer-item-content' });
+        if (v.title) vidCon.appendChild(createTag('div', { class: 'drawer-item-title' }, v.title));
+        if (v.description) vidCon.appendChild(createTag('div', { class: 'drawer-item-description' }, v.description));
+        item.appendChild(vidCon);
+
         return item;
       };
 
-      const { initDrawers } = await import('./drawer.js');
-      initDrawers(drawerRoot, {
+      const drawer = createDrawer(this.root, {
         items: videos,
+        ariaLabel: 'Videos',
         renderItem,
-        onItemClick: this.onDrawerClick.bind(this),
-        ariaLabel: 'Live Streams',
+        onItemClick: (_, v) => this.onDrawerClick(v),
       });
+
+      const itemsList = drawer?.itemsEl;
+      if (itemsList?.firstChild) {
+        itemsList.insertBefore(this.drawerHeading(), itemsList.firstChild);
+      }
     } catch (e) {
-      window.lana?.log(`Drawer init failed: ${e.message}`);
+      window.lana?.log(`Drawer load failed: ${e.message}`);
     }
   }
 
   async onDrawerClick(v) {
     try {
-      const isLive = await this.checkLive(v);
-      if (!isLive) {
-        window.lana?.log(`This stream is not currently live: ${v.videoid}`);
+      if (this.store) {
+        const live = await this.checkLive(v);
+        if (!live) window.lana?.log(`This stream is not currently live: ${v.videoid}`);
       }
-      await this.injectPlayer(v.videoid, v.skinid, v.aslid);
+      this.injectPlayer(v.videoid, this.cfg.skinid, v.aslid);
     } catch (e) {
       window.lana?.log(`Drawer item click error: ${e.message}`);
     }
   }
 
-  // eslint-disable-next-line class-methods-use-this
   async getMediaStatus(id) {
-    const env = (await getConfig()).env || 'prod';
-    const isLowerEnv = env !== 'prod';
-    const baseUrl = isLowerEnv ? CONFIG.API.DEV_URL : CONFIG.API.PROD_URL;
-    const res = await fetch(`${baseUrl}/api/media-status?ids=${id}`);
-    if (!res.ok) {
-      const err = await res.json();
-      throw new Error(err.message || 'Failed to get media status');
+    try {
+      const env = (await getConfig()).env || 'prod';
+      const isLowerEnv = env !== 'prod';
+      const baseUrl = isLowerEnv ? CONFIG.API.DEV_URL : CONFIG.API.PROD_URL;
+      const res = await fetch(`${baseUrl}/api/media-status?ids=${id}`);
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.message || 'Failed to get media status');
+      }
+      return await res.json();
+    } catch (e) {
+      window.lana?.log(`getMediaStatus error: ${e.message}`);
+      throw e;
     }
-    return res.json();
   }
 
   async checkLive(v) {
-    if (!v.videoid) return false;
+    if (!v?.videoid) return false;
     try {
-      // Use mainID if available, otherwise use the video's videoid
-      const idToCheck = this.mainID || v.videoid;
-      const status = await this.getMediaStatus(idToCheck);
-      const isLive = status.active?.includes(v.videoid) || false;
-      this.setStatus(v.videoid, isLive);
-      return isLive;
+      // Use mainID if available, otherwise use the provided video ID
+      const videoIDToCheck = this.mainID || v.videoid;
+      
+      const { active } = await this.getMediaStatus(videoIDToCheck);
+      const isActive = active.includes(v.videoid);
+      
+      // Only update store if status has actually changed
+      this.setStatus(v.videoid, isActive);
+      return isActive;
     } catch (e) {
-      window.lana?.log(`Check live failed: ${e.message}`);
+      window.lana?.log?.(`checkLive failed: ${e.message}`);
       return false;
     }
   }
 
   setStatus(id, live) {
-    if (!this.store || !id) return;
-
-    let key = null;
-    if (this.mainID && this.store.get(this.mainID) !== undefined) {
-      key = this.mainID;
-    } else if (this.store.get(id) !== undefined) {
-      key = id;
+    if (!id || !this.store) return;
+  
+    try {
+      let storeKey = null;
+  
+      if (this.mainID && this.store.get(this.mainID) !== undefined) {
+        storeKey = this.mainID;
+      } else if (this.store.get(id) !== undefined) {
+        storeKey = id;
+      }
+  
+      if (!storeKey) return;
+  
+      const currentStatus = this.store.get(storeKey);
+      if (currentStatus !== live) {
+        this.store.set(storeKey, live);
+        window.lana?.log?.(`Status updated for ${storeKey}: ${live}`);
+      }
+    } catch (e) {
+      window.lana?.log?.(`setStatus error for ${this.mainID || id}: ${e.message}`);
     }
-
-    if (key && this.store.get(key) !== live) {
-      this.store.set(key, live);
-    }
-  }
+  }  
 
   initASL() {
-    const container = this.wrap?.querySelector('.asl-container');
-    if (!container) return;
+    const con = this.wrap?.querySelector('.mobile-rider-container');
+    if (!con) return;
 
-    const button = container.querySelector(`#${CONFIG.ASL.BUTTON_ID}`);
-    if (button) {
-      this.setupASL(button, container);
-    }
+    let attempts = 0;
+    const check = () => {
+      const btn = con.querySelector(`#${CONFIG.ASL.BUTTON_ID}`);
+      if (btn) return this.setupASL(btn, con);
+      if (++attempts < CONFIG.ASL.MAX_CHECKS) setTimeout(check, CONFIG.ASL.CHECK_INTERVAL);
+    };
+    check();
   }
 
   setupASL(btn, con) {
-    const check = () => {
-      if (con.classList.contains(CONFIG.ASL.TOGGLE_CLASS)) {
-        this.initASL();
-      }
-    };
-
-    let checkCount = 0;
-    const interval = setInterval(() => {
-      checkCount += 1;
-      check();
-      if (checkCount >= CONFIG.ASL.MAX_CHECKS) {
-        clearInterval(interval);
-      }
-    }, CONFIG.ASL.CHECK_INTERVAL);
-
     btn.addEventListener('click', () => {
       if (!con.classList.contains(CONFIG.ASL.TOGGLE_CLASS)) {
         con.classList.add(CONFIG.ASL.TOGGLE_CLASS);
@@ -309,59 +349,59 @@ class MobileRider {
   }
 
   createDOM() {
-    const container = createTag('div', { class: 'mobile-rider-player' });
-    const wrapper = createTag('div', { class: 'video-wrapper' });
-    container.append(wrapper);
-    this.el.append(container);
-    return { container, wrapper };
+    let root = this.el.querySelector('.mobile-rider-player');
+    if (!root) {
+      root = createTag('div', { class: 'mobile-rider-player' });
+      this.el.appendChild(root);
+    }
+
+    let wrap = root.querySelector('.video-wrapper');
+    if (!wrap) {
+      wrap = createTag('div', { class: 'video-wrapper' });
+      root.appendChild(wrap);
+    }
+
+    return { container: root, wrapper: wrap };
   }
 
   parseCfg() {
     const meta = Object.fromEntries(
-      [...this.el.querySelectorAll(':scope > div > div:first-child')].map((div) => [
+      [...this.el.querySelectorAll(':scope > div > div:first-child')].map(div => [
         div.textContent.trim().toLowerCase().replace(/ /g, '-'),
-        div.nextElementSibling?.textContent?.trim() || '',
-      ]),
+        div.nextElementSibling?.textContent?.trim() || ''
+      ])
     );
 
-    const cfg = {
-      videoid: meta['video-id'],
-      skinid: meta['skin-id'],
-      autoplay: meta.autoplay,
-      controls: meta.controls,
-      muted: meta.muted,
-      aslid: meta['asl-id'],
-      concurrentenabled: meta.concurrentenabled === 'true',
-    };
-
-    if (cfg.concurrentenabled) {
-      cfg.concurrentVideos = this.parseConcurrent(meta);
+    if (meta.concurrentenabled === 'true') {
+      meta.concurrentenabled = true;
+      meta.concurrentVideos = this.parseConcurrent(meta);
     }
 
-    return cfg;
+    return meta;
   }
 
-  // eslint-disable-next-line class-methods-use-this
   parseConcurrent(meta) {
-    const videos = [];
-    const videoIds = Object.keys(meta).filter((key) => key.startsWith('concurrentvideoid'));
+    const keys = Object.keys(meta)
+      .filter(k => k.startsWith('concurrentvideoid'))
+      .map(k => k.replace('concurrentvideoid', ''));
 
-    videoIds.forEach((key, index) => {
-      const videoId = meta[key];
-      const titleKey = `concurrenttitle${index + 1}`;
-      const title = meta[titleKey] || '';
+    const uniq = [...new Set(keys)].sort((a, b) => Number(a) - Number(b));
 
-      videos.push({
-        videoid: videoId,
-        title,
-        skinid: meta['skin-id'],
-      });
-    });
-
-    return videos;
+    return uniq.map(i => ({
+      videoid: meta[`concurrentvideoid${i}`] || '',
+      aslid: meta[`concurrentaslid${i}`] || '',
+      title: meta[`concurrenttitle${i}`] || '',
+      description: meta[`concurrentdescription${i}`] || '',
+      thumbnail: meta[`concurrentthumbnail${i}`] || '',
+    }));
   }
 }
 
 export default function init(el) {
-  return new MobileRider(el);
+  try {
+    return new MobileRider(el);
+  } catch (e) {
+    window.lana?.log(`Mobile Rider init failed: ${e.message}`);
+    return null;
+  }
 }
