@@ -13,7 +13,6 @@ async function getCurrentTimeFromAPI() {
     const data = await response.json();
     return new Date(data.datetime).getTime();
   } catch (error) {
-    // eslint-disable-next-line no-console
     console.error('Error fetching time from API:', error);
     return null;
   }
@@ -106,7 +105,6 @@ async function validateTime(currentTime) {
   const diff = apiCurrentTime - currentTime;
 
   if (diff > 10000) {
-    // eslint-disable-next-line no-alert
     window.alert('Sorry. Your local time is off by more than 10 seconds. Please check your system clock.');
     return false;
   }
