@@ -208,7 +208,7 @@ async function handleRSVPBtnBasedOnProfile(rsvpBtn, miloLibs, profile) {
 }
 
 async function getSeries404(seriesSegmentInUrl) {
-  const series404MapResp = await fetch(SERIES_404_MAP_PATH)
+  const series404MapResp = await fetch(SERIES_404_MAP_PATH);
 
   if (series404MapResp.ok) {
     const series404Map = await series404MapResp.json();
@@ -328,29 +328,6 @@ function autoUpdateLinks(scope, miloLibs) {
     },
   };
 
-  const templateLoadCallbacks = {
-    webinar: (a, templateId) => {
-      a.href = templateId;
-    },
-    inperson: (a, templateId) => {
-      const params = new URLSearchParams(document.location.search);
-      const testTiming = params.get('timing');
-      let timeSuffix = '';
-
-      if (testTiming) {
-        timeSuffix = +testTiming > +getMetadata('local-end-time-millis') ? '-post' : '-pre';
-      } else {
-        const currentDate = new Date();
-        const currentTimestamp = currentDate.getTime();
-        timeSuffix = currentTimestamp > +getMetadata('local-end-time-millis') ? '-post' : '-pre';
-      }
-
-      a.href = `${templateId}${timeSuffix}`;
-      const timingClass = `timing${timeSuffix}-event`;
-      document.body.classList.add(timingClass);
-    },
-  };
-
   scope.querySelectorAll('a[href*="#"]').forEach(async (a) => {
     try {
       const url = new URL(a.href);
@@ -386,12 +363,7 @@ function autoUpdateLinks(scope, miloLibs) {
         }
 
         if (templateId) {
-          const eventType = getMetadata('event-type');
-          if (eventType && templateLoadCallbacks[eventType.toLowerCase()]) {
-            templateLoadCallbacks[eventType.toLowerCase()](a, templateId);
-          } else {
-            window.lana?.log(`Error: Failed to find template ID for event ${getMetadata('event-id')} due to missing event type`);
-          }
+          a.href = templateId;
         } else {
           window.lana?.log(`Error: Failed to find template ID for event ${getMetadata('event-id')}`);
         }

@@ -49,7 +49,7 @@ class Drawer {
 
   async setActive(el, data) {
     this.itemsEl?.querySelectorAll('.drawer-item.current')
-      .forEach(i => i.classList.remove('current'));
+      .forEach((i) => i.classList.remove('current'));
     el.classList.add('current');
     try {
       await this.onClick(el, data);
@@ -60,7 +60,7 @@ class Drawer {
 
   setActiveById(id) {
     const el = this.itemsEl?.querySelector(`[data-id="${id}"]`);
-    if (el) this.setActive(el, this.items.find(i => i.videoid === id));
+    if (el) this.setActive(el, this.items.find((i) => i.videoid === id));
   }
 
   defaultClick() {
