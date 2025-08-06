@@ -184,13 +184,13 @@ class MobileRider {
     });
   }
 
-  dispose() {
+  static dispose() {
     window.__mr_player?.dispose();
     window.__mr_player = null;
     window.__mr_stream_published = null;
   }
 
-  loadDrawerCSS() {
+  static loadDrawerCSS() {
     // Check if drawer CSS is already loaded
     if (document.querySelector('link[href*="drawer.css"]')) return;
 
@@ -269,7 +269,7 @@ class MobileRider {
     }
   }
 
-  async getMediaStatus(id) {
+  static async getMediaStatus(id) {
     try {
       const env = getConfig().env || 'prod';
       const isLowerEnv = env !== 'prod';
@@ -292,7 +292,7 @@ class MobileRider {
       // Use mainID if available, otherwise use the provided video ID
       const videoIDToCheck = this.mainID || v.videoid;
 
-      const { active } = await this.getMediaStatus(videoIDToCheck);
+      const { active } = await MobileRider.getMediaStatus(videoIDToCheck);
       const isActive = active.includes(v.videoid);
 
       // Only update store if status has actually changed
@@ -380,13 +380,13 @@ class MobileRider {
 
     if (meta.concurrentenabled === 'true') {
       meta.concurrentenabled = true;
-      meta.concurrentVideos = this.parseConcurrent(meta);
+      meta.concurrentVideos = MobileRider.parseConcurrent(meta);
     }
 
     return meta;
   }
 
-  parseConcurrent(meta) {
+  static parseConcurrent(meta) {
     const keys = Object.keys(meta)
       .filter((k) => k.startsWith('concurrentvideoid'))
       .map((k) => k.replace('concurrentvideoid', ''));
