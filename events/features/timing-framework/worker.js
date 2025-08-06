@@ -10,6 +10,18 @@ class TimingWorker {
     this.nextScheduleItem = null;
     this.previouslySentItem = null;
     this.testingManager = new TestingManager();
+
+    // Time management properties - optimized for scale
+    this.cachedApiTime = null;
+    this.lastApiCall = 0;
+    this.apiCallInterval = 300000; // 5 minutes minimum between API calls
+    this.cacheTtl = 600000; // 10 minutes cache TTL (longer for better scaling)
+    this.fallbackToLocal = true;
+    this.consecutiveFailures = 0;
+    this.maxFailures = 3;
+    this.backoffMultiplier = 2;
+    this.maxBackoffInterval = 1800000; // 30 minutes max backoff
+
     this.setupMessageHandler();
   }
 
@@ -64,18 +76,34 @@ class TimingWorker {
         window.lana?.log(`Error setting up mobileRider BroadcastChannel: ${JSON.stringify(error)}`);
       }
     }
+
+    // Set up shared time cache channel
+    try {
+      const timeChannel = new BroadcastChannel('time-cache-store');
+      timeChannel.onmessage = (event) => {
+        const { type, data } = event.data;
+        if (type === 'time-update' && data) {
+          // Update local cache with shared time data
+          this.cachedApiTime = data;
+          this.consecutiveFailures = 0; // Reset failures when we get shared time
+        }
+      };
+      this.channels.set('timeCache', timeChannel);
+    } catch (error) {
+      window.lana?.log(`Error setting up time cache BroadcastChannel: ${JSON.stringify(error)}`);
+    }
   }
 
   /**
    * @returns {number}
-   * @description Returns the current time from the API
+   * @description Returns the current time from the API with caching and rate limiting
    */
   static async getCurrentTimeFromAPI() {
     try {
-      // FIXME: get current time from Akamai API
-      const response = await fetch('https://worldtimeapi.org/api/ip');
-      const data = await response.json();
-      return new Date(data.datetime).getTime();
+      const response = await fetch('https://time.akamai.com/');
+      const data = await response.text();
+      const currentTimeInMs = Number.parseInt(data, 10) * 1000;
+      return currentTimeInMs;
     } catch (error) {
       window.lana?.log(`Error fetching time from API: ${JSON.stringify(error)}`);
       return null;
@@ -83,18 +111,112 @@ class TimingWorker {
   }
 
   /**
+   * @returns {Promise<number>}
+   * @description Returns the authoritative current time, using API with fallback to local
+   */
+  async getAuthoritativeTime() {
+    const now = Date.now();
+
+    // If in testing mode, skip API calls and use local time
+    if (this.testingManager.isTesting()) {
+      return now;
+    }
+
+    // If we have a valid cached API time, use it
+    if (this.cachedApiTime && (now - this.cachedApiTime.timestamp) < this.cacheTtl) {
+      const timeSinceCache = now - this.cachedApiTime.timestamp;
+      return this.cachedApiTime.time + timeSinceCache;
+    }
+
+    // Calculate backoff interval based on consecutive failures
+    const backoffInterval = Math.min(
+      this.apiCallInterval * (this.backoffMultiplier ** this.consecutiveFailures),
+      this.maxBackoffInterval,
+    );
+
+    // Add jitter to prevent thundering herd (random offset between 0-30% of interval)
+    const jitter = Math.random() * 0.3 * backoffInterval;
+    const effectiveInterval = backoffInterval + jitter;
+
+    // Check if enough time has passed since last API call (with backoff)
+    if (now - this.lastApiCall < effectiveInterval) {
+      // Use cached time if available, otherwise fall back to local
+      if (this.cachedApiTime) {
+        const timeSinceCache = now - this.cachedApiTime.timestamp;
+        return this.cachedApiTime.time + timeSinceCache;
+      }
+      return now;
+    }
+
+    // Try to get fresh time from API
+    try {
+      const apiTime = await TimingWorker.getCurrentTimeFromAPI();
+      this.lastApiCall = now;
+
+      if (apiTime !== null) {
+        this.cachedApiTime = {
+          time: apiTime,
+          timestamp: now,
+        };
+        // Reset failure count on success
+        this.consecutiveFailures = 0;
+
+        // Broadcast the new time to other tabs to reduce API calls
+        try {
+          const timeChannel = this.channels.get('timeCache');
+          if (timeChannel) {
+            timeChannel.postMessage({
+              type: 'time-update',
+              data: this.cachedApiTime,
+            });
+          }
+        } catch (error) {
+          window.lana?.log(`Error broadcasting time update: ${JSON.stringify(error)}`);
+        }
+
+        return apiTime;
+      }
+      // Increment failure count if API returns null
+      this.consecutiveFailures = Math.min(this.consecutiveFailures + 1, this.maxFailures);
+    } catch (error) {
+      window.lana?.log(`Error getting authoritative time: ${JSON.stringify(error)}`);
+      // Increment failure count on error
+      this.consecutiveFailures = Math.min(this.consecutiveFailures + 1, this.maxFailures);
+    }
+
+    // Fall back to local time if API fails or returns null
+    if (this.fallbackToLocal) {
+      return now;
+    }
+
+    // If fallback is disabled and API failed, use cached time or current time
+    if (this.cachedApiTime) {
+      const timeSinceCache = now - this.cachedApiTime.timestamp;
+      return this.cachedApiTime.time + timeSinceCache;
+    }
+
+    return now;
+  }
+
+  /**
    * @param {Object} scheduleRoot - The root of the schedule tree
    * @returns {Object}
    * @description Returns the first schedule item that should be shown based on toggleTime
    */
-  static getStartScheduleItemByToggleTime(scheduleRoot) {
-    const currentTime = new Date().getTime();
+  async getStartScheduleItemByToggleTime(scheduleRoot) {
+    const currentTime = await this.getAuthoritativeTime();
+    const adjustedTime = this.testingManager.isTesting()
+      ? this.testingManager.adjustTime(currentTime)
+      : currentTime;
+
     let pointer = scheduleRoot;
     let start = null;
 
     while (pointer) {
       const { toggleTime: t } = pointer;
-      const toggleTimePassed = typeof t !== 'number' || currentTime > t;
+      // Convert toggleTime to number if it's a string, like in shouldTriggerNextSchedule
+      const numericToggleTime = typeof t === 'string' ? parseInt(t, 10) : t;
+      const toggleTimePassed = typeof numericToggleTime !== 'number' || adjustedTime > numericToggleTime;
 
       if (!toggleTimePassed) break;
 
@@ -119,11 +241,13 @@ class TimingWorker {
    * @returns {number}
    * @description Returns the current time adjusted by the time offset if in test mode
    */
-  getCurrentTime() {
-    const currentTime = new Date().getTime();
-    return this.testingManager.isTesting()
+  async getCurrentTime() {
+    const currentTime = await this.getAuthoritativeTime();
+    const adjustedTime = this.testingManager.isTesting()
       ? this.testingManager.adjustTime(currentTime)
       : currentTime;
+
+    return adjustedTime;
   }
 
   /**
@@ -166,6 +290,7 @@ class TimingWorker {
             || (typeof value === 'object' && Object.keys(value).length === 0);
           const isAnyVal = !expectedValue && !isEmpty;
           const matchesExpectedValue = expectedValue && value === expectedValue;
+
           return isAnyVal || matchesExpectedValue;
         });
         return allConditionMet;
@@ -175,7 +300,11 @@ class TimingWorker {
     // If no plugins are blocking, check toggleTime
     const { toggleTime } = scheduleItem;
     if (toggleTime) {
-      return this.getCurrentTime() > toggleTime;
+      const currentTime = await this.getCurrentTime();
+      // Convert toggleTime to number if it's a string
+      const numericToggleTime = typeof toggleTime === 'string' ? parseInt(toggleTime, 10) : toggleTime;
+      const timePassed = currentTime > numericToggleTime;
+      return timePassed;
     }
 
     return true;
@@ -251,10 +380,19 @@ class TimingWorker {
     }
 
     if (schedule) {
-      this.nextScheduleItem = TimingWorker.getStartScheduleItemByToggleTime(schedule);
-      this.currentScheduleItem = this.nextScheduleItem?.prev || schedule;
-      this.previouslySentItem = null;
+      // Initialize schedule asynchronously since getStartScheduleItemByToggleTime is now async
+      this.initializeSchedule(schedule);
     }
+  }
+
+  /**
+   * @param {Object} schedule - The schedule to initialize
+   * @description Initializes the schedule asynchronously
+   */
+  async initializeSchedule(schedule) {
+    this.nextScheduleItem = await this.getStartScheduleItemByToggleTime(schedule);
+    this.currentScheduleItem = this.nextScheduleItem?.prev || schedule;
+    this.previouslySentItem = null;
 
     if (!this.nextScheduleItem) return;
 

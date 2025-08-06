@@ -1,5 +1,4 @@
-import { metadataStore } from '../../features/timing-framework/plugins/metadata/plugin.js';
-import { readBlockConfig, LIBS, getMetadata, setMetadata } from '../../scripts/utils.js';
+import { readBlockConfig, LIBS, getMetadata } from '../../scripts/utils.js';
 
 function buildScheduleDoubleLinkedList(entries) {
   if (!entries.length) return null;
@@ -75,13 +74,8 @@ function setScheduleToScheduleWorker(schedule, plugins, tabId) {
 
   // Convert plugin instances to their serializable state
   const pluginStates = Object.fromEntries(
-    Array.from(plugins.entries()).map(([name, plugin]) => [
-      name,
-      {
-        type: name,
-        data: plugin.getAll ? plugin.getAll() : plugin,
-      },
-    ]),
+    Array.from(plugins.entries())
+      .map(([n, p]) => [n, { type: n, data: p.getAll ? p.getAll() : p }]),
   );
 
   const messageData = {
@@ -102,7 +96,7 @@ function setScheduleToScheduleWorker(schedule, plugins, tabId) {
 }
 
 export default async function init(el) {
-  const [{ default: loadFragment }, { createTag }] = await Promise.all([
+  const [{ default: loadFragment }, { createTag, getLocale, getConfig }] = await Promise.all([
     import(`${LIBS}/blocks/fragment/fragment.js`),
     import(`${LIBS}/utils/utils.js`),
     import(`${LIBS}/features/spectrum-web-components/dist/theme.js`),
@@ -139,7 +133,7 @@ export default async function init(el) {
 
   worker.onmessage = (event) => {
     const { pathToFragment } = event.data;
-
+    const { prefix } = getLocale(getConfig().locales);
     el.style.height = `${el.clientHeight}px`;
 
     // load sp progress circle
@@ -149,7 +143,7 @@ export default async function init(el) {
     el.classList.add('loading');
     el.append(spTheme);
 
-    const a = createTag('a', { href: pathToFragment }, '', { parent: el });
+    const a = createTag('a', { href: `${prefix}${pathToFragment}` }, '', { parent: el });
 
     loadFragment(a).then(() => {
       // set el height to current height
