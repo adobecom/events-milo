@@ -9,7 +9,4 @@ mountpoints:
 folders:
   /events: /events/default
   /de/events: /de/events/default
-  /fr/events: /fr/events/default
   /uk/events: /uk/events/default
-  /es/events: /es/events/default
-  /th_en/events: /th_en/events/default

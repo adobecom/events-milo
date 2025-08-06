@@ -15,7 +15,7 @@ const API_CONFIG = {
     local: { host: 'https://wcms-events-service-platform-deploy-ethos102-stage-caff5f.stage.cloud.adobe.io' },
     dev: { host: 'https://wcms-events-service-platform-deploy-ethos102-stage-caff5f.stage.cloud.adobe.io' },
     dev02: { host: 'https://wcms-events-service-platform-deploy-ethos102-stage-c81eb6.stage.cloud.adobe.io' },
-    stage: { host: 'https://events-service-platform-stage-or2.adobe.io' },
+    stage: { host: 'https://events-service-platform-stage.adobe.io' },
     stage02: { host: 'https://wcms-events-service-platform-deploy-ethos105-stage-9a5fdc.stage.cloud.adobe.io' },
     prod: { host: 'https://events-service-platform.adobe.io' },
   },
@@ -66,8 +66,8 @@ export function waitForAdobeIMS() {
   });
 }
 
-export async function constructRequestOptions(method, body = null) {
-  const [{ default: getUuid }] = await Promise.all([import(`${LIBS}/utils/getUuid.js`), waitForAdobeIMS()]);
+export async function constructRequestOptions(method, body = null, waitForIMS = true) {
+  const [{ default: getUuid }] = await Promise.all([import(`${LIBS}/utils/getUuid.js`), waitForIMS ? waitForAdobeIMS() : Promise.resolve()]);
 
   const headers = new Headers();
   const authToken = window.adobeIMS?.getAccessToken()?.token;
@@ -96,7 +96,7 @@ export async function getEvent(eventId) {
     const data = await response.json();
 
     if (!response.ok) {
-      window.lana?.log(`Error: Failed to get details for event ${eventId}. Status:`, response.status, 'E:', data);
+      window.lana?.log(`Error: Failed to get details for event ${eventId}. Status:${JSON.stringify(response)}`);
       return { ok: response.ok, status: response.status, error: data };
     }
 
@@ -115,12 +115,12 @@ export async function getEventAttendee(eventId) {
     const response = await fetch(`${host}/v1/events/${eventId}/attendees/me`, options);
 
     if (!response.ok) {
-      window.lana?.log(`Error: Failed to get attendee for event ${eventId}:`, response.status);
+      window.lana?.log(`Error: Failed to get attendee for event ${eventId}:${JSON.stringify(response)}`);
       let textResp;
       try {
         textResp = await response.text();
       } catch (e) {
-        window.lana?.log('Error: Failed to parse response text:', e);
+        window.lana?.log(`Error: Failed to parse response text:${JSON.stringify(e)}`);
       }
 
       return {
@@ -132,7 +132,7 @@ export async function getEventAttendee(eventId) {
 
     return { ok: true, data: await response.json() };
   } catch (error) {
-    window.lana?.log(`Error: Failed to get attendee for event ${eventId}. E:`, error);
+    window.lana?.log(`Error: Failed to get attendee for event ${eventId}. E:${JSON.stringify(error)}`);
     return { ok: false, status: 'Network Error', error: error.message };
   }
 }
@@ -145,12 +145,12 @@ export async function getAttendee() {
     const response = await fetch(`${host}/v1/attendees/me`, options);
 
     if (!response.ok) {
-      window.lana?.log('Error: Failed to get attendee details. Status:', response.status);
+      window.lana?.log(`Error: Failed to get attendee details. Status:${JSON.stringify(response)}`);
       let textResp;
       try {
         textResp = await response.text();
       } catch (e) {
-        window.lana?.log('Error: Failed to parse response text:', e);
+        window.lana?.log(`Error: Failed to parse response text:${JSON.stringify(e)}`);
       }
 
       return {
@@ -162,7 +162,7 @@ export async function getAttendee() {
 
     return { ok: true, data: await response.json() };
   } catch (error) {
-    window.lana?.log('Error: Failed to get attendee. Error:', error);
+    window.lana?.log(`Error: Failed to get attendee. Error:${JSON.stringify(error)}`);
     return { ok: false, status: 'Network Error', error: error.message };
   }
 }
@@ -179,13 +179,13 @@ export async function createAttendee(attendeeData) {
     const data = await response.json();
 
     if (!response.ok) {
-      window.lana?.log('Error: Failed to create attendee. Status:', response.status, 'E:', data);
+      window.lana?.log(`Error: Failed to create attendee. Status:${JSON.stringify(response)}`);
       return { ok: response.ok, status: response.status, error: data };
     }
 
     return { ok: true, data };
   } catch (error) {
-    window.lana?.log('Error: Failed to create attendee. Error:', error);
+    window.lana?.log(`Error: Failed to create attendee. Error:${JSON.stringify(error)}`);
     return { ok: false, status: 'Network Error', error: error.message };
   }
 }
@@ -202,13 +202,13 @@ export async function addAttendeeToEvent(eventId, attendee) {
     const data = await response.json();
 
     if (!response.ok) {
-      window.lana?.log(`Error: Failed to add attendee for event ${eventId}. Status:`, response.status, 'E:', data);
+      window.lana?.log(`Error: Failed to add attendee for event ${eventId}. Status:${JSON.stringify(response)}`);
       return { ok: response.ok, status: response.status, error: data };
     }
 
     return { ok: true, data };
   } catch (error) {
-    window.lana?.log(`Error: Failed to add attendee for event ${eventId}:`, error);
+    window.lana?.log(`Error: Failed to add attendee for event ${eventId}:${JSON.stringify(error)}`);
     return { ok: false, status: 'Network Error', error: error.message };
   }
 }
@@ -225,13 +225,13 @@ export async function updateAttendee(attendeeData) {
     const data = await response.json();
 
     if (!response.ok) {
-      window.lana?.log('Error: Failed to update attendee. Status:', response.status, 'E:', data);
+      window.lana?.log(`Error: Failed to update attendee. Status:${JSON.stringify(response)}`);
       return { ok: response.ok, status: response.status, error: data };
     }
 
     return { ok: true, data };
   } catch (error) {
-    window.lana?.log('Error: Failed to update attendee:', error);
+    window.lana?.log(`Error: Failed to update attendee:${JSON.stringify(error)}`);
     return { ok: false, status: 'Network Error', error: error.message };
   }
 }
@@ -251,12 +251,12 @@ export async function deleteAttendeeFromEvent(eventId, attendeeId = null) {
     }
 
     if (!response.ok) {
-      window.lana?.log(`Error: Failed to delete attendee for event ${eventId}. Status:`, response.status);
+      window.lana?.log(`Error: Failed to delete attendee for event ${eventId}. Status:${JSON.stringify(response)}`);
       let textResp;
       try {
         textResp = await response.text();
       } catch (e) {
-        window.lana?.log('Error: Failed to parse response text:', e);
+        window.lana?.log(`Error: Failed to parse response text:${JSON.stringify(e)}`);
       }
 
       return {
@@ -269,7 +269,7 @@ export async function deleteAttendeeFromEvent(eventId, attendeeId = null) {
     if (response.status === 204) return { ok: true, data: { status: 204, attendeeDeleted: true } };
     return { ok: true, data: await response.json() };
   } catch (error) {
-    window.lana?.log(`Error: Failed to delete attendee for event ${eventId}:`, error);
+    window.lana?.log(`Error: Failed to delete attendee for event ${eventId}:${JSON.stringify(error)}`);
     return { ok: false, status: 'Network Error', error: error.message };
   }
 }
