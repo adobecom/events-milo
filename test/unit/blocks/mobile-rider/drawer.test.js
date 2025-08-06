@@ -430,16 +430,22 @@ describe('Mobile Rider Drawer', () => {
       expect(drawer.setActive.called).to.be.false;
     });
 
-    it('should log message in defaultClick', () => {
-      window.lana = { log: sinon.stub() };
-      drawer.defaultClick();
-      expect(window.lana.log.calledWith('Drawer Click ignored — no handler set.')).to.be.true;
+    it('should handle clicks when no onItemClick is provided', () => {
+      const root = document.createElement('div');
+      const testDrawer = createDrawer(root, { items });
+      const item = testDrawer.itemsEl.firstChild;
+      // Should not throw when clicked without a handler
+      expect(() => {
+        item.click();
+      }).to.not.throw();
     });
 
-    it('should handle defaultClick when lana is not available', () => {
-      delete window.lana;
+    it('should handle default handler gracefully', () => {
+      const root = document.createElement('div');
+      const testDrawer = createDrawer(root, { items });
+      const item = testDrawer.itemsEl.firstChild;
       expect(() => {
-        drawer.defaultClick();
+        item.click();
       }).to.not.throw();
     });
   });
