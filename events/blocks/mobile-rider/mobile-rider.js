@@ -33,14 +33,13 @@ async function loadScript() {
   if (scriptPromise) return scriptPromise;
 
   const promise = new Promise((res) => {
-    getConfig().then((config) => {
-      const env = config.env || 'prod';
-      const isProd = env === 'prod';
-      const src = isProd ? CONFIG.SCRIPTS.PROD_URL : CONFIG.SCRIPTS.DEV_URL;
-      const s = createTag('script', { src });
-      s.onload = res;
-      document.head.appendChild(s);
-    });
+    const config = getConfig();
+    const env = config.env || 'prod';
+    const isProd = env === 'prod';
+    const src = isProd ? CONFIG.SCRIPTS.PROD_URL : CONFIG.SCRIPTS.DEV_URL;
+    const s = createTag('script', { src });
+    s.onload = res;
+    document.head.appendChild(s);
   });
 
   scriptPromise = promise;
