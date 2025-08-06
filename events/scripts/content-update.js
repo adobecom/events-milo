@@ -234,7 +234,7 @@ async function getSeries404(seriesSegmentInUrl) {
 
   return {
     origin: '',
-    pathname: '/error-pages/404',
+    path: '/error-pages/404',
   };
 }
 
