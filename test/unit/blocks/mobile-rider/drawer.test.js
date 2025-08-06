@@ -1,29 +1,13 @@
+/* global globalThis */
+/* eslint-disable no-unused-vars */
 import { expect } from '@esm-bundle/chai';
 import sinon from 'sinon';
-import { default as createDrawer } from '../../../../events/blocks/mobile-rider/drawer.js';
+import createDrawer from '../../../../events/blocks/mobile-rider/drawer.js';
 
 describe('Mobile Rider Drawer', () => {
-  let createTagStub, mockLana;
+  let mockLana;
 
   beforeEach(() => {
-    // Setup stubs
-    createTagStub = sinon.stub().callsFake((tag, attrs, text) => {
-      const element = document.createElement(tag);
-      if (attrs) {
-        Object.keys(attrs).forEach(key => {
-          if (key === 'class') {
-            element.className = attrs[key];
-          } else {
-            element.setAttribute(key, attrs[key]);
-          }
-        });
-      }
-      if (text) {
-        element.textContent = text;
-      }
-      return element;
-    });
-
     // Mock lana
     mockLana = { log: sinon.stub() };
     globalThis.lana = mockLana;
@@ -43,7 +27,7 @@ describe('Mobile Rider Drawer', () => {
 
       const items = [
         { videoid: 'video1', title: 'Video 1', description: 'Description 1' },
-        { videoid: 'video2', title: 'Video 2', description: 'Description 2' }
+        { videoid: 'video2', title: 'Video 2', description: 'Description 2' },
       ];
 
       const renderItem = (item) => {
@@ -58,7 +42,7 @@ describe('Mobile Rider Drawer', () => {
         items,
         ariaLabel: 'Test Drawer',
         renderItem,
-        onItemClick
+        onItemClick,
       });
 
       expect(drawer).to.not.be.null;
@@ -68,14 +52,14 @@ describe('Mobile Rider Drawer', () => {
 
     it('should handle missing root element', () => {
       const items = [{ videoid: 'video1', title: 'Video 1' }];
-      const renderItem = (item) => document.createElement('div');
+      const renderItem = (_item) => document.createElement('div');
       const onItemClick = sinon.stub();
 
       const drawer = createDrawer(null, {
         items,
         ariaLabel: 'Test Drawer',
         renderItem,
-        onItemClick
+        onItemClick,
       });
 
       // The actual implementation catches the error and returns null
@@ -86,14 +70,14 @@ describe('Mobile Rider Drawer', () => {
       const root = document.createElement('div');
       document.body.appendChild(root);
 
-      const renderItem = (item) => document.createElement('div');
+      const renderItem = (_item) => document.createElement('div');
       const onItemClick = sinon.stub();
 
       const drawer = createDrawer(root, {
         items: [],
         ariaLabel: 'Test Drawer',
         renderItem,
-        onItemClick
+        onItemClick,
       });
 
       expect(drawer).to.not.be.null;
@@ -110,7 +94,7 @@ describe('Mobile Rider Drawer', () => {
       const drawer = createDrawer(root, {
         items,
         ariaLabel: 'Test Drawer',
-        onItemClick
+        onItemClick,
       });
 
       // The actual implementation provides a default renderItem
@@ -122,12 +106,12 @@ describe('Mobile Rider Drawer', () => {
       document.body.appendChild(root);
 
       const items = [{ videoid: 'video1', title: 'Video 1' }];
-      const renderItem = (item) => document.createElement('div');
+      const renderItem = (_item) => document.createElement('div');
 
       const drawer = createDrawer(root, {
         items,
         ariaLabel: 'Test Drawer',
-        renderItem
+        renderItem,
       });
 
       // The actual implementation provides a default onClick
@@ -150,7 +134,7 @@ describe('Mobile Rider Drawer', () => {
         items,
         ariaLabel: 'Test Drawer',
         renderItem,
-        onItemClick
+        onItemClick,
       });
 
       const drawerElement = root.querySelector('.drawer');
@@ -173,7 +157,7 @@ describe('Mobile Rider Drawer', () => {
         items,
         ariaLabel: 'Test Drawer',
         renderItem,
-        onItemClick
+        onItemClick,
       });
 
       const firstItem = drawer.itemsEl.firstChild;
@@ -190,7 +174,7 @@ describe('Mobile Rider Drawer', () => {
 
       const items = [
         { videoid: 'video1', title: 'Video 1' },
-        { videoid: 'video2', title: 'Video 2' }
+        { videoid: 'video2', title: 'Video 2' },
       ];
       const renderItem = (item) => {
         const div = document.createElement('div');
@@ -203,7 +187,7 @@ describe('Mobile Rider Drawer', () => {
         items,
         ariaLabel: 'Test Drawer',
         renderItem,
-        onItemClick
+        onItemClick,
       });
 
       const firstItem = drawer.itemsEl.firstChild;
@@ -240,7 +224,7 @@ describe('Mobile Rider Drawer', () => {
         items,
         ariaLabel: 'Test Drawer',
         renderItem,
-        onItemClick
+        onItemClick,
       });
 
       expect(drawer.itemsEl).to.not.be.null;
@@ -256,14 +240,14 @@ describe('Mobile Rider Drawer', () => {
           videoid: 'video1',
           title: 'Video 1',
           description: 'Description 1',
-          thumbnail: 'thumb1.jpg'
-        }
+          thumbnail: 'thumb1.jpg',
+        },
       ];
 
       const renderItem = (item) => {
         const div = document.createElement('div');
         div.className = 'drawer-item';
-        
+
         if (item.thumbnail) {
           const img = document.createElement('img');
           img.src = item.thumbnail;
@@ -292,7 +276,7 @@ describe('Mobile Rider Drawer', () => {
         items,
         ariaLabel: 'Test Drawer',
         renderItem,
-        onItemClick
+        onItemClick,
       });
 
       const item = drawer.itemsEl.firstChild;
@@ -308,7 +292,7 @@ describe('Mobile Rider Drawer', () => {
 
       const items = [
         { videoid: 'video1', title: 'Video 1' },
-        { videoid: 'video2', title: 'Video 2' }
+        { videoid: 'video2', title: 'Video 2' },
       ];
       const renderItem = (item) => {
         const div = document.createElement('div');
@@ -321,7 +305,7 @@ describe('Mobile Rider Drawer', () => {
         items,
         ariaLabel: 'Test Drawer',
         renderItem,
-        onItemClick
+        onItemClick,
       });
 
       const firstItem = drawer.itemsEl.firstChild;
@@ -344,7 +328,7 @@ describe('Mobile Rider Drawer', () => {
         items,
         ariaLabel: 'Test Drawer',
         renderItem,
-        onItemClick
+        onItemClick,
       });
 
       // The actual implementation catches errors and returns null
@@ -369,11 +353,11 @@ describe('Mobile Rider Drawer', () => {
         items,
         ariaLabel: 'Test Drawer',
         renderItem,
-        onItemClick
+        onItemClick,
       });
 
       const item = drawer.itemsEl.firstChild;
-      
+
       // Should not throw when clicked
       expect(() => {
         item.click();
@@ -382,12 +366,13 @@ describe('Mobile Rider Drawer', () => {
   });
 
   describe('Drawer methods coverage', () => {
-    let drawer, items, itemsEl;
+    let drawer; let items; let
+      itemsEl;
 
     beforeEach(() => {
       items = [
         { videoid: 'vid1', title: 'Video 1' },
-        { videoid: 'vid2', title: 'Video 2' }
+        { videoid: 'vid2', title: 'Video 2' },
       ];
       itemsEl = document.createElement('div');
       const el1 = document.createElement('div');
