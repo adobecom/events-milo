@@ -255,23 +255,24 @@ describe('TimingWorker', () => {
     it('should call API if cache is expired', async () => {
       const now = Date.now();
       const apiTime = now - 1000;
-      worker.cachedApiTime = { time: apiTime, timestamp: now - 700000 }; // 700 seconds ago (expired)
+      // 700 seconds ago (expired)
+      worker.cachedApiTime = { time: apiTime, timestamp: now - 700000 };
       worker.lastApiCall = now - 400000; // 400 seconds ago
 
       // Mock successful API response
-      mockFetch.resolves({
-        text: () => Promise.resolve(Math.floor(apiTime / 1000).toString()),
-      });
+      mockFetch.resolves({ text: () => Promise.resolve(Math.floor(apiTime / 1000).toString()) });
 
       const result = await worker.getAuthoritativeTime();
       expect(mockFetch.called).to.be.true;
-      // The result should be close to the API time, but we need to account for the time elapsed during the test
+      // The result should be close to the API time
+      // but we need to account for the time elapsed during the test
       expect(result).to.be.closeTo(apiTime, 1000);
     });
 
     it('should not call API if rate limit not reached', async () => {
       const now = Date.now();
-      worker.lastApiCall = now - 100000; // 100 seconds ago (rate limit not reached for 5 min interval)
+      // 100 seconds ago (rate limit not reached for 5 min interval)
+      worker.lastApiCall = now - 100000;
 
       const result = await worker.getAuthoritativeTime();
       expect(mockFetch.called).to.be.false;
@@ -296,9 +297,7 @@ describe('TimingWorker', () => {
       worker.lastApiCall = now - 40000;
 
       // Mock API returning null
-      mockFetch.resolves({
-        text: () => Promise.resolve('invalid'),
-      });
+      mockFetch.resolves({ text: () => Promise.resolve('invalid') });
 
       const result = await worker.getAuthoritativeTime();
       expect(result).to.be.closeTo(apiTime + 30000, 100);
@@ -323,9 +322,7 @@ describe('TimingWorker', () => {
       worker.consecutiveFailures = 0; // Start with no failures to ensure API call happens
 
       // Mock successful API response
-      mockFetch.resolves({
-        text: () => Promise.resolve(Math.floor(apiTime / 1000).toString()),
-      });
+      mockFetch.resolves({ text: () => Promise.resolve(Math.floor(apiTime / 1000).toString()) });
 
       await worker.getAuthoritativeTime();
       expect(worker.consecutiveFailures).to.equal(0);
@@ -337,14 +334,10 @@ describe('TimingWorker', () => {
       worker.lastApiCall = now - 400000; // 400 seconds ago
 
       // Mock successful API response
-      mockFetch.resolves({
-        text: () => Promise.resolve(Math.floor(apiTime / 1000).toString()),
-      });
+      mockFetch.resolves({ text: () => Promise.resolve(Math.floor(apiTime / 1000).toString()) });
 
       // Mock the time cache channel
-      const mockChannel = {
-        postMessage: sinon.stub(),
-      };
+      const mockChannel = { postMessage: sinon.stub() };
       worker.channels.set('timeCache', mockChannel);
 
       await worker.getAuthoritativeTime();
