@@ -33,9 +33,16 @@ function getSchedule(scheduleId) {
 }
 
 async function initPlugins(schedule) {
-  const SUPPORTED_PLUGINS = ['mobile-rider', 'metadata'];
-  const pluginsNeeded = SUPPORTED_PLUGINS.filter((plugin) => schedule.some((item) => item[plugin]));
-  const plugins = await Promise.all(pluginsNeeded.map((plugin) => import(`../../features/timing-framework/plugins/${plugin}/plugin.js`)));
+  const PLUGINS_MAP = {
+    mobileRider: 'mobile-rider',
+    metadata: 'metadata',
+  };
+  const hasPlugin = (plugin) => schedule.some((item) => item[plugin]);
+  const pluginsNeeded = Object.keys(PLUGINS_MAP).filter(hasPlugin);
+  const plugins = await Promise.all(pluginsNeeded.map((plugin) => {
+    const pluginDir = PLUGINS_MAP[plugin];
+    return import(`../../features/timing-framework/plugins/${pluginDir}/plugin.js`);
+  }));
 
   // Get or create a global tabId that's shared across all chrono-boxes on this page
   // This ensures that multiple chrono-boxes on the same page use the same tabId,
@@ -48,7 +55,7 @@ async function initPlugins(schedule) {
 
   const pluginsModules = new Map();
   await Promise.all(plugins.map(async (plugin, index) => {
-    const pluginName = pluginsNeeded[index].replace('-', '');
+    const pluginName = pluginsNeeded[index];
     pluginsModules.set(pluginName, await plugin.default(schedule));
   }));
 
