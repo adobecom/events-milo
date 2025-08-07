@@ -73,10 +73,10 @@ The framework uses a Promise-based initialization pattern to enable CLS preventi
 
 ### Promise-Based CLS Prevention
 - **Promise Return**: The `init()` function returns a Promise that resolves when the first message is received
-- **Timeout Protection**: 10-second timeout prevents hanging if something goes wrong
+- **Timeout Protection**: 3-second timeout balances CLS prevention with LCP/FCP performance
 - **CLS Prevention**: Calling code can `await` the initialization to prevent layout shifts
 - **Unchanged Framework**: The timing framework continues to work exactly as before
-- **Error Handling**: If timeout occurs, the Promise rejects with a clear error message
+- **Safe Integration**: Never rejects, safe for Promise.all() usage
 
 **Example Flow:**
 ```javascript
@@ -85,13 +85,9 @@ init(chronoBoxElement); // Returns immediately
 // First message arrives later (async) - potential CLS
 
 // After (Promise-based with timeout)
-try {
-  await init(chronoBoxElement); // Blocks until first message or timeout
-  // First message received, content loaded - no CLS
-} catch (error) {
-  // Timeout occurred, but block continues functioning
-  console.log('Timeout waiting for first message:', error.message);
-}
+await init(chronoBoxElement); // Blocks until first message or timeout
+// First message received, content loaded - no CLS
+// Note: Promise always resolves, never rejects
 ```
 
 ## Schedule Position Determination
