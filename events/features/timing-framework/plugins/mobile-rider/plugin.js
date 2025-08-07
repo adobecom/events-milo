@@ -24,18 +24,18 @@ export default function init(schedule) {
   const controller = new MobileRiderController();
 
   const mobileRiderSchedules = schedule.filter((entry) => entry.mobileRider);
-  mobileRiderSchedules.forEach((s) => {
+  mobileRiderSchedules.forEach(async (s) => {
     // Handle mobileRider as an object with sessionId property
     if (s.mobileRider && typeof s.mobileRider === 'object' && s.mobileRider.sessionId) {
       const { sessionId } = s.mobileRider;
-      const isActive = controller.isMediaActive(sessionId);
+      const isActive = await controller.isMediaActive(sessionId);
       mobileRiderStore.set(sessionId, isActive);
     } else if (Array.isArray(s.mobileRider)) {
       // Backward compatibility for array format
-      s.mobileRider.forEach((condition) => {
+      s.mobileRider.forEach(async (condition) => {
         if (condition && condition.sessionId) {
           const { sessionId } = condition;
-          const isActive = controller.isMediaActive(sessionId);
+          const isActive = await controller.isMediaActive(sessionId);
           mobileRiderStore.set(sessionId, isActive);
         }
       });
