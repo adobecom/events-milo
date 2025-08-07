@@ -53,6 +53,47 @@ The Timing Framework is a robust system for managing dynamic content scheduling 
    - Worker maintains current and next schedule items
    - Initial position determined by `getStartScheduleItemByToggleTime`
 
+## Initialization Flow
+
+The framework uses a Promise-based initialization pattern to enable CLS prevention while maintaining the original timing framework behavior:
+
+### Chronobox Block Initialization
+1. **Schedule Loading**: Loads schedule from metadata or static configuration
+2. **Plugin Initialization**: Dynamically imports and initializes required plugins
+3. **Worker Creation**: Creates the Timing Worker and sends initial configuration
+4. **Message Handler Setup**: Sets up the worker message handler
+5. **Promise Return**: Returns a Promise that resolves when the first message is received
+6. **Normal Operation**: Worker continues normal operation for subsequent messages
+
+### Worker Initialization
+1. **Message Reception**: Receives initial configuration (schedule, plugins, testing, tabId)
+2. **Schedule Positioning**: Determines initial position using `getStartScheduleItemByToggleTime`
+3. **First Message**: Immediately sends the first schedule item back to the main thread
+4. **Timer Setup**: Begins polling for schedule transitions (if not in testing mode)
+
+### Promise-Based CLS Prevention
+- **Promise Return**: The `init()` function returns a Promise that resolves when the first message is received
+- **Timeout Protection**: 10-second timeout prevents hanging if something goes wrong
+- **CLS Prevention**: Calling code can `await` the initialization to prevent layout shifts
+- **Unchanged Framework**: The timing framework continues to work exactly as before
+- **Error Handling**: If timeout occurs, the Promise rejects with a clear error message
+
+**Example Flow:**
+```javascript
+// Before (async, non-blocking)
+init(chronoBoxElement); // Returns immediately
+// First message arrives later (async) - potential CLS
+
+// After (Promise-based with timeout)
+try {
+  await init(chronoBoxElement); // Blocks until first message or timeout
+  // First message received, content loaded - no CLS
+} catch (error) {
+  // Timeout occurred, but block continues functioning
+  console.log('Timeout waiting for first message:', error.message);
+}
+```
+
 ## Schedule Position Determination
 
 The framework uses a two-phase approach to determine the current schedule position:

@@ -126,7 +126,7 @@ export default async function init(el) {
 
   if (!thisSchedule) {
     el.remove();
-    return;
+    return Promise.resolve();
   }
 
   el.innerHTML = '';
@@ -138,6 +138,7 @@ export default async function init(el) {
     pluginsOutputs.tabId,
   );
 
+  // Set up the message handler
   worker.onmessage = (event) => {
     const { pathToFragment } = event.data;
     const { prefix } = getLocale(getConfig().locales);
@@ -171,4 +172,19 @@ export default async function init(el) {
       el.classList.add('error');
     });
   };
+
+  return new Promise((resolve, reject) => {
+    const timeout = setTimeout(() => {
+      reject(new Error('Timeout waiting for first worker message'));
+    }, 10000); // 10 second timeout
+
+    const originalOnMessage = worker.onmessage;
+    worker.onmessage = (event) => {
+      clearTimeout(timeout);
+      // Call the original handler
+      originalOnMessage(event);
+      // Resolve the promise
+      resolve();
+    };
+  });
 }
