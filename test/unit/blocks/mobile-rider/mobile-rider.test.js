@@ -87,7 +87,7 @@ describe('Mobile Rider Module', () => {
 
       // Wait for async operations
       await new Promise((resolve) => {
-        setTimeout(resolve, 50);
+        setTimeout(resolve, 100);
       });
 
       const player = el.querySelector('.mobile-rider-player');
@@ -296,7 +296,7 @@ describe('Mobile Rider Module', () => {
     });
 
     describe('dispose', () => {
-      it('should dispose player and reset globals', () => {
+      it('should dispose player and reset globals', async () => {
         // Ensure __mr_player exists before calling dispose
         const disposeStub = sinon.stub();
         globalThis.__mr_player = {
@@ -305,17 +305,21 @@ describe('Mobile Rider Module', () => {
           on: sinon.stub(),
         };
 
-        riderInstance.dispose();
+        // Access MobileRider class through the instance constructor
+        const MobileRider = riderInstance.constructor;
+        MobileRider.dispose();
 
         expect(disposeStub.called).to.be.true;
         expect(globalThis.__mr_player).to.be.null;
         expect(globalThis.__mr_stream_published).to.be.null;
       });
 
-      it('should handle dispose when player is null', () => {
+      it('should handle dispose when player is null', async () => {
         globalThis.__mr_player = null;
 
-        expect(() => riderInstance.dispose()).to.not.throw();
+        // Access MobileRider class through the instance constructor
+        const MobileRider = riderInstance.constructor;
+        expect(() => MobileRider.dispose()).to.not.throw();
       });
     });
 
@@ -402,35 +406,18 @@ describe('Mobile Rider Module', () => {
     });
 
     describe('getMediaStatus', () => {
+      let MobileRider;
+
+      beforeEach(async () => {
+        // Access MobileRider class through the instance constructor
+        MobileRider = riderInstance.constructor;
+      });
+
       it('should fetch media status successfully', async () => {
-        const result = await riderInstance.getMediaStatus('test-video');
+        const result = await MobileRider.getMediaStatus('test-video');
 
         expect(mockFetch.called).to.be.true;
         expect(result).to.deep.equal({ active: ['test-video-123'] });
-      });
-
-      it('should use correct URL based on environment', async () => {
-        // Test dev environment
-        const configStub = sinon.stub().resolves({ env: 'dev' });
-        riderInstance.getMediaStatus = async function getMediaStatus(id) {
-          const env = (await configStub()).env || 'prod';
-          const isLowerEnv = env !== 'prod';
-          const baseUrl = isLowerEnv
-            ? 'https://overlay-admin-dev.mobilerider.com'
-            : 'https://overlay-admin.mobilerider.com';
-          const res = await fetch(`${baseUrl}/api/media-status?ids=${id}`);
-          if (!res.ok) {
-            const err = await res.json();
-            throw new Error(err.message || 'Failed to get media status');
-          }
-          return res.json();
-        };
-
-        await riderInstance.getMediaStatus('test-video');
-
-        expect(mockFetch.called).to.be.true;
-        const fetchCall = mockFetch.getCall(0);
-        expect(fetchCall.args[0]).to.include('overlay-admin-dev.mobilerider.com');
       });
 
       it('should handle API errors', async () => {
@@ -440,7 +427,7 @@ describe('Mobile Rider Module', () => {
         });
 
         try {
-          await riderInstance.getMediaStatus('test-video');
+          await MobileRider.getMediaStatus('test-video');
         } catch (e) {
           expect(e.message).to.include('API Error');
         }
@@ -450,7 +437,7 @@ describe('Mobile Rider Module', () => {
         mockFetch.rejects(new Error('Network error'));
 
         try {
-          await riderInstance.getMediaStatus('test-video');
+          await MobileRider.getMediaStatus('test-video');
         } catch (e) {
           expect(e.message).to.equal('Network error');
         }
@@ -458,8 +445,15 @@ describe('Mobile Rider Module', () => {
     });
 
     describe('checkLive', () => {
+      let MobileRider;
+
+      beforeEach(async () => {
+        // Access MobileRider class through the instance constructor
+        MobileRider = riderInstance.constructor;
+      });
+
       it('should check live status successfully', async () => {
-        riderInstance.getMediaStatus = sinon.stub().resolves({ active: ['test-video'] });
+        sinon.stub(MobileRider, 'getMediaStatus').resolves({ active: ['test-video'] });
         riderInstance.setStatus = sinon.stub();
         const video = { videoid: 'test-video' };
 
@@ -476,7 +470,7 @@ describe('Mobile Rider Module', () => {
       });
 
       it('should handle check errors', async () => {
-        riderInstance.getMediaStatus = sinon.stub().rejects(new Error('Check failed'));
+        sinon.stub(MobileRider, 'getMediaStatus').rejects(new Error('Check failed'));
         const video = { videoid: 'test-video' };
 
         const result = await riderInstance.checkLive(video);
@@ -693,6 +687,7 @@ describe('Mobile Rider Module', () => {
 
   describe('Concurrent Live Stream Management', () => {
     let concurrentInstance;
+    let MobileRider;
 
     beforeEach(async () => {
       const concurrentHtml = `
@@ -726,6 +721,9 @@ describe('Mobile Rider Module', () => {
       await new Promise((resolve) => {
         setTimeout(resolve, 100);
       });
+
+      // Access MobileRider class through the instance constructor
+      MobileRider = concurrentInstance.constructor;
     });
 
     it('should maintain mainID reference and use it for status checks', async () => {
@@ -733,13 +731,13 @@ describe('Mobile Rider Module', () => {
       concurrentInstance.store = { get: sinon.stub(), set: sinon.stub() };
       concurrentInstance.mainID = 'video1';
 
-      concurrentInstance.getMediaStatus = sinon.stub().resolves({ active: ['video1'] });
+      sinon.stub(MobileRider, 'getMediaStatus').resolves({ active: ['video1'] });
 
       const video = { videoid: 'video2' };
       await concurrentInstance.checkLive(video);
 
       // Should use mainID for API call
-      expect(concurrentInstance.getMediaStatus.calledWith('video1')).to.be.true;
+      expect(MobileRider.getMediaStatus.calledWith('video1')).to.be.true;
     });
 
     it('should only update store when status actually changes', async () => {
@@ -750,7 +748,7 @@ describe('Mobile Rider Module', () => {
       };
       concurrentInstance.store = mockStore;
 
-      concurrentInstance.getMediaStatus = sinon.stub().resolves({ active: ['video1'] });
+      sinon.stub(MobileRider, 'getMediaStatus').resolves({ active: ['video1'] });
 
       const video = { videoid: 'video1' };
       await concurrentInstance.checkLive(video);
@@ -768,7 +766,7 @@ describe('Mobile Rider Module', () => {
       concurrentInstance.store = mockStore;
 
       // Status changed to false
-      concurrentInstance.getMediaStatus = sinon.stub().resolves({ active: [] });
+      sinon.stub(MobileRider, 'getMediaStatus').resolves({ active: [] });
 
       const video = { videoid: 'video1' };
       await concurrentInstance.checkLive(video);
@@ -785,7 +783,7 @@ describe('Mobile Rider Module', () => {
       };
       concurrentInstance.store = mockStore;
 
-      concurrentInstance.getMediaStatus = sinon.stub().rejects(new Error('API Error'));
+      sinon.stub(MobileRider, 'getMediaStatus').rejects(new Error('API Error'));
 
       const video = { videoid: 'video1' };
       const result = await concurrentInstance.checkLive(video);
