@@ -278,7 +278,6 @@ class TimingWorker {
           if (scheduleItem.next) {
             return true; // Move on if session ended
           }
-          if (this.timerId) clearTimeout(this.timerId);
           return false; // Wait for session to end
         }
       }
