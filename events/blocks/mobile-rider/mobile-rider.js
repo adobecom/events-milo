@@ -293,7 +293,7 @@ class MobileRider {
       const videoIDToCheck = this.mainID || v.videoid;
 
       const { active } = await MobileRider.getMediaStatus(videoIDToCheck);
-      const isActive = active.includes(v.videoid);
+      const isActive = active.includes(videoIDToCheck);
 
       // Only update store if status has actually changed
       this.setStatus(v.videoid, isActive);
