@@ -22,8 +22,8 @@ const CONFIG = {
     MAX_CHECKS: 50,
   },
   API: {
-    PROD_URL: 'https://overlay-admin.mobilerider.com',
-    DEV_URL: 'https://overlay-admin-dev.mobilerider.com',
+    PROD_URL: 'https://overlay-admin-integration.mobilerider.com',
+    DEV_URL: 'https://overlay-admin-integration.mobilerider.com',
   },
 };
 
