@@ -22,8 +22,8 @@ const CONFIG = {
     MAX_CHECKS: 50,
   },
   API: {
-    PROD_URL: 'https://overlay-admin.mobilerider.com',
-    DEV_URL: 'https://overlay-admin-dev.mobilerider.com',
+    PROD_URL: 'https://overlay-admin-integration.mobilerider.com',
+    DEV_URL: 'https://overlay-admin-integration.mobilerider.com',
   },
 };
 
@@ -293,7 +293,7 @@ class MobileRider {
       const videoIDToCheck = this.mainID || v.videoid;
 
       const { active } = await MobileRider.getMediaStatus(videoIDToCheck);
-      const isActive = active.includes(v.videoid);
+      const isActive = active.includes(videoIDToCheck);
 
       // Only update store if status has actually changed
       this.setStatus(v.videoid, isActive);

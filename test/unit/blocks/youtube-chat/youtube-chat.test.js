@@ -167,10 +167,11 @@ describe('YouTube Chat Module', () => {
     });
 
     describe('preconnect', () => {
-      it('should add preconnect links for YouTube domains', () => {
+      it('should add preconnect links for YouTube domains', async () => {
         const originalHead = document.head.innerHTML;
 
-        youtubeChat.preconnect();
+        const { YouTubeChat } = await import('../../../../events/blocks/youtube-chat/youtube-chat.js');
+        YouTubeChat.preconnect();
 
         const links = document.querySelectorAll('link[rel="preconnect"]');
         expect(links.length).to.be.greaterThan(0);
@@ -182,13 +183,14 @@ describe('YouTube Chat Module', () => {
         document.head.innerHTML = originalHead;
       });
 
-      it('should only add preconnect links once', () => {
+      it('should only add preconnect links once', async () => {
         const originalHead = document.head.innerHTML;
 
-        youtubeChat.preconnect();
+        const { YouTubeChat } = await import('../../../../events/blocks/youtube-chat/youtube-chat.js');
+        YouTubeChat.preconnect();
         const firstCount = document.querySelectorAll('link[rel="preconnect"]').length;
 
-        youtubeChat.preconnect();
+        YouTubeChat.preconnect();
         const secondCount = document.querySelectorAll('link[rel="preconnect"]').length;
 
         expect(firstCount).to.equal(secondCount);
@@ -308,6 +310,7 @@ describe('YouTube Chat Module', () => {
       try {
         await result;
       } catch (error) {
+        // Expected to fail due to missing video ID in test HTML
         expect(error).to.be.instanceOf(Error);
       }
     });

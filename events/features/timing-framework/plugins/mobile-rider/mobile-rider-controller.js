@@ -4,7 +4,7 @@
  */
 class MobileRiderController {
   constructor() {
-    this.baseUrl = 'https://overlay-admin-dev.mobilerider.com';
+    this.baseUrl = 'https://overlay-admin-integration.mobilerider.com';
   }
 
   /**

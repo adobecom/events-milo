@@ -20,11 +20,12 @@ export const mobileRiderStore = {
   },
 };
 
-export default function init(schedule) {
+export default async function init(schedule) {
   const controller = new MobileRiderController();
-
   const mobileRiderSchedules = schedule.filter((entry) => entry.mobileRider);
-  mobileRiderSchedules.forEach(async (s) => {
+  
+  // Wait for all async operations to complete before returning store
+  await Promise.all(mobileRiderSchedules.map(async (s) => {
     // Handle mobileRider as an object with sessionId property
     if (s.mobileRider && typeof s.mobileRider === 'object' && s.mobileRider.sessionId) {
       const { sessionId } = s.mobileRider;
@@ -32,15 +33,15 @@ export default function init(schedule) {
       mobileRiderStore.set(sessionId, isActive);
     } else if (Array.isArray(s.mobileRider)) {
       // Backward compatibility for array format
-      s.mobileRider.forEach(async (condition) => {
+      await Promise.all(s.mobileRider.map(async (condition) => {
         if (condition && condition.sessionId) {
           const { sessionId } = condition;
           const isActive = await controller.isMediaActive(sessionId);
           mobileRiderStore.set(sessionId, isActive);
         }
-      });
+      }));
     }
-  });
+  }));
 
   return mobileRiderStore;
 }
