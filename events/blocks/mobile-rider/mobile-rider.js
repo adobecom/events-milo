@@ -125,7 +125,7 @@ class MobileRider {
 
   injectPlayer(vid, skin, asl = null) {
     if (!this.wrap) return;
-
+  
     let con = this.wrap.querySelector('.mobile-rider-container');
     if (!con) {
       con = createTag('div', {
@@ -139,42 +139,48 @@ class MobileRider {
     } else {
       Object.assign(con.dataset, { videoid: vid, skinid: skin, aslid: asl });
     }
-
+  
     window.__mr_player?.dispose();
     con.querySelector(`#${CONFIG.PLAYER.VIDEO_ID}`)?.remove();
-
+  
     const video = createTag('video', {
       id: CONFIG.PLAYER.VIDEO_ID,
       class: CONFIG.PLAYER.VIDEO_CLASS,
       controls: true,
     });
     con.appendChild(video);
-
-    if (!window.mobilerider) return;
-
-    window.mobilerider.embed(video.id, vid, skin, {
+  
+    // --- Delay just the embed to avoid first-load race in fragments ---
+    const selector = `#${video.id}`;
+    const options = {
       ...this.getPlayerOptions(),
       analytics: { provider: CONFIG.ANALYTICS.PROVIDER },
       identifier1: vid,
       identifier2: asl,
       sessionId: vid,
-    });
-
-    if (asl) this.initASL();
-    // Check store existence first, then check mainID or vid in store
-    if (this.store) {
-      let key = null;
-      if (this.mainID && this.store.get(this.mainID) !== undefined) {
-        key = this.mainID;
-      } else if (this.store.get(vid) !== undefined) {
-        key = vid;
+    };
+  
+    setTimeout(() => {
+      if (!window.mobilerider) return;
+      const host = document.querySelector(selector);
+      if (!host) return; // host disappeared; bail quietly
+  
+      window.mobilerider.embed(selector, vid, skin, options);
+  
+      // ASL and stream-end wiring a tick after embed
+      if (asl) setTimeout(() => this.initASL(), 50);
+  
+      if (this.store) {
+        let key = null;
+        if (this.mainID && this.store.get(this.mainID) !== undefined) key = this.mainID;
+        else if (this.store.get(vid) !== undefined) key = vid;
+        if (key) this.onStreamEnd(vid);
       }
-
-      if (key) this.onStreamEnd(vid);
-    }
-
+    }, 50);
+    // ------------------------------------------------------------------
+  
     con.classList.remove('is-hidden');
-  }
+  }  
 
   onStreamEnd(vid) {
     window.__mr_player?.off('streamend');
