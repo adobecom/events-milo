@@ -172,7 +172,8 @@ class MobileRider {
 
         if (key) this.onStreamEnd(vid);
       }
-    }, 1000);
+      con.classList.remove('is-hidden');
+  }, 1000);
   }
 
   onStreamEnd(vid) {
