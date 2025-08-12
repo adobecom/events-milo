@@ -317,6 +317,7 @@ class MobileRider {
       if (!storeKey) return;
 
       const currentStatus = this.store.get(storeKey);
+      this.store.set(storeKey, false);
       if (currentStatus !== live) {
         this.store.set(storeKey, live);
         window.lana?.log?.(`Status updated for ${storeKey}: ${live}`);
