@@ -325,8 +325,14 @@ class TimingWorker {
       this.currentScheduleItem = { ...this.nextScheduleItem };
       this.nextScheduleItem = this.nextScheduleItem.next;
     } else {
-      // If no items are triggered and we've reached the end, send the first item as fallback
-      itemToSend = this.getFirstScheduleItem();
+      // If no items are triggered, send the current schedule item
+      // This handles cases where mobileRider is still active or other blocking conditions
+      itemToSend = this.currentScheduleItem;
+      
+      // If we don't have a current item, fall back to the first item
+      if (!itemToSend) {
+        itemToSend = this.getFirstScheduleItem();
+      }
     }
 
     // Send the item if it's different from what we previously sent
