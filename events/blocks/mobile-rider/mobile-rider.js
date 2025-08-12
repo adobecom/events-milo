@@ -151,29 +151,27 @@ class MobileRider {
     con.appendChild(video);
 
     if (!window.mobilerider) return;
-    setTimeout(() => {
-      window.mobilerider.embed(video.id, vid, skin, {
-        ...this.getPlayerOptions(),
-        analytics: { provider: CONFIG.ANALYTICS.PROVIDER },
-        identifier1: vid,
-        identifier2: asl,
-        sessionId: vid,
-      });
+    window.mobilerider.embed(video.id, vid, skin, {
+      ...this.getPlayerOptions(),
+      analytics: { provider: CONFIG.ANALYTICS.PROVIDER },
+      identifier1: vid,
+      identifier2: asl,
+      sessionId: vid,
+    });
 
-      if (asl) this.initASL();
-      // Check store existence first, then check mainID or vid in store
-      if (this.store) {
-        let key = null;
-        if (this.mainID && this.store.get(this.mainID) !== undefined) {
-          key = this.mainID;
-        } else if (this.store.get(vid) !== undefined) {
-          key = vid;
-        }
-
-        if (key) this.onStreamEnd(vid);
+    if (asl) this.initASL();
+    // Check store existence first, then check mainID or vid in store
+    if (this.store) {
+      let key = null;
+      if (this.mainID && this.store.get(this.mainID) !== undefined) {
+        key = this.mainID;
+      } else if (this.store.get(vid) !== undefined) {
+        key = vid;
       }
-      con.classList.remove('is-hidden');
-  }, 1000);
+
+      if (key) this.onStreamEnd(vid);
+    }
+    con.classList.remove('is-hidden');
   }
 
   onStreamEnd(vid) {
