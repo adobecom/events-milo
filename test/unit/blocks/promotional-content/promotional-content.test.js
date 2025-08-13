@@ -16,19 +16,17 @@ describe('Promotional Content Block', () => {
         {
           name: 'adobe-express',
           title: 'Adobe Express',
-          description: 'Create stunning designs quickly'
+          description: 'Create stunning designs quickly',
         },
         {
           name: 'photoshop',
           title: 'Photoshop',
-          description: 'Professional image editing'
-        }
-      ]
+          description: 'Professional image editing',
+        },
+      ],
     };
 
-    fetchStub = sinon.stub(window, 'fetch').resolves({
-      json: () => Promise.resolve(mockPromotionalData)
-    });
+    fetchStub = sinon.stub(window, 'fetch').resolves({ json: () => Promise.resolve(mockPromotionalData) });
   });
 
   afterEach(() => {
@@ -62,7 +60,7 @@ describe('Promotional Content Block', () => {
       fetchStub.rejects(new Error('Network error'));
 
       const init = (await import('../../../../events/blocks/promotional-content/promotional-content.js')).default;
-      
+
       try {
         await init(el);
       } catch (error) {
@@ -144,4 +142,4 @@ describe('Promotional Content Block', () => {
       expect(fetchStub.calledOnce).to.be.true;
     });
   });
-}); 
+});
