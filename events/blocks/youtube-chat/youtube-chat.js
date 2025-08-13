@@ -44,7 +44,7 @@ export class YouTubeChat {
 
       if (!this.videoId) throw new Error('Invalid or missing video ID.');
 
-      this.preconnect();
+      YouTubeChat.preconnect();
       block.textContent = '';
       block.append(this.buildStream());
     } catch (err) {
@@ -53,11 +53,11 @@ export class YouTubeChat {
     }
   }
 
-  preconnect() {
+  static preconnect() {
     if (YouTubeChat.preconnected) return;
     YouTubeChat.preconnected = true;
 
-    CONFIG.PRELOAD_DOMAINS.forEach(domain => {
+    CONFIG.PRELOAD_DOMAINS.forEach((domain) => {
       const link = createTag('link', { rel: 'preconnect', href: `https://${domain}` });
       document.head.appendChild(link);
     });
@@ -65,9 +65,7 @@ export class YouTubeChat {
 
   buildStream() {
     const autoplay = this.isAutoplayEnabled();
-    const container = createTag('div', {
-      class: `youtube-stream${!this.chatEnabled || !autoplay ? ' single-column' : ''}${this.chatEnabled ? ' has-chat' : ''}`.trim(),
-    });
+    const container = createTag('div', { class: `youtube-stream${!this.chatEnabled || !autoplay ? ' single-column' : ''}${this.chatEnabled ? ' has-chat' : ''}`.trim() });
 
     container.append(this.buildVideoSection(autoplay));
     if (this.chatEnabled && autoplay) container.append(this.buildChatSection());
@@ -80,7 +78,12 @@ export class YouTubeChat {
     const container = createTag('div', { class: 'youtube-video-container' });
     const wrapper = createTag('div', { class: 'iframe-container' });
 
-    autoplay ? this.insertAutoplayIframe(wrapper) : this.insertLitePlayer(wrapper);
+    if (autoplay) {
+      this.insertAutoplayIframe(wrapper);
+    } else {
+      this.insertLitePlayer(wrapper);
+    }
+
     container.append(wrapper);
     return container;
   }

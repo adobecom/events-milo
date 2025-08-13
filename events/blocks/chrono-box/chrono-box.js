@@ -33,9 +33,16 @@ function getSchedule(scheduleId) {
 }
 
 async function initPlugins(schedule) {
-  const SUPPORTED_PLUGINS = ['mobile-rider', 'metadata'];
-  const pluginsNeeded = SUPPORTED_PLUGINS.filter((plugin) => schedule.some((item) => item[plugin]));
-  const plugins = await Promise.all(pluginsNeeded.map((plugin) => import(`../../features/timing-framework/plugins/${plugin}/plugin.js`)));
+  const PLUGINS_MAP = {
+    mobileRider: 'mobile-rider',
+    metadata: 'metadata',
+  };
+  const hasPlugin = (plugin) => schedule.some((item) => item[plugin]);
+  const pluginsNeeded = Object.keys(PLUGINS_MAP).filter(hasPlugin);
+  const plugins = await Promise.all(pluginsNeeded.map((plugin) => {
+    const pluginDir = PLUGINS_MAP[plugin];
+    return import(`../../features/timing-framework/plugins/${pluginDir}/plugin.js`);
+  }));
 
   // Get or create a global tabId that's shared across all chrono-boxes on this page
   // This ensures that multiple chrono-boxes on the same page use the same tabId,
@@ -48,7 +55,7 @@ async function initPlugins(schedule) {
 
   const pluginsModules = new Map();
   await Promise.all(plugins.map(async (plugin, index) => {
-    const pluginName = pluginsNeeded[index].replace('-', '');
+    const pluginName = pluginsNeeded[index];
     pluginsModules.set(pluginName, await plugin.default(schedule));
   }));
 
@@ -119,7 +126,7 @@ export default async function init(el) {
 
   if (!thisSchedule) {
     el.remove();
-    return;
+    return Promise.resolve();
   }
 
   el.innerHTML = '';
@@ -131,37 +138,51 @@ export default async function init(el) {
     pluginsOutputs.tabId,
   );
 
-  worker.onmessage = (event) => {
-    const { pathToFragment } = event.data;
-    const { prefix } = getLocale(getConfig().locales);
-    el.style.height = `${el.clientHeight}px`;
+  // Create a promise that resolves when the first message is received
+  return new Promise((resolve) => {
+    const timeout = setTimeout(() => {
+      window.lana?.log('Timeout waiting for first worker message, continuing without CLS prevention');
+      resolve(); // resolve the promise without waiting for the first message
+    }, 3000); // 3 second timeout - balances CLS prevention with LCP/FCP
 
-    // load sp progress circle
-    const spTheme = createTag('sp-theme', { color: 'light', scale: 'medium', class: 'loading-screen' });
-    createTag('sp-progress-circle', { size: 'l', indeterminate: true }, '', { parent: spTheme });
-    el.innerHTML = '';
-    el.classList.add('loading');
-    el.append(spTheme);
+    // Set up the message handler that resolves the promise
+    worker.onmessage = (event) => {
+      clearTimeout(timeout);
 
-    const a = createTag('a', { href: `${prefix}${pathToFragment}` }, '', { parent: el });
+      const { pathToFragment } = event.data;
+      const { prefix } = getLocale(getConfig().locales);
+      el.style.height = `${el.clientHeight}px`;
 
-    loadFragment(a).then(() => {
-      // set el height to current height
-      spTheme.remove();
-      el.removeAttribute('style');
-      el.classList.remove('loading');
-    }).catch((error) => {
-      // Handle fragment loading errors
-      window.lana?.log(`Error loading fragment ${pathToFragment}: ${JSON.stringify(error)}`);
+      // load sp progress circle
+      const spTheme = createTag('sp-theme', { color: 'light', scale: 'medium', class: 'loading-screen' });
+      createTag('sp-progress-circle', { size: 'l', indeterminate: true }, '', { parent: spTheme });
+      el.innerHTML = '';
+      el.classList.add('loading');
+      el.append(spTheme);
 
-      // Remove loading state
-      spTheme.remove();
-      el.removeAttribute('style');
-      el.classList.remove('loading');
+      const a = createTag('a', { href: `${prefix}${pathToFragment}` }, '', { parent: el });
 
-      // Show error state to user
-      el.innerHTML = '<div class="error-message">Unable to load content. Please refresh the page.</div>';
-      el.classList.add('error');
-    });
-  };
+      loadFragment(a).then(() => {
+        // set el height to current height
+        spTheme.remove();
+        el.removeAttribute('style');
+        el.classList.remove('loading');
+      }).catch((error) => {
+        // Handle fragment loading errors
+        window.lana?.log(`Error loading fragment ${pathToFragment}: ${JSON.stringify(error)}`);
+
+        // Remove loading state
+        spTheme.remove();
+        el.removeAttribute('style');
+        el.classList.remove('loading');
+
+        // Show error state to user
+        el.innerHTML = '<div class="error-message">Unable to load content. Please refresh the page.</div>';
+        el.classList.add('error');
+      });
+
+      // Resolve the promise
+      resolve();
+    };
+  });
 }

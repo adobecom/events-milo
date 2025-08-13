@@ -8,7 +8,7 @@ class Drawer {
     this.cfg = cfg;
     this.items = cfg.items || [];
     this.renderItem = cfg.renderItem || (() => createTag('div', { class: 'drawer-item' }, 'Item'));
-    this.onClick = cfg.onItemClick || this.defaultClick.bind(this);
+    this.onClick = cfg.onItemClick || (() => {});
     this.itemsEl = null;
 
     this.render();
@@ -60,11 +60,10 @@ class Drawer {
 
   setActiveById(id) {
     const el = this.itemsEl?.querySelector(`[data-id="${id}"]`);
-    if (el) this.setActive(el, this.items.find((i) => i.videoid === id));
-  }
-
-  defaultClick() {
-    window.lana?.log('Drawer Click ignored — no handler set.');
+    if (el) {
+      const item = this.items.find((i) => i.videoid === id);
+      if (item) this.setActive(el, item);
+    }
   }
 }
 
@@ -72,7 +71,7 @@ export default function initDrawers(root, cfg) {
   try {
     return new Drawer(root, cfg);
   } catch (e) {
-    console.error('Drawer init failed:', e);
+    window.lana?.log(`Drawer init failed: ${e.message}`);
     return null;
   }
 }
