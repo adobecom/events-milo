@@ -27,6 +27,45 @@ const CONFIG = {
   },
 };
 
+// --- LCP helpers -------------------------------------------------------------
+
+/** Preload the poster so it can be the LCP element. Idempotent. */
+function preloadPoster(url) {
+  if (!url) return;
+  const sel = `link[rel="preload"][as="image"][href="${url}"]`;
+  if (!document.querySelector(sel)) {
+    const l = document.createElement('link');
+    l.rel = 'preload';
+    l.as = 'image';
+    l.href = url;
+    document.head.appendChild(l);
+  }
+}
+
+/** Injects an eagerly loaded poster <img> placeholder. Returns a cleanup fn. */
+function showPosterPlaceholder(container, poster, altText = 'Video poster') {
+  if (!poster || !container) return () => {};
+  // If one already exists, don’t duplicate
+  let img = container.querySelector('.mr-poster');
+  if (!img) {
+    img = createTag('img', {
+      src: poster,
+      alt: altText,
+      class: 'mr-poster',
+      fetchpriority: 'high',
+      loading: 'eager',
+      decoding: 'async',
+    });
+    // Make sure it sits behind the video but fills the box; CSS-friendly:
+    // .mobile-rider-container { position: relative; }
+    // .mr-poster { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
+    container.appendChild(img);
+  }
+  return () => img?.remove();
+}
+
+// ---------------------------------------------------------------------------
+
 let scriptPromise = null;
 
 async function loadScript() {
@@ -140,26 +179,49 @@ class MobileRider {
       Object.assign(con.dataset, { videoid: vid, skinid: skin, aslid: asl });
     }
 
+    // --- LCP: add poster preload + placeholder before we touch <video> -------
+    const poster = this.cfg.poster || this.cfg.thumbnail;
+    if (poster) {
+      preloadPoster(poster);
+    }
+    const removePoster = showPosterPlaceholder(con, poster, this.cfg.title || 'Video poster');
+
+    // -------------------------------------------------------------------------
+
     window.__mr_player?.dispose();
     con.querySelector(`#${CONFIG.PLAYER.VIDEO_ID}`)?.remove();
 
-    const video = createTag('video', {
+    const videoAttrs = {
       id: CONFIG.PLAYER.VIDEO_ID,
       class: CONFIG.PLAYER.VIDEO_CLASS,
       controls: true,
-    });
+      preload: 'metadata',       // LCP-friendly
+      playsinline: '',           // iOS: avoid fullscreen jumps
+    };
+    if (poster) videoAttrs.poster = poster; // Also set poster on <video>
+    const video = createTag('video', videoAttrs);
     con.appendChild(video);
 
     if (!window.mobilerider) return;
+
+    // Remove poster when we have data (or after a short fallback)
+    const cleanup = () => removePoster();
+    video.addEventListener('loadeddata', cleanup, { once: true });
+    // Fallback: in case the player fires custom events or takes longer
+    setTimeout(cleanup, 4000);
+
     window.mobilerider.embed(video.id, vid, skin, {
       ...this.getPlayerOptions(),
       analytics: { provider: CONFIG.ANALYTICS.PROVIDER },
       identifier1: vid,
       identifier2: asl,
       sessionId: vid,
+      // If the SDK supports it, this is harmless to pass along:
+      poster, // may be ignored by SDK; safe to include
     });
 
     if (asl) this.initASL();
+
     // Check store existence first, then check mainID or vid in store
     if (this.store) {
       let key = null;
@@ -168,9 +230,9 @@ class MobileRider {
       } else if (this.store.get(vid) !== undefined) {
         key = vid;
       }
-
       if (key) this.onStreamEnd(vid);
     }
+
     con.classList.remove('is-hidden');
   }
 
