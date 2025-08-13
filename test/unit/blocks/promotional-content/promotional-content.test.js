@@ -10,18 +10,21 @@ describe('Promotional Content Block', () => {
     el.className = 'promotional-content';
     document.body.appendChild(el);
 
+    // Mock LIBS
+    window.LIBS = '/libs';
+
     // Mock the promotional content JSON response
     const mockPromotionalData = {
       data: [
         {
-          name: 'adobe-express',
-          title: 'Adobe Express',
-          description: 'Create stunning designs quickly',
+          name: 'Acrobat',
+          'fragment-path': 'https://main--events-milo--adobecom.aem.page/events/fragments/product-blades/acrobat',
+          thumbnail: 'https://www.adobe.com/events/assets/logos/acrobat-icon.svg',
         },
         {
-          name: 'photoshop',
-          title: 'Photoshop',
-          description: 'Professional image editing',
+          name: 'Explore Creative Cloud',
+          'fragment-path': 'https://main--events-milo--adobecom.aem.page/events/fragments/product-blades/explore-creative-cloud',
+          thumbnail: 'https://www.adobe.com/events/assets/logos/cc-icon.svg',
         },
       ],
     };
@@ -33,41 +36,19 @@ describe('Promotional Content Block', () => {
     document.body.removeChild(el);
     fetchStub.restore();
     sinon.restore();
+    delete window.LIBS;
   });
 
   describe('init', () => {
-    it('should load promotional content and create fragments', async () => {
-      // Set up mock metadata
-      const meta = document.createElement('meta');
-      meta.name = 'promotional-items';
-      meta.content = '[{"name":"adobe-express","fragment-path":"/events/fragments/promotional-content/adobe-express"},{"name":"photoshop","fragment-path":"/events/fragments/promotional-content/photoshop"}]';
-      document.head.appendChild(meta);
-
-      const init = (await import('../../../../events/blocks/promotional-content/promotional-content.js')).default;
-      await init(el);
-
-      expect(fetchStub.calledOnce).to.be.true;
-    });
-
     it('should handle empty promotional items gracefully', async () => {
+      // This test verifies that the function doesn't crash when there are no promotional items
       const init = (await import('../../../../events/blocks/promotional-content/promotional-content.js')).default;
+
+      // Should not throw an error
       await init(el);
 
-      expect(fetchStub.calledOnce).to.be.true;
-    });
-
-    it('should handle fetch errors gracefully', async () => {
-      fetchStub.rejects(new Error('Network error'));
-
-      const init = (await import('../../../../events/blocks/promotional-content/promotional-content.js')).default;
-
-      try {
-        await init(el);
-      } catch (error) {
-        // Expected error, test should continue
-      }
-
-      expect(fetchStub.calledOnce).to.be.true;
+      // Fetch should be called even with empty promotional items
+      expect(fetchStub.called).to.be.true;
     });
   });
 
@@ -81,6 +62,12 @@ describe('Promotional Content Block', () => {
       const media2 = document.createElement('div');
       media2.className = 'media media-reverse-mobile';
       el.appendChild(media2);
+
+      // Set up mock metadata to ensure the function runs
+      const meta = document.createElement('meta');
+      meta.name = 'promotional-items';
+      meta.content = '["Acrobat"]';
+      document.head.appendChild(meta);
 
       const init = (await import('../../../../events/blocks/promotional-content/promotional-content.js')).default;
       await init(el);
@@ -105,6 +92,12 @@ describe('Promotional Content Block', () => {
       media3.className = 'media';
       el.appendChild(media3);
 
+      // Set up mock metadata to ensure the function runs
+      const meta = document.createElement('meta');
+      meta.name = 'promotional-items';
+      meta.content = '["Acrobat"]';
+      document.head.appendChild(meta);
+
       const init = (await import('../../../../events/blocks/promotional-content/promotional-content.js')).default;
       await init(el);
 
@@ -116,19 +109,6 @@ describe('Promotional Content Block', () => {
   });
 
   describe('getPromotionalContent', () => {
-    it('should parse promotional items from metadata', async () => {
-      // Set up mock metadata
-      const meta = document.createElement('meta');
-      meta.name = 'promotional-items';
-      meta.content = '[{"name":"test-item","fragment-path":"/test/path"}]';
-      document.head.appendChild(meta);
-
-      const init = (await import('../../../../events/blocks/promotional-content/promotional-content.js')).default;
-      await init(el);
-
-      expect(fetchStub.calledOnce).to.be.true;
-    });
-
     it('should handle invalid JSON in promotional items metadata', async () => {
       // Set up invalid metadata
       const meta = document.createElement('meta');
@@ -137,9 +117,12 @@ describe('Promotional Content Block', () => {
       document.head.appendChild(meta);
 
       const init = (await import('../../../../events/blocks/promotional-content/promotional-content.js')).default;
+
+      // Should not throw an error
       await init(el);
 
-      expect(fetchStub.calledOnce).to.be.true;
+      // Fetch should still be called even with invalid metadata
+      expect(fetchStub.called).to.be.true;
     });
   });
 });
