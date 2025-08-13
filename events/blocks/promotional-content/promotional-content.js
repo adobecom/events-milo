@@ -20,8 +20,8 @@ async function getPromotionalContent() {
     return [];
   }
 
-  const rehydratedPromotionalItems = data.map((item) => {
-    const promotionalItem = promotionalItems.find((content) => content.name === item.name);
+  const rehydratedPromotionalItems = promotionalItems.map((item) => {
+    const promotionalItem = data.find((content) => content.name === item.name);
     return {
       ...item,
       promotionalItem,
