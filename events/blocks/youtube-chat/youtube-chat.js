@@ -127,7 +127,7 @@ export class YouTubeChat {
       container.classList.remove('single-column');
     }
 
-    // When user clicks play, start video immediately but respect their mute preference
+    // When user clicks play, start video immediately but respect author's mute preference
     const iframe = this.createVideoIframe(this.buildEmbedUrl(false, true));
     liteYT.insertAdjacentElement('afterend', iframe);
     liteYT.remove();
