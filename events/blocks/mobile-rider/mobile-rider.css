@@ -42,5 +42,5 @@
 
 /* Override conflicting line-height for title container */
 .mobile-rider h2#title_container {
-  line-height: 1.25 !important;
+  line-height: 1;
 }
