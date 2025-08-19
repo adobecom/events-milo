@@ -61,8 +61,10 @@ class Drawer {
   setActiveById(id) {
     const el = this.itemsEl?.querySelector(`[data-id="${id}"]`);
     if (el) {
-      const item = this.items.find((i) => i.videoid === id);
-      if (item) this.setActive(el, item);
+      // Only update visual state, don't trigger click handler
+      this.itemsEl?.querySelectorAll('.drawer-item.current')
+        .forEach((i) => i.classList.remove('current'));
+      el.classList.add('current');
     }
   }
 }
