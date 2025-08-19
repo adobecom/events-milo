@@ -25,7 +25,57 @@ const CONFIG = {
     PROD_URL: 'https://overlay-admin-integration.mobilerider.com',
     DEV_URL: 'https://overlay-admin-integration.mobilerider.com',
   },
+  STORAGE: {
+    CURRENT_VIDEO_KEY: 'mobile-rider-current-video',
+  },
 };
+
+// --- Storage helpers ---------------------------------------------------------
+
+/**
+ * Save the current video state to sessionStorage
+ * @param {string} videoId - The video ID that is currently playing
+ * @param {string} mainId - The main session ID for concurrent streams
+ */
+function saveCurrentVideo(videoId, mainId = null) {
+  try {
+    const data = {
+      videoId,
+      mainId,
+    };
+    sessionStorage.setItem(CONFIG.STORAGE.CURRENT_VIDEO_KEY, JSON.stringify(data));
+  } catch (e) {
+    window.lana?.log(`Failed to save current video state: ${e.message}`);
+  }
+}
+
+/**
+ * Get the saved current video state from sessionStorage
+ * @returns {Object|null} The saved video state or null if not found
+ */
+function getCurrentVideo() {
+  try {
+    const data = sessionStorage.getItem(CONFIG.STORAGE.CURRENT_VIDEO_KEY);
+    
+    if (!data) return null;
+    
+    return JSON.parse(data);
+  } catch (e) {
+    window.lana?.log(`Failed to get current video state: ${e.message}`);
+    return null;
+  }
+}
+
+/**
+ * Clear the saved current video state
+ */
+function clearCurrentVideo() {
+  try {
+    sessionStorage.removeItem(CONFIG.STORAGE.CURRENT_VIDEO_KEY);
+  } catch (e) {
+    window.lana?.log(`Failed to clear current video state: ${e.message}`);
+  }
+}
 
 // --- LCP helpers -------------------------------------------------------------
 
@@ -92,7 +142,15 @@ class MobileRider {
     this.root = null;
     this.store = null;
     this.mainID = null;
+    this.currentVideoId = null;
     this.init();
+    
+    // Save current video state before page unload
+    window.addEventListener('beforeunload', () => {
+      if (this.currentVideoId && this.cfg?.concurrentenabled) {
+        saveCurrentVideo(this.currentVideoId, this.mainID);
+      }
+    });
   }
 
   async init() {
@@ -118,7 +176,20 @@ class MobileRider {
       const isConcurrent = this.cfg.concurrentenabled;
       const videos = isConcurrent ? this.cfg.concurrentVideos : [this.cfg];
 
-      const { videoid, aslid } = videos[0];
+      // Check for saved video state
+      const savedVideo = getCurrentVideo();
+      let initialVideo = videos[0];
+      
+      if (savedVideo && isConcurrent) {
+        // Find the saved video in the concurrent videos array
+        const savedVideoObj = videos.find(v => v.videoid === savedVideo.videoId);
+        if (savedVideoObj) {
+          initialVideo = savedVideoObj;
+          window.lana?.log(`Restoring saved video: ${savedVideo.videoId}`);
+        }
+      }
+
+      const { videoid, aslid } = initialVideo;
       if (!videoid) {
         window.lana?.log('Missing video-id in config.');
         return;
@@ -126,10 +197,16 @@ class MobileRider {
 
       // Set mainID for concurrent streams
       if (isConcurrent && this.store) {
-        this.mainID = videos[0].videoid;
+        this.mainID = savedVideo?.mainId || videos[0].videoid;
       }
 
       await this.loadPlayer(videoid, aslid);
+      
+      // Save the initial video state for concurrent streams
+      if (isConcurrent) {
+        saveCurrentVideo(videoid, this.mainID);
+      }
+      
       if (isConcurrent && videos.length > 1) await this.initDrawer(videos);
     } catch (e) {
       window.lana?.log(`MobileRider Init error: ${e.message}`);
@@ -164,6 +241,9 @@ class MobileRider {
 
   injectPlayer(vid, skin, asl = null) {
     if (!this.wrap) return;
+
+    // Track current video ID
+    this.currentVideoId = vid;
 
     let con = this.wrap.querySelector('.mobile-rider-container');
     if (!con) {
@@ -240,6 +320,8 @@ class MobileRider {
     window.__mr_player?.off('streamend');
     window.__mr_player?.on('streamend', () => {
       this.setStatus(vid, false);
+      // Clear saved state when stream ends
+      clearCurrentVideo();
       MobileRider.dispose();
     });
   }
@@ -248,6 +330,9 @@ class MobileRider {
     window.__mr_player?.dispose();
     window.__mr_player = null;
     window.__mr_stream_published = null;
+    
+    // Clear saved video state when disposing
+    clearCurrentVideo();
   }
 
   static loadDrawerCSS() {
@@ -323,6 +408,13 @@ class MobileRider {
         const live = await this.checkLive(v);
         if (!live) window.lana?.log(`This stream is not currently live: ${v.videoid}`);
       }
+      
+      // Save the current video state when user switches videos
+      if (this.cfg.concurrentenabled) {
+        saveCurrentVideo(v.videoid, this.mainID);
+        this.currentVideoId = v.videoid;
+      }
+      
       this.injectPlayer(v.videoid, this.cfg.skinid, v.aslid);
     } catch (e) {
       window.lana?.log(`Drawer item click error: ${e.message}`);

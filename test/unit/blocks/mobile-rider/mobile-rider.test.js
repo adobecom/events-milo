@@ -792,4 +792,131 @@ describe('Mobile Rider Module', () => {
       expect(mockStore.set.called).to.be.false;
     });
   });
+
+  describe('sessionStorage persistence', () => {
+    let mockSessionStorage;
+    let originalSessionStorage;
+
+    const concurrentHtml = `
+      <div class="mobile-rider">
+        <div>
+          <div>video-id</div>
+          <div>main-video</div>
+        </div>
+        <div>
+          <div>skin-id</div>
+          <div>default-skin</div>
+        </div>
+        <div>
+          <div>concurrentenabled</div>
+          <div>true</div>
+        </div>
+        <div>
+          <div>concurrentvideoid1</div>
+          <div>video1</div>
+        </div>
+        <div>
+          <div>concurrentvideoid2</div>
+          <div>video2</div>
+        </div>
+      </div>
+    `;
+
+    beforeEach(() => {
+      mockSessionStorage = {};
+      originalSessionStorage = globalThis.sessionStorage;
+      
+      Object.defineProperty(globalThis, 'sessionStorage', {
+        value: {
+          getItem: sinon.stub().callsFake((key) => mockSessionStorage[key] || null),
+          setItem: sinon.stub().callsFake((key, value) => {
+            mockSessionStorage[key] = value;
+          }),
+          removeItem: sinon.stub().callsFake((key) => {
+            delete mockSessionStorage[key];
+          }),
+        },
+        writable: true,
+      });
+    });
+
+    afterEach(() => {
+      Object.defineProperty(globalThis, 'sessionStorage', {
+        value: originalSessionStorage,
+        writable: true,
+      });
+      mockSessionStorage = {};
+    });
+
+    it('should restore saved video state on initialization', async () => {
+      // Mock saved video state
+      const savedState = {
+        videoId: 'video2',
+        mainId: 'video1',
+      };
+      mockSessionStorage['mobile-rider-current-video'] = JSON.stringify(savedState);
+
+      document.body.innerHTML = concurrentHtml;
+      const el = document.querySelector('.mobile-rider');
+      const instance = init(el);
+
+      await new Promise((resolve) => {
+        setTimeout(resolve, 100);
+      });
+
+      // Should log that it's restoring the saved video
+      expect(mockLana.log.calledWith('Restoring saved video: video2')).to.be.true;
+    });
+
+    it('should save video state when switching videos', async () => {
+      document.body.innerHTML = concurrentHtml;
+      const el = document.querySelector('.mobile-rider');
+      const instance = init(el);
+
+      await new Promise((resolve) => {
+        setTimeout(resolve, 100);
+      });
+
+      // Simulate clicking on a different video
+      const video = { videoid: 'video2', aslid: 'asl2' };
+      await instance.onDrawerClick(video);
+
+      // Should save the new video state
+      expect(globalThis.sessionStorage.setItem.called).to.be.true;
+      const savedData = JSON.parse(mockSessionStorage['mobile-rider-current-video']);
+      expect(savedData.videoId).to.equal('video2');
+    });
+
+    it('should clear saved state when stream ends', async () => {
+      document.body.innerHTML = concurrentHtml;
+      const el = document.querySelector('.mobile-rider');
+      const instance = init(el);
+
+      await new Promise((resolve) => {
+        setTimeout(resolve, 100);
+      });
+
+      // Trigger stream end
+      instance.constructor.dispose();
+
+      // Should clear saved state
+      expect(globalThis.sessionStorage.removeItem.called).to.be.true;
+    });
+
+    it('should handle invalid saved state', async () => {
+      // Mock invalid saved video state
+      mockSessionStorage['mobile-rider-current-video'] = 'invalid-json';
+
+      document.body.innerHTML = concurrentHtml;
+      const el = document.querySelector('.mobile-rider');
+      const instance = init(el);
+
+      await new Promise((resolve) => {
+        setTimeout(resolve, 100);
+      });
+
+      // Should not restore invalid state
+      expect(mockLana.log.calledWith('Restoring saved video: video2')).to.be.false;
+    });
+  });
 });
