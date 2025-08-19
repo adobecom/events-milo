@@ -185,6 +185,9 @@ export class YouTubeChat {
     }
 
     Object.entries(CONFIG.PLAYER_OPTIONS).forEach(([key, param]) => {
+      // Skip mute if autoplay is enabled since it's already added above
+      if (autoplay && key === 'mute') return;
+      
       if (this.config[key]?.toLowerCase?.() === 'true') {
         params.append(param, '1');
       }
