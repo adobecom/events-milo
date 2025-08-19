@@ -181,7 +181,7 @@ export class YouTubeChat {
 
     if (autoplay) {
       params.append('autoplay', '1');
-      params.append('mute', '1');
+      // params.append('mute', '1');
     }
 
     Object.entries(CONFIG.PLAYER_OPTIONS).forEach(([key, param]) => {
