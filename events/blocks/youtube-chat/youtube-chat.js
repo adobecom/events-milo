@@ -127,7 +127,9 @@ export class YouTubeChat {
       container.classList.remove('single-column');
     }
 
-    const iframe = this.createVideoIframe(this.buildEmbedUrl(true));
+    // When user clicks play, respect their mute preference
+    // Don't force autoplay=true since user is manually clicking play
+    const iframe = this.createVideoIframe(this.buildEmbedUrl(false));
     liteYT.insertAdjacentElement('afterend', iframe);
     liteYT.remove();
 
@@ -181,11 +183,15 @@ export class YouTubeChat {
 
     if (autoplay) {
       params.append('autoplay', '1');
-      params.append('mute', '1');
+      // Only force mute if autoplay is enabled and user hasn't explicitly set mute to false
+      const shouldMute = this.config.mute?.toLowerCase() !== 'false';
+      if (shouldMute) {
+        params.append('mute', '1');
+      }
     }
 
     Object.entries(CONFIG.PLAYER_OPTIONS).forEach(([key, param]) => {
-      // Skip mute if autoplay is enabled since it's already added above
+      // Skip mute if autoplay is enabled since it's already handled above
       if (autoplay && key === 'mute') return;
       
       if (this.config[key]?.toLowerCase?.() === 'true') {
