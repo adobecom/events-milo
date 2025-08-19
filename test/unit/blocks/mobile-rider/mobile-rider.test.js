@@ -918,5 +918,27 @@ describe('Mobile Rider Module', () => {
       // Should not restore invalid state
       expect(mockLana.log.calledWith('Restoring saved video: video2')).to.be.false;
     });
+
+    it('should update drawer active state when switching videos', async () => {
+      document.body.innerHTML = concurrentHtml;
+      const el = document.querySelector('.mobile-rider');
+      const instance = init(el);
+
+      await new Promise((resolve) => {
+        setTimeout(resolve, 100);
+      });
+
+      // Mock drawer setActiveById method
+      if (instance.drawer) {
+        instance.drawer.setActiveById = sinon.stub();
+      }
+
+      // Simulate clicking on a different video
+      const video = { videoid: 'video2', aslid: 'asl2' };
+      await instance.onDrawerClick(video);
+
+      // Should update drawer active state
+      expect(instance.drawer.setActiveById.calledWith('video2')).to.be.true;
+    });
   });
 });

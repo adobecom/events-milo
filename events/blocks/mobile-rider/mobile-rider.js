@@ -143,6 +143,7 @@ class MobileRider {
     this.store = null;
     this.mainID = null;
     this.currentVideoId = null;
+    this.drawer = null;
     this.init();
     
     // Save current video state before page unload
@@ -207,7 +208,13 @@ class MobileRider {
         saveCurrentVideo(videoid, this.mainID);
       }
       
-      if (isConcurrent && videos.length > 1) await this.initDrawer(videos);
+      if (isConcurrent && videos.length > 1) {
+        await this.initDrawer(videos);
+        // Update drawer active state to match the restored video
+        if (savedVideo && this.drawer) {
+          this.drawer.setActiveById(videoid);
+        }
+      }
     } catch (e) {
       window.lana?.log(`MobileRider Init error: ${e.message}`);
     }
@@ -386,14 +393,14 @@ class MobileRider {
         return item;
       };
 
-      const drawer = createDrawer(this.root, {
+      this.drawer = createDrawer(this.root, {
         items: videos,
         ariaLabel: 'Videos',
         renderItem,
         onItemClick: (_, v) => this.onDrawerClick(v),
       });
 
-      const itemsList = drawer?.itemsEl;
+      const itemsList = this.drawer?.itemsEl;
       if (itemsList?.firstChild) {
         itemsList.insertBefore(this.drawerHeading(), itemsList.firstChild);
       }
@@ -416,6 +423,11 @@ class MobileRider {
       }
       
       this.injectPlayer(v.videoid, this.cfg.skinid, v.aslid);
+      
+      // Update drawer active state
+      if (this.drawer) {
+        this.drawer.setActiveById(v.videoid);
+      }
     } catch (e) {
       window.lana?.log(`Drawer item click error: ${e.message}`);
     }
