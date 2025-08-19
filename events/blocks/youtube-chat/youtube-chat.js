@@ -182,8 +182,9 @@ export class YouTubeChat {
 
     if (autoplay || userInitiated) {
       params.append('autoplay', '1');
-      // Force mute only for browser autoplay, not for user-initiated play
-      if (autoplay && this.config.mute?.toLowerCase() !== 'false') {
+      // Force mute for browser autoplay (required by browsers)
+      // For user-initiated play, respect the user's mute preference
+      if (autoplay) {
         params.append('mute', '1');
       }
     }
