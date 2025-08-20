@@ -69,6 +69,12 @@
   transition: all 0.2s ease;
 }
 
+.mobile-rider .drawer-item.current {
+  border-bottom: 3px solid #1473e6;
+}
+
+
+/* Blue background on hover only for non-current items */
 .mobile-rider .drawer-item:not(.current):hover {
   background-color: #1473e6;
 }
