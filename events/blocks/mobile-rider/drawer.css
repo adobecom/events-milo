@@ -74,7 +74,7 @@
 }
 
 /* Non-current items with blue background */
-.mobile-rider .drawer-item:not(.current) {
+.mobile-rider .drawer-item:not(.current):hover {
   background-color: #1473e6;
 }
 
