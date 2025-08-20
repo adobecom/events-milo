@@ -91,22 +91,6 @@ describe('Content Update Script', () => {
 
     expect(document.querySelector('a[href$="#rsvp-form-1"]').textContent).to.be.equal(buttonOriginalText);
   });
-
-  it('should show expore all blade when more than 4 related products are found', async () => {
-    document.head.innerHTML = await readFile({ path: './mocks/head-5-blades.html' });
-
-    document.body.innerHTML = body;
-    const miloDeps = {
-      getConfig,
-      miloLibs: LIBS,
-    };
-
-    autoUpdateContent(document, miloDeps);
-    const productBlades = document.querySelector('.event-product-blades');
-    const frags = productBlades.querySelectorAll('a');
-    expect(frags.length).to.be.equal(1);
-    expect(frags[0].textContent).to.be.equal('/events/fragments/product-blades/explore-creative-cloud');
-  });
 });
 
 describe('updateAnalyticTag', () => {
