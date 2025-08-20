@@ -73,10 +73,6 @@
   border-bottom: 3px solid #1473e6;
 }
 
-/* Non-current items with blue background */
-.mobile-rider .drawer-item:not(.current):hover {
-  background-color: #1473e6;
-}
 
 /* Blue background on hover only for non-current items */
 .mobile-rider .drawer-item:not(.current):hover {
@@ -98,6 +94,10 @@
   border-radius: 4px;
   border: 3px solid black;
   transition: border-color 0.2s ease;
+}
+
+.mobile-rider .drawer-item-thumbnail img:hover {
+  border: 3px solid white;
 }
 
 /* Play button overlay */
