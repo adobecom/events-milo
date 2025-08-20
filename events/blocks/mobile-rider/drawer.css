@@ -96,9 +96,6 @@
   transition: border-color 0.2s ease;
 }
 
-.mobile-rider .drawer-item-thumbnail img:hover {
-  border: 3px solid white;
-}
 
 /* Play button overlay */
 .mobile-rider .drawer-item-thumbnail::after {
@@ -157,6 +154,10 @@
 
 /* Hover effects for current item */
 .mobile-rider .drawer-item.current:hover .drawer-item-thumbnail img {
+  border: 3px solid white;
+}
+
+.mobile-rider .drawer-item:not(.current):hover .drawer-item-thumbnail img {
   border: 3px solid white;
 }
 
