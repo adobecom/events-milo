@@ -98,7 +98,7 @@
 
 
 /* Play button overlay */
-.mobile-rider .drawer-item-thumbnail::after {
+.mobile-rider .drawer-item-thumbnail img::after {
   content: '';
   position: absolute;
   top: 50%;
@@ -113,7 +113,7 @@
   justify-content: center;
 }
 
-.mobile-rider .drawer-item-thumbnail::before {
+.mobile-rider .drawer-item-thumbnail img::before {
   content: '';
   position: absolute;
   top: 50%;
