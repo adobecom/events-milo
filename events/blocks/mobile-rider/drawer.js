@@ -65,6 +65,14 @@ class Drawer {
       if (item) this.setActive(el, item);
     }
   }
+
+  remove() {
+    // Remove the drawer element from the DOM
+    const drawerElement = this.root.querySelector('.drawer');
+    if (drawerElement) {
+      drawerElement.remove();
+    }
+  }
 }
 
 export default function initDrawers(root, cfg) {

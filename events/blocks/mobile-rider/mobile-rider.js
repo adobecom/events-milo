@@ -177,6 +177,11 @@ class MobileRider {
   onStreamEnd(vid) {
     window.__mr_player?.off('streamend');
     window.__mr_player?.on('streamend', () => {
+      // Remove drawer if it exists
+      if (this.drawer) {
+        this.drawer.remove();
+        this.drawer = null;
+      }
       this.setStatus(vid, false);
       MobileRider.dispose();
     });
@@ -239,14 +244,14 @@ class MobileRider {
         return item;
       };
 
-      const drawer = createDrawer(this.root, {
+      this.drawer = createDrawer(this.root, {
         items: videos,
         ariaLabel: 'Videos',
         renderItem,
         onItemClick: (_, v) => this.onDrawerClick(v),
       });
 
-      const itemsList = drawer?.itemsEl;
+      const itemsList = this.drawer?.itemsEl;
       if (itemsList?.firstChild) {
         itemsList.insertBefore(this.drawerHeading(), itemsList.firstChild);
       }

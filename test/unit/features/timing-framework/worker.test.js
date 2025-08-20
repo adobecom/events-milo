@@ -121,8 +121,10 @@ describe('TimingWorker', () => {
     });
 
     it('should handle mobileRider underrun scenario', async () => {
+      const now = Date.now();
       const nextItem = {
         mobileRider: { sessionId: 'session1' },
+        toggleTime: now - 1000, // Time has passed
         pathToFragment: '/next',
       };
 
