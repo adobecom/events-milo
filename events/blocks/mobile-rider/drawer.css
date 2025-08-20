@@ -151,15 +151,15 @@
 }
 
 /* Hover effects for current item */
-.mobile-rider .drawer-item.current .drawer-item-thumbnail img {
+.mobile-rider .drawer-item.current .drawer-item-thumbnail {
   border: 3px solid white;
 }
 
-.mobile-rider .drawer-item.current:hover .drawer-item-thumbnail img {
+.mobile-rider .drawer-item.current:hover .drawer-item-thumbnail {
   border: 3px solid white;
 }
 
-.mobile-rider .drawer-item:not(.current):hover .drawer-item-thumbnail img {
+.mobile-rider .drawer-item:not(.current):hover .drawer-item-thumbnail {
   border: 3px solid white;
 }
 
