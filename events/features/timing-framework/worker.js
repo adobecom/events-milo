@@ -271,6 +271,15 @@ class TimingWorker {
 
     // Check if current item has mobileRider that's ended (underrun)
     if (scheduleItem.mobileRider) {
+      const { toggleTime } = scheduleItem;
+      const timePassed = false;
+      if (toggleTime) {
+        const currentTime = await this.getCurrentTime();
+        // Convert toggleTime to number if it's a string
+        const numericToggleTime = typeof toggleTime === 'string' ? parseInt(toggleTime, 10) : toggleTime;
+        timePassed = currentTime > numericToggleTime;
+      }
+      if (!timePassed) return false;
       const mobileRiderStore = this.plugins.get('mobileRider');
       if (mobileRiderStore) {
         const { sessionId } = scheduleItem.mobileRider;
