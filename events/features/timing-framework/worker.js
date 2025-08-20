@@ -265,6 +265,7 @@ class TimingWorker {
         const { sessionId } = this.currentScheduleItem.mobileRider;
         const isActive = mobileRiderStore.get(sessionId);
         if (isActive) return false; // Wait for session to end
+        return true;
       }
     }
 
