@@ -93,7 +93,7 @@ if (
     let marketoConfiguratorJSON = {};
     try {
       marketoConfiguratorJSON = JSON.parse(
-        decodeURIComponent(escape(window.atob(marketoConfiguratorLink))),
+        decodeURIComponent(escape(window.atob(marketoConfiguratorLink)))
       );
     } catch (e) {
       console.error('Error parsing Marketo Configurator JSON', e);
@@ -212,38 +212,38 @@ if (
     window.mcz_marketoForm_pref = JSON.parse(JSON.stringify(mcz_marketoForm_pref_local));
 
     const loadScript = (url, type, { mode } = {}) => new Promise((resolve, reject) => {
-      let script = document.querySelector(`head > script[src="${url}"]`);
-      if (!script) {
-        const { head } = document;
+        let script = document.querySelector(`head > script[src="${url}"]`);
+        if (!script) {
+          const { head } = document;
         script = document.createElement('script');
         script.setAttribute('src', url);
-        if (type) {
+          if (type) {
           script.setAttribute('type', type);
-        }
+          }
         if (['async', 'defer'].includes(mode)) script.setAttribute(mode, true);
-        head.append(script);
-      }
+          head.append(script);
+        }
 
-      if (script.dataset.loaded) {
-        resolve(script);
-        return;
-      }
+        if (script.dataset.loaded) {
+          resolve(script);
+          return;
+        }
 
-      const onScript = (event) => {
+        const onScript = (event) => {
         script.removeEventListener('load', onScript);
         script.removeEventListener('error', onScript);
 
         if (event.type === 'error') {
-          reject(new Error(`error loading script: ${script.src}`));
+            reject(new Error(`error loading script: ${script.src}`));
         } else if (event.type === 'load') {
-          script.dataset.loaded = true;
-          resolve(script);
-        }
-      };
+            script.dataset.loaded = true;
+            resolve(script);
+          }
+        };
 
       script.addEventListener('load', onScript);
       script.addEventListener('error', onScript);
-    });
+      });
 
     const resourceForm = document.createElement('div');
     resourceForm.innerHTML = resourceFormHTML;
@@ -317,6 +317,8 @@ if (
     } else {
       console.log('no resource with attribute data-mcz-dl-status found');
     }
+
+    mczFrm_updateTimeUntil();
   };
 
   //
@@ -511,6 +513,7 @@ if (
     console.log('timeUntilStart', timeUntilStart);
 
     if (timeUntilStart.minutes <= 30) {
+      mczFrm_saveSnapshot("root.program.event");
       if (!timeUntilInterval) {
         timeUntilInterval = setInterval(mczFrm_updateTimeUntil, 1000);
       }
@@ -592,13 +595,15 @@ if (
     console.log('Profile sync iframe added with URL:', iframe.src);
   }
 
-  function mczFrm_aquireFromStorage(lookupKey = null) {
+  function mczFrm_aquireFromStorage(lookupKey = null, updateWith = null) {
     const now = new Date().getTime();
+    let locationWas = 'session';
 
     let itemStr = null;
     itemStr = sessionStorage.getItem(lookupKey);
     if (!itemStr) {
       itemStr = localStorage.getItem(lookupKey);
+      locationWas = 'local';
     }
     if (!itemStr) {
       return null;
@@ -615,6 +620,19 @@ if (
         localStorage.removeItem(lookupKey);
         console.log(`MCZ RefData: Expired program removed from ${lookupKey}`);
         return null;
+      }
+      if (updateWith) {
+        item.location = locationWas;
+        item.timestamp = now;
+        item.expires = now + shelfLife;
+        item.data = updateWith;
+        itemStr = JSON.stringify(item);
+        if (locationWas == 'session') {
+          sessionStorage.setItem(lookupKey, itemStr);
+        } else {
+          localStorage.setItem(lookupKey, itemStr);
+        }
+        console.log("MCZ RefData: Updated snapshot in", locationWas, lookupKey);
       }
       return item;
     } catch (e) {
@@ -714,38 +732,62 @@ if (
     }
   }
 
-  async function mczFrm_saveSnapshot(target_path = 'root.program') {
-    let snapshot = {};
+  async function mczFrm_saveSnapshot(targetPath = 'root.program.event') {
     const base = window?.mcz_marketoForm_pref || null;
-    if (base == null) {
-      console.log('No base found, skipping snapshot.');
-      return;
-    }
-
     const pageFromEventId = base?.program?.event?.id || '';
     const programIDOnly = pageFromEventId?.replace(/[^0-9]/g, '') || '';
     if (programIDOnly == '') {
       console.log('No event id found, skipping snapshot.');
       return;
     }
+    targetPath = targetPath.toLowerCase().trim();
+    const syncActions = {
+      'root.program': 'program',
+      'root.program_profile': 'program_profile',
+      'root.program.event': 'event',
+      'root.profile': 'profile',
+      'root.profile.acc': 'profile_acc',
+      'root.form': 'form',
+      'root.landingPage': 'landingPage',
+    };
 
-    if (target_path == 'root.program_profile') {
-      snapshot = base.program_profile;
-    } else if (target_path == 'root.profile') {
-      snapshot = base.profile;
-    } else if (target_path == 'root.form') {
-      snapshot = base.form;
-    } else if (target_path == 'root.program') {
-      snapshot = base.program;
-    } else if (target_path == 'root.program.event') {
-      snapshot = base.program.event;
+    if (syncActions[targetPath]) {
+      let snapshot = {};
+      if (base == null) {
+        console.warn('mczFrm_saveSnapshot: No base found');
+        return;
+      }
+      const targetPathRef = (targetPath?.split(".")?.pop() || '').toLowerCase().trim();
+      const saveAlias = base?.sync_profiles?.data_profiles?.[targetPathRef]?.ref || null;
+      const host = base?.sync_profiles?.data_profiles?.[targetPathRef]?.host || null;
+
+      if (host == null) {
+        console.warn('mczFrm_saveSnapshot: No host found for', targetPath);
+        return;
+      }
+      if (saveAlias == null) {
+        console.warn('mczFrm_saveSnapshot: No save alias found for', targetPath);
+        return;
+      }
+      const hostRef = (host?.split('.')?.pop() || '').toLowerCase().trim();
+      snapshot = base[hostRef] || {};
+
+      if (Object.keys(snapshot).length == 0) {
+        console.warn('mczFrm_saveSnapshot: snapshot is empty for', targetPath);
+        return;
+      }
+
+      const existingSnapshot = mczFrm_aquireFromStorage(saveAlias, snapshot);
+      if (existingSnapshot) {
+        console.log(
+          'mczFrm_saveSnapshot: Existing snapshot found and updated with',
+          existingSnapshot
+        );
+        return;
+      }
+    } else {
+      console.warn('mczFrm_saveSnapshot: targetPath not found', targetPath);
     }
-
-    mczFrm_saveMsg({
-      alias: `pr_${programIDOnly}_`,
-      location: 'local',
-      data: JSON.parse(JSON.stringify(snapshot)),
-    });
   }
 
   window.addEventListener('message', (event) => {
@@ -779,26 +821,54 @@ if (
     }
   });
 
-  function crawlAndUpdateObject(thisObject = null, targetObject = null) {
+  function crawlAndUpdateObject(
+    thisObject = null,
+    targetObject = null,
+    shouldOverwrite = true,
+    addToTarget = true
+  ) {
     if (thisObject == null || targetObject == null) {
       console.warn('No object to crawl or update');
       return;
     }
-    const this_data = JSON.parse(JSON.stringify(thisObject));
-    for (const key in this_data) {
-      if (targetObject.hasOwnProperty(key)) {
-        if (this_data[key] != null && this_data[key] != '' && this_data[key] != 0) {
-          if (typeof this_data[key] === 'object') {
-            crawlAndUpdateObject(this_data[key], targetObject[key]);
-          } else if (
-            targetObject[key] == null
-              || targetObject[key] == ''
-              || targetObject[key] == 0
-              || targetObject[key] == 'NULL'
-          ) {
-            targetObject[key] = this_data[key];
-          }
-        }
+
+    const isSourceMeaningful = (value) => {
+      if (value === null || value === undefined) return false;
+      if (value === "") return false;
+      if (value === 0 || value === false) return false; // preserve original loose `!= 0` semantics
+      return true;
+    };
+
+    const isTargetEmpty = (value) => {
+      return (
+        value === null ||
+        value === undefined ||
+        value === "" ||
+        value === 0 ||
+        value === false ||
+        value === "NULL"
+      );
+    };
+
+    const isObjectLike = (value) => typeof value === 'object' && value !== null;
+
+    for (const key of Object.keys(thisObject)) {
+      if (!Object.prototype.hasOwnProperty.call(targetObject, key) && !addToTarget) {
+        continue;
+      }
+      const sourceVal = thisObject[key];
+      if (!isSourceMeaningful(sourceVal)) {
+        continue;
+      }
+
+      const targetVal = targetObject[key];
+      if (isObjectLike(sourceVal) && isObjectLike(targetVal)) {
+        crawlAndUpdateObject(sourceVal, targetVal, shouldOverwrite, addToTarget);
+        continue;
+      }
+
+      if (isTargetEmpty(targetVal) || shouldOverwrite) {
+        targetObject[key] = sourceVal;
       }
     }
   }
@@ -817,23 +887,23 @@ if (
     const this_data = JSON.parse(JSON.stringify(data?.data));
     if (targetPath == 'root.program_profile') {
       window.mcz_marketoForm_pref.program_profile = this_data;
-      // crawlAndUpdateObject(this_data, window.mcz_marketoForm_pref.program_profile);
-    } else if (targetPath == 'root.profile') {
-      // window.mcz_marketoForm_pref.profile = this_data;
-      crawlAndUpdateObject(this_data, window.mcz_marketoForm_pref.profile);
-    } else if (targetPath == 'root.form') {
+      //crawlAndUpdateObject(this_data, window.mcz_marketoForm_pref.program_profile, true, true);
+    } else if (targetPath === 'root.profile') {
+      window.mcz_marketoForm_pref.profile = this_data;
+      //crawlAndUpdateObject(this_data, window.mcz_marketoForm_pref.profile, true, true);
+    } else if (targetPath === 'root.form') {
       window.mcz_marketoForm_pref.form = this_data;
-      // crawlAndUpdateObject(this_data, window.mcz_marketoForm_pref.form);
-    } else if (targetPath == 'root.profile.acc') {
+      crawlAndUpdateObject(this_data, window.mcz_marketoForm_pref.form, true, true);
+    } else if (targetPath === 'root.profile.acc') {
       window.mcz_marketoForm_pref.profile.acc = this_data;
-      // crawlAndUpdateObject(this_data, window.mcz_marketoForm_pref.profile.acc);
-    } else if (targetPath == 'root.program') {
+      //crawlAndUpdateObject(this_data, window.mcz_marketoForm_pref.profile.acc, true, true);
+    } else if (targetPath === 'root.program') {
       window.mcz_marketoForm_pref.program = this_data;
-      // crawlAndUpdateObject(this_data, window.mcz_marketoForm_pref.program);
+      //crawlAndUpdateObject(this_data, window.mcz_marketoForm_pref.program);
       program_type = this_data?.type || 'default';
-    } else if (targetPath == 'root.program.event') {
+    } else if (targetPath === 'root.program.event') {
       window.mcz_marketoForm_pref.program.event = this_data;
-      // crawlAndUpdateObject(this_data, window.mcz_marketoForm_pref.program.event);
+      //crawlAndUpdateObject(this_data, window.mcz_marketoForm_pref.program.event);
       program_type = this_data?.type || 'default';
     }
 
@@ -841,7 +911,8 @@ if (
       mczFrm_updateTimeUntil();
       if (window.mcz_marketoForm_pref?.program?.event?.type == 'adobe_connect') {
         program_type = 'adobe_connect';
-        program_status = window.mcz_marketoForm_pref?.program?.event?.adobe_connect?.status?.overall || 'pending';
+        program_status =
+          window.mcz_marketoForm_pref?.program?.event?.adobe_connect?.status?.overall || "pending";
       }
     }
 
