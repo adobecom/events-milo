@@ -49,7 +49,7 @@ if (
 
   const BASE_URL = 'https://engage.marketo.com';
   const MUNCHKIN_ID = '360-KCI-804';
-  var mczFrm_mkto_testing_loader = (el, resourceLocation) => {
+  var mczFrm_mkto_testing_loader = (el, resourceLocation, mczId = null) => {
     const cssFast = `
    button[daa-ll="Join the event-1--"] {
      visibility: hidden !important;
@@ -136,7 +136,7 @@ if (
         event: {
           type: 'adobe_connect', // connect_recording or video
           subtype: 'flex_event',
-          id: 'mcz114328',
+          id: mczId ?? 'mcz114328',
           status: {
             viewport: {
               width: 1024,
@@ -215,12 +215,14 @@ if (
         let script = document.querySelector(`head > script[src="${url}"]`);
         if (!script) {
           const { head } = document;
-        script = document.createElement('script');
-        script.setAttribute('src', url);
+          script = document.createElement('script');
+          script.setAttribute('src', url);
           if (type) {
-          script.setAttribute('type', type);
+            script.setAttribute('type', type);
           }
-        if (['async', 'defer'].includes(mode)) script.setAttribute(mode, true);
+        
+          if (['async', 'defer'].includes(mode)) script.setAttribute(mode, true);
+        
           head.append(script);
         }
 
@@ -997,7 +999,7 @@ if (
 // ##
 // ##
 let maxTries = 1000;
-export function CheckResourceLocation(el, resourceWatch, resourceLocation) {
+export function CheckResourceLocation(el, resourceWatch, resourceLocation, mczId = null) {
   if (maxTries <= 0) {
     console.log('maxTries reached', maxTries);
     return;
@@ -1006,12 +1008,12 @@ export function CheckResourceLocation(el, resourceWatch, resourceLocation) {
   if (document.querySelector(resourceWatch)) {
     setTimeout(() => {
       console.log('Resource found, loading...');
-      mczFrm_mkto_testing_loader(el, resourceLocation);
+      mczFrm_mkto_testing_loader(el, resourceLocation, mczId);
     }, 1000);
   } else {
     setTimeout(() => {
       console.log('Resource not found, checking again...');
-      CheckResourceLocation(el, resourceWatch, resourceLocation);
+      CheckResourceLocation(el, resourceWatch, resourceLocation, mczId);
     }, 20);
   }
 }

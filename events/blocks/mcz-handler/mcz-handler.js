@@ -13,7 +13,14 @@ export default async function init(el) {
 
   el.setAttribute('data-mcz-dl-status', 'loading');
 
-  await CheckResourceLocation(el, resourceWatch, resourceLocation);
+  let mczId = null;
+  if (getMetadata('eventExternalId')) {
+    const eventExternalId = getMetadata('eventExternalId');
+    //split the eventExternalId by - and get the last part
+    mczId = eventExternalId.replace('-', '').toLowerCase();
+  }
+
+  await CheckResourceLocation(el, resourceWatch, resourceLocation, mczId);
 
   async function mczMarketoFormAdobeConnectEvent() {
     if (window.mcz_marketoForm_pref?.form?.success?.type === 'adobe_connect') {
