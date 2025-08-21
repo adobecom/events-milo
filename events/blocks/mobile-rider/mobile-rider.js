@@ -373,7 +373,7 @@ class MobileRider {
 
         const vidCon = createTag('div', { class: 'drawer-item-content' });
         if (v.title) vidCon.appendChild(createTag('div', { class: 'drawer-item-title' }, v.title));
-        if (v.description) vidCon.appendChild(createTag('div', { class: 'drawer-item-description' }, v.description));
+        // if (v.description) vidCon.appendChild(createTag('div', { class: 'drawer-item-description' }, v.description));
         item.appendChild(vidCon);
 
         return item;
