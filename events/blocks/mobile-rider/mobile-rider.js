@@ -252,14 +252,11 @@ class MobileRider {
       Object.assign(con.dataset, { videoid: vid, skinid: skin, aslid: asl });
     }
 
-    // --- LCP: add poster preload + placeholder before we touch <video> -------
     const poster = this.cfg.poster || this.cfg.thumbnail;
     if (poster) {
       preloadPoster(poster);
     }
     const removePoster = showPosterPlaceholder(con, poster, this.cfg.title || 'Video poster');
-
-    // -------------------------------------------------------------------------
 
     window.__mr_player?.dispose();
     con.querySelector(`#${CONFIG.PLAYER.VIDEO_ID}`)?.remove();
@@ -268,8 +265,8 @@ class MobileRider {
       id: CONFIG.PLAYER.VIDEO_ID,
       class: CONFIG.PLAYER.VIDEO_CLASS,
       controls: true,
-      preload: 'metadata',       // LCP-friendly
-      playsinline: '',           // iOS: avoid fullscreen jumps
+      preload: 'metadata',
+      playsinline: '',
     };
     if (poster) videoAttrs.poster = poster; // Also set poster on <video>
     const video = createTag('video', videoAttrs);
@@ -277,10 +274,8 @@ class MobileRider {
 
     if (!window.mobilerider) return;
 
-    // Remove poster when we have data (or after a short fallback)
     const cleanup = () => removePoster();
     video.addEventListener('loadeddata', cleanup, { once: true });
-    // Fallback: in case the player fires custom events or takes longer
     setTimeout(cleanup, 4000);
 
     window.mobilerider.embed(video.id, vid, skin, {
@@ -293,7 +288,6 @@ class MobileRider {
     });
 
     if (asl) this.initASL();
-    // Check store existence first, then check mainID or vid in store
     if (this.store) {
       let key = null;
       if (this.mainID && this.store.get(this.mainID) !== undefined) {
@@ -310,7 +304,6 @@ class MobileRider {
   onStreamEnd(vid) {
     window.__mr_player?.off('streamend');
     window.__mr_player?.on('streamend', () => {
-      // Remove drawer if it exists
       if (this.drawer) {
         this.drawer.remove();
         this.drawer = null;
@@ -373,7 +366,7 @@ class MobileRider {
 
         const vidCon = createTag('div', { class: 'drawer-item-content' });
         if (v.title) vidCon.appendChild(createTag('div', { class: 'drawer-item-title' }, v.title));
-        // if (v.description) vidCon.appendChild(createTag('div', { class: 'drawer-item-description' }, v.description));
+        if (v.description) vidCon.appendChild(createTag('div', { class: 'drawer-item-description' }, v.description));
         item.appendChild(vidCon);
 
         return item;
