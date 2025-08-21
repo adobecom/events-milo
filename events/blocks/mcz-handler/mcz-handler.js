@@ -1,5 +1,5 @@
 import { CheckResourceLocation } from '../../../rs/360-KCI-804/images/mktoTestFormConfig.js';
-import { setMetadata } from '../../scripts/utils.js';
+import { setMetadata, getMetadata } from '../../scripts/utils.js';
 
 export default async function init(el) {
   const rows = Array.from(el.children);
