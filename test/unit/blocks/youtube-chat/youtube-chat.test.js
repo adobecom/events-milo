@@ -70,24 +70,71 @@ describe('YouTube Chat Module', () => {
         youtubeChat.videoId = 'dQw4w9WgXcQ';
       });
 
-      it('should build embed URL with correct parameters', () => {
+      it('should build embed URL with correct parameters for browser autoplay', () => {
         youtubeChat.config = {
           'show-controls': 'true',
           'show-player-title-actions': 'true',
+          mute: 'true',
         };
 
-        const autoplayUrl = youtubeChat.buildEmbedUrl(true);
+        const autoplayUrl = youtubeChat.buildEmbedUrl(true, false);
         expect(autoplayUrl).to.include('https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ');
         expect(autoplayUrl).to.include('autoplay=1');
         expect(autoplayUrl).to.include('mute=1');
         expect(autoplayUrl).to.include('controls=1');
         expect(autoplayUrl).to.include('modestbranding=1');
+      });
 
-        const noAutoplayUrl = youtubeChat.buildEmbedUrl(false);
+      it('should build embed URL with correct parameters for user-initiated play', () => {
+        youtubeChat.config = {
+          'show-controls': 'true',
+          'show-player-title-actions': 'true',
+          mute: 'true',
+        };
+
+        const userInitiatedUrl = youtubeChat.buildEmbedUrl(false, true);
+        expect(userInitiatedUrl).to.include('https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ');
+        expect(userInitiatedUrl).to.include('autoplay=1');
+        expect(userInitiatedUrl).to.include('mute=1');
+        expect(userInitiatedUrl).to.include('controls=1');
+        expect(userInitiatedUrl).to.include('modestbranding=1');
+      });
+
+      it('should build embed URL without autoplay for regular load', () => {
+        youtubeChat.config = {
+          'show-controls': 'true',
+          'show-player-title-actions': 'true',
+        };
+
+        const noAutoplayUrl = youtubeChat.buildEmbedUrl(false, false);
         expect(noAutoplayUrl).to.include('https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ');
         expect(noAutoplayUrl).to.not.include('autoplay=1');
         expect(noAutoplayUrl).to.not.include('mute=1');
         expect(noAutoplayUrl).to.include('controls=1');
+      });
+
+      it('should respect mute config for user-initiated play when mute is false', () => {
+        youtubeChat.config = {
+          mute: 'false',
+          'show-controls': 'true',
+        };
+
+        const userInitiatedUrl = youtubeChat.buildEmbedUrl(false, true);
+        expect(userInitiatedUrl).to.include('autoplay=1');
+        expect(userInitiatedUrl).to.not.include('mute=1');
+        expect(userInitiatedUrl).to.include('controls=1');
+      });
+
+      it('should force mute for browser autoplay even when mute config is false', () => {
+        youtubeChat.config = {
+          mute: 'false',
+          'show-controls': 'true',
+        };
+
+        const autoplayUrl = youtubeChat.buildEmbedUrl(true, false);
+        expect(autoplayUrl).to.include('autoplay=1');
+        expect(autoplayUrl).to.include('mute=1'); // Forced for browser autoplay
+        expect(autoplayUrl).to.include('controls=1');
       });
     });
 
