@@ -377,7 +377,13 @@ describe('Mobile Rider Drawer', () => {
       itemsEl = document.createElement('div');
       const el1 = document.createElement('div');
       el1.setAttribute('data-id', 'vid1');
+      el1.classList.add('drawer-item'); // Add the required class
       itemsEl.appendChild(el1);
+
+      const el2 = document.createElement('div');
+      el2.setAttribute('data-id', 'vid2');
+      el2.classList.add('drawer-item'); // Add the required class
+      itemsEl.appendChild(el2);
 
       const root = document.createElement('div');
       drawer = createDrawer(root, { items });
@@ -390,11 +396,12 @@ describe('Mobile Rider Drawer', () => {
       sinon.restore();
     });
 
-    it('should call setActive with correct element and item in setActiveById', () => {
+    it('should update visual state without calling setActive in setActiveById', () => {
       drawer.setActiveById('vid1');
-      expect(drawer.setActive.calledOnce).to.be.true;
-      expect(drawer.setActive.firstCall.args[0].getAttribute('data-id')).to.equal('vid1');
-      expect(drawer.setActive.firstCall.args[1]).to.deep.equal(items[0]);
+      expect(drawer.setActive.called).to.be.false;
+      // Verify the visual state is updated directly
+      const currentElement = drawer.itemsEl.querySelector('.drawer-item.current');
+      expect(currentElement.getAttribute('data-id')).to.equal('vid1');
     });
 
     it('should do nothing if id not found in setActiveById', () => {

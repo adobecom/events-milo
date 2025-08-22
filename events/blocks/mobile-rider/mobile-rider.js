@@ -25,7 +25,87 @@ const CONFIG = {
     PROD_URL: 'https://overlay-admin-integration.mobilerider.com',
     DEV_URL: 'https://overlay-admin-integration.mobilerider.com',
   },
+  STORAGE: {
+    CURRENT_VIDEO_KEY: 'mobile-rider-current-video',
+  },
 };
+
+// --- Storage helpers ---------------------------------------------------------
+
+/**
+ * Save the current video state to sessionStorage
+ * @param {string} videoId - The video ID that is currently playing
+ * @param {string} mainId - The main session ID for concurrent streams
+ */
+function saveCurrentVideo(videoId, mainId = null) {
+  try {
+    const data = {
+      videoId,
+      mainId,
+    };
+    sessionStorage.setItem(CONFIG.STORAGE.CURRENT_VIDEO_KEY, JSON.stringify(data));
+  } catch (e) {
+    window.lana?.log(`Failed to save current video state: ${e.message}`);
+  }
+}
+
+/**
+ * Get the saved current video state from sessionStorage
+ * @returns {Object|null} The saved video state or null if not found
+ */
+function getCurrentVideo() {
+  try {
+    const data = sessionStorage.getItem(CONFIG.STORAGE.CURRENT_VIDEO_KEY);
+
+    if (!data) return null;
+
+    return JSON.parse(data);
+  } catch (e) {
+    window.lana?.log(`Failed to get current video state: ${e.message}`);
+    return null;
+  }
+}
+
+/**
+ * Clear the saved current video state
+ */
+function clearCurrentVideo() {
+  try {
+    sessionStorage.removeItem(CONFIG.STORAGE.CURRENT_VIDEO_KEY);
+  } catch (e) {
+    window.lana?.log(`Failed to clear current video state: ${e.message}`);
+  }
+}
+
+// --- LCP helpers -------------------------------------------------------------
+function preloadPoster(url) {
+  if (!url) return;
+  const sel = `link[rel="preload"][as="image"][href="${url}"]`;
+  if (!document.querySelector(sel)) {
+    const l = document.createElement('link');
+    l.rel = 'preload';
+    l.as = 'image';
+    l.href = url;
+    document.head.appendChild(l);
+  }
+}
+
+function showPosterPlaceholder(container, poster, altText = 'Video poster') {
+  if (!poster || !container) return () => {};
+  let img = container.querySelector('.mr-poster');
+  if (!img) {
+    img = createTag('img', {
+      src: poster,
+      alt: altText,
+      class: 'mr-poster',
+      fetchpriority: 'high',
+      loading: 'eager',
+      decoding: 'async',
+    });
+    container.appendChild(img);
+  }
+  return () => img?.remove();
+}
 
 let scriptPromise = null;
 
@@ -53,7 +133,16 @@ class MobileRider {
     this.root = null;
     this.store = null;
     this.mainID = null;
+    this.currentVideoId = null;
+    this.drawer = null;
     this.init();
+
+    // Save current video state before page unload
+    window.addEventListener('beforeunload', () => {
+      if (this.currentVideoId && this.cfg?.concurrentenabled) {
+        saveCurrentVideo(this.currentVideoId, this.mainID);
+      }
+    });
   }
 
   async init() {
@@ -79,7 +168,19 @@ class MobileRider {
       const isConcurrent = this.cfg.concurrentenabled;
       const videos = isConcurrent ? this.cfg.concurrentVideos : [this.cfg];
 
-      const { videoid, aslid } = videos[0];
+      const savedVideo = getCurrentVideo();
+      let initialVideo = videos[0];
+
+      if (savedVideo && isConcurrent) {
+        // Find the saved video in the concurrent videos array
+        const savedVideoObj = videos.find(v => v.videoid === savedVideo.videoId);
+        if (savedVideoObj) {
+          initialVideo = savedVideoObj;
+          window.lana?.log(`Restoring saved video: ${savedVideo.videoId}`);
+        }
+      }
+
+      const { videoid, aslid } = initialVideo;
       if (!videoid) {
         window.lana?.log('Missing video-id in config.');
         return;
@@ -87,11 +188,22 @@ class MobileRider {
 
       // Set mainID for concurrent streams
       if (isConcurrent && this.store) {
-        this.mainID = videos[0].videoid;
+        this.mainID = savedVideo?.mainId || videos[0].videoid;
       }
 
       await this.loadPlayer(videoid, aslid);
-      if (isConcurrent && videos.length > 1) await this.initDrawer(videos);
+      // Save the initial video state for concurrent streams
+      if (isConcurrent) {
+        saveCurrentVideo(videoid, this.mainID);
+      }
+
+      if (isConcurrent && videos.length > 1) {
+        await this.initDrawer(videos);
+        // Update drawer active state to match the restored video
+        if (savedVideo && this.drawer) {
+          this.drawer.setActiveById(videoid);
+        }
+      }
     } catch (e) {
       window.lana?.log(`MobileRider Init error: ${e.message}`);
     }
@@ -125,7 +237,7 @@ class MobileRider {
 
   injectPlayer(vid, skin, asl = null) {
     if (!this.wrap) return;
-
+    this.currentVideoId = vid;
     let con = this.wrap.querySelector('.mobile-rider-container');
     if (!con) {
       con = createTag('div', {
@@ -140,27 +252,42 @@ class MobileRider {
       Object.assign(con.dataset, { videoid: vid, skinid: skin, aslid: asl });
     }
 
+    const poster = this.cfg.poster || this.cfg.thumbnail;
+    if (poster) {
+      preloadPoster(poster);
+    }
+    const removePoster = showPosterPlaceholder(con, poster, this.cfg.title || 'Video poster');
+
     window.__mr_player?.dispose();
     con.querySelector(`#${CONFIG.PLAYER.VIDEO_ID}`)?.remove();
 
-    const video = createTag('video', {
+    const videoAttrs = {
       id: CONFIG.PLAYER.VIDEO_ID,
       class: CONFIG.PLAYER.VIDEO_CLASS,
       controls: true,
-    });
+      preload: 'metadata',
+      playsinline: '',
+    };
+    if (poster) videoAttrs.poster = poster; // Also set poster on <video>
+    const video = createTag('video', videoAttrs);
     con.appendChild(video);
 
     if (!window.mobilerider) return;
+
+    const cleanup = () => removePoster();
+    video.addEventListener('loadeddata', cleanup, { once: true });
+    setTimeout(cleanup, 4000);
+
     window.mobilerider.embed(video.id, vid, skin, {
       ...this.getPlayerOptions(),
       analytics: { provider: CONFIG.ANALYTICS.PROVIDER },
       identifier1: vid,
       identifier2: asl,
       sessionId: vid,
+      poster,
     });
 
     if (asl) this.initASL();
-    // Check store existence first, then check mainID or vid in store
     if (this.store) {
       let key = null;
       if (this.mainID && this.store.get(this.mainID) !== undefined) {
@@ -177,8 +304,13 @@ class MobileRider {
   onStreamEnd(vid) {
     window.__mr_player?.off('streamend');
     window.__mr_player?.on('streamend', () => {
+      if (this.drawer) {
+        this.drawer.remove();
+        this.drawer = null;
+      }
       this.setStatus(vid, false);
       MobileRider.dispose();
+      clearCurrentVideo();
     });
   }
 
@@ -186,6 +318,7 @@ class MobileRider {
     window.__mr_player?.dispose();
     window.__mr_player = null;
     window.__mr_stream_published = null;
+    clearCurrentVideo();
   }
 
   static loadDrawerCSS() {
@@ -239,14 +372,14 @@ class MobileRider {
         return item;
       };
 
-      const drawer = createDrawer(this.root, {
+      this.drawer = createDrawer(this.root, {
         items: videos,
         ariaLabel: 'Videos',
         renderItem,
         onItemClick: (_, v) => this.onDrawerClick(v),
       });
 
-      const itemsList = drawer?.itemsEl;
+      const itemsList = this.drawer?.itemsEl;
       if (itemsList?.firstChild) {
         itemsList.insertBefore(this.drawerHeading(), itemsList.firstChild);
       }
@@ -261,7 +394,16 @@ class MobileRider {
         const live = await this.checkLive(v);
         if (!live) window.lana?.log(`This stream is not currently live: ${v.videoid}`);
       }
+      // Save the current video state when user switches videos
+      if (this.cfg.concurrentenabled) {
+        saveCurrentVideo(v.videoid, this.mainID);
+        this.currentVideoId = v.videoid;
+      }
       this.injectPlayer(v.videoid, this.cfg.skinid, v.aslid);
+      // Update drawer active state
+      if (this.drawer) {
+        this.drawer.setActiveById(v.videoid);
+      }
     } catch (e) {
       window.lana?.log(`Drawer item click error: ${e.message}`);
     }
