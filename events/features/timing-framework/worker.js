@@ -251,6 +251,21 @@ class TimingWorker {
   }
 
   /**
+   * Check if toggleTime has passed for a schedule item
+   * @param {Object} scheduleItem
+   * @returns {Promise<boolean>}
+   */
+  async hasToggleTimePassed(scheduleItem) {
+    const { toggleTime } = scheduleItem;
+    if (!toggleTime) return true; // No toggleTime means no time restriction
+    
+    const currentTime = await this.getCurrentTime();
+    // Convert toggleTime to number if it's a string
+    const numericToggleTime = typeof toggleTime === 'string' ? parseInt(toggleTime, 10) : toggleTime;
+    return currentTime > numericToggleTime;
+  }
+
+  /**
    * @param {Object} scheduleItem
    * @returns {boolean}
    * @description Returns true if the next schedule item should be triggered based on plugins
@@ -265,16 +280,24 @@ class TimingWorker {
         const { sessionId } = this.currentScheduleItem.mobileRider;
         const isActive = mobileRiderStore.get(sessionId);
         if (isActive) return false; // Wait for session to end
+         // Check if current item has mobileRider that's ended (underrun)
+        return true;
       }
     }
 
-    // Check if current item has mobileRider that's ended (underrun)
     if (scheduleItem.mobileRider) {
+      // Check if toggleTime has passed before checking mobileRider status
+      const timePassed = await this.hasToggleTimePassed(scheduleItem);
+      if (!timePassed) return false;
+      
       const mobileRiderStore = this.plugins.get('mobileRider');
       if (mobileRiderStore) {
         const { sessionId } = scheduleItem.mobileRider;
         const isActive = mobileRiderStore.get(sessionId);
-        if (!isActive) return true;
+        if (!isActive) {
+          this.nextScheduleItem = scheduleItem.next;
+          return true;
+        }
       }
     }
 
@@ -298,16 +321,7 @@ class TimingWorker {
     }
 
     // If no plugins are blocking, check toggleTime
-    const { toggleTime } = scheduleItem;
-    if (toggleTime) {
-      const currentTime = await this.getCurrentTime();
-      // Convert toggleTime to number if it's a string
-      const numericToggleTime = typeof toggleTime === 'string' ? parseInt(toggleTime, 10) : toggleTime;
-      const timePassed = currentTime > numericToggleTime;
-      return timePassed;
-    }
-
-    return true;
+    return await this.hasToggleTimePassed(scheduleItem);
   }
 
   async runTimer() {
