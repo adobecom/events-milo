@@ -23,7 +23,7 @@ export const mobileRiderStore = {
 export default async function init(schedule) {
   const controller = new MobileRiderController();
   const mobileRiderSchedules = schedule.filter((entry) => entry.mobileRider);
-  
+
   // Wait for all async operations to complete before returning store
   await Promise.all(mobileRiderSchedules.map(async (s) => {
     // Handle mobileRider as an object with sessionId property
