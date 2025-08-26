@@ -1,4 +1,4 @@
-import { ICON_REG, META_REG, SERIES_404_MAP_PATH } from './constances.js';
+import { ICON_REG, META_REG, SERIES_404_MAP_PATH, ALLOWED_EMAIL_DOMAINS } from './constances.js';
 import BlockMediator from './deps/block-mediator.min.js';
 import { getEvent } from './esp-controller.js';
 import {
@@ -249,7 +249,7 @@ export async function validatePageAndRedirect(miloLibs) {
     BlockMediator.subscribe('imsProfile', ({ newValue }) => {
       if (newValue?.noProfile || newValue?.account_type === 'guest') {
         signIn(getSusiOptions(getConfig()));
-      } else if (!newValue.email?.toLowerCase().endsWith('@adobe.com')) {
+      } else if (!ALLOWED_EMAIL_DOMAINS.some((d) => newValue.email?.toLowerCase().endsWith(d))) {
         window.location.replace(error404Location);
       }
     });
