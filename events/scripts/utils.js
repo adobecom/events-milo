@@ -1,4 +1,4 @@
-import { SUSI_OPTIONS } from './constances.js';
+import { SUSI_OPTIONS, EVENT_LIBS_VERSION } from './constances.js';
 
 export const LIBS = (() => {
   const { hostname, search } = window.location;
@@ -6,6 +6,14 @@ export const LIBS = (() => {
   const branch = new URLSearchParams(search).get('milolibs') || 'main';
   if (branch === 'local') return 'http://localhost:6456/libs';
   return branch.includes('--') ? `https://${branch}.aem.live/libs` : `https://${branch}--milo--adobecom.aem.live/libs`;
+})();
+
+export const EVENT_LIBS = (() => {
+  const { hostname, search } = window.location;
+  if (!(hostname.includes('.hlx.') || hostname.includes('.aem.') || hostname.includes('local'))) return '/libs';
+  const branch = new URLSearchParams(search).get('eventlibs') || 'migration';
+  if (branch === 'local') return `http://localhost:3868/event-libs/${EVENT_LIBS_VERSION}`;
+  return branch.includes('--') ? `https://${branch}.aem.live/event-libs/${EVENT_LIBS_VERSION}` : `https://${branch}--event-libs--adobecom.aem.live/event-libs/${EVENT_LIBS_VERSION}`;
 })();
 
 export function getEventServiceEnv() {

@@ -11,17 +11,36 @@
  */
 
 import { lazyCaptureProfile } from './profile.js';
-import autoUpdateContent, { getNonProdData, validatePageAndRedirect } from './content-update.js';
-import { getSusiOptions, setMetadata, getMetadata, getEventServiceEnv, LIBS } from './utils.js';
+import {
+  getSusiOptions,
+  setMetadata,
+  getMetadata,
+  getEventServiceEnv,
+  LIBS,
+  EVENT_LIBS,
+} from './utils.js';
 
-const {
+const [{
   loadArea,
   setConfig,
   updateConfig,
   getConfig,
   loadLana,
   getLocale,
-} = await import(`${LIBS}/utils/utils.js`);
+}, {
+  setEventConfig,
+  autoUpdateContent,
+  getNonProdData,
+  validatePageAndRedirect,
+}] = await Promise.all([
+  import(`${LIBS}/utils/utils.js`),
+  import(`${EVENT_LIBS}/utils/decorate.js`),
+]);
+
+console.log(setEventConfig);
+console.log(autoUpdateContent);
+console.log(getNonProdData);
+console.log(validatePageAndRedirect);
 
 export default function decorateArea(area = document) {
   const parsePhotosData = () => {
@@ -199,8 +218,11 @@ const CONFIG = {
   },
 };
 
+const E_CONFIG = { cmsType: 'SP' };
+
 const MILO_CONFIG = setConfig({ ...CONFIG });
 updateConfig({ ...MILO_CONFIG, signInContext: getSusiOptions(MILO_CONFIG) });
+setEventConfig(E_CONFIG, CONFIG);
 
 function renderWithNonProdMetadata() {
   const isEventDetailsPage = getMetadata('event-details-page') === 'yes';
