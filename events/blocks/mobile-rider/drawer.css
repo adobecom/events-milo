@@ -48,6 +48,8 @@
   color: #fff;
   margin: 0;
   font-size: 12px;
+  font-weight: 400;
+  line-height: 1.5;
 }
 
 .mobile-rider .now-playing-subtitle {
@@ -68,14 +70,21 @@
   align-items: center;
 }
 
-.mobile-rider .drawer-item:hover, .mobile-rider .drawer-item.current {
+.mobile-rider .drawer-item.current {
   border-bottom: 3px solid #1473e6;
+}
+
+/* Blue background on hover only for non-current items */
+.mobile-rider .drawer-item:not(.current):hover {
+  background-color: #1473e6;
 }
 
 .mobile-rider .drawer-item-thumbnail {
   height: 45px;
   width: 74.66px;
   margin: 0;
+  border: 3px solid black;
+  position: relative;
 }
 
 .mobile-rider .drawer-item-thumbnail img {
@@ -83,8 +92,36 @@
   height: 100%;
   object-fit: cover;
   display: block;
-  border-radius: 4px;
-  border: 3px solid black;
+}
+
+/* Play button overlay */
+.mobile-rider .drawer-item:hover .drawer-item-thumbnail::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 20px;
+  height: 20px;
+  background-color: #1473e6;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mobile-rider .drawer-item:hover .drawer-item-thumbnail::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 0;
+  height: 0;
+  border-left: 8px solid white;
+  border-top: 5px solid transparent;
+  border-bottom: 5px solid transparent;
+  z-index: 1;
 }
 
 .mobile-rider .drawer-item-content {
@@ -93,7 +130,7 @@
   justify-content: center;
   padding: 0 0.75rem;
   min-width: 0;
-  width: 100%;
+  flex: 1;
 }
 
 .mobile-rider .drawer-item-title {
@@ -121,6 +158,20 @@
   -webkit-box-orient: vertical;
   width: 100%;
   color: #FCFCFC;
+}
+
+/* Hover effects for current item */
+.mobile-rider .drawer-item.current .drawer-item-thumbnail {
+  border: 3px solid white;
+}
+
+.mobile-rider .drawer-item:not(.current):hover .drawer-item-thumbnail {
+  border: 3px solid white;
+}
+
+.mobile-rider .drawer-item.current:hover .drawer-item-title {
+  text-decoration: underline;
+  text-decoration-color: white;
 }
 
 @media (max-width: 768px) {
@@ -158,9 +209,7 @@
   }
 
   .mobile-rider .now-playing-title {
-    font-size: 12px;
     line-height: 1;
-    color: #fff;
     font-weight: lighter;
   }
 }
