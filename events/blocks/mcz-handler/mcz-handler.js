@@ -16,7 +16,7 @@ export default async function init(el) {
   let mczId = null;
   if (getMetadata('eventExternalId')) {
     const eventExternalId = getMetadata('eventExternalId');
-    //split the eventExternalId by - and get the last part
+    // split the eventExternalId by - and get the last part
     mczId = eventExternalId.replace('-', '').toLowerCase();
   }
 
