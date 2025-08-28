@@ -2,13 +2,13 @@ import { LIBS, getMetadata, getSusiOptions } from '../../scripts/utils.js';
 import { deleteAttendeeFromEvent, getAndCreateAndAddAttendee, getAttendee, getEvent } from '../../scripts/esp-controller.js';
 import BlockMediator from '../../scripts/deps/block-mediator.min.js';
 import autoUpdateContent, { miloReplaceKey, signIn } from '../../scripts/content-update.js';
-import { dictionaryManager } from '../../scripts/dictionary-manager.js';
 
 const { createTag, getConfig } = await import(`${LIBS}/utils/utils.js`);
 const { closeModal, sendAnalytics } = await import(`${LIBS}/blocks/modal/modal.js`);
 const { default: sanitizeComment } = await import(`${LIBS}/utils/sanitizeComment.js`);
 const { decorateDefaultLinkAnalytics } = await import(`${LIBS}/martech/attributes.js`);
 const { default: loadFragment } = await import(`${LIBS}/blocks/fragment/fragment.js`);
+const { dictionaryManager } = await import(`${LIBS}/utils/dictionary-manager.js`);
 
 const RULE_OPERATORS = {
   equal: '=',

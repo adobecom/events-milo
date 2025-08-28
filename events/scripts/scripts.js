@@ -23,7 +23,6 @@ const [{
   loadArea,
   setConfig,
   updateConfig,
-  getConfig,
   loadLana,
   getLocale,
 }, {
@@ -31,33 +30,14 @@ const [{
   autoUpdateContent,
   getNonProdData,
   validatePageAndRedirect,
-}, {
-  lazyCaptureProfile,
-}] = await Promise.all([
+}, { lazyCaptureProfile }, { dictionaryManager }] = await Promise.all([
   import(`${LIBS}/utils/utils.js`),
   import(`${EVENT_LIBS}/utils/decorate.js`),
   import(`${EVENT_LIBS}/utils/profile.js`),
+  import(`${EVENT_LIBS}/utils/dictionary-manager.js`),
 ]);
 
 export default function decorateArea(area = document) {
-  const parsePhotosData = () => {
-    const output = {};
-
-    if (!area) return output;
-
-    try {
-      const photosData = JSON.parse(getMetadata('photos'));
-
-      photosData.forEach((photo) => {
-        output[photo.imageKind] = photo;
-      });
-    } catch (e) {
-      window.lana?.log(`Failed to parse photos metadata:\n${JSON.stringify(e, null, 2)}`);
-    }
-
-    return output;
-  };
-
   const eagerLoad = (parent, selector) => {
     const img = parent.querySelector(selector);
     img?.removeAttribute('loading');
@@ -78,14 +58,7 @@ export default function decorateArea(area = document) {
 
   if (getMetadata('event-details-page') !== 'yes') return;
 
-  const photosData = parsePhotosData(area);
-
-  const miloDeps = {
-    miloLibs: LIBS,
-    getConfig,
-  };
-
-  autoUpdateContent(area, miloDeps, photosData);
+  autoUpdateContent(area);
 }
 
 const prodDomains = ['milo.adobe.com', 'business.adobe.com', 'www.adobe.com', 'news.adobe.com', 'helpx.adobe.com'];
@@ -237,6 +210,8 @@ function renderWithNonProdMetadata() {
 
   return false;
 }
+
+await dictionaryManager.initialize(MILO_CONFIG);
 
 async function fetchAndDecorateArea() {
   // Load non-prod data for stage and dev environments
