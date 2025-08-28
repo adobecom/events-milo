@@ -102,7 +102,7 @@ describe('Promotional Content Block', () => {
       await init(el);
 
       const mediaBlocks = el.querySelectorAll('.media');
-
+      console.log(mediaBlocks);
       expect(mediaBlocks[0].classList.contains('media-reversed')).to.be.false;
       expect(mediaBlocks[1].classList.contains('media-reversed')).to.be.true;
       expect(mediaBlocks[2].classList.contains('media-reversed')).to.be.false;
