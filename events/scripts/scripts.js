@@ -30,11 +30,11 @@ const [{
   autoUpdateContent,
   getNonProdData,
   validatePageAndRedirect,
-}, { lazyCaptureProfile }, { dictionaryManager }] = await Promise.all([
+  lazyCaptureProfile,
+  dictionaryManager,
+}] = await Promise.all([
   import(`${LIBS}/utils/utils.js`),
-  import(`${EVENT_LIBS}/utils/decorate.js`),
-  import(`${EVENT_LIBS}/utils/profile.js`),
-  import(`${EVENT_LIBS}/utils/dictionary-manager.js`),
+  import(`${EVENT_LIBS}/libs.js`),
 ]);
 
 export default function decorateArea(area = document) {
