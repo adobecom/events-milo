@@ -10,7 +10,6 @@
  * governing permissions and limitations under the License.
  */
 
-import { lazyCaptureProfile } from './profile.js';
 import {
   getSusiOptions,
   setMetadata,
@@ -32,15 +31,13 @@ const [{
   autoUpdateContent,
   getNonProdData,
   validatePageAndRedirect,
+}, {
+  lazyCaptureProfile,
 }] = await Promise.all([
   import(`${LIBS}/utils/utils.js`),
   import(`${EVENT_LIBS}/utils/decorate.js`),
+  import(`${EVENT_LIBS}/utils/profile.js`),
 ]);
-
-console.log(setEventConfig);
-console.log(autoUpdateContent);
-console.log(getNonProdData);
-console.log(validatePageAndRedirect);
 
 export default function decorateArea(area = document) {
   const parsePhotosData = () => {
