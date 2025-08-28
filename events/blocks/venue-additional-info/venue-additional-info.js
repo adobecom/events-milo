@@ -71,7 +71,7 @@ function decorateModal(el, createTag) {
 export default async function init(el) {
   const { createTag } = await import(`${LIBS}/utils/utils.js`);
 
-  if (getMetadata('show-venue-additional-info-post-event') !== 'true' && document.body.classList.contains('timing-post-event')) {
+  if (getMetadata('show-venue-additional-info-post-event') !== 'true' && document.body.dataset.eventState === 'post-event') {
     el.remove();
     return;
   }
