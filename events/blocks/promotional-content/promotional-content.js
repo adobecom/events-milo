@@ -29,7 +29,7 @@ async function getPromotionalContent() {
   return rehydratedPromotionalItems;
 }
 
-function addMediaReversedClass(el) {
+export function addMediaReversedClass(el) {
   const mediaBlocks = el.querySelectorAll('.media');
   mediaBlocks.forEach((blade, i) => {
     blade.classList.remove('media-reverse-mobile');

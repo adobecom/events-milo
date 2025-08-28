@@ -50,7 +50,7 @@ function decorateTextContainer(el, createTag, decorateButtons) {
     if (city && state && postalCode) createTag('p', { class: 'venue-address-text' }, `${city}, ${state} ${postalCode}`, { parent: textContentWrapper });
   }
 
-  if (getMetadata('show-venue-additional-info-post-event') !== 'true' && document.body.classList.contains('timing-post-event')) return;
+  if (getMetadata('show-venue-additional-info-post-event') !== 'true' && document.body.dataset.eventState === 'post-event') return;
 
   if (additionalInfoBtn && (additionalInformation || venueAdditionalImageObj)) {
     decorateButtons(additionalInfoBtn, 'button-l');
@@ -101,7 +101,7 @@ export default async function init(el) {
     import(`${LIBS}/utils/utils.js`),
     import(`${LIBS}/utils/decorate.js`),
   ]);
-  if (getMetadata('show-venue-post-event') !== 'true' && document.body.classList.contains('timing-post-event')) {
+  if (getMetadata('show-venue-post-event') !== 'true' && document.body.dataset.eventState === 'post-event') {
     el.remove();
     return;
   }
