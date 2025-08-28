@@ -98,11 +98,11 @@ describe('Promotional Content Block', () => {
       meta.content = '["Acrobat"]';
       document.head.appendChild(meta);
 
-      const init = (await import('../../../../events/blocks/promotional-content/promotional-content.js')).default;
-      await init(el);
+      const { addMediaReversedClass } = (await import('../../../../events/blocks/promotional-content/promotional-content.js'));
+      addMediaReversedClass(el);
 
       const mediaBlocks = el.querySelectorAll('.media');
-      console.log(mediaBlocks);
+
       expect(mediaBlocks[0].classList.contains('media-reversed')).to.be.false;
       expect(mediaBlocks[1].classList.contains('media-reversed')).to.be.true;
       expect(mediaBlocks[2].classList.contains('media-reversed')).to.be.false;
