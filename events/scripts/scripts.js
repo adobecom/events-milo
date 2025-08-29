@@ -15,6 +15,8 @@ import {
   EVENT_LIBS,
 } from './utils.js';
 
+const E_CONFIG = { cmsType: 'SP', version: 'v1' };
+
 const [{
   loadArea,
   setConfig,
@@ -33,7 +35,7 @@ const [{
   setMetadata,
 }] = await Promise.all([
   import(`${LIBS}/utils/utils.js`),
-  import(`${EVENT_LIBS}/libs.js`),
+  import(`${EVENT_LIBS(E_CONFIG.version)}/libs.js`),
 ]);
 
 export default function decorateArea(area = document) {
@@ -187,11 +189,28 @@ const CONFIG = {
   },
 };
 
-const E_CONFIG = { cmsType: 'SP' };
+const EVENT_BLOCKS = [
+  'bento-cards',
+  'chrono-box',
+  'daa-injection',
+  'event-agenda',
+  'event-map',
+  'event-partners',
+  'event-product-blades',
+  'event-schema',
+  'event-subscription-form',
+  'events-form',
+  'mobile-rider',
+  'preview-bar',
+  'profile-cards',
+  'promotional-content',
+  'venue-additional-info',
+  'youtube-chat',
+];
 
-const MILO_CONFIG = setConfig({ ...CONFIG });
-updateConfig({ ...MILO_CONFIG, signInContext: getSusiOptions(MILO_CONFIG) });
-const EVENT_CONFIG = setEventConfig(E_CONFIG, CONFIG);
+const MILO_CONFIG = setConfig({ ...CONFIG, externalLibs: { base: `/event-libs/${E_CONFIG.version}`, blocks: EVENT_BLOCKS } });
+const EVENT_CONFIG = setEventConfig(E_CONFIG, MILO_CONFIG);
+updateConfig({ ...MILO_CONFIG, signInContext: getSusiOptions() });
 
 function renderWithNonProdMetadata() {
   const isEventDetailsPage = getMetadata('event-details-page') === 'yes';
