@@ -23,10 +23,10 @@ const EVENT_BLOCKS_OVERRIDE = [
 const [{
   loadArea,
   setConfig,
-  getConfig,
   updateConfig,
   loadLana,
   getLocale,
+  getConfig,
 }, {
   setEventConfig,
   getEventConfig,
@@ -66,6 +66,50 @@ export default function decorateArea(area = document) {
   if (getMetadata('event-details-page') !== 'yes') return;
 
   autoUpdateContent(area);
+}
+
+function renderWithNonProdMetadata() {
+  const isEventDetailsPage = getMetadata('event-details-page') === 'yes';
+
+  if (!isEventDetailsPage) return false;
+
+  const isLiveProd = getEventConfig().eventServiceEnv.name === 'prod' && window.location.hostname === 'www.adobe.com';
+  const isMissingEventId = !getMetadata('event-id');
+
+  if (!isLiveProd && isMissingEventId) return true;
+
+  const isPreviewMode = new URLSearchParams(window.location.search).get('previewMode');
+
+  if (isLiveProd && isPreviewMode) return true;
+
+  return false;
+}
+
+async function fetchAndDecorateArea() {
+  // Load non-prod data for stage and dev environments
+  let env = getEventConfig().eventServiceEnv.name;
+  if (env === 'local') env = 'dev';
+  const nonProdData = await getNonProdData(env);
+  if (!nonProdData) return;
+  Object.entries(nonProdData).forEach(([key, value]) => {
+    setMetadata(key, value);
+  });
+
+  decorateArea();
+}
+
+function replaceDotMedia(area = document) {
+  const { prefix } = getLocale(getConfig().locales);
+  const currUrl = new URL(window.location);
+  const pathSeg = currUrl.pathname.split('/').length;
+  if ((prefix === '' && pathSeg >= 3) || (prefix !== '' && pathSeg >= 4)) return;
+  const resetAttributeBase = (tag, attr) => {
+    area.querySelectorAll(`${tag}[${attr}^="./media_"]`).forEach((el) => {
+      el[attr] = `${new URL(`${getConfig().contentRoot}${el.getAttribute(attr).substring(1)}`, window.location).href}`;
+    });
+  };
+  resetAttributeBase('img', 'src');
+  resetAttributeBase('source', 'srcset');
 }
 
 const prodDomains = ['milo.adobe.com', 'business.adobe.com', 'www.adobe.com', 'news.adobe.com', 'helpx.adobe.com'];
@@ -207,56 +251,7 @@ updateConfig({
   },
 });
 
-const miloConfig = getConfig();
-console.log('miloConfig', miloConfig);
-const eventConfig = getEventConfig();
-console.log('eventConfig', eventConfig);
-
-function renderWithNonProdMetadata() {
-  const isEventDetailsPage = getMetadata('event-details-page') === 'yes';
-
-  if (!isEventDetailsPage) return false;
-
-  const isLiveProd = EVENT_CONFIG.eventServiceEnv.name === 'prod' && window.location.hostname === 'www.adobe.com';
-  const isMissingEventId = !getMetadata('event-id');
-
-  if (!isLiveProd && isMissingEventId) return true;
-
-  const isPreviewMode = new URLSearchParams(window.location.search).get('previewMode');
-
-  if (isLiveProd && isPreviewMode) return true;
-
-  return false;
-}
-
 await dictionaryManager.initialize(MILO_CONFIG);
-
-async function fetchAndDecorateArea() {
-  // Load non-prod data for stage and dev environments
-  let env = EVENT_CONFIG.eventServiceEnv.name;
-  if (env === 'local') env = 'dev';
-  const nonProdData = await getNonProdData(env);
-  if (!nonProdData) return;
-  Object.entries(nonProdData).forEach(([key, value]) => {
-    setMetadata(key, value);
-  });
-
-  decorateArea();
-}
-
-function replaceDotMedia(area = document) {
-  const { prefix } = getLocale(CONFIG.locales);
-  const currUrl = new URL(window.location);
-  const pathSeg = currUrl.pathname.split('/').length;
-  if ((prefix === '' && pathSeg >= 3) || (prefix !== '' && pathSeg >= 4)) return;
-  const resetAttributeBase = (tag, attr) => {
-    area.querySelectorAll(`${tag}[${attr}^="./media_"]`).forEach((el) => {
-      el[attr] = `${new URL(`${CONFIG.contentRoot}${el.getAttribute(attr).substring(1)}`, window.location).href}`;
-    });
-  };
-  resetAttributeBase('img', 'src');
-  resetAttributeBase('source', 'srcset');
-}
 
 replaceDotMedia(document);
 
@@ -264,11 +259,11 @@ replaceDotMedia(document);
 
 decorateArea();
 
-// fetch metadata json and decorate again if non-prod or prod + preview mode
-if (renderWithNonProdMetadata()) await fetchAndDecorateArea();
-
-// Validate the page and redirect if is event-details-page
-if (getMetadata('event-details-page') === 'yes') await validatePageAndRedirect(LIBS);
+// SP projects legacy support
+if (EVENT_CONFIG.cmsType === 'SP') {
+  if (renderWithNonProdMetadata()) await fetchAndDecorateArea();
+  if (getMetadata('event-details-page') === 'yes') await validatePageAndRedirect(LIBS);
+}
 
 /*
  * ------------------------------------------------------------
