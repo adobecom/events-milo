@@ -23,11 +23,13 @@ const EVENT_BLOCKS_OVERRIDE = [
 const [{
   loadArea,
   setConfig,
+  getConfig,
   updateConfig,
   loadLana,
   getLocale,
 }, {
   setEventConfig,
+  getEventConfig,
   autoUpdateContent,
   getNonProdData,
   validatePageAndRedirect,
@@ -204,6 +206,11 @@ updateConfig({
     blocks: EVENT_BLOCKS_OVERRIDE.length > 0 ? EVENT_BLOCKS_OVERRIDE : EVENT_BLOCKS,
   },
 });
+
+const miloConfig = getConfig();
+console.log('miloConfig', miloConfig);
+const eventConfig = getEventConfig();
+console.log('eventConfig', eventConfig);
 
 function renderWithNonProdMetadata() {
   const isEventDetailsPage = getMetadata('event-details-page') === 'yes';
