@@ -1,5 +1,3 @@
-import { SUSI_OPTIONS, EVENT_LIBS_VERSION } from './constances.js';
-
 export const LIBS = (() => {
   const { hostname, search } = window.location;
   if (!(hostname.includes('.hlx.') || hostname.includes('.aem.') || hostname.includes('local'))) return '/libs';
@@ -9,11 +7,12 @@ export const LIBS = (() => {
 })();
 
 export const EVENT_LIBS = (() => {
+  const version = 'v1';
   const { hostname, search } = window.location;
   if (!(hostname.includes('.hlx.') || hostname.includes('.aem.') || hostname.includes('local'))) return '/libs';
-  const branch = new URLSearchParams(search).get('eventlibs') || 'migration';
-  if (branch === 'local') return `http://localhost:3868/event-libs/${EVENT_LIBS_VERSION}`;
-  return branch.includes('--') ? `https://${branch}.aem.live/event-libs/${EVENT_LIBS_VERSION}` : `https://${branch}--event-libs--adobecom.aem.live/event-libs/${EVENT_LIBS_VERSION}`;
+  const branch = new URLSearchParams(search).get('eventlibs') || 'main';
+  if (branch === 'local') return `http://localhost:3868/event-libs/${version}`;
+  return branch.includes('--') ? `https://${branch}.aem.live/event-libs/${version}` : `https://${branch}--event-libs--adobecom.aem.live/event-libs/${version}`;
 })();
 
 export function getEventServiceEnv() {

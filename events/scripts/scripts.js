@@ -11,10 +11,6 @@
  */
 
 import {
-  getSusiOptions,
-  setMetadata,
-  getMetadata,
-  getEventServiceEnv,
   LIBS,
   EVENT_LIBS,
 } from './utils.js';
@@ -32,6 +28,9 @@ const [{
   validatePageAndRedirect,
   lazyCaptureProfile,
   dictionaryManager,
+  getSusiOptions,
+  getMetadata,
+  setMetadata,
 }] = await Promise.all([
   import(`${LIBS}/utils/utils.js`),
   import(`${EVENT_LIBS}/libs.js`),
@@ -192,14 +191,14 @@ const E_CONFIG = { cmsType: 'SP' };
 
 const MILO_CONFIG = setConfig({ ...CONFIG });
 updateConfig({ ...MILO_CONFIG, signInContext: getSusiOptions(MILO_CONFIG) });
-setEventConfig(E_CONFIG, CONFIG);
+const EVENT_CONFIG = setEventConfig(E_CONFIG, CONFIG);
 
 function renderWithNonProdMetadata() {
   const isEventDetailsPage = getMetadata('event-details-page') === 'yes';
 
   if (!isEventDetailsPage) return false;
 
-  const isLiveProd = getEventServiceEnv() === 'prod' && window.location.hostname === 'www.adobe.com';
+  const isLiveProd = EVENT_CONFIG.eventServiceEnv.name === 'prod' && window.location.hostname === 'www.adobe.com';
   const isMissingEventId = !getMetadata('event-id');
 
   if (!isLiveProd && isMissingEventId) return true;
@@ -215,7 +214,7 @@ await dictionaryManager.initialize(MILO_CONFIG);
 
 async function fetchAndDecorateArea() {
   // Load non-prod data for stage and dev environments
-  let env = getEventServiceEnv();
+  let env = EVENT_CONFIG.eventServiceEnv.name;
   if (env === 'local') env = 'dev';
   const nonProdData = await getNonProdData(env);
   if (!nonProdData) return;
