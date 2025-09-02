@@ -245,10 +245,13 @@ const EVENT_CONFIG = setEventConfig(E_CONFIG, MILO_CONFIG);
 updateConfig({
   ...MILO_CONFIG,
   signInContext: getSusiOptions(),
-  externalLibs: {
-    base: EVENT_CONFIG.eventLibs,
-    blocks: EVENT_BLOCKS_OVERRIDE.length > 0 ? EVENT_BLOCKS_OVERRIDE : EVENT_BLOCKS,
-  },
+  externalLibs: [
+    {
+      base: EVENT_CONFIG.eventLibs,
+      blocks: EVENT_BLOCKS_OVERRIDE.length ? EVENT_BLOCKS_OVERRIDE : EVENT_BLOCKS,
+    },
+    // Add more in order of precedence (first match wins):
+  ],
 });
 
 await dictionaryManager.initialize(MILO_CONFIG);
