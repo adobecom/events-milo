@@ -344,6 +344,9 @@ class VideoPlaylist {
     const dataEl = this.el.querySelector('[data-playlist-config]');
     if (dataEl) {
       const dataConfig = dataEl.dataset;
+      
+      // Map the data attributes to config properties
+      // Note: dataset converts kebab-case to camelCase automatically
       config.playlistId = dataConfig.playlistId || null;
       config.playlistTitle = dataConfig.playlistTitle || 'Video Playlist';
       config.topicEyebrow = dataConfig.topicEyebrow || '';
@@ -359,6 +362,12 @@ class VideoPlaylist {
       config.favoritesButtonText = dataConfig.favoritesButtonText || 'View Schedule';
       config.favoritesButtonLink = dataConfig.favoritesButtonLink || '/schedule';
       config.relatedPlaylists = dataConfig.relatedPlaylists ? JSON.parse(dataConfig.relatedPlaylists) : [];
+      
+      // Debug logging to help troubleshoot
+      console.log('Parsed config:', config);
+      console.log('Raw dataset:', dataConfig);
+    } else {
+      console.warn('No data-playlist-config element found');
     }
 
     return config;
@@ -430,7 +439,7 @@ class VideoPlaylist {
       <div class="video-playlist__header__upper">
         <div class="video-playlist__header__upper__skipLink">
           <a href="#video-playlist-skip" class="video-playlist__header__upper__skipLink__link button">
-            ${this.cfg.skipPlaylistText}
+            ${this.cfg.skipPlaylistText || 'Skip playlist'}
           </a>
         </div>
         <div class="video-playlist__header__toggle">
@@ -444,7 +453,7 @@ class VideoPlaylist {
             />
             <span class="spectrum-Switch-switch"></span>
             <label class="spectrum-Switch-label" for="playlist-play-all">
-              ${this.cfg.autoplayText.toUpperCase()}
+              ${(this.cfg.autoplayText || 'Play All').toUpperCase()}
             </label>
           </div>
         </div>
@@ -452,8 +461,8 @@ class VideoPlaylist {
 
       <div class="video-playlist__header__content">
         <div class="video-playlist__header__content__left">
-          <p class="video-playlist__header__content__left__topic">${this.cfg.topicEyebrow}</p>
-          <h3 class="video-playlist__header__content__left__title">${this.cfg.playlistTitle}</h3>
+          <p class="video-playlist__header__content__left__topic">${this.cfg.topicEyebrow || ''}</p>
+          <h3 class="video-playlist__header__content__left__title">${this.cfg.playlistTitle || 'Video Playlist'}</h3>
         </div>
         <div class="video-playlist__header__content__right">
           ${this.cfg.socialSharing ? this.createSocialSharingButton() : ''}
@@ -532,7 +541,7 @@ class VideoPlaylist {
               </p>
               ${this.cfg.favoritesEnabled ? `
                 <span class="spectrum-Tooltip spectrum-Tooltip--left spectrum-Tooltip--info">
-                  <span class="spectrum-Tooltip-label">${this.cfg.favoritesTooltipText}</span>
+                  <span class="spectrum-Tooltip-label">${this.cfg.favoritesTooltipText || 'Add to favorites'}</span>
                   <span class="spectrum-Tooltip-tip"></span>
                 </span>
               ` : ''}
