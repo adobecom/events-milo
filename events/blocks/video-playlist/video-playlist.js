@@ -1,0 +1,880 @@
+/* eslint-disable no-underscore-dangle */
+import { LIBS } from '../../scripts/utils.js';
+
+const { createTag, getConfig } = await import(`${LIBS}/utils/utils.js`);
+
+const CONFIG = {
+  STORAGE: {
+    CURRENT_VIDEO_KEY: 'videoPlaylist_currentVideo',
+    PROGRESS_KEY: 'videoPlaylist_progress',
+    AUTOPLAY_KEY: 'videoPlaylist_autoplay',
+  },
+  API: {
+    MOCK_ENDPOINT: '/api/sessions',
+    FAVORITES_ENDPOINT: '/api/favorites',
+  },
+  PLAYER: {
+    PROGRESS_SAVE_INTERVAL: 5,
+    RESTART_THRESHOLD: 5,
+  },
+  ANALYTICS: {
+    PLAYLIST: 'Playlist',
+    TOGGLE_OFF: 'Play all_Off',
+    TOGGLE_ON: 'Play all_On',
+    VIDEO_SELECT: 'Video Select',
+    FAVORITE: 'Favorite',
+    UNFAVORITE: 'Unfavorite',
+    VIEW_SCHEDULE: 'View Schedule',
+  },
+};
+
+// Mock API for testing
+const mockAPI = {
+  async getSessions(playlistId = null, entityIds = null) {
+    // Simulate API delay
+    await new Promise(resolve => setTimeout(resolve, 100));
+    
+    const mockSessions = [
+      {
+        id: "1tmt6y1",
+        search: {
+          mpcVideoId: '3442586',
+          videoId: 'yt_001',
+          videoService: 'mpc',
+          sessionId: '1726853839238001M8Un',
+          thumbnailUrl: 'https://images-tv.adobe.com/mpcv3/b8f920e0-0298-4d82-9ec3-c17d4c9ceda9/38f837a1-0b27-4319-9a7c-2429d88e3058/61f09647c0884bc3840da53bd2c2ffc0_1742533829-200x113.jpg',
+          videoDuration: '00:51:53',
+          sessionCode: 'S744',
+        },
+        contentArea: {
+          title: 'Unlocking Modern Marketing\'s Potential with Integrated Operations and AI',
+          description: 'Discover Choreo, a transformative framework powered by AI and Adobe technology, that empowers marketing teams to design, build, and optimize the way they work.',
+        },
+        overlayLink: 'https://business.adobe.com/summit/2025/sessions/unlocking-modern-marketings-potential-s744.html',
+        styles: {
+          backgroundImage: 'https://business.adobe.com/content/dam/dx/us/en/summit/2025/sessions/Session-3_1200x675.jpg',
+        },
+      },
+      {
+        id: "2tmt6y2",
+        search: {
+          mpcVideoId: '3442587',
+          videoId: 'yt_002',
+          videoService: 'mpc',
+          sessionId: '1726853839238001M8Un2',
+          thumbnailUrl: 'https://images-tv.adobe.com/mpcv3/b8f920e0-0298-4d82-9ec3-c17d4c9ceda9/38f837a1-0b27-4319-9a7c-2429d88e3058/61f09647c0884bc3840da53bd2c2ffc0_1742533829-200x113.jpg',
+          videoDuration: '00:21:24',
+          sessionCode: 'S745',
+        },
+        contentArea: {
+          title: 'Pitch Perfect: Winning the Marketing Budget Conversation',
+          description: 'Marketing Budget, Secure funding and resources for your marketing initiatives with proven strategies and compelling presentations.',
+        },
+        overlayLink: 'https://business.adobe.com/summit/2025/sessions/pitch-perfect-marketing-budget-s745.html',
+        styles: {
+          backgroundImage: 'https://business.adobe.com/content/dam/dx/us/en/summit/2025/sessions/Session-4_1200x675.jpg',
+        },
+      },
+      {
+        id: "3tmt6y3",
+        search: {
+          mpcVideoId: '3442588',
+          videoId: 'yt_003',
+          videoService: 'mpc',
+          sessionId: '1726853839238001M8Un3',
+          thumbnailUrl: 'https://images-tv.adobe.com/mpcv3/b8f920e0-0298-4d82-9ec3-c17d4c9ceda9/38f837a1-0b27-4319-9a7c-2429d88e3058/61f09647c0884bc3840da53bd2c2ffc0_1742533829-200x113.jpg',
+          videoDuration: '00:52:34',
+          sessionCode: 'S746',
+        },
+        contentArea: {
+          title: 'The Future of Adobe Workfront',
+          description: 'Discover how Adobe Workfront\'s innovative features are transforming project management and team collaboration.',
+        },
+        overlayLink: 'https://business.adobe.com/summit/2025/sessions/future-adobe-workfront-s746.html',
+        styles: {
+          backgroundImage: 'https://business.adobe.com/content/dam/dx/us/en/summit/2025/sessions/Session-5_1200x675.jpg',
+        },
+      },
+      {
+        id: "4tmt6y4",
+        search: {
+          mpcVideoId: '3442589',
+          videoId: 'yt_004',
+          videoService: 'mpc',
+          sessionId: '1726853839238001M8Un4',
+          thumbnailUrl: 'https://images-tv.adobe.com/mpcv3/b8f920e0-0298-4d82-9ec3-c17d4c9ceda9/38f837a1-0b27-4319-9a7c-2429d88e3058/61f09647c0884bc3840da53bd2c2ffc0_1742533829-200x113.jpg',
+          videoDuration: '00:39:36',
+          sessionCode: 'S747',
+        },
+        contentArea: {
+          title: 'Maximize Martech Investments with a Co-led IT and Marketing COE',
+          description: 'Learn best practices on bridging IT and marketing collaboration to maximize your technology investments.',
+        },
+        overlayLink: 'https://business.adobe.com/summit/2025/sessions/maximize-martech-investments-s747.html',
+        styles: {
+          backgroundImage: 'https://business.adobe.com/content/dam/dx/us/en/summit/2025/sessions/Session-6_1200x675.jpg',
+        },
+      },
+      {
+        id: "5tmt6y5",
+        search: {
+          mpcVideoId: '3442590',
+          videoId: 'yt_005',
+          videoService: 'mpc',
+          sessionId: '1726853839238001M8Un5',
+          thumbnailUrl: 'https://images-tv.adobe.com/mpcv3/b8f920e0-0298-4d82-9ec3-c17d4c9ceda9/38f837a1-0b27-4319-9a7c-2429d88e3058/61f09647c0884bc3840da53bd2c2ffc0_1742533829-200x113.jpg',
+          videoDuration: '00:39:35',
+          sessionCode: 'S748',
+        },
+        contentArea: {
+          title: 'Boost Experimentation with Auto-Created Tests the Home Depot Way',
+          description: 'Learn how to establish a system for automated testing that drives continuous improvement and better results.',
+        },
+        overlayLink: 'https://business.adobe.com/summit/2025/sessions/boost-experimentation-home-depot-s748.html',
+        styles: {
+          backgroundImage: 'https://business.adobe.com/content/dam/dx/us/en/summit/2025/sessions/Session-7_1200x675.jpg',
+        },
+      },
+      {
+        id: "6tmt6y6",
+        search: {
+          mpcVideoId: '3442591',
+          videoId: 'yt_006',
+          videoService: 'mpc',
+          sessionId: '1726853839238001M8Un6',
+          thumbnailUrl: 'https://images-tv.adobe.com/mpcv3/b8f920e0-0298-4d82-9ec3-c17d4c9ceda9/38f837a1-0b27-4319-9a7c-2429d88e3058/61f09647c0884bc3840da53bd2c2ffc0_1742533829-200x113.jpg',
+          videoDuration: '00:42:18',
+          sessionCode: 'S749',
+        },
+        contentArea: {
+          title: 'How Workfront Is Bringing Teams Together',
+          description: 'Explore the collaborative features that make Workfront the ultimate platform for cross-functional team success.',
+        },
+        overlayLink: 'https://business.adobe.com/summit/2025/sessions/workfront-bringing-teams-together-s749.html',
+        styles: {
+          backgroundImage: 'https://business.adobe.com/content/dam/dx/us/en/summit/2025/sessions/Session-8_1200x675.jpg',
+        },
+      },
+      {
+        id: "7tmt6y7",
+        search: {
+          mpcVideoId: '3442592',
+          videoId: 'yt_007',
+          videoService: 'mpc',
+          sessionId: '1726853839238001M8Un7',
+          thumbnailUrl: 'https://images-tv.adobe.com/mpcv3/b8f920e0-0298-4d82-9ec3-c17d4c9ceda9/38f837a1-0b27-4319-9a7c-2429d88e3058/61f09647c0884bc3840da53bd2c2ffc0_1742533829-200x113.jpg',
+          videoDuration: '00:35:42',
+          sessionCode: 'S750',
+        },
+        contentArea: {
+          title: 'Customer Experience Transformation in the Digital Age',
+          description: 'Discover strategies for creating seamless, personalized customer experiences that drive loyalty and growth.',
+        },
+        overlayLink: 'https://business.adobe.com/summit/2025/sessions/customer-experience-transformation-s750.html',
+        styles: {
+          backgroundImage: 'https://business.adobe.com/content/dam/dx/us/en/summit/2025/sessions/Session-9_1200x675.jpg',
+        },
+      },
+      {
+        id: "8tmt6y8",
+        search: {
+          mpcVideoId: '3442593',
+          videoId: 'yt_008',
+          videoService: 'mpc',
+          sessionId: '1726853839238001M8Un8',
+          thumbnailUrl: 'https://images-tv.adobe.com/mpcv3/b8f920e0-0298-4d82-9ec3-c17d4c9ceda9/38f837a1-0b27-4319-9a7c-2429d88e3058/61f09647c0884bc3840da53bd2c2ffc0_1742533829-200x113.jpg',
+          videoDuration: '00:48:15',
+          sessionCode: 'S751',
+        },
+        contentArea: {
+          title: 'Data-Driven Marketing: From Insights to Action',
+          description: 'Learn how to leverage data analytics to make informed marketing decisions and drive measurable results.',
+        },
+        overlayLink: 'https://business.adobe.com/summit/2025/sessions/data-driven-marketing-insights-action-s751.html',
+        styles: {
+          backgroundImage: 'https://business.adobe.com/content/dam/dx/us/en/summit/2025/sessions/Session-10_1200x675.jpg',
+        },
+      },
+    ];
+
+    return { cards: mockSessions };
+  },
+
+  async getFavorites() {
+    await new Promise(resolve => setTimeout(resolve, 50));
+    return {
+      sessionInterests: [
+        { sessionID: 'sess_001' },
+        { sessionID: 'sess_003' },
+      ],
+    };
+  },
+
+  async toggleFavorite(sessionId) {
+    await new Promise(resolve => setTimeout(resolve, 200));
+    return { success: true };
+  },
+};
+
+// Storage helpers
+function getLocalStorageVideos() {
+  try {
+    const data = localStorage.getItem(CONFIG.STORAGE.PROGRESS_KEY);
+    return data ? JSON.parse(data) : {};
+  } catch (e) {
+    console.error('Failed to get video progress:', e);
+    return {};
+  }
+}
+
+function saveCurrentVideoProgress(videoId, currentTime, duration = 0) {
+  try {
+    const videos = getLocalStorageVideos();
+    videos[videoId] = {
+      secondsWatched: currentTime,
+      length: duration,
+      timestamp: Date.now(),
+    };
+    localStorage.setItem(CONFIG.STORAGE.PROGRESS_KEY, JSON.stringify(videos));
+  } catch (e) {
+    console.error('Failed to save video progress:', e);
+  }
+}
+
+function getLocalStorageShouldAutoPlay() {
+  try {
+    const data = localStorage.getItem(CONFIG.STORAGE.AUTOPLAY_KEY);
+    return data ? JSON.parse(data) : false;
+  } catch (e) {
+    console.error('Failed to get autoplay setting:', e);
+    return false;
+  }
+}
+
+function saveShouldAutoPlayToLocalStorage(shouldAutoPlay) {
+  try {
+    localStorage.setItem(CONFIG.STORAGE.AUTOPLAY_KEY, JSON.stringify(shouldAutoPlay));
+  } catch (e) {
+    console.error('Failed to save autoplay setting:', e);
+  }
+}
+
+function getCurrentPlaylistId() {
+  const urlParams = new URLSearchParams(window.location.search);
+  return urlParams.get('playlistId');
+}
+
+// Utility functions
+function findVideoIdFromIframeSrc(iframeSrc) {
+  const url = new URL(iframeSrc);
+  return url.searchParams.get('videoId') || url.pathname.split('/').pop();
+}
+
+function startVideoFromSecond(videoContainer, seconds) {
+  const iframe = videoContainer.querySelector('iframe');
+  if (!iframe) return;
+
+  const currentSrc = iframe.getAttribute('src');
+  const url = new URL(currentSrc);
+  url.searchParams.set('start', seconds);
+  iframe.setAttribute('src', url.toString());
+}
+
+function filterCards(cards) {
+  return cards.filter(card => card.search && card.contentArea);
+}
+
+function sortCards(cards, sortType = 'default') {
+  const sortedCards = [...cards];
+  
+  switch (sortType) {
+    case 'title':
+      return sortedCards.sort((a, b) => 
+        a.contentArea.title.localeCompare(b.contentArea.title)
+      );
+    case 'duration':
+      return sortedCards.sort((a, b) => {
+        const durationA = parseInt(a.search.videoDuration.replace(':', ''));
+        const durationB = parseInt(b.search.videoDuration.replace(':', ''));
+        return durationA - durationB;
+      });
+    case 'reverse':
+      return sortedCards.reverse();
+    default:
+      return sortedCards;
+  }
+}
+
+class VideoPlaylist {
+  constructor(el) {
+    this.el = el;
+    this.cfg = null;
+    this.root = null;
+    this.sessionsWrapper = null;
+    this.videoContainer = null;
+    this.cards = [];
+    this.currentPlaylistId = null;
+    this.init();
+  }
+
+  async init() {
+    try {
+      this.cfg = this.parseCfg();
+      this.currentPlaylistId = getCurrentPlaylistId();
+      
+      // Create main container
+      this.root = this.createMainContainer();
+      this.el.appendChild(this.root);
+      
+      // Load and display sessions
+      await this.loadSessions();
+      
+      // Setup video player
+      this.setupVideoPlayer();
+      
+    } catch (e) {
+      console.error('VideoPlaylist Init error:', e);
+    }
+  }
+
+  parseCfg() {
+    const config = {};
+    
+    // Get configuration from data attributes
+    const dataEl = this.el.querySelector('[data-playlist-config]');
+    if (dataEl) {
+      const dataConfig = dataEl.dataset;
+      config.playlistId = dataConfig.playlistId || null;
+      config.playlistTitle = dataConfig.playlistTitle || 'Video Playlist';
+      config.topicEyebrow = dataConfig.topicEyebrow || '';
+      config.autoplayText = dataConfig.autoplayText || 'Play All';
+      config.skipPlaylistText = dataConfig.skipPlaylistText || 'Skip playlist';
+      config.minimumSessions = parseInt(dataConfig.minimumSessions) || 2;
+      config.sort = dataConfig.sort || 'default';
+      config.isTagBased = dataConfig.isTagBased === 'true';
+      config.socialSharing = dataConfig.socialSharing === 'true';
+      config.favoritesEnabled = dataConfig.favoritesEnabled === 'true';
+      config.favoritesTooltipText = dataConfig.favoritesTooltipText || 'Add to favorites';
+      config.favoritesNotificationText = dataConfig.favoritesNotificationText || 'Session added to favorites';
+      config.favoritesButtonText = dataConfig.favoritesButtonText || 'View Schedule';
+      config.favoritesButtonLink = dataConfig.favoritesButtonLink || '/schedule';
+      config.relatedPlaylists = dataConfig.relatedPlaylists ? JSON.parse(dataConfig.relatedPlaylists) : [];
+    }
+
+    return config;
+  }
+
+  createMainContainer() {
+    const container = createTag('div', { class: 'video-playlist' });
+    container.style.display = 'none'; // Hidden until sessions are loaded
+    return container;
+  }
+
+  async loadSessions() {
+    try {
+      let response;
+      
+      if (this.cfg.isTagBased) {
+        // Tag-based playlist (dynamic)
+        response = await mockAPI.getSessions();
+      } else {
+        // AEM-based playlist (manual)
+        response = await mockAPI.getSessions(this.cfg.playlistId);
+      }
+
+      this.cards = response.cards;
+      const filteredCards = filterCards(this.cards);
+      const sortedCards = sortCards(filteredCards, this.cfg.sort);
+
+      if (sortedCards.length < this.cfg.minimumSessions) {
+        console.warn('Not enough sessions to display playlist');
+        return;
+      }
+
+      this.displayPlaylist(sortedCards);
+      
+    } catch (e) {
+      console.error('Failed to load sessions:', e);
+    }
+  }
+
+  displayPlaylist(cards) {
+    this.root.style.display = 'block';
+    
+    // Create header
+    const header = this.createHeader();
+    this.root.appendChild(header);
+    
+    // Create sessions
+    this.sessionsWrapper = this.createSessionsWrapper(cards);
+    this.root.appendChild(this.sessionsWrapper);
+    
+    // Create footer
+    if (this.cfg.relatedPlaylists.length > 0) {
+      const footer = this.createFooter();
+      this.root.appendChild(footer);
+    }
+    
+    // Setup favorites if enabled
+    if (this.cfg.favoritesEnabled) {
+      this.setupFavorites();
+    }
+  }
+
+  createHeader() {
+    const header = createTag('div', { class: 'video-playlist__header' });
+    
+    const isAutoPlayChecked = getLocalStorageShouldAutoPlay();
+    
+    header.innerHTML = `
+      <div class="video-playlist__header__upper">
+        <div class="video-playlist__header__upper__skipLink">
+          <a href="#video-playlist-skip" class="video-playlist__header__upper__skipLink__link button">
+            ${this.cfg.skipPlaylistText}
+          </a>
+        </div>
+        <div class="video-playlist__header__toggle">
+          <div class="spectrum-Switch spectrum-Switch--sizeM">
+            <input 
+              type="checkbox" 
+              class="spectrum-Switch-input" 
+              id="playlist-play-all" 
+              daa-ll="${isAutoPlayChecked ? CONFIG.ANALYTICS.TOGGLE_OFF : CONFIG.ANALYTICS.TOGGLE_ON}" 
+              ${isAutoPlayChecked ? 'checked' : ''} 
+            />
+            <span class="spectrum-Switch-switch"></span>
+            <label class="spectrum-Switch-label" for="playlist-play-all">
+              ${this.cfg.autoplayText.toUpperCase()}
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <div class="video-playlist__header__content">
+        <div class="video-playlist__header__content__left">
+          <p class="video-playlist__header__content__left__topic">${this.cfg.topicEyebrow}</p>
+          <h3 class="video-playlist__header__content__left__title">${this.cfg.playlistTitle}</h3>
+        </div>
+        <div class="video-playlist__header__content__right">
+          ${this.cfg.socialSharing ? this.createSocialSharingButton() : ''}
+        </div>
+      </div>
+    `;
+
+    // Setup autoplay checkbox
+    this.setupAutoplayCheckbox(header);
+    
+    return header;
+  }
+
+  createSocialSharingButton() {
+    return `
+      <button class="video-playlist__social-share" daa-ll="Social_Share">
+        <svg width="16" height="16" viewBox="0 0 16 16">
+          <path d="M12 6c.8 0 1.5.7 1.5 1.5S12.8 9 12 9s-1.5-.7-1.5-1.5S11.2 6 12 6zM4 6c.8 0 1.5.7 1.5 1.5S4.8 9 4 9s-1.5-.7-1.5-1.5S3.2 6 4 6zM8 6c.8 0 1.5.7 1.5 1.5S8.8 9 8 9s-1.5-.7-1.5-1.5S7.2 6 8 6z"/>
+        </svg>
+        Share
+      </button>
+    `;
+  }
+
+  setupAutoplayCheckbox(header) {
+    const checkbox = header.querySelector('#playlist-play-all');
+    if (checkbox) {
+      checkbox.addEventListener('change', (event) => {
+        saveShouldAutoPlayToLocalStorage(event.target.checked);
+        const daaLL = event.target.checked
+          ? CONFIG.ANALYTICS.TOGGLE_OFF
+          : CONFIG.ANALYTICS.TOGGLE_ON;
+        event.target.setAttribute('daa-ll', daaLL);
+      });
+    }
+  }
+
+  createSessionsWrapper(cards) {
+    const sessions = createTag('div', { class: 'video-playlist__sessions' });
+    const sessionsWrapper = createTag('div', { class: 'video-playlist__sessions__wrapper' });
+
+    const sessionsHTML = cards.map((card, index) => {
+      const {
+        thumbnailUrl,
+        videoDuration,
+        mpcVideoId,
+        videoId,
+      } = card.search;
+      
+      const videoIdToUse = mpcVideoId || videoId;
+      
+      return `
+        <div daa-lh="${card.contentArea.title}" class="video-playlist__sessions__wrapper__session" data-video-id="${videoIdToUse}">
+          <a daa-ll="${CONFIG.ANALYTICS.VIDEO_SELECT}" href="${card.overlayLink}" class="video-playlist__sessions__wrapper__session__link">
+            <div class="video-playlist__sessions__wrapper__session__thumbnail">
+              <img src="${thumbnailUrl}" alt="${card.contentArea.title}" />
+              <div class="video-playlist__sessions__wrapper__session__thumbnail__play-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" height="40" viewBox="0 0 18 18" width="40">
+                  <rect id="Canvas" fill="#ff13dc" opacity="0" width="18" height="18" />
+                  <path fill="#e5e5e5" d="M9,1a8,8,0,1,0,8,8A8,8,0,0,0,9,1Zm4.2685,8.43L7.255,12.93A.50009.50009,0,0,1,7,13H6.5a.5.5,0,0,1-.5-.5v-7A.5.5,0,0,1,6.5,5H7a.50009.50009,0,0,1,.255.07l6.0135,3.5a.5.5,0,0,1,0,.86Z" />
+                </svg>
+              </div>
+              <div class="video-playlist__sessions__wrapper__session__thumbnail__duration">
+                <p class="video-playlist__sessions__wrapper__session__thumbnail__duration__text">${videoDuration}</p>
+              </div>
+              <div class="video-playlist__sessions__wrapper__session__thumbnail__progress">
+                <div class="video-playlist__sessions__wrapper__session__thumbnail__progress__bar"></div>
+              </div>
+            </div>
+            <div class="video-playlist__sessions__wrapper__session__info">
+              <h4 class="video-playlist__sessions__wrapper__session__info__title">
+                ${card.contentArea.title}
+              </h4>
+              <p class="video-playlist__sessions__wrapper__session__info__description">
+                ${card.contentArea.description}
+              </p>
+              ${this.cfg.favoritesEnabled ? `
+                <span class="spectrum-Tooltip spectrum-Tooltip--left spectrum-Tooltip--info">
+                  <span class="spectrum-Tooltip-label">${this.cfg.favoritesTooltipText}</span>
+                  <span class="spectrum-Tooltip-tip"></span>
+                </span>
+              ` : ''}
+            </div>
+          </a>
+        </div>
+      `;
+    }).join('');
+
+    sessionsWrapper.innerHTML = sessionsHTML;
+    sessions.appendChild(sessionsWrapper);
+
+    // Set initial progress bars
+    this.setInitialProgressBars(sessionsWrapper);
+    
+    return sessions;
+  }
+
+  setInitialProgressBars(sessionsWrapper) {
+    const localStorageVideos = getLocalStorageVideos();
+    if (localStorageVideos) {
+      const sessionElements = sessionsWrapper.querySelectorAll(
+        '.video-playlist__sessions__wrapper__session',
+      );
+      sessionElements.forEach((sessionElement) => {
+        const sessionVideoId = sessionElement.getAttribute('data-video-id');
+        const sessionData = localStorageVideos[sessionVideoId];
+        if (sessionData) {
+          const progressBar = sessionElement.querySelector(
+            '.video-playlist__sessions__wrapper__session__thumbnail__progress__bar',
+          );
+          const progress = (sessionData.secondsWatched / sessionData.length) * 100;
+          progressBar.style.width = `${progress}%`;
+        }
+      });
+    }
+  }
+
+  createFooter() {
+    const footer = createTag('div', { class: 'video-playlist__footer' });
+    
+    const relatedLinks = this.cfg.relatedPlaylists
+      .map((playlist) => `
+        <a
+          daa-ll="Related_${playlist.title}" 
+          href="${playlist.link}" 
+          class="video-playlist__footer__content__playlists__playlist spectrum-Link spectrum-Link--secondary"
+        >
+          ${playlist.title}
+        </a>`)
+      .join('');
+
+    footer.innerHTML = `
+      <div class="video-playlist__footer__content">
+        <h3 class="video-playlist__footer__content__title">Related playlists</h3>
+        <div class="video-playlist__footer__content__playlists">
+          ${relatedLinks}
+        </div>
+      </div>
+    `;
+    
+    return footer;
+  }
+
+  async setupFavorites() {
+    try {
+      const favoritesResponse = await mockAPI.getFavorites();
+      const favorites = favoritesResponse.sessionInterests;
+      
+      const allSessions = this.sessionsWrapper.querySelectorAll(
+        '.video-playlist__sessions__wrapper__session',
+      );
+
+      allSessions.forEach((session) => {
+        const sessionVideoId = session.getAttribute('data-video-id');
+        const card = this.cards.find((c) => 
+          (c.search.mpcVideoId === sessionVideoId || c.search.videoId === sessionVideoId)
+        );
+        
+        if (card) {
+          const isFavorite = favorites.some(
+            (favorite) => favorite.sessionID === card.search.sessionId,
+          );
+          
+          const favoriteButton = this.createFavoriteButton(session, card, isFavorite);
+          session.appendChild(favoriteButton);
+        }
+      });
+    } catch (e) {
+      console.error('Failed to setup favorites:', e);
+    }
+  }
+
+  createFavoriteButton(session, card, isFavorite) {
+    const favoriteButton = createTag('button', {
+      class: 'video-playlist__sessions__wrapper__session__favorite',
+      'daa-ll': isFavorite ? CONFIG.ANALYTICS.UNFAVORITE : CONFIG.ANALYTICS.FAVORITE,
+      'aria-label': `Favorite session ${card.contentArea.title}`,
+    });
+
+    const heartClass = isFavorite ? 'filled' : 'unfilled';
+    favoriteButton.innerHTML = `
+      <svg class="heart ${heartClass}" xmlns="http://www.w3.org/2000/svg" width="15" height="14" viewBox="0 0 15 14">
+        <path d="M10.5895 1.82617C10.0133 1.85995 9.45382 2.03175 8.95885 2.32693C8.46389 2.62211 8.04809 3.0319 7.74691 3.52137C7.44573 3.0319 7.02993 2.62211 6.53496 2.32693C6.04 2.03175 5.48056 1.85995 4.90436 1.82617C3.99978 1.82617 3.13226 2.18337 2.49262 2.8192C1.85299 3.45502 1.49365 4.31738 1.49365 5.21657C1.49365 8.45423 7.74691 12.563 7.74691 12.563C7.74691 12.563 14.0002 8.49774 14.0002 5.21657C14.0002 4.31738 13.6408 3.45502 13.0012 2.8192C12.3616 2.18337 11.494 1.82617 10.5895 1.82617Z" stroke-width="2"/>
+      </svg>
+    `;
+
+    favoriteButton.addEventListener('click', (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      this.toggleFavorite(favoriteButton, card);
+    });
+
+    return favoriteButton;
+  }
+
+  async toggleFavorite(favoriteButton, card) {
+    try {
+      await mockAPI.toggleFavorite(card.search.sessionId);
+      
+      const favoriteSVG = favoriteButton.querySelector('svg');
+      const isFavorite = favoriteSVG.classList.contains('filled');
+      
+      favoriteSVG.classList.toggle('filled', !isFavorite);
+      favoriteSVG.classList.toggle('unfilled', isFavorite);
+      favoriteButton.setAttribute(
+        'daa-ll',
+        isFavorite ? CONFIG.ANALYTICS.FAVORITE : CONFIG.ANALYTICS.UNFAVORITE,
+      );
+
+      // Show notification
+      if (!isFavorite) {
+        this.showNotification();
+      }
+    } catch (e) {
+      console.error('Failed to toggle favorite:', e);
+    }
+  }
+
+  showNotification() {
+    const notification = createTag('div', {
+      class: 'video-playlist__notification',
+    });
+    
+    notification.innerHTML = `
+      <div class="video-playlist__notification__content">
+        <p>${this.cfg.favoritesNotificationText}</p>
+        <button class="video-playlist__notification__button">
+          ${this.cfg.favoritesButtonText}
+        </button>
+        <button class="video-playlist__notification__close">×</button>
+      </div>
+    `;
+
+    this.root.appendChild(notification);
+
+    // Auto-remove after 5 seconds
+    setTimeout(() => {
+      if (notification.parentNode) {
+        notification.remove();
+      }
+    }, 5000);
+
+    // Close button
+    const closeBtn = notification.querySelector('.video-playlist__notification__close');
+    closeBtn.addEventListener('click', () => notification.remove());
+
+    // Action button
+    const actionBtn = notification.querySelector('.video-playlist__notification__button');
+    actionBtn.addEventListener('click', () => {
+      if (this.cfg.favoritesButtonLink) {
+        window.location.href = this.cfg.favoritesButtonLink;
+      }
+    });
+  }
+
+  setupVideoPlayer() {
+    // Find video container (this would be created by another component)
+    this.videoContainer = document.querySelector('.videoContainer');
+    
+    if (this.videoContainer) {
+      this.setupPlayerListeners();
+    } else {
+      // Watch for video container to be added
+      this.watchForVideoContainer();
+    }
+  }
+
+  watchForVideoContainer() {
+    const observer = new MutationObserver((mutationsList, observer) => {
+      for (const mutation of mutationsList) {
+        if (mutation.type === 'childList') {
+          const videoContainer = document.querySelector('.videoContainer');
+          if (videoContainer) {
+            observer.disconnect();
+            this.videoContainer = videoContainer;
+            this.setupPlayerListeners();
+            break;
+          }
+        }
+      }
+    });
+    
+    observer.observe(document.body, { childList: true, subtree: true });
+  }
+
+  setupPlayerListeners() {
+    // Highlight current session
+    this.highlightCurrentSession();
+    
+    // Setup message listener for MPC player
+    window.addEventListener('message', this.handlePlayerMessage.bind(this));
+    
+    // Setup YouTube player if needed
+    this.setupYouTubePlayer();
+  }
+
+  highlightCurrentSession() {
+    if (!this.videoContainer || !this.sessionsWrapper) return;
+    
+    const videoId = this.findVideoId();
+    if (videoId) {
+      const sessionElement = this.sessionsWrapper.querySelector(
+        `[data-video-id="${videoId}"]`,
+      );
+      if (sessionElement) {
+        // Remove previous highlights
+        this.sessionsWrapper.querySelectorAll('.highlighted').forEach(el => {
+          el.classList.remove('highlighted');
+        });
+        
+        sessionElement.classList.add('highlighted');
+        sessionElement.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
+    }
+  }
+
+  findVideoId() {
+    if (!this.videoContainer) return null;
+    
+    const iframe = this.videoContainer.querySelector('iframe');
+    if (!iframe) return null;
+    
+    const iframeSrc = iframe.getAttribute('src');
+    return findVideoIdFromIframeSrc(iframeSrc);
+  }
+
+  handlePlayerMessage(event) {
+    // Handle MPC player messages
+    if (event.origin !== 'https://player.adobe.com') return;
+    if (event.data.type !== 'mpcStatus') return;
+
+    const { state, data } = event.data;
+    
+    switch (state) {
+      case 'load':
+        this.handleLoadState(data);
+        break;
+      case 'pause':
+        this.handlePauseState(data);
+        break;
+      case 'tick':
+        this.handleTickState(data);
+        break;
+      case 'complete':
+        this.handleCompleteState(data.id);
+        break;
+    }
+  }
+
+  handleLoadState(data) {
+    const { id, length } = data;
+    this.highlightCurrentSession();
+
+    // Restore progress
+    const localStorageVideos = getLocalStorageVideos();
+    const currentSessionData = localStorageVideos[id];
+    if (currentSessionData) {
+      const { secondsWatched } = currentSessionData;
+      const startAt = secondsWatched > length - CONFIG.PLAYER.RESTART_THRESHOLD ? 0 : secondsWatched;
+      startVideoFromSecond(this.videoContainer, startAt);
+    } else {
+      startVideoFromSecond(this.videoContainer, 0);
+    }
+  }
+
+  handlePauseState(data) {
+    const { id, currentTime } = data;
+    saveCurrentVideoProgress(id, currentTime);
+  }
+
+  handleTickState(data) {
+    const { id, currentTime } = data;
+    if (currentTime % CONFIG.PLAYER.PROGRESS_SAVE_INTERVAL === 0) {
+      saveCurrentVideoProgress(id, currentTime);
+    }
+  }
+
+  handleCompleteState(videoId) {
+    const shouldPlayAll = getLocalStorageShouldAutoPlay();
+    
+    if (shouldPlayAll) {
+      const currentSessionIndex = this.cards.findIndex(
+        (card) => (card.search.mpcVideoId === videoId || card.search.videoId === videoId),
+      );
+
+      if (currentSessionIndex !== -1 && currentSessionIndex < this.cards.length - 1) {
+        const nextSession = this.cards[currentSessionIndex + 1];
+        window.location.href = nextSession.overlayLink;
+      }
+    }
+  }
+
+  setupYouTubePlayer() {
+    // Load YouTube API if needed
+    if (!window.YT) {
+      const tag = document.createElement('script');
+      tag.src = 'https://www.youtube.com/iframe_api';
+      const firstScriptTag = document.getElementsByTagName('script')[0];
+      firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+    }
+
+    // Setup YouTube player when API is ready
+    window.onYouTubeIframeAPIReady = () => {
+      // YouTube player setup would go here
+      console.log('YouTube API ready');
+    };
+  }
+
+  static dispose() {
+    // Cleanup method
+    const playlists = document.querySelectorAll('.video-playlist');
+    playlists.forEach(playlist => {
+      if (playlist.parentNode) {
+        playlist.parentNode.removeChild(playlist);
+      }
+    });
+  }
+}
+
+export default function init(el) {
+  return new VideoPlaylist(el);
+}
+
+

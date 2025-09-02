@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Video Playlist Test</title>
+    <link rel="stylesheet" href="events/blocks/video-playlist/video-playlist.css">
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background: #0f0f0f;
+            font-family: 'Adobe Clean', 'Source Sans Pro', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .demo-title {
+            color: #ffffff;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 32px;
+            font-weight: 700;
+        }
+        
+        .demo-description {
+            color: #cccccc;
+            text-align: center;
+            margin-bottom: 40px;
+            font-size: 16px;
+            line-height: 1.5;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="demo-title">Video Playlist Component Demo</h1>
+        <p class="demo-description">
+            This demonstrates the video playlist component with realistic mock data matching the "Related content" interface style.
+        </p>
+        
+        <div class="video-playlist-container">
+            <div data-playlist-config
+                 data-playlist-id="summit-2025-playlist"
+                 data-playlist-title="Adobe Summit 2025 Sessions"
+                 data-topic-eyebrow="Marketing & Technology"
+                 data-autoplay-text="Play All"
+                 data-skip-playlist-text="Skip playlist"
+                 data-minimum-sessions="2"
+                 data-sort="default"
+                 data-is-tag-based="true"
+                 data-social-sharing="true"
+                 data-favorites-enabled="true"
+                 data-favorites-tooltip-text="Add to favorites"
+                 data-favorites-notification-text="Session added to favorites"
+                 data-favorites-button-text="View Schedule"
+                 data-favorites-button-link="/schedule"
+                 data-related-playlists='[{"title":"Marketing Operations","link":"/playlists/marketing-ops"},{"title":"AI & Automation","link":"/playlists/ai-automation"},{"title":"Customer Experience","link":"/playlists/cx"}]'>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        // Mock the LIBS import for testing
+        window.LIBS = '/libs';
+        
+        // Mock createTag and getConfig functions
+        window.createTag = (tag, attributes = {}) => {
+            const element = document.createElement(tag);
+            Object.entries(attributes).forEach(([key, value]) => {
+                if (key === 'class') {
+                    element.className = value;
+                } else {
+                    element.setAttribute(key, value);
+                }
+            });
+            return element;
+        };
+        
+        window.getConfig = () => ({ env: 'test' });
+        
+        // Mock localStorage
+        const mockLocalStorage = {
+            getItem: (key) => {
+                const data = {
+                    'videoPlaylist_progress': JSON.stringify({
+                        '3442586': { secondsWatched: 1200, length: 3113, timestamp: Date.now() },
+                        '3442587': { secondsWatched: 800, length: 1284, timestamp: Date.now() },
+                        '3442588': { secondsWatched: 2000, length: 3154, timestamp: Date.now() }
+                    }),
+                    'videoPlaylist_autoplay': 'false'
+                };
+                return data[key] || null;
+            },
+            setItem: (key, value) => {
+                console.log('localStorage.setItem:', key, value);
+            }
+        };
+        
+        Object.defineProperty(window, 'localStorage', {
+            value: mockLocalStorage,
+            writable: true
+        });
+        
+        // Import and initialize the video playlist
+        import('./events/blocks/video-playlist/video-playlist.js').then(module => {
+            const init = module.default;
+            const container = document.querySelector('.video-playlist-container');
+            if (container) {
+                init(container);
+            }
+        }).catch(error => {
+            console.error('Failed to load video playlist:', error);
+            // Fallback: show mock content
+            showMockContent();
+        });
+        
+        function showMockContent() {
+            const container = document.querySelector('.video-playlist-container');
+            container.innerHTML = `
+                <div class="video-playlist">
+                    <div class="video-playlist__header">
+                        <div class="video-playlist__header__upper">
+                            <div class="video-playlist__header__upper__skipLink">
+                                <a href="#video-playlist-skip" class="video-playlist__header__upper__skipLink__link button">
+                                    Skip playlist
+                                </a>
+                            </div>
+                            <div class="video-playlist__header__toggle">
+                                <div class="spectrum-Switch spectrum-Switch--sizeM">
+                                    <input type="checkbox" class="spectrum-Switch-input" id="playlist-play-all" />
+                                    <span class="spectrum-Switch-switch"></span>
+                                    <label class="spectrum-Switch-label" for="playlist-play-all">
+                                        PLAY ALL
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="video-playlist__header__content">
+                            <div class="video-playlist__header__content__left">
+                                <p class="video-playlist__header__content__left__topic">Marketing & Technology</p>
+                                <h3 class="video-playlist__header__content__left__title">Adobe Summit 2025 Sessions</h3>
+                            </div>
+                            <div class="video-playlist__header__content__right">
+                                <button class="video-playlist__social-share">
+                                    <svg width="16" height="16" viewBox="0 0 16 16">
+                                        <path d="M12 6c.8 0 1.5.7 1.5 1.5S12.8 9 12 9s-1.5-.7-1.5-1.5S11.2 6 12 6zM4 6c.8 0 1.5.7 1.5 1.5S4.8 9 4 9s-1.5-.7-1.5-1.5S3.2 6 4 6zM8 6c.8 0 1.5.7 1.5 1.5S8.8 9 8 9s-1.5-.7-1.5-1.5S7.2 6 8 6z"/>
+                                    </svg>
+                                    Share
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="video-playlist__sessions">
+                        <div class="video-playlist__sessions__wrapper">
+                            <div class="video-playlist__sessions__wrapper__session highlighted">
+                                <a href="#" class="video-playlist__sessions__wrapper__session__link">
+                                    <div class="video-playlist__sessions__wrapper__session__thumbnail">
+                                        <img src="https://images-tv.adobe.com/mpcv3/b8f920e0-0298-4d82-9ec3-c17d4c9ceda9/38f837a1-0b27-4319-9a7c-2429d88e3058/61f09647c0884bc3840da53bd2c2ffc0_1742533829-200x113.jpg" alt="Session thumbnail" />
+                                        <div class="video-playlist__sessions__wrapper__session__thumbnail__play-icon">
+                                            <svg xmlns="http://www.w3.org/2000/svg" height="40" viewBox="0 0 18 18" width="40">
+                                                <rect id="Canvas" fill="#ff13dc" opacity="0" width="18" height="18" />
+                                                <path fill="#e5e5e5" d="M9,1a8,8,0,1,0,8,8A8,8,0,0,0,9,1Zm4.2685,8.43L7.255,12.93A.50009.50009,0,0,1,7,13H6.5a.5,5,0,0,1-.5-.5v-7A.5,5,0,0,1,6.5,5H7a.50009.50009,0,0,1,.255.07l6.0135,3.5a.5,5,0,0,1,0,.86Z" />
+                                            </svg>
+                                        </div>
+                                        <div class="video-playlist__sessions__wrapper__session__thumbnail__duration">
+                                            <p class="video-playlist__sessions__wrapper__session__thumbnail__duration__text">00:51:53</p>
+                                        </div>
+                                        <div class="video-playlist__sessions__wrapper__session__thumbnail__progress">
+                                            <div class="video-playlist__sessions__wrapper__session__thumbnail__progress__bar" style="width: 38%"></div>
+                                        </div>
+                                    </div>
+                                    <div class="video-playlist__sessions__wrapper__session__info">
+                                        <h4 class="video-playlist__sessions__wrapper__session__info__title">
+                                            Unlocking Modern Marketing's Potential with Integrated Operations and AI
+                                        </h4>
+                                        <p class="video-playlist__sessions__wrapper__session__info__description">
+                                            Discover Choreo, a transformative framework powered by AI and Adobe technology, that empowers marketing teams to design, build, and optimize the way they work.
+                                        </p>
+                                    </div>
+                                </a>
+                                <button class="video-playlist__sessions__wrapper__session__favorite">
+                                    <svg class="heart filled" xmlns="http://www.w3.org/2000/svg" width="15" height="14" viewBox="0 0 15 14">
+                                        <path d="M10.5895 1.82617C10.0133 1.85995 9.45382 2.03175 8.95885 2.32693C8.46389 2.62211 8.04809 3.0319 7.74691 3.52137C7.44573 3.0319 7.02993 2.62211 6.53496 2.32693C6.04 2.03175 5.48056 1.85995 4.90436 1.82617C3.99978 1.82617 3.13226 2.18337 2.49262 2.8192C1.85299 3.45502 1.49365 4.31738 1.49365 5.21657C1.49365 8.45423 7.74691 12.563 7.74691 12.563C7.74691 12.563 14.0002 8.49774 14.0002 5.21657C14.0002 4.31738 13.6408 3.45502 13.0012 2.8192C12.3616 2.18337 11.494 1.82617 10.5895 1.82617Z" stroke-width="2"/>
+                                    </svg>
+                                </button>
+                            </div>
+                            
+                            <div class="video-playlist__sessions__wrapper__session">
+                                <a href="#" class="video-playlist__sessions__wrapper__session__link">
+                                    <div class="video-playlist__sessions__wrapper__session__thumbnail">
+                                        <img src="https://images-tv.adobe.com/mpcv3/b8f920e0-0298-4d82-9ec3-c17d4c9ceda9/38f837a1-0b27-4319-9a7c-2429d88e3058/61f09647c0884bc3840da53bd2c2ffc0_1742533829-200x113.jpg" alt="Session thumbnail" />
+                                        <div class="video-playlist__sessions__wrapper__session__thumbnail__play-icon">
+                                            <svg xmlns="http://www.w3.org/2000/svg" height="40" viewBox="0 0 18 18" width="40">
+                                                <rect id="Canvas" fill="#ff13dc" opacity="0" width="18" height="18" />
+                                                <path fill="#e5e5e5" d="M9,1a8,8,0,1,0,8,8A8,8,0,0,0,9,1Zm4.2685,8.43L7.255,12.93A.50009.50009,0,0,1,7,13H6.5a.5,5,0,0,1-.5-.5v-7A.5,5,0,0,1,6.5,5H7a.50009.50009,0,0,1,.255.07l6.0135,3.5a.5,5,0,0,1,0,.86Z" />
+                                            </svg>
+                                        </div>
+                                        <div class="video-playlist__sessions__wrapper__session__thumbnail__duration">
+                                            <p class="video-playlist__sessions__wrapper__session__thumbnail__duration__text">00:21:24</p>
+                                        </div>
+                                        <div class="video-playlist__sessions__wrapper__session__thumbnail__progress">
+                                            <div class="video-playlist__sessions__wrapper__session__thumbnail__progress__bar" style="width: 62%"></div>
+                                        </div>
+                                    </div>
+                                    <div class="video-playlist__sessions__wrapper__session__info">
+                                        <h4 class="video-playlist__sessions__wrapper__session__info__title">
+                                            Pitch Perfect: Winning the Marketing Budget Conversation
+                                        </h4>
+                                        <p class="video-playlist__sessions__wrapper__session__info__description">
+                                            Marketing Budget, Secure funding and resources for your marketing initiatives with proven strategies and compelling presentations.
+                                        </p>
+                                    </div>
+                                </a>
+                                <button class="video-playlist__sessions__wrapper__session__favorite">
+                                    <svg class="heart unfilled" xmlns="http://www.w3.org/2000/svg" width="15" height="14" viewBox="0 0 15 14">
+                                        <path d="M10.5895 1.82617C10.0133 1.85995 9.45382 2.03175 8.95885 2.32693C8.46389 2.62211 8.04809 3.0319 7.74691 3.52137C7.44573 3.0319 7.02993 2.62211 6.53496 2.32693C6.04 2.03175 5.48056 1.85995 4.90436 1.82617C3.99978 1.82617 3.13226 2.18337 2.49262 2.8192C1.85299 3.45502 1.49365 4.31738 1.49365 5.21657C1.49365 8.45423 7.74691 12.563 7.74691 12.563C7.74691 12.563 14.0002 8.49774 14.0002 5.21657C14.0002 4.31738 13.6408 3.45502 13.0012 2.8192C12.3616 2.18337 11.494 1.82617 10.5895 1.82617Z" stroke-width="2"/>
+                                    </svg>
+                                </button>
+                            </div>
+                            
+                            <div class="video-playlist__sessions__wrapper__session">
+                                <a href="#" class="video-playlist__sessions__wrapper__session__link">
+                                    <div class="video-playlist__sessions__wrapper__session__thumbnail">
+                                        <img src="https://images-tv.adobe.com/mpcv3/b8f920e0-0298-4d82-9ec3-c17d4c9ceda9/38f837a1-0b27-4319-9a7c-2429d88e3058/61f09647c0884bc3840da53bd2c2ffc0_1742533829-200x113.jpg" alt="Session thumbnail" />
+                                        <div class="video-playlist__sessions__wrapper__session__thumbnail__play-icon">
+                                            <svg xmlns="http://www.w3.org/2000/svg" height="40" viewBox="0 0 18 18" width="40">
+                                                <rect id="Canvas" fill="#ff13dc" opacity="0" width="18" height="18" />
+                                                <path fill="#e5e5e5" d="M9,1a8,8,0,1,0,8,8A8,8,0,0,0,9,1Zm4.2685,8.43L7.255,12.93A.50009.50009,0,0,1,7,13H6.5a.5,5,0,0,1-.5-.5v-7A.5,5,0,0,1,6.5,5H7a.50009.50009,0,0,1,.255.07l6.0135,3.5a.5,5,0,0,1,0,.86Z" />
+                                            </svg>
+                                        </div>
+                                        <div class="video-playlist__sessions__wrapper__session__thumbnail__duration">
+                                            <p class="video-playlist__sessions__wrapper__session__thumbnail__duration__text">00:52:34</p>
+                                        </div>
+                                        <div class="video-playlist__sessions__wrapper__session__thumbnail__progress">
+                                            <div class="video-playlist__sessions__wrapper__session__thumbnail__progress__bar" style="width: 63%"></div>
+                                        </div>
+                                    </div>
+                                    <div class="video-playlist__sessions__wrapper__session__info">
+                                        <h4 class="video-playlist__sessions__wrapper__session__info__title">
+                                            The Future of Adobe Workfront
+                                        </h4>
+                                        <p class="video-playlist__sessions__wrapper__session__info__description">
+                                            Discover how Adobe Workfront's innovative features are transforming project management and team collaboration.
+                                        </p>
+                                    </div>
+                                </a>
+                                <button class="video-playlist__sessions__wrapper__session__favorite">
+                                    <svg class="heart unfilled" xmlns="http://www.w3.org/2000/svg" width="15" height="14" viewBox="0 0 15 14">
+                                        <path d="M10.5895 1.82617C10.0133 1.85995 9.45382 2.03175 8.95885 2.32693C8.46389 2.62211 8.04809 3.0319 7.74691 3.52137C7.44573 3.0319 7.02993 2.62211 6.53496 2.32693C6.04 2.03175 5.48056 1.85995 4.90436 1.82617C3.99978 1.82617 3.13226 2.18337 2.49262 2.8192C1.85299 3.45502 1.49365 4.31738 1.49365 5.21657C1.49365 8.45423 7.74691 12.563 7.74691 12.563C7.74691 12.563 14.0002 8.49774 14.0002 5.21657C14.0002 4.31738 13.6408 3.45502 13.0012 2.8192C12.3616 2.18337 11.494 1.82617 10.5895 1.82617Z" stroke-width="2"/>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="video-playlist__footer">
+                        <div class="video-playlist__footer__content">
+                            <h3 class="video-playlist__footer__content__title">Related playlists</h3>
+                            <div class="video-playlist__footer__content__playlists">
+                                <a href="/playlists/marketing-ops" class="video-playlist__footer__content__playlists__playlist spectrum-Link spectrum-Link--secondary">
+                                    Marketing Operations
+                                </a>
+                                <a href="/playlists/ai-automation" class="video-playlist__footer__content__playlists__playlist spectrum-Link spectrum-Link--secondary">
+                                    AI & Automation
+                                </a>
+                                <a href="/playlists/cx" class="video-playlist__footer__content__playlists__playlist spectrum-Link spectrum-Link--secondary">
+                                    Customer Experience
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+    </script>
+</body>
+</html>
+
+
