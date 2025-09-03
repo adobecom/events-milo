@@ -340,34 +340,115 @@ class VideoPlaylist {
   parseCfg() {
     const config = {};
     
-    // Get configuration from data attributes
-    const dataEl = this.el.querySelector('[data-playlist-config]');
-    if (dataEl) {
-      const dataConfig = dataEl.dataset;
+    // Parse configuration from Helix-generated HTML structure
+    // The structure is: <div><div>configKey</div><div>configValue</div></div>
+    const configDivs = this.el.querySelectorAll('div > div');
+    
+    if (configDivs.length > 0) {
+      // Process pairs of divs (key-value pairs)
+      for (let i = 0; i < configDivs.length; i += 2) {
+        if (i + 1 < configDivs.length) {
+          const keyDiv = configDivs[i];
+          const valueDiv = configDivs[i + 1];
+          
+          if (keyDiv && valueDiv) {
+            const key = keyDiv.textContent.trim();
+            const value = valueDiv.textContent.trim();
+            
+            // Map the keys to config properties
+            switch (key) {
+              case 'playlistID':
+                config.playlistId = value;
+                break;
+              case 'playlistTitle':
+                config.playlistTitle = value;
+                break;
+              case 'topicEyebrow':
+                config.topicEyebrow = value;
+                break;
+              case 'autoplayText':
+                config.autoplayText = value;
+                break;
+              case 'skipPlaylist':
+                config.skipPlaylistText = value;
+                break;
+              case 'minimumSession':
+                config.minimumSessions = parseInt(value) || 2;
+                break;
+              case 'sort':
+                config.sort = value;
+                break;
+              case 'isTagbased':
+                config.isTagBased = value === 'true';
+                break;
+              case 'socialSharing':
+                config.socialSharing = value === 'true';
+                break;
+              case 'favoritesEnabled':
+                config.favoritesEnabled = value === 'true';
+                break;
+              case 'tooltipText':
+                config.favoritesTooltipText = value;
+                break;
+              case 'favoritesNotificationText':
+                config.favoritesNotificationText = value;
+                break;
+              case 'favoritesButtonText':
+                config.favoritesButtonText = value;
+                break;
+              case 'favoritesButtonLink':
+                config.favoritesButtonLink = value;
+                break;
+              case 'relatedPlaylists':
+                try {
+                  config.relatedPlaylists = JSON.parse(value);
+                } catch (e) {
+                  console.warn('Failed to parse relatedPlaylists JSON:', value);
+                  config.relatedPlaylists = [];
+                }
+                break;
+            }
+          }
+        }
+      }
       
-      // Map the data attributes to config properties
-      // Note: dataset converts kebab-case to camelCase automatically
-      config.playlistId = dataConfig.playlistId || null;
-      config.playlistTitle = dataConfig.playlistTitle || 'Video Playlist';
-      config.topicEyebrow = dataConfig.topicEyebrow || '';
-      config.autoplayText = dataConfig.autoplayText || 'Play All';
-      config.skipPlaylistText = dataConfig.skipPlaylistText || 'Skip playlist';
-      config.minimumSessions = parseInt(dataConfig.minimumSessions) || 2;
-      config.sort = dataConfig.sort || 'default';
-      config.isTagBased = dataConfig.isTagBased === 'true';
-      config.socialSharing = dataConfig.socialSharing === 'true';
-      config.favoritesEnabled = dataConfig.favoritesEnabled === 'true';
-      config.favoritesTooltipText = dataConfig.favoritesTooltipText || 'Add to favorites';
-      config.favoritesNotificationText = dataConfig.favoritesNotificationText || 'Session added to favorites';
-      config.favoritesButtonText = dataConfig.favoritesButtonText || 'View Schedule';
-      config.favoritesButtonLink = dataConfig.favoritesButtonLink || '/schedule';
-      config.relatedPlaylists = dataConfig.relatedPlaylists ? JSON.parse(dataConfig.relatedPlaylists) : [];
+      // Set default values for missing properties
+      config.playlistId = config.playlistId || null;
+      config.playlistTitle = config.playlistTitle || 'Video Playlist';
+      config.topicEyebrow = config.topicEyebrow || '';
+      config.autoplayText = config.autoplayText || 'Play All';
+      config.skipPlaylistText = config.skipPlaylistText || 'Skip playlist';
+      config.minimumSessions = config.minimumSessions || 2;
+      config.sort = config.sort || 'default';
+      config.isTagBased = config.isTagBased !== undefined ? config.isTagBased : true;
+      config.socialSharing = config.socialSharing !== undefined ? config.socialSharing : true;
+      config.favoritesEnabled = config.favoritesEnabled !== undefined ? config.favoritesEnabled : true;
+      config.favoritesTooltipText = config.favoritesTooltipText || 'Add to favorites';
+      config.favoritesNotificationText = config.favoritesNotificationText || 'Session added to favorites';
+      config.favoritesButtonText = config.favoritesButtonText || 'View Schedule';
+      config.favoritesButtonLink = config.favoritesButtonLink || '/schedule';
+      config.relatedPlaylists = config.relatedPlaylists || [];
       
       // Debug logging to help troubleshoot
-      console.log('Parsed config:', config);
-      console.log('Raw dataset:', dataConfig);
+      console.log('Parsed config from Helix HTML:', config);
     } else {
-      console.warn('No data-playlist-config element found');
+      console.warn('No configuration divs found in Helix HTML structure');
+      // Set default values
+      config.playlistId = null;
+      config.playlistTitle = 'Video Playlist';
+      config.topicEyebrow = '';
+      config.autoplayText = 'Play All';
+      config.skipPlaylistText = 'Skip playlist';
+      config.minimumSessions = 2;
+      config.sort = 'default';
+      config.isTagBased = true;
+      config.socialSharing = true;
+      config.favoritesEnabled = true;
+      config.favoritesTooltipText = 'Add to favorites';
+      config.favoritesNotificationText = 'Session added to favorites';
+      config.favoritesButtonText = 'View Schedule';
+      config.favoritesButtonLink = '/schedule';
+      config.relatedPlaylists = [];
     }
 
     return config;
