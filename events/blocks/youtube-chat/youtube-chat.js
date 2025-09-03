@@ -89,7 +89,7 @@ export class YouTubeChat {
   }
 
   insertAutoplayIframe(wrapper) {
-    const iframe = this.createVideoIframe(this.buildEmbedUrl(true));
+    const iframe = this.createVideoIframe(this.buildEmbedUrl(true, false));
     wrapper.append(iframe);
     this.videoLoaded = true;
     if (this.chatEnabled) setTimeout(() => this.loadChat(), CONFIG.CHAT_LOAD_DELAY);
@@ -127,7 +127,8 @@ export class YouTubeChat {
       container.classList.remove('single-column');
     }
 
-    const iframe = this.createVideoIframe(this.buildEmbedUrl(true));
+    // When user clicks play, start video immediately but respect author's mute preference
+    const iframe = this.createVideoIframe(this.buildEmbedUrl(false, true));
     liteYT.insertAdjacentElement('afterend', iframe);
     liteYT.remove();
 
@@ -175,16 +176,23 @@ export class YouTubeChat {
     return this.config.autoplay?.toLowerCase() === 'true';
   }
 
-  buildEmbedUrl(autoplay = false) {
+  buildEmbedUrl(autoplay = false, userInitiated = false) {
     const base = `${CONFIG.YOUTUBE_EMBED_BASE}/${this.videoId}`;
     const params = new URLSearchParams();
 
-    if (autoplay) {
+    if (autoplay || userInitiated) {
       params.append('autoplay', '1');
-      params.append('mute', '1');
+      // Force mute for browser autoplay (required by browsers)
+      // For user-initiated play, respect the user's mute preference
+      if (autoplay) {
+        params.append('mute', '1');
+      }
     }
 
     Object.entries(CONFIG.PLAYER_OPTIONS).forEach(([key, param]) => {
+      // Skip mute if autoplay is enabled since it's already handled above
+      if (autoplay && key === 'mute') return;
+      
       if (this.config[key]?.toLowerCase?.() === 'true') {
         params.append(param, '1');
       }
