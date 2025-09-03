@@ -606,6 +606,28 @@ function updateExtraMetaTags(parent) {
   }
 }
 
+function flagEventState(parent) {
+  if (parent !== document) return;
+
+  const localStartMillis = getMetadata('local-start-time-millis');
+  const localEndMillis = getMetadata('local-end-time-millis');
+
+  if (!localStartMillis || !localEndMillis) return;
+
+  const now = Date.now();
+  const isBeforeStart = now < localStartMillis;
+  const isAfterEnd = now > localEndMillis;
+  const isDuringEvent = now >= localStartMillis && now <= localEndMillis;
+
+  if (isBeforeStart) {
+    document.body.dataset.eventState = 'pre-event';
+  } else if (isAfterEnd) {
+    document.body.dataset.eventState = 'post-event';
+  } else if (isDuringEvent) {
+    document.body.dataset.eventState = 'during-event';
+  }
+}
+
 // data -> dom gills
 export default function autoUpdateContent(parent, miloDeps, extraData) {
   const { getConfig, miloLibs } = miloDeps;
@@ -668,6 +690,8 @@ export default function autoUpdateContent(parent, miloDeps, extraData) {
       });
     }
   });
+
+  flagEventState(parent);
 
   // handle link replacement. To keep when switching to metadata based rendering
   autoUpdateLinks(parent, miloLibs);
