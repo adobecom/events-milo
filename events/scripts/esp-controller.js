@@ -318,3 +318,22 @@ export async function getAndCreateAndAddAttendee(eventId, attendeeData) {
 
   return addAttendeeToEvent(eventId, eventAttendeePayload);
 }
+
+export async function indexPathToSchedule(scheduleId, pagePath) {
+  const { host } = API_CONFIG.esp[getEventServiceEnv()];
+  const options = await constructRequestOptions('POST');
+
+  try {
+    const response = await fetch(`${host}/v1/page-schedules/${scheduleId}/page-paths`, options, { body: JSON.stringify({ pagePath }) });
+
+    if (!response.ok) {
+      window.lana?.log(`Error: Failed to index path to schedule. Status:${JSON.stringify(response)}`);
+      return { ok: false, status: response.status, error: response.status };
+    }
+
+    return { ok: true, data: await response.json() };
+  } catch (error) {
+    window.lana?.log(`Error: Failed to index path to schedule:${JSON.stringify(error)}`);
+    return { ok: false, status: 'Network Error', error: error.message };
+  }
+}

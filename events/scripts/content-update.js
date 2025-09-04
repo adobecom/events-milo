@@ -1,6 +1,7 @@
 import { ICON_REG, META_REG, SERIES_404_MAP_PATH, ALLOWED_EMAIL_DOMAINS } from './constances.js';
 import BlockMediator from './deps/block-mediator.min.js';
 import { getEvent } from './esp-controller.js';
+import addPagePathIndexerWidget from './tools.js';
 import {
   getMetadata,
   setMetadata,
@@ -10,6 +11,7 @@ import {
   getEventServiceEnv,
   parseMetadataPath,
 } from './utils.js';
+import { lazyCaptureProfile } from './profile.js';
 
 const preserveFormatKeys = [
   'description',
@@ -697,4 +699,11 @@ export default function autoUpdateContent(parent, miloDeps, extraData) {
   autoUpdateLinks(parent, miloLibs);
   decorateProfileCardsZPattern(parent);
   if (getEventServiceEnv() !== 'prod') updateExtraMetaTags(parent);
+}
+
+export function delayedEventFeatures() {
+  if (getMetadata('event-details-page') === 'yes') {
+    lazyCaptureProfile();
+  }
+  addPagePathIndexerWidget();
 }

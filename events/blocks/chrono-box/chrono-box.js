@@ -1,4 +1,4 @@
-import { readBlockConfig, LIBS, getMetadata } from '../../scripts/utils.js';
+import { readBlockConfig, LIBS, getMetadata, createTag } from '../../scripts/utils.js';
 
 function buildScheduleDoubleLinkedList(entries) {
   if (!entries.length) return null;
@@ -103,7 +103,7 @@ function setScheduleToScheduleWorker(schedule, plugins, tabId) {
 }
 
 export default async function init(el) {
-  const [{ default: loadFragment }, { createTag, getLocale, getConfig }] = await Promise.all([
+  const [{ default: loadFragment }, { getLocale, getConfig }] = await Promise.all([
     import(`${LIBS}/blocks/fragment/fragment.js`),
     import(`${LIBS}/utils/utils.js`),
     import(`${LIBS}/features/spectrum-web-components/dist/theme.js`),
@@ -111,6 +111,9 @@ export default async function init(el) {
   ]);
 
   const blockConfig = readBlockConfig(el);
+  if (blockConfig?.['schedule-id']) {
+    el.setAttribute('data-schedule-id', blockConfig?.['schedule-id']);
+  }
   const scheduleId = blockConfig?.['schedule-id'];
   let staticSchedule;
 
