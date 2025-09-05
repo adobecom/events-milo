@@ -131,3 +131,24 @@ body.validating-page {
 .text-block.column-icon-spacing-xxs table td:last-child a:not(:last-child) {
   padding-right: var(--spacing-xxs);
 }
+
+.page-path-indexer-widget {
+  position: fixed;
+  bottom: 12px;
+  right: 12px;
+  z-index: 1000;
+  box-shadow: 0 0 10px 0 rgb(0 0 0 / 10%);
+  border-radius: 16px;
+}
+
+button.page-path-indexer-button {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+}
+
+.page-path-indexer-button-text {
+  font-family: var(--font-family-body);
+  font-size: var(--type-body-xs-size);
+}
