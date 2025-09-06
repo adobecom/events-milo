@@ -113,6 +113,7 @@ export default async function init(el) {
   const blockConfig = readBlockConfig(el);
   if (blockConfig?.['schedule-id']) {
     el.setAttribute('data-schedule-id', blockConfig?.['schedule-id']);
+    el.setAttribute('data-schedule-name', blockConfig?.['schedule-name']);
   }
   const scheduleId = blockConfig?.['schedule-id'];
   let staticSchedule;

@@ -135,21 +135,51 @@ body.validating-page {
 .page-path-indexer-widget {
   position: fixed;
   bottom: 12px;
-  right: 12px;
+  right: 0;
   z-index: 1000;
   box-shadow: 2px 2px 10px 0 rgb(0 0 0 / 50%);
-  border-radius: 16px;
+  border-radius: 16px 0 0 16px;
   background-color: var(--color-gray-700);
   color: var(--color-white);
   padding: 12px;
   font-family: var(--font-family-body);
   font-size: var(--type-body-xxs-size);
+  transition: transform 0.3s ease;
+  transform: translateX(calc(100% - 12px));
+
+  .page-path-indexer-hover-tab {
+    position: absolute;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 40px;
+    top: 50%;
+    left: -16px;
+    transform: translateY(-50%);
+    background-color: var(--color-gray-700);
+    color: var(--color-white);
+    padding: 8px 4px;
+    border-radius: 8px 0 0 8px;
+    font-size: var(--type-body-xxs-size);
+    font-weight: 700;
+    text-orientation: mixed;
+    cursor: pointer;
+    transition: background-color 0.2s;
+  }
+
+  .page-path-indexer-hover-tab:hover {
+    background-color: var(--color-gray-600);
+  }
+
+  /* Visible state - slides fully into view */
+  &:not(.hidden) {
+    transform: translateX(0);
+  }
 
   .page-path-indexer-schedule-id-list {
     padding: 16px;
     font-size: var(--type-body-xs-size);
     border-bottom: 1px solid var(--color-gray-600);
-    margin-bottom: 16px;
     display: flex;
     flex-direction: column;
     gap: 8px;
@@ -166,6 +196,7 @@ body.validating-page {
       justify-content: space-between;
       gap: 8px;
       height: 32px;
+      white-space: nowrap;
     }
 
     .page-path-indexer-schedule-id-item-status-wrapper {
@@ -208,9 +239,7 @@ body.validating-page {
   }
     
   button.page-path-indexer-button {
-    display: flex;
-    align-items: center;
-    gap: 4px;
+    margin: 16px;
     cursor: pointer;
     font-family: var(--font-family-body);
     font-size: var(--type-body-xs-size);
