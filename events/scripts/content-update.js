@@ -705,5 +705,6 @@ export function delayedEventFeatures() {
   if (getMetadata('event-details-page') === 'yes') {
     lazyCaptureProfile();
   }
+
   addPagePathIndexerWidget();
 }
