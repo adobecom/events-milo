@@ -3,6 +3,36 @@ import { LIBS } from '../../scripts/utils.js';
 
 const { createTag, getConfig } = await import(`${LIBS}/utils/utils.js`);
 
+// Constants
+const PLAYLIST_PLAY_ALL_ID = 'playlist-play-all';
+const MPC_STATUS = 'mpcStatus';
+const RESTART_THRESHOLD = 5;
+const PROGRESS_SAVE_INTERVAL = 5;
+const VIDEO_ORIGIN = 'https://player.adobe.com';
+const VIDEO_PLAYLIST_ID_URL_KEY = 'videoPlaylistID';
+const TOAST_CONTAINER_ID = 'toast-container';
+const PLAYLIST_SKIP_TO_ID = 'video-playlist-skip';
+
+const EVENT_STATES = {
+    LOAD: 'load',
+    PAUSE: 'pause',
+    TICK: 'tick',
+    COMPLETE: 'complete',
+};
+
+const analytics = {
+    PLAYLIST: 'Playlist',
+    TOGGLE_OFF: 'Play all_Off',
+    TOGGLE_ON: 'Play all_On',
+    VIDEO_SELECT: 'Video Select',
+    FAVORITE: 'Favorite',
+    UNFAVORITE: 'Unfavorite',
+    CLOSE_FAVORITE_NOTIFICATION: 'Close Favorite Notification',
+    VIEW_SCHEDULE: 'View Schedule',
+    CLOSE_REGISTRATION_NOTIFICATION: 'Close Registration Notification',
+    REGISTER: 'Register',
+};
+
 const CONFIG = {
   STORAGE: {
     CURRENT_VIDEO_KEY: 'videoPlaylist_currentVideo',
@@ -355,7 +385,7 @@ class VideoPlaylist {
             const key = keyDiv.textContent.trim();
             const value = valueDiv.textContent.trim();
             
-            // Map the keys to config properties
+            // Map the keys to config properties based on new requirements
             switch (key) {
               case 'playlistID':
                 config.playlistId = value;
@@ -373,10 +403,13 @@ class VideoPlaylist {
                 config.skipPlaylistText = value;
                 break;
               case 'minimumSession':
-                config.minimumSessions = parseInt(value) || 2;
+                config.minimumSessions = parseInt(value) || 4;
                 break;
               case 'sort':
                 config.sort = value;
+                break;
+              case 'sortByTime':
+                config.sortByTime = value === 'true';
                 break;
               case 'isTagbased':
                 config.isTagBased = value === 'true';
@@ -399,12 +432,15 @@ class VideoPlaylist {
               case 'favoritesButtonLink':
                 config.favoritesButtonLink = value;
                 break;
-              case 'relatedPlaylists':
+              case 'endpoint':
+                config.endpoint = value;
+                break;
+              case 'videoPlaylists':
                 try {
-                  config.relatedPlaylists = JSON.parse(value);
+                  config.videoPlaylists = JSON.parse(value);
                 } catch (e) {
-                  console.warn('Failed to parse relatedPlaylists JSON:', value);
-                  config.relatedPlaylists = [];
+                  console.warn('Failed to parse videoPlaylists JSON:', value);
+                  config.videoPlaylists = [];
                 }
                 break;
             }
@@ -418,8 +454,9 @@ class VideoPlaylist {
       config.topicEyebrow = config.topicEyebrow || '';
       config.autoplayText = config.autoplayText || 'Play All';
       config.skipPlaylistText = config.skipPlaylistText || 'Skip playlist';
-      config.minimumSessions = config.minimumSessions || 2;
+      config.minimumSessions = config.minimumSessions || 4;
       config.sort = config.sort || 'default';
+      config.sortByTime = config.sortByTime || false;
       config.isTagBased = config.isTagBased !== undefined ? config.isTagBased : true;
       config.socialSharing = config.socialSharing !== undefined ? config.socialSharing : true;
       config.favoritesEnabled = config.favoritesEnabled !== undefined ? config.favoritesEnabled : true;
@@ -427,7 +464,8 @@ class VideoPlaylist {
       config.favoritesNotificationText = config.favoritesNotificationText || 'Session added to favorites';
       config.favoritesButtonText = config.favoritesButtonText || 'View Schedule';
       config.favoritesButtonLink = config.favoritesButtonLink || '/schedule';
-      config.relatedPlaylists = config.relatedPlaylists || [];
+      config.endpoint = config.endpoint || '/api/sessions';
+      config.videoPlaylists = config.videoPlaylists || [];
       
       // Debug logging to help troubleshoot
       console.log('Parsed config from Helix HTML:', config);
@@ -439,8 +477,9 @@ class VideoPlaylist {
       config.topicEyebrow = '';
       config.autoplayText = 'Play All';
       config.skipPlaylistText = 'Skip playlist';
-      config.minimumSessions = 2;
+      config.minimumSessions = 4;
       config.sort = 'default';
+      config.sortByTime = false;
       config.isTagBased = true;
       config.socialSharing = true;
       config.favoritesEnabled = true;
@@ -448,14 +487,15 @@ class VideoPlaylist {
       config.favoritesNotificationText = 'Session added to favorites';
       config.favoritesButtonText = 'View Schedule';
       config.favoritesButtonLink = '/schedule';
-      config.relatedPlaylists = [];
+      config.endpoint = '/api/sessions';
+      config.videoPlaylists = [];
     }
 
     return config;
   }
 
   createMainContainer() {
-    const container = createTag('div', { class: 'video-playlist' });
+    const container = createTag('div', { class: 'videoPlaylist' });
     container.style.display = 'none'; // Hidden until sessions are loaded
     return container;
   }
@@ -499,11 +539,7 @@ class VideoPlaylist {
     this.sessionsWrapper = this.createSessionsWrapper(cards);
     this.root.appendChild(this.sessionsWrapper);
     
-    // Create footer
-    if (this.cfg.relatedPlaylists.length > 0) {
-      const footer = this.createFooter();
-      this.root.appendChild(footer);
-    }
+    // Footer functionality removed as per requirements
     
     // Setup favorites if enabled
     if (this.cfg.favoritesEnabled) {
@@ -512,40 +548,40 @@ class VideoPlaylist {
   }
 
   createHeader() {
-    const header = createTag('div', { class: 'video-playlist__header' });
+    const header = createTag('div', { class: 'videoPlaylist__header' });
     
     const isAutoPlayChecked = getLocalStorageShouldAutoPlay();
     
     header.innerHTML = `
-      <div class="video-playlist__header__upper">
-        <div class="video-playlist__header__upper__skipLink">
-          <a href="#video-playlist-skip" class="video-playlist__header__upper__skipLink__link button">
+      <div class="videoPlaylist__header__upper">
+        <div class="videoPlaylist__header__upper__skipLink">
+          <a href="#${PLAYLIST_SKIP_TO_ID}" class="videoPlaylist__header__upper__skipLink__link button">
             ${this.cfg.skipPlaylistText || 'Skip playlist'}
           </a>
         </div>
-        <div class="video-playlist__header__toggle">
-          <div class="spectrum-Switch spectrum-Switch--sizeM">
-            <input 
-              type="checkbox" 
-              class="spectrum-Switch-input" 
-              id="playlist-play-all" 
-              daa-ll="${isAutoPlayChecked ? CONFIG.ANALYTICS.TOGGLE_OFF : CONFIG.ANALYTICS.TOGGLE_ON}" 
-              ${isAutoPlayChecked ? 'checked' : ''} 
-            />
-            <span class="spectrum-Switch-switch"></span>
-            <label class="spectrum-Switch-label" for="playlist-play-all">
-              ${(this.cfg.autoplayText || 'Play All').toUpperCase()}
-            </label>
-          </div>
+        <div class="videoPlaylist__header__toggle">
+        <div class="consonant-switch consonant-switch--sizeM">
+          <input 
+            type="checkbox" 
+            class="consonant-switch-input" 
+            id="${PLAYLIST_PLAY_ALL_ID}" 
+            daa-ll="${isAutoPlayChecked ? analytics.TOGGLE_OFF : analytics.TOGGLE_ON}" 
+            ${isAutoPlayChecked ? 'checked' : ''} 
+          />
+          <span class="consonant-switch-switch"></span>
+          <label class="consonant-switch-label" for="${PLAYLIST_PLAY_ALL_ID}">
+            ${(this.cfg.autoplayText || 'Play All').toUpperCase()}
+          </label>
+        </div>
         </div>
       </div>
 
-      <div class="video-playlist__header__content">
-        <div class="video-playlist__header__content__left">
-          <p class="video-playlist__header__content__left__topic">${this.cfg.topicEyebrow || ''}</p>
-          <h3 class="video-playlist__header__content__left__title">${this.cfg.playlistTitle || 'Video Playlist'}</h3>
+      <div class="videoPlaylist__header__content">
+        <div class="videoPlaylist__header__content__left">
+          <p class="videoPlaylist__header__content__left__topic">${this.cfg.topicEyebrow || ''}</p>
+          <h3 class="videoPlaylist__header__content__left__title">${this.cfg.playlistTitle || 'Video Playlist'}</h3>
         </div>
-        <div class="video-playlist__header__content__right">
+        <div class="videoPlaylist__header__content__right">
           ${this.cfg.socialSharing ? this.createSocialSharingButton() : ''}
         </div>
       </div>
@@ -559,7 +595,7 @@ class VideoPlaylist {
 
   createSocialSharingButton() {
     return `
-      <button class="video-playlist__social-share" daa-ll="Social_Share">
+      <button class="videoPlaylist__social-share" daa-ll="Social_Share">
         <svg width="16" height="16" viewBox="0 0 16 16">
           <path d="M12 6c.8 0 1.5.7 1.5 1.5S12.8 9 12 9s-1.5-.7-1.5-1.5S11.2 6 12 6zM4 6c.8 0 1.5.7 1.5 1.5S4.8 9 4 9s-1.5-.7-1.5-1.5S3.2 6 4 6zM8 6c.8 0 1.5.7 1.5 1.5S8.8 9 8 9s-1.5-.7-1.5-1.5S7.2 6 8 6z"/>
         </svg>
@@ -569,21 +605,21 @@ class VideoPlaylist {
   }
 
   setupAutoplayCheckbox(header) {
-    const checkbox = header.querySelector('#playlist-play-all');
+    const checkbox = header.querySelector(`#${PLAYLIST_PLAY_ALL_ID}`);
     if (checkbox) {
       checkbox.addEventListener('change', (event) => {
         saveShouldAutoPlayToLocalStorage(event.target.checked);
         const daaLL = event.target.checked
-          ? CONFIG.ANALYTICS.TOGGLE_OFF
-          : CONFIG.ANALYTICS.TOGGLE_ON;
+          ? analytics.TOGGLE_OFF
+          : analytics.TOGGLE_ON;
         event.target.setAttribute('daa-ll', daaLL);
       });
     }
   }
 
   createSessionsWrapper(cards) {
-    const sessions = createTag('div', { class: 'video-playlist__sessions' });
-    const sessionsWrapper = createTag('div', { class: 'video-playlist__sessions__wrapper' });
+    const sessions = createTag('div', { class: 'videoPlaylist__sessions' });
+    const sessionsWrapper = createTag('div', { class: 'videoPlaylist__sessions__wrapper' });
 
     const sessionsHTML = cards.map((card, index) => {
       const {
@@ -596,34 +632,34 @@ class VideoPlaylist {
       const videoIdToUse = mpcVideoId || videoId;
       
       return `
-        <div daa-lh="${card.contentArea.title}" class="video-playlist__sessions__wrapper__session" data-video-id="${videoIdToUse}">
-          <a daa-ll="${CONFIG.ANALYTICS.VIDEO_SELECT}" href="${card.overlayLink}" class="video-playlist__sessions__wrapper__session__link">
-            <div class="video-playlist__sessions__wrapper__session__thumbnail">
+        <div daa-lh="${card.contentArea.title}" class="videoPlaylist__sessions__wrapper__session" data-video-id="${videoIdToUse}">
+          <a daa-ll="${analytics.VIDEO_SELECT}" href="${card.overlayLink}" class="videoPlaylist__sessions__wrapper__session__link">
+            <div class="videoPlaylist__sessions__wrapper__session__thumbnail">
               <img src="${thumbnailUrl}" alt="${card.contentArea.title}" />
-              <div class="video-playlist__sessions__wrapper__session__thumbnail__play-icon">
+              <div class="videoPlaylist__sessions__wrapper__session__thumbnail__play-icon">
                 <svg xmlns="http://www.w3.org/2000/svg" height="40" viewBox="0 0 18 18" width="40">
                   <rect id="Canvas" fill="#ff13dc" opacity="0" width="18" height="18" />
                   <path fill="#e5e5e5" d="M9,1a8,8,0,1,0,8,8A8,8,0,0,0,9,1Zm4.2685,8.43L7.255,12.93A.50009.50009,0,0,1,7,13H6.5a.5.5,0,0,1-.5-.5v-7A.5.5,0,0,1,6.5,5H7a.50009.50009,0,0,1,.255.07l6.0135,3.5a.5.5,0,0,1,0,.86Z" />
                 </svg>
               </div>
-              <div class="video-playlist__sessions__wrapper__session__thumbnail__duration">
-                <p class="video-playlist__sessions__wrapper__session__thumbnail__duration__text">${videoDuration}</p>
+              <div class="videoPlaylist__sessions__wrapper__session__thumbnail__duration">
+                <p class="videoPlaylist__sessions__wrapper__session__thumbnail__duration__text">${videoDuration}</p>
               </div>
-              <div class="video-playlist__sessions__wrapper__session__thumbnail__progress">
-                <div class="video-playlist__sessions__wrapper__session__thumbnail__progress__bar"></div>
+              <div class="videoPlaylist__sessions__wrapper__session__thumbnail__progress">
+                <div class="videoPlaylist__sessions__wrapper__session__thumbnail__progress__bar"></div>
               </div>
             </div>
-            <div class="video-playlist__sessions__wrapper__session__info">
-              <h4 class="video-playlist__sessions__wrapper__session__info__title">
+            <div class="videoPlaylist__sessions__wrapper__session__info">
+              <h4 class="videoPlaylist__sessions__wrapper__session__info__title">
                 ${card.contentArea.title}
               </h4>
-              <p class="video-playlist__sessions__wrapper__session__info__description">
+              <p class="videoPlaylist__sessions__wrapper__session__info__description">
                 ${card.contentArea.description}
               </p>
               ${this.cfg.favoritesEnabled ? `
-                <span class="spectrum-Tooltip spectrum-Tooltip--left spectrum-Tooltip--info">
-                  <span class="spectrum-Tooltip-label">${this.cfg.favoritesTooltipText || 'Add to favorites'}</span>
-                  <span class="spectrum-Tooltip-tip"></span>
+                <span class="consonant-tooltip consonant-tooltip--left consonant-tooltip--info">
+                  <span class="consonant-tooltip-label">${this.cfg.favoritesTooltipText || 'Add to favorites'}</span>
+                  <span class="consonant-tooltip-tip"></span>
                 </span>
               ` : ''}
             </div>
@@ -635,6 +671,10 @@ class VideoPlaylist {
     sessionsWrapper.innerHTML = sessionsHTML;
     sessions.appendChild(sessionsWrapper);
 
+    // Adding a toast container for notifications
+    const toastsContainer = createTag('div', { id: TOAST_CONTAINER_ID });
+    sessions.appendChild(toastsContainer);
+
     // Set initial progress bars
     this.setInitialProgressBars(sessionsWrapper);
     
@@ -645,14 +685,14 @@ class VideoPlaylist {
     const localStorageVideos = getLocalStorageVideos();
     if (localStorageVideos) {
       const sessionElements = sessionsWrapper.querySelectorAll(
-        '.video-playlist__sessions__wrapper__session',
+        '.videoPlaylist__sessions__wrapper__session',
       );
       sessionElements.forEach((sessionElement) => {
         const sessionVideoId = sessionElement.getAttribute('data-video-id');
         const sessionData = localStorageVideos[sessionVideoId];
         if (sessionData) {
           const progressBar = sessionElement.querySelector(
-            '.video-playlist__sessions__wrapper__session__thumbnail__progress__bar',
+            '.videoPlaylist__sessions__wrapper__session__thumbnail__progress__bar',
           );
           const progress = (sessionData.secondsWatched / sessionData.length) * 100;
           progressBar.style.width = `${progress}%`;
@@ -661,31 +701,7 @@ class VideoPlaylist {
     }
   }
 
-  createFooter() {
-    const footer = createTag('div', { class: 'video-playlist__footer' });
-    
-    const relatedLinks = this.cfg.relatedPlaylists
-      .map((playlist) => `
-        <a
-          daa-ll="Related_${playlist.title}" 
-          href="${playlist.link}" 
-          class="video-playlist__footer__content__playlists__playlist spectrum-Link spectrum-Link--secondary"
-        >
-          ${playlist.title}
-        </a>`)
-      .join('');
-
-    footer.innerHTML = `
-      <div class="video-playlist__footer__content">
-        <h3 class="video-playlist__footer__content__title">Related playlists</h3>
-        <div class="video-playlist__footer__content__playlists">
-          ${relatedLinks}
-        </div>
-      </div>
-    `;
-    
-    return footer;
-  }
+  // createFooter method removed as related playlists functionality is no longer needed
 
   async setupFavorites() {
     try {
@@ -693,7 +709,7 @@ class VideoPlaylist {
       const favorites = favoritesResponse.sessionInterests;
       
       const allSessions = this.sessionsWrapper.querySelectorAll(
-        '.video-playlist__sessions__wrapper__session',
+        '.videoPlaylist__sessions__wrapper__session',
       );
 
       allSessions.forEach((session) => {
@@ -718,8 +734,8 @@ class VideoPlaylist {
 
   createFavoriteButton(session, card, isFavorite) {
     const favoriteButton = createTag('button', {
-      class: 'video-playlist__sessions__wrapper__session__favorite',
-      'daa-ll': isFavorite ? CONFIG.ANALYTICS.UNFAVORITE : CONFIG.ANALYTICS.FAVORITE,
+      class: 'videoPlaylist__sessions__wrapper__session__favorite',
+      'daa-ll': isFavorite ? analytics.UNFAVORITE : analytics.FAVORITE,
       'aria-label': `Favorite session ${card.contentArea.title}`,
     });
 
@@ -750,7 +766,7 @@ class VideoPlaylist {
       favoriteSVG.classList.toggle('unfilled', isFavorite);
       favoriteButton.setAttribute(
         'daa-ll',
-        isFavorite ? CONFIG.ANALYTICS.FAVORITE : CONFIG.ANALYTICS.UNFAVORITE,
+        isFavorite ? analytics.FAVORITE : analytics.UNFAVORITE,
       );
 
       // Show notification
@@ -764,16 +780,16 @@ class VideoPlaylist {
 
   showNotification() {
     const notification = createTag('div', {
-      class: 'video-playlist__notification',
+      class: 'videoPlaylist__notification',
     });
     
     notification.innerHTML = `
-      <div class="video-playlist__notification__content">
+      <div class="videoPlaylist__notification__content">
         <p>${this.cfg.favoritesNotificationText}</p>
-        <button class="video-playlist__notification__button">
+        <button class="videoPlaylist__notification__button">
           ${this.cfg.favoritesButtonText}
         </button>
-        <button class="video-playlist__notification__close">×</button>
+        <button class="videoPlaylist__notification__close">×</button>
       </div>
     `;
 
@@ -787,11 +803,11 @@ class VideoPlaylist {
     }, 5000);
 
     // Close button
-    const closeBtn = notification.querySelector('.video-playlist__notification__close');
+    const closeBtn = notification.querySelector('.videoPlaylist__notification__close');
     closeBtn.addEventListener('click', () => notification.remove());
 
     // Action button
-    const actionBtn = notification.querySelector('.video-playlist__notification__button');
+    const actionBtn = notification.querySelector('.videoPlaylist__notification__button');
     actionBtn.addEventListener('click', () => {
       if (this.cfg.favoritesButtonLink) {
         window.location.href = this.cfg.favoritesButtonLink;
@@ -872,22 +888,22 @@ class VideoPlaylist {
 
   handlePlayerMessage(event) {
     // Handle MPC player messages
-    if (event.origin !== 'https://player.adobe.com') return;
-    if (event.data.type !== 'mpcStatus') return;
+    if (event.origin !== VIDEO_ORIGIN) return;
+    if (event.data.type !== MPC_STATUS) return;
 
     const { state, data } = event.data;
     
     switch (state) {
-      case 'load':
+      case EVENT_STATES.LOAD:
         this.handleLoadState(data);
         break;
-      case 'pause':
+      case EVENT_STATES.PAUSE:
         this.handlePauseState(data);
         break;
-      case 'tick':
+      case EVENT_STATES.TICK:
         this.handleTickState(data);
         break;
-      case 'complete':
+      case EVENT_STATES.COMPLETE:
         this.handleCompleteState(data.id);
         break;
     }
@@ -902,7 +918,7 @@ class VideoPlaylist {
     const currentSessionData = localStorageVideos[id];
     if (currentSessionData) {
       const { secondsWatched } = currentSessionData;
-      const startAt = secondsWatched > length - CONFIG.PLAYER.RESTART_THRESHOLD ? 0 : secondsWatched;
+      const startAt = secondsWatched > length - RESTART_THRESHOLD ? 0 : secondsWatched;
       startVideoFromSecond(this.videoContainer, startAt);
     } else {
       startVideoFromSecond(this.videoContainer, 0);
@@ -916,7 +932,7 @@ class VideoPlaylist {
 
   handleTickState(data) {
     const { id, currentTime } = data;
-    if (currentTime % CONFIG.PLAYER.PROGRESS_SAVE_INTERVAL === 0) {
+    if (currentTime % PROGRESS_SAVE_INTERVAL === 0) {
       saveCurrentVideoProgress(id, currentTime);
     }
   }
@@ -931,7 +947,23 @@ class VideoPlaylist {
 
       if (currentSessionIndex !== -1 && currentSessionIndex < this.cards.length - 1) {
         const nextSession = this.cards[currentSessionIndex + 1];
-        window.location.href = nextSession.overlayLink;
+        let nextSessionURL;
+        try {
+          nextSessionURL = new URL(nextSession.overlayLink);
+        } catch (error) {
+          console.error('Invalid URL', error);
+          return;
+        }
+
+        if (this.currentPlaylistId) {
+          nextSessionURL.searchParams.append(
+            VIDEO_PLAYLIST_ID_URL_KEY,
+            this.currentPlaylistId,
+          );
+        }
+
+        // Take user to the next session
+        window.location.href = nextSessionURL.href;
       }
     }
   }
@@ -954,7 +986,7 @@ class VideoPlaylist {
 
   static dispose() {
     // Cleanup method
-    const playlists = document.querySelectorAll('.video-playlist');
+    const playlists = document.querySelectorAll('.videoPlaylist');
     playlists.forEach(playlist => {
       if (playlist.parentNode) {
         playlist.parentNode.removeChild(playlist);
