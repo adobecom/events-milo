@@ -495,7 +495,7 @@ class VideoPlaylist {
   }
 
   createMainContainer() {
-    const container = createTag('div', { class: 'videoPlaylist' });
+    const container = createTag('div', { class: 'video-playlist-container' });
     container.style.display = 'none'; // Hidden until sessions are loaded
     return container;
   }
@@ -548,18 +548,18 @@ class VideoPlaylist {
   }
 
   createHeader() {
-    const header = createTag('div', { class: 'videoPlaylist__header' });
+    const header = createTag('div', { class: 'video-playlist-container__header' });
     
     const isAutoPlayChecked = getLocalStorageShouldAutoPlay();
     
     header.innerHTML = `
-      <div class="videoPlaylist__header__upper">
-        <div class="videoPlaylist__header__upper__skipLink">
-          <a href="#${PLAYLIST_SKIP_TO_ID}" class="videoPlaylist__header__upper__skipLink__link button">
+      <div class="video-playlist-container__header__upper">
+        <div class="video-playlist-container__header__upper__skipLink">
+          <a href="#${PLAYLIST_SKIP_TO_ID}" class="video-playlist-container__header__upper__skipLink__link button">
             ${this.cfg.skipPlaylistText || 'Skip playlist'}
           </a>
         </div>
-        <div class="videoPlaylist__header__toggle">
+        <div class="video-playlist-container__header__toggle">
         <div class="consonant-switch consonant-switch--sizeM">
           <input 
             type="checkbox" 
@@ -576,12 +576,12 @@ class VideoPlaylist {
         </div>
       </div>
 
-      <div class="videoPlaylist__header__content">
-        <div class="videoPlaylist__header__content__left">
-          <p class="videoPlaylist__header__content__left__topic">${this.cfg.topicEyebrow || ''}</p>
-          <h3 class="videoPlaylist__header__content__left__title">${this.cfg.playlistTitle || 'Video Playlist'}</h3>
+      <div class="video-playlist-container__header__content">
+        <div class="video-playlist-container__header__content__left">
+          <p class="video-playlist-container__header__content__left__topic">${this.cfg.topicEyebrow || ''}</p>
+          <h3 class="video-playlist-container__header__content__left__title">${this.cfg.playlistTitle || 'Video Playlist'}</h3>
         </div>
-        <div class="videoPlaylist__header__content__right">
+        <div class="video-playlist-container__header__content__right">
           ${this.cfg.socialSharing ? this.createSocialSharingButton() : ''}
         </div>
       </div>
@@ -595,7 +595,7 @@ class VideoPlaylist {
 
   createSocialSharingButton() {
     return `
-      <button class="videoPlaylist__social-share" daa-ll="Social_Share">
+      <button class="video-playlist-container__social-share" daa-ll="Social_Share">
         <svg width="16" height="16" viewBox="0 0 16 16">
           <path d="M12 6c.8 0 1.5.7 1.5 1.5S12.8 9 12 9s-1.5-.7-1.5-1.5S11.2 6 12 6zM4 6c.8 0 1.5.7 1.5 1.5S4.8 9 4 9s-1.5-.7-1.5-1.5S3.2 6 4 6zM8 6c.8 0 1.5.7 1.5 1.5S8.8 9 8 9s-1.5-.7-1.5-1.5S7.2 6 8 6z"/>
         </svg>
@@ -618,8 +618,8 @@ class VideoPlaylist {
   }
 
   createSessionsWrapper(cards) {
-    const sessions = createTag('div', { class: 'videoPlaylist__sessions' });
-    const sessionsWrapper = createTag('div', { class: 'videoPlaylist__sessions__wrapper' });
+    const sessions = createTag('div', { class: 'video-playlist-container__sessions' });
+    const sessionsWrapper = createTag('div', { class: 'video-playlist-container__sessions__wrapper' });
 
     const sessionsHTML = cards.map((card, index) => {
       const {
@@ -632,28 +632,28 @@ class VideoPlaylist {
       const videoIdToUse = mpcVideoId || videoId;
       
       return `
-        <div daa-lh="${card.contentArea.title}" class="videoPlaylist__sessions__wrapper__session" data-video-id="${videoIdToUse}">
-          <a daa-ll="${analytics.VIDEO_SELECT}" href="${card.overlayLink}" class="videoPlaylist__sessions__wrapper__session__link">
-            <div class="videoPlaylist__sessions__wrapper__session__thumbnail">
+        <div daa-lh="${card.contentArea.title}" class="video-playlist-container__sessions__wrapper__session" data-video-id="${videoIdToUse}">
+          <a daa-ll="${analytics.VIDEO_SELECT}" href="${card.overlayLink}" class="video-playlist-container__sessions__wrapper__session__link">
+            <div class="video-playlist-container__sessions__wrapper__session__thumbnail">
               <img src="${thumbnailUrl}" alt="${card.contentArea.title}" />
-              <div class="videoPlaylist__sessions__wrapper__session__thumbnail__play-icon">
+              <div class="video-playlist-container__sessions__wrapper__session__thumbnail__play-icon">
                 <svg xmlns="http://www.w3.org/2000/svg" height="40" viewBox="0 0 18 18" width="40">
                   <rect id="Canvas" fill="#ff13dc" opacity="0" width="18" height="18" />
                   <path fill="#e5e5e5" d="M9,1a8,8,0,1,0,8,8A8,8,0,0,0,9,1Zm4.2685,8.43L7.255,12.93A.50009.50009,0,0,1,7,13H6.5a.5.5,0,0,1-.5-.5v-7A.5.5,0,0,1,6.5,5H7a.50009.50009,0,0,1,.255.07l6.0135,3.5a.5.5,0,0,1,0,.86Z" />
                 </svg>
               </div>
-              <div class="videoPlaylist__sessions__wrapper__session__thumbnail__duration">
-                <p class="videoPlaylist__sessions__wrapper__session__thumbnail__duration__text">${videoDuration}</p>
+              <div class="video-playlist-container__sessions__wrapper__session__thumbnail__duration">
+                <p class="video-playlist-container__sessions__wrapper__session__thumbnail__duration__text">${videoDuration}</p>
               </div>
-              <div class="videoPlaylist__sessions__wrapper__session__thumbnail__progress">
-                <div class="videoPlaylist__sessions__wrapper__session__thumbnail__progress__bar"></div>
+              <div class="video-playlist-container__sessions__wrapper__session__thumbnail__progress">
+                <div class="video-playlist-container__sessions__wrapper__session__thumbnail__progress__bar"></div>
               </div>
             </div>
-            <div class="videoPlaylist__sessions__wrapper__session__info">
-              <h4 class="videoPlaylist__sessions__wrapper__session__info__title">
+            <div class="video-playlist-container__sessions__wrapper__session__info">
+              <h4 class="video-playlist-container__sessions__wrapper__session__info__title">
                 ${card.contentArea.title}
               </h4>
-              <p class="videoPlaylist__sessions__wrapper__session__info__description">
+              <p class="video-playlist-container__sessions__wrapper__session__info__description">
                 ${card.contentArea.description}
               </p>
               ${this.cfg.favoritesEnabled ? `
@@ -685,14 +685,14 @@ class VideoPlaylist {
     const localStorageVideos = getLocalStorageVideos();
     if (localStorageVideos) {
       const sessionElements = sessionsWrapper.querySelectorAll(
-        '.videoPlaylist__sessions__wrapper__session',
+        '.video-playlist-container__sessions__wrapper__session',
       );
       sessionElements.forEach((sessionElement) => {
         const sessionVideoId = sessionElement.getAttribute('data-video-id');
         const sessionData = localStorageVideos[sessionVideoId];
         if (sessionData) {
           const progressBar = sessionElement.querySelector(
-            '.videoPlaylist__sessions__wrapper__session__thumbnail__progress__bar',
+            '.video-playlist-container__sessions__wrapper__session__thumbnail__progress__bar',
           );
           const progress = (sessionData.secondsWatched / sessionData.length) * 100;
           progressBar.style.width = `${progress}%`;
@@ -709,7 +709,7 @@ class VideoPlaylist {
       const favorites = favoritesResponse.sessionInterests;
       
       const allSessions = this.sessionsWrapper.querySelectorAll(
-        '.videoPlaylist__sessions__wrapper__session',
+        '.video-playlist-container__sessions__wrapper__session',
       );
 
       allSessions.forEach((session) => {
@@ -734,7 +734,7 @@ class VideoPlaylist {
 
   createFavoriteButton(session, card, isFavorite) {
     const favoriteButton = createTag('button', {
-      class: 'videoPlaylist__sessions__wrapper__session__favorite',
+      class: 'video-playlist-container__sessions__wrapper__session__favorite',
       'daa-ll': isFavorite ? analytics.UNFAVORITE : analytics.FAVORITE,
       'aria-label': `Favorite session ${card.contentArea.title}`,
     });
@@ -780,16 +780,16 @@ class VideoPlaylist {
 
   showNotification() {
     const notification = createTag('div', {
-      class: 'videoPlaylist__notification',
+      class: 'video-playlist-container__notification',
     });
     
     notification.innerHTML = `
-      <div class="videoPlaylist__notification__content">
+      <div class="video-playlist-container__notification__content">
         <p>${this.cfg.favoritesNotificationText}</p>
-        <button class="videoPlaylist__notification__button">
+        <button class="video-playlist-container__notification__button">
           ${this.cfg.favoritesButtonText}
         </button>
-        <button class="videoPlaylist__notification__close">×</button>
+        <button class="video-playlist-container__notification__close">×</button>
       </div>
     `;
 
@@ -803,11 +803,11 @@ class VideoPlaylist {
     }, 5000);
 
     // Close button
-    const closeBtn = notification.querySelector('.videoPlaylist__notification__close');
+    const closeBtn = notification.querySelector('.video-playlist-container__notification__close');
     closeBtn.addEventListener('click', () => notification.remove());
 
     // Action button
-    const actionBtn = notification.querySelector('.videoPlaylist__notification__button');
+    const actionBtn = notification.querySelector('.video-playlist-container__notification__button');
     actionBtn.addEventListener('click', () => {
       if (this.cfg.favoritesButtonLink) {
         window.location.href = this.cfg.favoritesButtonLink;
@@ -986,7 +986,7 @@ class VideoPlaylist {
 
   static dispose() {
     // Cleanup method
-    const playlists = document.querySelectorAll('.videoPlaylist');
+    const playlists = document.querySelectorAll('.video-playlist-container');
     playlists.forEach(playlist => {
       if (playlist.parentNode) {
         playlist.parentNode.removeChild(playlist);
