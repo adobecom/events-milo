@@ -1,7 +1,7 @@
 import { ICON_REG, META_REG, SERIES_404_MAP_PATH, ALLOWED_EMAIL_DOMAINS } from './constances.js';
 import BlockMediator from './deps/block-mediator.min.js';
 import { getEvent } from './esp-controller.js';
-import addPagePathIndexerWidget from './tools.js';
+import addPagePathIndexerWidget from '../features/indexer-widget/page-schedule-indexer.js';
 import {
   getMetadata,
   setMetadata,

@@ -1,4 +1,20 @@
-import { createTag, getIcon } from './utils.js';
+import { createTag, getIcon } from '../../scripts/utils.js';
+
+async function loadWidgetCSS() {
+  // Check if CSS is already loaded
+  if (document.querySelector('link[href*="page-schedule-indexer.css"]')) {
+    return Promise.resolve();
+  }
+
+  return new Promise((resolve, reject) => {
+    const link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = '/events/features/indexer-widget/page-schedule-indexer.css';
+    link.onload = resolve;
+    link.onerror = reject;
+    document.head.appendChild(link);
+  });
+}
 
 export default async function addPagePathIndexerWidget() {
   const params = new URLSearchParams(document.location.search);
@@ -16,12 +32,16 @@ export default async function addPagePathIndexerWidget() {
   // })
   //   .filter((schedule) => schedule.id);
 
-  // mock schedules
+  // TODO: remove mock schedules
   const schedules = [
     { id: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890', name: 'Schedule 1' },
     { id: 'f9e8d7c6-b5a4-3210-9876-543210fedcba', name: 'Schedule 2' },
     { id: '12345678-9abc-def0-1234-56789abcdef0' },
   ];
+
+  if (schedules.length === 0) return;
+  await loadWidgetCSS();
+
   const pagePath = window.location.pathname;
   const pagePathIndexerWidget = createTag('div', { class: 'page-path-indexer-widget dark' });
 
@@ -79,7 +99,7 @@ export default async function addPagePathIndexerWidget() {
       notIndexedStatusAction.disabled = true;
       // await indexPathToSchedule(id, pagePath);
 
-      // mock api calls response
+      // TODO: remove mock api calls response
       setTimeout(() => {
         console.log('mock api calls response', schedule.id, pagePath);
         const mockApiCallsResponse = {
@@ -97,9 +117,6 @@ export default async function addPagePathIndexerWidget() {
   pagePathIndexerWidget.append(scheduleIdList);
   pagePathIndexerWidget.append(indexAllButton);
   document.body.append(pagePathIndexerWidget);
-
-  if (schedules.length === 0) return;
-
   // Auto-hide widget after 3 seconds of inactivity
   let hideTimeout;
   const autoHideDelay = 3000;
@@ -133,7 +150,7 @@ export default async function addPagePathIndexerWidget() {
         return;
       }
       // await indexPathToSchedule(scheduleId, pagePath);
-      // mock api calls response
+      // TODO: remove mock api calls response
       await new Promise((resolve) => {
         setTimeout(() => {
           console.log('mock api calls response', schedule.id, pagePath);
