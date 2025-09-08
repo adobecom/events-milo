@@ -163,12 +163,6 @@ body.validating-page {
     font-size: var(--type-body-xxs-size);
     font-weight: 700;
     text-orientation: mixed;
-    cursor: pointer;
-    transition: background-color 0.2s;
-  }
-
-  .page-path-indexer-hover-tab:hover {
-    background-color: var(--color-gray-600);
   }
 
   /* Visible state - slides fully into view */
