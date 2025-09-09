@@ -1,8 +1,28 @@
 /* Video Playlist Block Styles */
 
-/* Hide configuration divs */
-.video-playlist > div:not(.video-playlist-container) {
+/* Hide configuration divs but keep video container */
+/* Modern browsers with :has() support */
+.video-playlist > div:not(.video-playlist-container):not(:has(.milo-video)) {
   display: none !important;
+}
+
+/* Fallback for older browsers (including Edge Legacy) */
+@supports not selector(:has(*)) {
+  /* Hide all direct child divs except video-playlist-container */
+  .video-playlist > div:not(.video-playlist-container) {
+    display: none !important;
+  }
+  
+  /* Show the video container by targeting the milo-video element */
+  .video-playlist .milo-video {
+    display: block !important;
+  }
+  
+  /* Show the parent div containing the video */
+  .video-playlist .milo-video,
+  .video-playlist .milo-video * {
+    display: block !important;
+  }
 }
 
 .video-playlist-container {
