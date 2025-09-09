@@ -887,6 +887,7 @@ class VideoPlaylist {
   }
 
   handlePlayerMessage(event) {
+    console.log('Listening for the Event');
     // Handle MPC player messages
     if (event.origin !== VIDEO_ORIGIN) return;
     if (event.data.type !== MPC_STATUS) return;
