@@ -817,22 +817,28 @@ class VideoPlaylist {
 
   setupVideoPlayer() {
     // Find video container (this would be created by another component)
-    this.videoContainer = document.querySelector('.videoContainer');
+    this.videoContainer = document.querySelector('.milo-video');
+    console.log('Looking for .milo-video:', this.videoContainer);
     
     if (this.videoContainer) {
+      console.log('Video container found, setting up listeners');
       this.setupPlayerListeners();
     } else {
+      console.log('Video container not found, watching for it to be added');
       // Watch for video container to be added
       this.watchForVideoContainer();
     }
   }
 
   watchForVideoContainer() {
+    console.log('Setting up MutationObserver to watch for .milo-video');
     const observer = new MutationObserver((mutationsList, observer) => {
       for (const mutation of mutationsList) {
         if (mutation.type === 'childList') {
-          const videoContainer = document.querySelector('.videoContainer');
+          const videoContainer = document.querySelector('.milo-video');
+          console.log('Mutation detected, checking for .milo-video:', videoContainer);
           if (videoContainer) {
+            console.log('Video container found via observer, setting up listeners');
             observer.disconnect();
             this.videoContainer = videoContainer;
             this.setupPlayerListeners();
