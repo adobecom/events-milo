@@ -443,6 +443,9 @@ class VideoPlaylist {
                   config.videoPlaylists = [];
                 }
                 break;
+              case 'theme':
+                config.theme = value;
+                break;
             }
           }
         }
@@ -466,6 +469,7 @@ class VideoPlaylist {
       config.favoritesButtonLink = config.favoritesButtonLink || '/schedule';
       config.endpoint = config.endpoint || '/api/sessions';
       config.videoPlaylists = config.videoPlaylists || [];
+      config.theme = config.theme || 'light';
       
       // Debug logging to help troubleshoot
       console.log('Parsed config from Helix HTML:', config);
@@ -489,6 +493,7 @@ class VideoPlaylist {
       config.favoritesButtonLink = '/schedule';
       config.endpoint = '/api/sessions';
       config.videoPlaylists = [];
+      config.theme = 'light';
     }
 
     return config;
@@ -496,6 +501,14 @@ class VideoPlaylist {
 
   createMainContainer() {
     const container = createTag('div', { class: 'video-playlist-container' });
+    
+    // Apply theme class based on configuration
+    if (this.cfg.theme === 'dark') {
+      // Dark theme is default, no additional class needed
+    } else if (this.cfg.theme === 'light') {
+      container.classList.add('consonant--light');
+    }
+    
     container.style.display = 'none'; // Hidden until sessions are loaded
     return container;
   }
