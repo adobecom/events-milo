@@ -368,133 +368,51 @@ class VideoPlaylist {
   }
 
   parseCfg() {
-    const config = {};
-    
-    // Parse configuration from Helix-generated HTML structure
+    // Parse configuration from Helix-generated HTML structure using mobile-rider pattern
     // The structure is: <div><div>configKey</div><div>configValue</div></div>
-    const configDivs = this.el.querySelectorAll('div > div');
-    
-    if (configDivs.length > 0) {
-      // Process pairs of divs (key-value pairs)
-      for (let i = 0; i < configDivs.length; i += 2) {
-        if (i + 1 < configDivs.length) {
-          const keyDiv = configDivs[i];
-          const valueDiv = configDivs[i + 1];
-          
-          if (keyDiv && valueDiv) {
-            const key = keyDiv.textContent.trim();
-            const value = valueDiv.textContent.trim();
-            
-            // Map the keys to config properties based on new requirements
-            switch (key) {
-              case 'playlistID':
-                config.playlistId = value;
-                break;
-              case 'playlistTitle':
-                config.playlistTitle = value;
-                break;
-              case 'topicEyebrow':
-                config.topicEyebrow = value;
-                break;
-              case 'autoplayText':
-                config.autoplayText = value;
-                break;
-              case 'skipPlaylist':
-                config.skipPlaylistText = value;
-                break;
-              case 'minimumSession':
-                config.minimumSessions = parseInt(value) || 4;
-                break;
-              case 'sort':
-                config.sort = value;
-                break;
-              case 'sortByTime':
-                config.sortByTime = value === 'true';
-                break;
-              case 'isTagbased':
-                config.isTagBased = value === 'true';
-                break;
-              case 'socialSharing':
-                config.socialSharing = value === 'true';
-                break;
-              case 'favoritesEnabled':
-                config.favoritesEnabled = value === 'true';
-                break;
-              case 'tooltipText':
-                config.favoritesTooltipText = value;
-                break;
-              case 'favoritesNotificationText':
-                config.favoritesNotificationText = value;
-                break;
-              case 'favoritesButtonText':
-                config.favoritesButtonText = value;
-                break;
-              case 'favoritesButtonLink':
-                config.favoritesButtonLink = value;
-                break;
-              case 'endpoint':
-                config.endpoint = value;
-                break;
-              case 'videoPlaylists':
-                try {
-                  config.videoPlaylists = JSON.parse(value);
-                } catch (e) {
-                  console.warn('Failed to parse videoPlaylists JSON:', value);
-                  config.videoPlaylists = [];
-                }
-                break;
-              case 'theme':
-                config.theme = value;
-                break;
-            }
-          }
-        }
+    const meta = Object.fromEntries(
+      [...this.el.querySelectorAll(':scope > div > div:first-child')].map((div) => [
+        div.textContent.trim().toLowerCase().replace(/ /g, '-'),
+        div.nextElementSibling?.textContent?.trim() || '',
+      ]),
+    );
+
+    // Map the parsed keys to our config properties
+    const config = {
+      playlistId: meta['playlist-id'] || null,
+      playlistTitle: meta['playlist-title'] || 'Video Playlist',
+      topicEyebrow: meta['topic-eyebrow'] || '',
+      autoplayText: meta['autoplay-text'] || 'Play All',
+      skipPlaylistText: meta['skip-playlist'] || 'Skip playlist',
+      minimumSessions: parseInt(meta['minimum-session']) || 4,
+      sort: meta['sort'] || 'default',
+      sortByTime: meta['sort-by-time'] === 'true',
+      isTagBased: meta['is-tagbased'] !== 'false', // Default to true
+      socialSharing: meta['social-sharing'] !== 'false', // Default to true
+      favoritesEnabled: meta['favorites-enabled'] !== 'false', // Default to true
+      favoritesTooltipText: meta['tooltip-text'] || 'Add to favorites',
+      favoritesNotificationText: meta['favorites-notification-text'] || 'Session added to favorites',
+      favoritesButtonText: meta['favorites-button-text'] || 'View Schedule',
+      favoritesButtonLink: meta['favorites-button-link'] || '/schedule',
+      endpoint: meta['endpoint'] || '/api/sessions',
+      theme: meta['theme'] || 'light',
+    };
+
+    // Parse videoPlaylists JSON if present
+    if (meta['video-playlists']) {
+      try {
+        config.videoPlaylists = JSON.parse(meta['video-playlists']);
+      } catch (e) {
+        console.warn('Failed to parse videoPlaylists JSON:', meta['video-playlists']);
+        config.videoPlaylists = [];
       }
-      
-      // Set default values for missing properties
-      config.playlistId = config.playlistId || null;
-      config.playlistTitle = config.playlistTitle || 'Video Playlist';
-      config.topicEyebrow = config.topicEyebrow || '';
-      config.autoplayText = config.autoplayText || 'Play All';
-      config.skipPlaylistText = config.skipPlaylistText || 'Skip playlist';
-      config.minimumSessions = config.minimumSessions || 4;
-      config.sort = config.sort || 'default';
-      config.sortByTime = config.sortByTime || false;
-      config.isTagBased = config.isTagBased !== undefined ? config.isTagBased : true;
-      config.socialSharing = config.socialSharing !== undefined ? config.socialSharing : true;
-      config.favoritesEnabled = config.favoritesEnabled !== undefined ? config.favoritesEnabled : true;
-      config.favoritesTooltipText = config.favoritesTooltipText || 'Add to favorites';
-      config.favoritesNotificationText = config.favoritesNotificationText || 'Session added to favorites';
-      config.favoritesButtonText = config.favoritesButtonText || 'View Schedule';
-      config.favoritesButtonLink = config.favoritesButtonLink || '/schedule';
-      config.endpoint = config.endpoint || '/api/sessions';
-      config.videoPlaylists = config.videoPlaylists || [];
-      config.theme = config.theme || 'light';
-      
-      // Debug logging to help troubleshoot
-      console.log('Parsed config from Helix HTML:', config);
     } else {
-      console.warn('No configuration divs found in Helix HTML structure');
-      // Set default values
-      config.playlistId = null;
-      config.playlistTitle = 'Video Playlist';
-      config.topicEyebrow = '';
-      config.autoplayText = 'Play All';
-      config.skipPlaylistText = 'Skip playlist';
-      config.minimumSessions = 4;
-      config.sort = 'default';
-      config.sortByTime = false;
-      config.isTagBased = true;
-      config.socialSharing = true;
-      config.favoritesEnabled = true;
-      config.favoritesTooltipText = 'Add to favorites';
-      config.favoritesNotificationText = 'Session added to favorites';
-      config.favoritesButtonText = 'View Schedule';
-      config.favoritesButtonLink = '/schedule';
-      config.endpoint = '/api/sessions';
       config.videoPlaylists = [];
-      config.theme = 'light';
     }
+
+    // Debug logging to help troubleshoot
+    console.log('Parsed config from Helix HTML:', config);
+    console.log('Raw meta object:', meta);
 
     return config;
   }
