@@ -207,10 +207,9 @@
 .consonant-switch {
   display: flex;
   align-items: center;
-  min-height: 40px; /* --spectrum-component-height-100 */
+  min-height: 32px;
   cursor: pointer;
   position: relative;
-  padding-top: 8px; /* --spectrum-component-top-to-text-100 */
 }
 
 .consonant-switch-input {
@@ -229,27 +228,32 @@
 
 .consonant-switch-switch {
   position: relative;
-  width: 36px; /* --spectrum-switch-control-width-medium */
-  height: 18px; /* --spectrum-switch-control-height-medium */
+  width: 26px;
+  height: 14px;
   background: var(--sessions-session-info-description-color);
-  border-radius: 9px; /* half of height for perfect circle */
+  border-radius: 9px;
   transition: background-color 0.3s ease;
   display: inline-block;
   cursor: pointer;
-  margin-top: 11px; /* --spectrum-switch-top-to-control-medium */
+  margin: 9px 0;
 }
 
 .consonant-switch-switch::before {
   content: '';
   position: absolute;
-  top: 2px;
-  left: 2px;
-  width: 14px; /* 18px - 4px (2px top + 2px bottom) */
-  height: 14px; /* 18px - 4px (2px top + 2px bottom) */
+  /* top: 2px; */
+  /* left: 2px; */
+  width: 10px;
+  height: 10px;
   background: white;
   border-radius: 50%;
   transition: transform 0.3s ease;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  /* inline-size: 11px; */
+  border-width: 2px;
+  border-style: solid;
+  background-color: #fff;
+  border-color: #6D6D6D;
 }
 
 .consonant-switch-input:checked + .consonant-switch-switch {
