@@ -10,8 +10,7 @@
  * governing permissions and limitations under the License.
  */
 
-import { lazyCaptureProfile } from './profile.js';
-import autoUpdateContent, { getNonProdData, validatePageAndRedirect } from './content-update.js';
+import autoUpdateContent, { getNonProdData, validatePageAndRedirect, delayedEventFeatures } from './content-update.js';
 import { getSusiOptions, setMetadata, getMetadata, getEventServiceEnv, LIBS } from './utils.js';
 
 const {
@@ -278,6 +277,6 @@ if (getMetadata('event-details-page') === 'yes') await validatePageAndRedirect(L
 (async function loadPage() {
   await loadLana({ clientId: 'events-milo' });
   await loadArea().then(() => {
-    if (getMetadata('event-details-page') === 'yes') lazyCaptureProfile();
+    delayedEventFeatures();
   });
 }());

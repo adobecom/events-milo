@@ -131,3 +131,5 @@ body.validating-page {
 .text-block.column-icon-spacing-xxs table td:last-child a:not(:last-child) {
   padding-right: var(--spacing-xxs);
 }
+
+
