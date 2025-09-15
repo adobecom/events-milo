@@ -491,7 +491,7 @@ class VideoPlaylist {
           </a>
         </div>
         <div class="video-playlist-container__header__toggle">
-        <div class="consonant-switch consonant-switch--sizeM">
+        <div class="consonant-switch --spacing-m">
           <input 
             type="checkbox" 
             class="consonant-switch-input" 
