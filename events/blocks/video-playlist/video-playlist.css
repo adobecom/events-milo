@@ -205,12 +205,17 @@
 }
 
 .consonant-switch-input {
-  position: absolute;
-  opacity: 0;
-  width: 0;
-  height: 0;
   margin: 0;
+  box-sizing: border-box;
   padding: 0;
+  position: absolute;
+  inline-size: 100%;
+  block-size: 100%;
+  inset-block-start: 0;
+  inset-inline-start: 0;
+  opacity: 0;
+  z-index: 1;
+  cursor: pointer;
 }
 
 .consonant-switch-switch {
