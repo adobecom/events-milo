@@ -205,11 +205,11 @@
 
 /* Consonant Switch Styles */
 .consonant-switch {
-  display: flex;
-  align-items: center;
-  min-height: 32px;
-  cursor: pointer;
+  display: inline-flex;
+  align-items: flex-start;
   position: relative;
+  min-block-size: 32px;
+  max-inline-size: 100%;
 }
 
 .consonant-switch-input {
