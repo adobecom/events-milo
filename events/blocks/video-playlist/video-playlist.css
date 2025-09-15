@@ -1,5 +1,13 @@
 /* Video Playlist Block Styles */
 
+/* CSS Custom Properties for Switch Component */
+:root {
+  --spectrum-switch-control-width: 26px;
+  --spectrum-switch-min-height: 32px;
+  --spectrum-switch-control-height: 14px;
+  --spectrum-switch-spacing-top-to-control: 9px;
+}
+
 /* Hide configuration divs but keep video container */
 /* Modern browsers with :has() support */
 .video-playlist > div:not(.video-playlist-container):not(:has(.milo-video)) {
@@ -220,15 +228,17 @@
 }
 
 .consonant-switch-switch {
-  position: relative;
-  width: 36px; /* --spectrum-switch-control-width-medium */
-  height: 18px; /* --spectrum-switch-control-height-medium */
-  background: var(--sessions-session-info-description-color);
-  border-radius: 9px; /* half of height for perfect circle */
-  transition: background-color 0.3s ease;
   display: inline-block;
-  cursor: pointer;
-  margin-top: 11px; /* --spectrum-switch-top-to-control-medium */
+  position: relative;
+  inline-size: 26px;
+  margin-block: calc(32px - 14px - 9px);
+  margin-inline: 0;
+  flex-grow: 0;
+  flex-shrink: 0;
+  vertical-align: middle;
+  transition: background var(--mod-animation-duration-100, var(--spectrum-animation-duration-100)) ease-in-out, border var(--mod-animation-duration-100, var(--spectrum-animation-duration-100)) ease-in-out;
+  inset-inline-start: 0;
+  inset-inline-end: 0;
 }
 
 .consonant-switch-switch::before {
