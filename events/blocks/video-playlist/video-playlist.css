@@ -261,7 +261,7 @@
 }
 
 .consonant-switch-input:checked + .consonant-switch-switch::before {
-  transform: translateX(18px); /* 36px - 14px - 4px (2px left + 2px right) */
+  transform: translateX(14px); /* 36px - 14px - 4px (2px left + 2px right) */
 }
 
 .consonant-switch-label {
