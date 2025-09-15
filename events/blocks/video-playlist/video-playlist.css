@@ -201,6 +201,7 @@
   align-items: center;
   gap: 8px;
   cursor: pointer;
+  position: relative;
 }
 
 .consonant-switch-input {
@@ -208,6 +209,8 @@
   opacity: 0;
   width: 0;
   height: 0;
+  margin: 0;
+  padding: 0;
 }
 
 .consonant-switch-switch {
@@ -216,7 +219,9 @@
   height: 24px;
   background: #ccc;
   border-radius: 12px;
-  transition: background-color 0.2s ease;
+  transition: background-color 0.3s ease;
+  display: inline-block;
+  cursor: pointer;
 }
 
 .consonant-switch-switch::before {
@@ -228,11 +233,12 @@
   height: 20px;
   background: white;
   border-radius: 50%;
-  transition: transform 0.2s ease;
+  transition: transform 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
 }
 
 .consonant-switch-input:checked + .consonant-switch-switch {
-  background: var(--sessions-session-thumbnail-progress-bar-color);
+  background: var(--sessions-session-thumbnail-progress-bar-color, #1473e6);
 }
 
 .consonant-switch-input:checked + .consonant-switch-switch::before {
@@ -243,6 +249,14 @@
   font-size: 14px;
   font-weight: 500;
   color: var(--text-color);
+  cursor: pointer;
+  user-select: none;
+}
+
+/* Ensure the switch is clickable */
+.consonant-switch-input,
+.consonant-switch-switch,
+.consonant-switch-label {
   cursor: pointer;
 }
 

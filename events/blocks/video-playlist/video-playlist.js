@@ -537,14 +537,18 @@ class VideoPlaylist {
 
   setupAutoplayCheckbox(header) {
     const checkbox = header.querySelector(`#${PLAYLIST_PLAY_ALL_ID}`);
+    console.log('Setting up autoplay checkbox:', checkbox);
     if (checkbox) {
       checkbox.addEventListener('change', (event) => {
+        console.log('Switch toggled:', event.target.checked);
         saveShouldAutoPlayToLocalStorage(event.target.checked);
         const daaLL = event.target.checked
           ? analytics.TOGGLE_OFF
           : analytics.TOGGLE_ON;
         event.target.setAttribute('daa-ll', daaLL);
       });
+    } else {
+      console.error('Autoplay checkbox not found!');
     }
   }
 
