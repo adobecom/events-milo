@@ -222,7 +222,7 @@
   position: relative;
   width: 44px;
   height: 24px;
-  background: var(--sessions-session-info-description-color, #d5d5d5);
+  background: var(--sessions-session-info-description-color);
   border-radius: 12px;
   transition: background-color 0.3s ease;
   display: inline-block;
