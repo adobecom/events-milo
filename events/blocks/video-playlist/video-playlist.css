@@ -228,17 +228,15 @@
 }
 
 .consonant-switch-switch {
-  display: inline-block;
   position: relative;
-  inline-size: 26px;
-  margin-block: calc(32px - 14px - 9px);
-  margin-inline: 0;
-  flex-grow: 0;
-  flex-shrink: 0;
-  vertical-align: middle;
-  transition: background var(--mod-animation-duration-100, var(--spectrum-animation-duration-100)) ease-in-out, border var(--mod-animation-duration-100, var(--spectrum-animation-duration-100)) ease-in-out;
-  inset-inline-start: 0;
-  inset-inline-end: 0;
+  width: 36px; /* --spectrum-switch-control-width-medium */
+  height: 18px; /* --spectrum-switch-control-height-medium */
+  background: var(--sessions-session-info-description-color);
+  border-radius: 9px; /* half of height for perfect circle */
+  transition: background-color 0.3s ease;
+  display: inline-block;
+  cursor: pointer;
+  margin-top: 11px; /* --spectrum-switch-top-to-control-medium */
 }
 
 .consonant-switch-switch::before {
