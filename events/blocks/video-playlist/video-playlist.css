@@ -243,7 +243,7 @@
 }
 
 .consonant-switch-input:checked + .consonant-switch-switch {
-  background: var(--sessions-session-info-description-color, #464646);
+  background: #464646;
 }
 
 .consonant-switch-input:checked + .consonant-switch-switch::before {
