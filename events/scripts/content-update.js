@@ -614,7 +614,8 @@ function flagEventState(parent) {
 
   if (!localStartMillis || !localEndMillis) return;
 
-  const now = Date.now();
+  const timeStampInUSP = new URLSearchParams(window.location.search).get('timing');
+  const now = timeStampInUSP ? +timeStampInUSP : Date.now();
   const isBeforeStart = now < localStartMillis;
   const isAfterEnd = now > localEndMillis;
   const isDuringEvent = now >= localStartMillis && now <= localEndMillis;

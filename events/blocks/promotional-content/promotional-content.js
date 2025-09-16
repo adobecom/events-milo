@@ -6,7 +6,12 @@ async function getPromotionalContent() {
   if (eventPromotionalItemsMetadata) {
     try {
       const promotionalItemsMetadata = JSON.parse(eventPromotionalItemsMetadata);
-      promotionalItems = promotionalItemsMetadata.filter((item) => item.name);
+      promotionalItems = promotionalItemsMetadata.filter((item) => {
+        if (typeof item === 'object') {
+          return item.name;
+        }
+        return item;
+      });
     } catch (error) {
       window.lana?.log(`Error parsing promotional items: ${JSON.stringify(error)}`);
       return promotionalItems;
