@@ -22,7 +22,6 @@
 /* Display milo-video and video-playlist-container side by side */
 .video-playlist {
   display: flex;
-  gap: 20px;
   align-items: flex-start;
 }
 
@@ -111,6 +110,7 @@
 
   font-family: 'Adobe Clean', 'Source Sans Pro', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   max-width: 360px;
+  height: 675px;
   flex-shrink: 0;
   background-color: var(--container-background-color);
   color: var(--text-color);
