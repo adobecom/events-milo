@@ -347,6 +347,7 @@
   position: relative;
   flex: 1;
   overflow-y: auto;
+  height: 100%;
   margin-bottom: 8px;
   scrollbar-width: thin;
   scrollbar-color: var(--scrollbar-thumb-color) transparent;
