@@ -8,10 +8,11 @@ const PLAYLIST_PLAY_ALL_ID = 'playlist-play-all';
 const MPC_STATUS = 'mpcStatus';
 const RESTART_THRESHOLD = 5;
 const PROGRESS_SAVE_INTERVAL = 5;
-const VIDEO_ORIGIN = 'https://player.adobe.com';
-const VIDEO_PLAYLIST_ID_URL_KEY = 'videoPlaylistID';
-const TOAST_CONTAINER_ID = 'toast-container';
-const PLAYLIST_SKIP_TO_ID = 'video-playlist-skip';
+const VIDEO_ORIGIN = 'https://video.tv.adobe.com';
+const VIDEO_PLAYLIST_ID_URL_KEY = 'videoPlaylistId';
+const TOAST_CONTAINER_ID = 'playlist-toasts-container';
+const PLAYLIST_SKIP_TO_ID = 'playlist-skip-to';
+
 
 const EVENT_STATES = {
     LOAD: 'load',
