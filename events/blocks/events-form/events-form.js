@@ -270,9 +270,11 @@ function createButton({ type, label }, bp) {
         button.setAttribute('disabled', true);
         button.classList.add('submitting');
         const respJson = await submitForm(bp);
-        button.removeAttribute('disabled');
-        button.classList.remove('submitting');
-        if (!respJson) return;
+        if (!respJson) {
+          button.removeAttribute('disabled');
+          button.classList.remove('submitting');
+          return;
+        }
 
         if (respJson.ok) {
           BlockMediator.set('rsvpData', respJson.data);
@@ -280,8 +282,7 @@ function createButton({ type, label }, bp) {
         } else {
           const { status } = respJson;
 
-          if (status === 400 && respJson.error?.message === 'Request to ESP failed: Event is full') {
-            BlockMediator.set('rsvpData', null);
+          if (status === 400) {
             const eventResp = await getEvent(getMetadata('event-id'));
             if (eventResp.ok) {
               const { isFull, allowWaitlisting, attendeeCount, attendeeLimit } = eventResp.data;
@@ -298,10 +299,15 @@ function createButton({ type, label }, bp) {
                 }
               }
             }
+
+            BlockMediator.set('rsvpData', null);
           }
 
           buildErrorMsg(bp.form, status);
         }
+
+        button.removeAttribute('disabled');
+        button.classList.remove('submitting');
       }
     });
   }
