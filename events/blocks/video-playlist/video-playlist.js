@@ -762,23 +762,23 @@ class VideoPlaylist {
 
   watchForVideoContainer() {
     console.log('Setting up MutationObserver to watch for .milo-video');
-    // const observer = new MutationObserver((mutationsList, observer) => {
-    //   for (const mutation of mutationsList) {
-    //     if (mutation.type === 'childList') {
-    //       const videoContainer = document.querySelector('.milo-video');
-    //       console.log('Mutation detected, checking for .milo-video:', videoContainer);
-    //       if (videoContainer) {
-    //         console.log('Video container found via observer, setting up listeners');
-    //         observer.disconnect();
-    //         this.videoContainer = videoContainer;
-    //         this.setupPlayerListeners();
-    //         break;
-    //       }
-    //     }
-    //   }
-    // });
+    const observer = new MutationObserver((mutationsList, observer) => {
+      for (const mutation of mutationsList) {
+        if (mutation.type === 'childList') {
+          const videoContainer = document.querySelector('.milo-video');
+          console.log('Mutation detected, checking for .milo-video:', videoContainer);
+          if (videoContainer) {
+            console.log('Video container found via observer, setting up listeners');
+            observer.disconnect();
+            this.videoContainer = videoContainer;
+            this.setupPlayerListeners();
+            break;
+          }
+        }
+      }
+    });
     
-    // observer.observe(document.body, { childList: true, subtree: true });
+    observer.observe(document.body, { childList: true, subtree: true });
   }
 
   setupPlayerListeners() {
