@@ -10,10 +10,19 @@
 
 /* Hide configuration divs but keep video container */
 /* Modern browsers with :has() support */
+.video-playlist > div:not(.video-playlist-container):not(:has(.milo-video)) {
+  display: none !important;
+}
 
+.video-playlist > div:has(.youtube.link-block) > div:first-child {
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
 
 /* Hide the div containing "video-url(video-container)" - it's the first div in the video container */
-
+.video-playlist > div:has(.milo-video) > div:first-child {
+  display: none !important;
+}
 
 /* Display milo-video and video-playlist-container side by side */
 .video-playlist {
