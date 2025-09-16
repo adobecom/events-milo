@@ -829,8 +829,8 @@ class VideoPlaylist {
     if (event.origin !== VIDEO_ORIGIN) return;
     if (event.data.type !== MPC_STATUS) return;
 
-    const { state, data } = event.data;
-    
+    const { data } = event;
+    const { state } = data;
     switch (state) {
       case EVENT_STATES.LOAD:
         this.handleLoadState(data);
