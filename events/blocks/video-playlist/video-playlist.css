@@ -14,14 +14,15 @@
   display: none !important;
 }
 
-.video-playlist > div:has(.youtube.link-block) > div:first-child {
-  opacity: 0 !important;
-  pointer-events: none !important;
-}
-
 /* Hide the div containing "video-url(video-container)" - it's the first div in the video container */
 .video-playlist > div:has(.milo-video) > div:first-child {
   display: none !important;
+}
+
+.video-playlist > div:has(.youtube.link-block) {
+  opacity: 0 !important;
+  pointer-events: none !important;
+  display: block !important;
 }
 
 /* Display milo-video and video-playlist-container side by side */
