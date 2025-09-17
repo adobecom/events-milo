@@ -4,6 +4,8 @@ import { LIBS } from '../../scripts/utils.js';
 const { createTag, getConfig } = await import(`${LIBS}/utils/utils.js`);
 
 // Constants
+const AUTOPLAY_PLAYLIST_KEY = 'shouldAutoPlayPlaylist';
+const PLAYLIST_VIDEOS_KEY = 'playlistVideos';
 const PLAYLIST_PLAY_ALL_ID = 'playlist-play-all';
 const MPC_STATUS = 'mpcStatus';
 const RESTART_THRESHOLD = 5;
@@ -250,49 +252,116 @@ const mockAPI = {
 // Storage helpers
 function getLocalStorageVideos() {
   try {
-    const data = localStorage.getItem(CONFIG.STORAGE.PROGRESS_KEY);
-    return data ? JSON.parse(data) : {};
-  } catch (e) {
-    console.error('Failed to get video progress:', e);
+    return JSON.parse(localStorage.getItem(PLAYLIST_VIDEOS_KEY)) || {};
+  } catch (error) {
+    console.error('Error parsing the videos from the local storage:', error);
     return {};
   }
 }
 
-function saveCurrentVideoProgress(videoId, currentTime, duration = 0) {
+function saveLocalStorageVideos(videos) {
   try {
-    const videos = getLocalStorageVideos();
-    videos[videoId] = {
+    localStorage.setItem(PLAYLIST_VIDEOS_KEY, JSON.stringify(videos));
+  } catch (error) {
+    console.error('Error saving the videos to the local storage:', error);
+  }
+}
+
+function saveCurrentVideoProgress(id, currentTime, length) {
+  const localStorageVideos = getLocalStorageVideos();
+  const currentSessionData = localStorageVideos[id];
+  // Update the current session data in the local storage
+  if (currentSessionData) {
+    localStorageVideos[id] = {
+      ...currentSessionData,
       secondsWatched: currentTime,
-      length: duration,
-      timestamp: Date.now(),
     };
-    localStorage.setItem(CONFIG.STORAGE.PROGRESS_KEY, JSON.stringify(videos));
-  } catch (e) {
-    console.error('Failed to save video progress:', e);
+    saveLocalStorageVideos(localStorageVideos);
+  } else if (length) { // If the length is available, save the video progress in the local storage
+    localStorageVideos[id] = {
+      secondsWatched: currentTime,
+      length,
+    };
+    saveLocalStorageVideos(localStorageVideos);
+  } else { // If the length isn't available, fetch it, and save the progress to localStorage
+    const url = new URL(`${VIDEO_ORIGIN}/v/${id}?format=json-ld`);
+    fetch(url)
+      .then((response) => response.json())
+      .then((data) => {
+        const duration = data && data.jsonLinkedData && data.jsonLinkedData.duration;
+        const seconds = convertIsoDurationToSeconds(duration);
+        localStorageVideos[id] = {
+          secondsWatched: currentTime,
+          length: seconds,
+        };
+        saveLocalStorageVideos(localStorageVideos);
+      });
   }
 }
 
 function getLocalStorageShouldAutoPlay() {
   try {
-    const data = localStorage.getItem(CONFIG.STORAGE.AUTOPLAY_KEY);
-    return data ? JSON.parse(data) : false;
-  } catch (e) {
-    console.error('Failed to get autoplay setting:', e);
-    return false;
+    return JSON.parse(localStorage.getItem(AUTOPLAY_PLAYLIST_KEY)) ?? true;
+  } catch (error) {
+    console.error('Error parsing the autoplay flag from the local storage:', error);
+    return true;
   }
 }
 
-function saveShouldAutoPlayToLocalStorage(shouldAutoPlay) {
+function saveShouldAutoPlayToLocalStorage(shouldAutoPlayPlaylist) {
   try {
-    localStorage.setItem(CONFIG.STORAGE.AUTOPLAY_KEY, JSON.stringify(shouldAutoPlay));
-  } catch (e) {
-    console.error('Failed to save autoplay setting:', e);
+    localStorage.setItem(AUTOPLAY_PLAYLIST_KEY, JSON.stringify(shouldAutoPlayPlaylist));
+  } catch (error) {
+    console.error('Error saving the autoplay flag to the local storage:', error);
   }
 }
 
 function getCurrentPlaylistId() {
   const urlParams = new URLSearchParams(window.location.search);
   return urlParams.get('playlistId');
+}
+
+function parseBoolean(value) {
+  return value.toLowerCase() === 'true';
+}
+
+// Time Conversion Operations
+/**
+ * Converts an ISO 8601 duration string to seconds.
+ *
+ * @param {string} isoDuration - The ISO 8601 duration string to convert.
+ * @returns {number} The duration in seconds.
+ * @throws {Error} If the input is not a valid ISO 8601 duration format.
+ */
+function convertIsoDurationToSeconds(isoDuration) {
+  // Define regex patterns for each time component
+  const pattern = /P(?:(\d+)Y)?(?:(\d+)M)?(?:(\d+)D)?(?:T(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?)?/;
+
+  // Match the pattern with the ISO 8601 duration string
+  const match = isoDuration.match(pattern);
+  if (!match) {
+    throw new Error('Invalid ISO 8601 duration format');
+  }
+
+  // Extract the time components, defaulting to 0 if not present
+  const years = parseInt(match[1] || 0, 10);
+  const months = parseInt(match[2] || 0, 10);
+  const days = parseInt(match[3] || 0, 10);
+  const hours = parseInt(match[4] || 0, 10);
+  const minutes = parseInt(match[5] || 0, 10);
+  const seconds = parseInt(match[6] || 0, 10);
+
+  // Convert each component to seconds
+  const totalSeconds = (
+    years * 365 * 24 * 3600 // assuming 365 days in a year
+    + months * 30 * 24 * 3600 // assuming 30 days in a month
+    + days * 24 * 3600
+    + hours * 3600
+    + minutes * 60
+    + seconds
+  );
+
+  return totalSeconds;
 }
 
 // Utility functions
@@ -323,28 +392,48 @@ function startVideoFromSecond(videoContainer, seconds) {
 }
 
 function filterCards(cards) {
-  return cards.filter(card => card.search && card.contentArea);
+  if (!Array.isArray(cards)) {
+    console.error('Invalid input: cards must be an array.');
+    return [];
+  }
+
+  let currentDate;
+  try {
+    currentDate = window?.northstar?.servertime?.currentTime?.getInstance()?.getTime();
+    if (!currentDate) throw new Error('Current date is not available.');
+  } catch (error) {
+    console.error('Error accessing current date:', error);
+    return cards;
+  }
+
+  return cards.filter((card) => {
+    if (isNaN(Date.parse(card.endDate))) {
+      return false; // Skip this card
+    }
+    // Since we now support youtube videos, videoId will be the new way to identify a video.
+    // We will accept both mpcVideoId(old way) and videoId(new way)
+    const hasMpcVideoId = card.search && card.search.mpcVideoId;
+    const hasVideoId = card.search && card.search.videoId;
+    if (!hasMpcVideoId && !hasVideoId) {
+      return false; // Skip this card
+    }
+    const endDate = new Date(card.endDate);
+    return endDate.getTime() < currentDate;
+  });
 }
 
-function sortCards(cards, sortType = 'default') {
-  const sortedCards = [...cards];
-  
-  switch (sortType) {
-    case 'title':
-      return sortedCards.sort((a, b) => 
-        a.contentArea.title.localeCompare(b.contentArea.title)
-      );
-    case 'duration':
-      return sortedCards.sort((a, b) => {
-        const durationA = parseInt(a.search.videoDuration.replace(':', ''));
-        const durationB = parseInt(b.search.videoDuration.replace(':', ''));
-        return durationA - durationB;
-      });
-    case 'reverse':
-      return sortedCards.reverse();
-    default:
-      return sortedCards;
+function sortCards(cards, sort) {
+  if (!sort) return cards;
+  if (cards.length === 0) return cards;
+  if (sort.byTime && parseBoolean(sort.byTime)) {
+    const sortedCards = [...cards].sort((a, b) => {
+      const aTime = new Date(a.startDate);
+      const bTime = new Date(b.startDate);
+      return aTime - bTime;
+    });
+    return sortedCards;
   }
+  return cards;
 }
 
 class VideoPlaylist {
