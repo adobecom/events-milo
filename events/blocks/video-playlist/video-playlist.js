@@ -786,8 +786,16 @@ class VideoPlaylist {
     // Highlight current session
     this.highlightCurrentSession();
     
+    // Remove existing listener if it exists
+    if (this.boundHandlePlayerMessage) {
+      window.removeEventListener('message', this.boundHandlePlayerMessage);
+    }
+    
+    // Create bound function reference
+    this.boundHandlePlayerMessage = this.handlePlayerMessage.bind(this);
+    
     // Setup message listener for MPC player
-    window.addEventListener('message', this.handlePlayerMessage.bind(this));
+    window.addEventListener('message', this.boundHandlePlayerMessage);
     
     // Setup YouTube player if needed
     this.setupYouTubePlayer();
