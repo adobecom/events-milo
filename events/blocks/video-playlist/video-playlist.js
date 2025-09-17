@@ -622,16 +622,49 @@ class VideoPlaylist {
     // Setup autoplay checkbox
     this.setupAutoplayCheckbox(header);
     
+    // Setup social sharing if enabled
+    if (this.cfg.socialSharing) {
+      this.setupSocialSharing(header);
+    }
+    
     return header;
   }
 
   createSocialSharingButton() {
     return `
-      <button class="video-playlist-container__social-share" daa-ll="Social_Share">
-        <svg width="16" height="16" viewBox="0 0 16 16">
-          <path d="M12 6c.8 0 1.5.7 1.5 1.5S12.8 9 12 9s-1.5-.7-1.5-1.5S11.2 6 12 6zM4 6c.8 0 1.5.7 1.5 1.5S4.8 9 4 9s-1.5-.7-1.5-1.5S3.2 6 4 6zM8 6c.8 0 1.5.7 1.5 1.5S8.8 9 8 9s-1.5-.7-1.5-1.5S7.2 6 8 6z"/>
-        </svg>
-      </button>
+      <div class="video-playlist-container__social-share-wrapper">
+        <button class="video-playlist-container__social-share" daa-ll="Social_Share">
+          <svg width="16" height="16" viewBox="0 0 16 16">
+            <path d="M12 6c.8 0 1.5.7 1.5 1.5S12.8 9 12 9s-1.5-.7-1.5-1.5S11.2 6 12 6zM4 6c.8 0 1.5.7 1.5 1.5S4.8 9 4 9s-1.5-.7-1.5-1.5S3.2 6 4 6zM8 6c.8 0 1.5.7 1.5 1.5S8.8 9 8 9s-1.5-.7-1.5-1.5S7.2 6 8 6z"/>
+          </svg>
+        </button>
+        <div class="video-playlist-container__social-share-menu">
+          <button class="video-playlist-container__social-share-menu__item" data-platform="facebook" daa-ll="Social_Share_Facebook">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+            </svg>
+            Share Playlist on Facebook
+          </button>
+          <button class="video-playlist-container__social-share-menu__item" data-platform="twitter" daa-ll="Social_Share_Twitter">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+            </svg>
+            Share Playlist on X
+          </button>
+          <button class="video-playlist-container__social-share-menu__item" data-platform="linkedin" daa-ll="Social_Share_LinkedIn">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+            </svg>
+            Share Playlist on LinkedIn
+          </button>
+          <button class="video-playlist-container__social-share-menu__item" data-platform="link" daa-ll="Social_Share_Link">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M10.59 13.41c.41.39.41 1.03 0 1.42-.39.39-1.03.39-1.42 0a5.003 5.003 0 0 1 0-7.07l3.54-3.54a5.003 5.003 0 0 1 7.07 0 5.003 5.003 0 0 1 0 7.07l-1.49 1.49c.01-.82-.12-1.64-.4-2.42l.47-.48a2.982 2.982 0 0 0 0-4.24 2.982 2.982 0 0 0-4.24 0l-3.53 3.53a2.982 2.982 0 0 0 0 4.24zm2.82-4.24c.39-.39 1.03-.39 1.42 0a5.003 5.003 0 0 1 0 7.07l-3.54 3.54a5.003 5.003 0 0 1-7.07 0 5.003 5.003 0 0 1 0-7.07l1.49-1.49c-.01.82.12 1.64.4 2.42l-.47.48a2.982 2.982 0 0 0 0 4.24 2.982 2.982 0 0 0 4.24 0l3.53-3.53a2.982 2.982 0 0 0 0-4.24z"/>
+            </svg>
+            Share with link
+          </button>
+        </div>
+      </div>
     `;
   }
 
@@ -646,6 +679,147 @@ class VideoPlaylist {
         event.target.setAttribute('daa-ll', daaLL);
       });
     }
+  }
+
+  setupSocialSharing(header) {
+    const shareButton = header.querySelector('.video-playlist-container__social-share');
+    const shareMenu = header.querySelector('.video-playlist-container__social-share-menu');
+    
+    if (shareButton && shareMenu) {
+      // Toggle menu on button click
+      shareButton.addEventListener('click', (e) => {
+        e.stopPropagation();
+        shareMenu.classList.toggle('active');
+      });
+
+      // Close menu when clicking outside
+      document.addEventListener('click', (e) => {
+        if (!header.contains(e.target)) {
+          shareMenu.classList.remove('active');
+        }
+      });
+
+      // Handle share menu item clicks
+      const shareItems = shareMenu.querySelectorAll('.video-playlist-container__social-share-menu__item');
+      shareItems.forEach(item => {
+        item.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const platform = item.dataset.platform;
+          this.handleShare(platform);
+          shareMenu.classList.remove('active');
+        });
+      });
+    }
+  }
+
+  handleShare(platform) {
+    const playlistUrl = window.location.href;
+    const playlistTitle = this.cfg.playlistTitle || 'Video Playlist';
+    const shareText = `Check out this playlist: ${playlistTitle}`;
+
+    switch (platform) {
+      case 'facebook':
+        this.shareToFacebook(playlistUrl, shareText);
+        break;
+      case 'twitter':
+        this.shareToTwitter(playlistUrl, shareText);
+        break;
+      case 'linkedin':
+        this.shareToLinkedIn(playlistUrl, shareText);
+        break;
+      case 'link':
+        this.copyToClipboard(playlistUrl);
+        break;
+    }
+  }
+
+  shareToFacebook(url, text) {
+    const shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`;
+    this.openShareWindow(shareUrl, 'Facebook');
+  }
+
+  shareToTwitter(url, text) {
+    const shareUrl = `https://twitter.com/intent/tweet?url=${encodeURIComponent(url)}&text=${encodeURIComponent(text)}`;
+    this.openShareWindow(shareUrl, 'Twitter');
+  }
+
+  shareToLinkedIn(url, text) {
+    const shareUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}`;
+    this.openShareWindow(shareUrl, 'LinkedIn');
+  }
+
+  copyToClipboard(text) {
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(text).then(() => {
+        this.showNotification('Link copied to clipboard!');
+      }).catch(() => {
+        this.fallbackCopyToClipboard(text);
+      });
+    } else {
+      this.fallbackCopyToClipboard(text);
+    }
+  }
+
+  fallbackCopyToClipboard(text) {
+    const textArea = document.createElement('textarea');
+    textArea.value = text;
+    textArea.style.position = 'fixed';
+    textArea.style.left = '-999999px';
+    textArea.style.top = '-999999px';
+    document.body.appendChild(textArea);
+    textArea.focus();
+    textArea.select();
+    
+    try {
+      document.execCommand('copy');
+      this.showNotification('Link copied to clipboard!');
+    } catch (err) {
+      console.error('Failed to copy text: ', err);
+      this.showNotification('Failed to copy link');
+    }
+    
+    document.body.removeChild(textArea);
+  }
+
+  openShareWindow(url, platform) {
+    const width = 600;
+    const height = 400;
+    const left = (window.innerWidth - width) / 2;
+    const top = (window.innerHeight - height) / 2;
+    
+    window.open(
+      url,
+      `${platform}Share`,
+      `width=${width},height=${height},left=${left},top=${top},scrollbars=yes,resizable=yes`
+    );
+  }
+
+  showNotification(message) {
+    // Create a simple notification
+    const notification = document.createElement('div');
+    notification.className = 'video-playlist-container__share-notification';
+    notification.textContent = message;
+    notification.style.cssText = `
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: #333;
+      color: white;
+      padding: 12px 20px;
+      border-radius: 4px;
+      z-index: 10000;
+      font-size: 14px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+    `;
+    
+    document.body.appendChild(notification);
+    
+    // Remove notification after 3 seconds
+    setTimeout(() => {
+      if (notification.parentNode) {
+        notification.parentNode.removeChild(notification);
+      }
+    }, 3000);
   }
 
   createSessionsWrapper(cards) {

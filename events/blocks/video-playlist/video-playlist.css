@@ -760,3 +760,92 @@
 .video-playlist-container .consonant-icon:nth-last-child(1) {
   margin-right: 0;
 }
+
+/* Social Share Menu Styles */
+.video-playlist-container__social-share-wrapper {
+  position: relative;
+  display: inline-block;
+}
+
+.video-playlist-container__social-share-menu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background: white;
+  border: 1px solid #d2d2d2;
+  border-radius: 4px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 1000;
+  min-width: 200px;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-10px);
+  transition: opacity 0.2s ease, visibility 0.2s ease, transform 0.2s ease;
+}
+
+.video-playlist-container__social-share-menu.active {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.video-playlist-container__social-share-menu__item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 12px 16px;
+  border: none;
+  background: none;
+  text-align: left;
+  font-size: 14px;
+  color: #333;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.video-playlist-container__social-share-menu__item:hover {
+  background-color: #f5f5f5;
+}
+
+.video-playlist-container__social-share-menu__item:first-child {
+  border-radius: 4px 4px 0 0;
+}
+
+.video-playlist-container__social-share-menu__item:last-child {
+  border-radius: 0 0 4px 4px;
+}
+
+.video-playlist-container__social-share-menu__item svg {
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+}
+
+/* Dark theme support */
+.video-playlist-container.consonant--light .video-playlist-container__social-share-menu {
+  background: white;
+  border-color: #d2d2d2;
+}
+
+.video-playlist-container.consonant--light .video-playlist-container__social-share-menu__item {
+  color: #333;
+}
+
+.video-playlist-container.consonant--light .video-playlist-container__social-share-menu__item:hover {
+  background-color: #f5f5f5;
+}
+
+/* Default dark theme */
+.video-playlist-container__social-share-menu {
+  background: #1d1d1d;
+  border-color: #373737;
+}
+
+.video-playlist-container__social-share-menu__item {
+  color: #fff;
+}
+
+.video-playlist-container__social-share-menu__item:hover {
+  background-color: #404040;
+}
