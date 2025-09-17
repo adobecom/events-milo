@@ -787,7 +787,7 @@ class VideoPlaylist {
     this.highlightCurrentSession();
     
     // Setup message listener for MPC player
-    window.addEventListener('message', this.handlePlayerMessage.bind(this));
+    // window.addEventListener('message', this.handlePlayerMessage.bind(this));
     
     // Setup YouTube player if needed
     this.setupYouTubePlayer();
@@ -862,6 +862,7 @@ class VideoPlaylist {
       startVideoFromSecond(this.videoContainer, 0);
     }
   }
+  
 
   handlePauseState(data) {
     const { id, currentTime } = data;
