@@ -297,18 +297,29 @@ function getCurrentPlaylistId() {
 
 // Utility functions
 function findVideoIdFromIframeSrc(iframeSrc) {
-  const url = new URL(iframeSrc);
-  return url.searchParams.get('videoId') || url.pathname.split('/').pop();
+  // Match either:
+  // 1. v/{digits}? for mpc video format
+  // 2. youtube.com/embed/{videoId} for YouTube videos
+  const patterns = {
+    mpc: /v\/(\d+)\?/, // Match the internal video ID from the URL
+    youtube: /youtube\.com\/embed\/([a-zA-Z0-9_-]+)/, // Match YouTube video ID
+  };
+  // Try matching mpc video format first
+  const mpcMatch = iframeSrc.match(patterns.mpc);
+  if (mpcMatch) return mpcMatch[1];
+  // Try matching YouTube format
+  const youtubeMatch = iframeSrc.match(patterns.youtube);
+  return youtubeMatch ? youtubeMatch[1] : null;
 }
 
 function startVideoFromSecond(videoContainer, seconds) {
-  const iframe = videoContainer.querySelector('iframe');
-  if (!iframe) return;
-
-  const currentSrc = iframe.getAttribute('src');
-  const url = new URL(currentSrc);
-  url.searchParams.set('start', seconds);
-  iframe.setAttribute('src', url.toString());
+  if (videoContainer) {
+    const iframe = videoContainer.querySelector('iframe');
+    iframe?.contentWindow?.postMessage(
+      { type: 'mpcAction', action: 'play', currentTime: seconds },
+      'https://video.tv.adobe.com',
+    );
+  }
 }
 
 function filterCards(cards) {
