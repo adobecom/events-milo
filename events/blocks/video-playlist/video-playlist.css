@@ -796,7 +796,6 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  width: 100%;
   border: none;
   background: none;
   text-align: left;
@@ -805,7 +804,7 @@
   cursor: pointer;
   transition: background-color 0.2s ease;
   text-decoration: none;
-  padding: 12px 16px;
+  padding: 0 12px;
 }
 
 .video-playlist-container__social-share-menu__item:hover {
@@ -826,7 +825,7 @@
 
 .video-playlist-container__social-share-menu li {
   margin: 0;
-  padding: 0;
+  padding: 12px 0;
 }
 
 .video-playlist-container__social-share-menu li:first-child .video-playlist-container__social-share-menu__item {
