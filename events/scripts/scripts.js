@@ -15,7 +15,7 @@ import {
   EVENT_LIBS,
 } from './utils.js';
 
-const E_CONFIG = { cmsType: 'SP', version: 'v1' };
+const E_CONFIG = { cmsType: 'SP' };
 const EVENT_BLOCKS_OVERRIDE = [
   // pick your own subset of blocks if preferred
 ];
@@ -23,7 +23,6 @@ const EVENT_BLOCKS_OVERRIDE = [
 const [{
   loadArea,
   setConfig,
-  updateConfig,
   loadLana,
   getLocale,
   getConfig,
@@ -33,15 +32,13 @@ const [{
   autoUpdateContent,
   getNonProdData,
   validatePageAndRedirect,
-  lazyCaptureProfile,
-  dictionaryManager,
   getSusiOptions,
   getMetadata,
   setMetadata,
   EVENT_BLOCKS,
 }] = await Promise.all([
   import(`${LIBS}/utils/utils.js`),
-  import(`${EVENT_LIBS(E_CONFIG)}/libs.js`),
+  import(`${EVENT_LIBS}/libs.js`),
 ]);
 
 export default function decorateArea(area = document) {
@@ -237,22 +234,18 @@ const CONFIG = {
       window.locaton.reload();
     },
   },
-};
-
-const MILO_CONFIG = setConfig({ ...CONFIG });
-const EVENT_CONFIG = setEventConfig(E_CONFIG, MILO_CONFIG);
-
-updateConfig({
-  ...MILO_CONFIG,
   signInContext: getSusiOptions(),
   externalLibs: [
     {
-      base: EVENT_CONFIG.eventLibs,
+      base: EVENT_LIBS,
       blocks: EVENT_BLOCKS_OVERRIDE.length ? EVENT_BLOCKS_OVERRIDE : EVENT_BLOCKS,
     },
     // Add more in order of precedence (first match wins):
   ],
-});
+};
+
+const MILO_CONFIG = setConfig({ ...CONFIG });
+const EVENT_CONFIG = setEventConfig(E_CONFIG, MILO_CONFIG);
 
 replaceDotMedia(document);
 
@@ -285,7 +278,8 @@ if (EVENT_CONFIG.cmsType === 'SP') {
 
 (async function loadPage() {
   await loadLana({ clientId: 'events-milo' });
-  await loadArea().then(() => {
-    if (getMetadata('event-details-page') === 'yes') lazyCaptureProfile();
+  await loadArea().then(async () => {
+    const { eventsDelayedActions } = await import(`${EVENT_LIBS}/libs.js`);
+    if (getMetadata('event-details-page') === 'yes') eventsDelayedActions();
   });
 }());
