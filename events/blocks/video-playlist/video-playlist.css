@@ -769,6 +769,7 @@
 
 .video-playlist-container__social-share-wrapper > div {
   position: relative;
+  padding: 4px 0;
 }
 
 .video-playlist-container__social-share-menu {
