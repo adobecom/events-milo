@@ -50,7 +50,7 @@ describe('Events Form', () => {
     window.deleteAttendeeFromEvent = () => Promise.resolve({ ok: true, data: {} });
     window.getSusiOptions = () => ({});
     window.signIn = () => {};
-    window.autoUpdateContent = () => {};
+    window.decorateEvent = () => {};
     window.decorateDefaultLinkAnalytics = () => {};
     window.createTag = (tag, attrs, content) => {
       const element = document.createElement(tag);
@@ -86,7 +86,7 @@ describe('Events Form', () => {
     delete window.deleteAttendeeFromEvent;
     delete window.getSusiOptions;
     delete window.signIn;
-    delete window.autoUpdateContent;
+    delete window.decorateEvent;
     delete window.decorateDefaultLinkAnalytics;
     delete window.createTag;
     delete window.getConfig;

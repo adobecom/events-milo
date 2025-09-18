@@ -5,7 +5,7 @@ import { LIBS, setMetadata } from '../../../events/scripts/utils.js';
 import BlockMediator from '../../../events/scripts/deps/block-mediator.min.js';
 
 const {
-  default: autoUpdateContent,
+  default: decorateEvent,
   updateAnalyticTag,
   signIn,
   validatePageAndRedirect,
@@ -38,7 +38,7 @@ describe('Content Update Script', () => {
       miloLibs: LIBS,
     };
 
-    autoUpdateContent(document, miloDeps);
+    decorateEvent(document, miloDeps);
     expect(checkForDoubleSquareBrackets()).to.be.false;
   });
 
@@ -49,7 +49,7 @@ describe('Content Update Script', () => {
       miloLibs: LIBS,
     };
 
-    autoUpdateContent(document, miloDeps);
+    decorateEvent(document, miloDeps);
     expect(checkForDoubleSquareBrackets()).to.be.false;
   });
 
@@ -86,7 +86,7 @@ describe('Content Update Script', () => {
     BlockMediator.set('imsProfile', profile);
 
     const buttonOriginalText = document.querySelector('a[href$="#rsvp-form-1"]').textContent;
-    autoUpdateContent(document, miloDeps);
+    decorateEvent(document, miloDeps);
     BlockMediator.set('rsvpData', null);
 
     expect(document.querySelector('a[href$="#rsvp-form-1"]').textContent).to.be.equal(buttonOriginalText);
@@ -169,7 +169,7 @@ describe('getNonProdData', () => {
   });
 });
 
-describe('autoUpdateContent - Array Iteration', () => {
+describe('decorateEvent - Array Iteration', () => {
   let container;
 
   beforeEach(() => {
@@ -201,7 +201,7 @@ describe('autoUpdateContent - Array Iteration', () => {
     it('should process @array(contacts) with English commas', () => {
       // Set up test metadata
       setMetadata('contacts', JSON.stringify(['John Doe', 'Jane Smith', 'Bob Johnson']));
-      setMetadata('event-id', 'test-event'); // Required for autoUpdateContent to run
+      setMetadata('event-id', 'test-event'); // Required for decorateEvent to run
 
       // Create test HTML with @array syntax
       container.innerHTML = '<p>Contact us: [[@array(contacts),]]</p>';
@@ -212,8 +212,8 @@ describe('autoUpdateContent - Array Iteration', () => {
         miloLibs: '/libs',
       };
 
-      // Call autoUpdateContent
-      autoUpdateContent(container, miloDeps, {});
+      // Call decorateEvent
+      decorateEvent(container, miloDeps, {});
 
       // Debug: log the actual content
       console.log('Actual content:', container.textContent);
@@ -237,8 +237,8 @@ describe('autoUpdateContent - Array Iteration', () => {
         miloLibs: '/libs',
       };
 
-      // Call autoUpdateContent
-      autoUpdateContent(container, miloDeps, {});
+      // Call decorateEvent
+      decorateEvent(container, miloDeps, {});
 
       // Verify the result uses custom separator
       expect(container.textContent).to.equal('Contact us: John Doe | Jane Smith | Bob Johnson');
@@ -258,8 +258,8 @@ describe('autoUpdateContent - Array Iteration', () => {
         miloLibs: '/libs',
       };
 
-      // Call autoUpdateContent
-      autoUpdateContent(container, miloDeps, {});
+      // Call decorateEvent
+      decorateEvent(container, miloDeps, {});
 
       // Verify the result uses space as default separator
       expect(container.textContent).to.equal('Contact us: John Doe Jane Smith Bob Johnson');
@@ -279,8 +279,8 @@ describe('autoUpdateContent - Array Iteration', () => {
         miloLibs: '/libs',
       };
 
-      // Call autoUpdateContent
-      autoUpdateContent(container, miloDeps, {});
+      // Call decorateEvent
+      decorateEvent(container, miloDeps, {});
 
       // Verify the result uses the comma as provided (no locale-specific handling)
       expect(container.textContent).to.equal('連絡先: 田中太郎,佐藤花子,鈴木一郎');
@@ -300,8 +300,8 @@ describe('autoUpdateContent - Array Iteration', () => {
         miloLibs: '/libs',
       };
 
-      // Call autoUpdateContent
-      autoUpdateContent(container, miloDeps, {});
+      // Call decorateEvent
+      decorateEvent(container, miloDeps, {});
 
       // Verify the result uses the comma as provided (no locale-specific handling)
       expect(container.textContent).to.equal('联系人: 张三,李四,王五');
@@ -321,8 +321,8 @@ describe('autoUpdateContent - Array Iteration', () => {
         miloLibs: '/libs',
       };
 
-      // Call autoUpdateContent
-      autoUpdateContent(container, miloDeps, {});
+      // Call decorateEvent
+      decorateEvent(container, miloDeps, {});
 
       // Verify the result is empty
       expect(container.textContent).to.equal('Contact us: ');
@@ -342,8 +342,8 @@ describe('autoUpdateContent - Array Iteration', () => {
         miloLibs: '/libs',
       };
 
-      // Call autoUpdateContent
-      autoUpdateContent(container, miloDeps, {});
+      // Call decorateEvent
+      decorateEvent(container, miloDeps, {});
 
       // Verify the result is empty (non-array returns empty string)
       expect(container.textContent).to.equal('Contact us: ');
@@ -363,8 +363,8 @@ describe('autoUpdateContent - Array Iteration', () => {
         miloLibs: '/libs',
       };
 
-      // Call autoUpdateContent
-      autoUpdateContent(container, miloDeps, {});
+      // Call decorateEvent
+      decorateEvent(container, miloDeps, {});
 
       // Verify the result uses the comma as provided (no locale-specific handling)
       expect(container.textContent).to.equal('Contact us: John Doe,Jane Smith');
@@ -387,8 +387,8 @@ describe('autoUpdateContent - Array Iteration', () => {
         miloLibs: '/libs',
       };
 
-      // Call autoUpdateContent
-      autoUpdateContent(container, miloDeps, {});
+      // Call decorateEvent
+      decorateEvent(container, miloDeps, {});
 
       // Verify the result
       expect(container.textContent).to.equal('Contact us: John Doe,Jane Smith');
@@ -412,8 +412,8 @@ describe('autoUpdateContent - Array Iteration', () => {
         miloLibs: '/libs',
       };
 
-      // Call autoUpdateContent
-      autoUpdateContent(container, miloDeps, {});
+      // Call decorateEvent
+      decorateEvent(container, miloDeps, {});
 
       // Debug: log the actual content
       console.log('Actual content:', container.textContent);
@@ -440,8 +440,8 @@ describe('autoUpdateContent - Array Iteration', () => {
         miloLibs: '/libs',
       };
 
-      // Call autoUpdateContent
-      autoUpdateContent(container, miloDeps, {});
+      // Call decorateEvent
+      decorateEvent(container, miloDeps, {});
 
       // Verify the result uses custom separator
       expect(container.textContent).to.equal('Speakers: Dr. Alice Brown | Prof. Charlie Wilson');
@@ -467,8 +467,8 @@ describe('autoUpdateContent - Array Iteration', () => {
         miloLibs: '/libs',
       };
 
-      // Call autoUpdateContent
-      autoUpdateContent(container, miloDeps, {});
+      // Call decorateEvent
+      decorateEvent(container, miloDeps, {});
 
       // Verify the result
       expect(container.textContent).to.equal('Speakers: Dr. Alice Brown,Prof. Charlie Wilson');
@@ -491,8 +491,8 @@ describe('autoUpdateContent - Array Iteration', () => {
         miloLibs: '/libs',
       };
 
-      // Call autoUpdateContent
-      autoUpdateContent(container, miloDeps, {});
+      // Call decorateEvent
+      decorateEvent(container, miloDeps, {});
 
       // Verify the result converts objects to JSON strings
       expect(container.textContent).to.include('Speakers: {"name":"Dr. Alice Brown","title":"Senior Researcher"},{"name":"Prof. Charlie Wilson","title":"Professor"}');
@@ -516,8 +516,8 @@ describe('autoUpdateContent - Array Iteration', () => {
         miloLibs: '/libs',
       };
 
-      // Call autoUpdateContent
-      autoUpdateContent(container, miloDeps, {});
+      // Call decorateEvent
+      decorateEvent(container, miloDeps, {});
 
       // Verify the result handles missing attributes
       expect(container.textContent).to.equal('Speakers: Dr. Alice Brown,Prof. Charlie Wilson,');

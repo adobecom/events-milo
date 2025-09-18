@@ -29,7 +29,7 @@ const [{
 }, {
   setEventConfig,
   getEventConfig,
-  autoUpdateContent,
+  decorateEvent,
   getNonProdData,
   validatePageAndRedirect,
   getSusiOptions,
@@ -62,7 +62,7 @@ export default function decorateArea(area = document) {
 
   if (getMetadata('event-details-page') !== 'yes') return;
 
-  autoUpdateContent(area);
+  decorateEvent(area);
 }
 
 function renderWithNonProdMetadata() {
