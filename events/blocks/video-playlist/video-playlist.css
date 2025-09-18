@@ -786,6 +786,10 @@
   padding: 0;
 }
 
+.video-playlist-container__social-share-menu {
+  padding: 7px 12px 7px 10px;
+}
+
 .video-playlist-container__social-share-menu.active {
   opacity: 1;
   visibility: visible;
@@ -797,7 +801,6 @@
   align-items: center;
   gap: 12px;
   width: 100%;
-  padding: 12px 16px;
   border: none;
   background: none;
   text-align: left;
