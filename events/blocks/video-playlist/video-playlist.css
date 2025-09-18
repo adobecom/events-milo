@@ -767,6 +767,10 @@
   display: inline-block;
 }
 
+.video-playlist-container__social-share-wrapper > div {
+  position: relative;
+}
+
 .video-playlist-container__social-share-menu {
   position: absolute;
   top: 100%;
