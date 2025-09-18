@@ -638,32 +638,40 @@ class VideoPlaylist {
             <path d="M12 6c.8 0 1.5.7 1.5 1.5S12.8 9 12 9s-1.5-.7-1.5-1.5S11.2 6 12 6zM4 6c.8 0 1.5.7 1.5 1.5S4.8 9 4 9s-1.5-.7-1.5-1.5S3.2 6 4 6zM8 6c.8 0 1.5.7 1.5 1.5S8.8 9 8 9s-1.5-.7-1.5-1.5S7.2 6 8 6z"/>
           </svg>
         </button>
-        <div class="video-playlist-container__social-share-menu">
-          <a class="video-playlist-container__social-share-menu__item social-share-link" data-platform="facebook" daa-ll="Facebook_Share Playlist" aria-label="Share Playlist on Facebook" href="#" target="_blank">
-            <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M15 2.5C14.9774 1.84415 14.7067 1.22133 14.2427 0.757298C13.7787 0.29327 13.1558 0.0226174 12.5 0L2.5 0C1.84415 0.0226174 1.22133 0.29327 0.757298 0.757298C0.29327 1.22133 0.0226174 1.84415 0 2.5L0 12.5C0.0226174 13.1558 0.29327 13.7787 0.757298 14.2427C1.22133 14.7067 1.84415 14.9774 2.5 15H7.5V9.33333H5.66667V6.83333H7.5V5.85917C7.46729 5.0672 7.7415 4.29316 8.26546 3.6984C8.78943 3.10364 9.52273 2.73405 10.3125 2.66667H12.3333V5.16667H10.3125C10.0917 5.16667 9.83333 5.435 9.83333 5.83333V6.83333H12.3333V9.33333H9.83333V15H12.5C13.1558 14.9774 13.7787 14.7067 14.2427 14.2427C14.7067 13.7787 14.9774 13.1558 15 12.5V2.5Z" fill="currentColor"/>
-            </svg>
-            <span class="spectrum-Menu-itemLabel">Share Playlist on Facebook</span>
-          </a>
-          <a class="video-playlist-container__social-share-menu__item social-share-link" data-platform="twitter" daa-ll="Twitter_Share Playlist" aria-label="Share Playlist on X" href="#" target="_blank">
-            <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M9.122 6.5L13.5 2H12.378L8.75 5.75L5.878 2H2.5L7.122 6.5L2.5 13H3.622L7.5 9L10.372 13H13.75L9.122 6.5ZM7.25 8.5L6.75 7.75L3.5 2.75H5.5L7.25 8.5Z" fill="currentColor"/>
-            </svg>
-            <span class="spectrum-Menu-itemLabel">Share Playlist on X</span>
-          </a>
-          <a class="video-playlist-container__social-share-menu__item social-share-link" data-platform="linkedin" daa-ll="LinkedIn_Share Playlist" aria-label="Share Playlist on LinkedIn" href="#" target="_blank">
-            <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M3.5 2C2.67157 2 2 2.67157 2 3.5V11.5C2 12.3284 2.67157 13 3.5 13H11.5C12.3284 13 13 12.3284 13 11.5V3.5C13 2.67157 12.3284 2 11.5 2H3.5ZM4 4.5C4.27614 4.5 4.5 4.27614 4.5 4C4.5 3.72386 4.27614 3.5 4 3.5C3.72386 3.5 3.5 3.72386 3.5 4C3.5 4.27614 3.72386 4.5 4 4.5ZM3.5 5.5H4.5V11.5H3.5V5.5ZM6 5.5H7V6.5H6V5.5ZM6 7H7V11.5H6V7ZM8.5 5.5C8.5 5.22386 8.72386 5 9 5H10.5C10.7761 5 11 5.22386 11 5.5V11.5H10V7.5C10 7.22386 9.77614 7 9.5 7H9C8.72386 7 8.5 7.22386 8.5 7.5V11.5H7.5V5.5Z" fill="currentColor"/>
-            </svg>
-            <span class="spectrum-Menu-itemLabel">Share Playlist on LinkedIn</span>
-          </a>
-          <a class="video-playlist-container__social-share-menu__item social-share-link" data-platform="link" daa-ll="Link_Share Playlist" aria-label="Share with link" href="#" target="_blank">
-            <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M4.5 2C3.67157 2 3 2.67157 3 3.5V4.5C3 5.32843 3.67157 6 4.5 6H5.5C6.32843 6 7 5.32843 7 4.5V3.5C7 2.67157 6.32843 2 5.5 2H4.5ZM4.5 3H5.5V4.5H4.5V3ZM8 2C7.17157 2 6.5 2.67157 6.5 3.5V4.5C6.5 5.32843 7.17157 6 8 6H9C9.82843 6 10.5 5.32843 10.5 4.5V3.5C10.5 2.67157 9.82843 2 9 2H8ZM8 3H9V4.5H8V3ZM3 7.5C3 6.67157 3.67157 6 4.5 6H5.5C6.32843 6 7 6.67157 7 7.5V8.5C7 9.32843 6.32843 10 5.5 10H4.5C3.67157 10 3 9.32843 3 8.5V7.5ZM4.5 7H5.5V8.5H4.5V7ZM8 6C7.17157 6 6.5 6.67157 6.5 7.5V8.5C6.5 9.32843 7.17157 10 8 10H9C9.82843 10 10.5 9.32843 10.5 8.5V7.5C10.5 6.67157 9.82843 6 9 6H8ZM8 7H9V8.5H8V7Z" fill="currentColor"/>
-            </svg>
-            <span class="spectrum-Menu-itemLabel">Share with link</span>
-          </a>
-        </div>
+        <ul class="video-playlist-container__social-share-menu">
+          <li>
+            <a class="video-playlist-container__social-share-menu__item social-share-link" data-platform="facebook" daa-ll="Facebook_Share Playlist" aria-label="Share Playlist on Facebook" href="#" target="_blank">
+              <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M15 2.5C14.9774 1.84415 14.7067 1.22133 14.2427 0.757298C13.7787 0.29327 13.1558 0.0226174 12.5 0L2.5 0C1.84415 0.0226174 1.22133 0.29327 0.757298 0.757298C0.29327 1.22133 0.0226174 1.84415 0 2.5L0 12.5C0.0226174 13.1558 0.29327 13.7787 0.757298 14.2427C1.22133 14.7067 1.84415 14.9774 2.5 15H7.5V9.33333H5.66667V6.83333H7.5V5.85917C7.46729 5.0672 7.7415 4.29316 8.26546 3.6984C8.78943 3.10364 9.52273 2.73405 10.3125 2.66667H12.3333V5.16667H10.3125C10.0917 5.16667 9.83333 5.435 9.83333 5.83333V6.83333H12.3333V9.33333H9.83333V15H12.5C13.1558 14.9774 13.7787 14.7067 14.2427 14.2427C14.7067 13.7787 14.9774 13.1558 15 12.5V2.5Z" fill="currentColor"/>
+              </svg>
+              <span class="spectrum-Menu-itemLabel">Share Playlist on Facebook</span>
+            </a>
+          </li>
+          <li>
+            <a class="video-playlist-container__social-share-menu__item social-share-link" data-platform="twitter" daa-ll="Twitter_Share Playlist" aria-label="Share Playlist on X" href="#" target="_blank">
+              <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M9.122 6.5L13.5 2H12.378L8.75 5.75L5.878 2H2.5L7.122 6.5L2.5 13H3.622L7.5 9L10.372 13H13.75L9.122 6.5ZM7.25 8.5L6.75 7.75L3.5 2.75H5.5L7.25 8.5Z" fill="currentColor"/>
+              </svg>
+              <span class="spectrum-Menu-itemLabel">Share Playlist on X</span>
+            </a>
+          </li>
+          <li>
+            <a class="video-playlist-container__social-share-menu__item social-share-link" data-platform="linkedin" daa-ll="LinkedIn_Share Playlist" aria-label="Share Playlist on LinkedIn" href="#" target="_blank">
+              <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M3.5 2C2.67157 2 2 2.67157 2 3.5V11.5C2 12.3284 2.67157 13 3.5 13H11.5C12.3284 13 13 12.3284 13 11.5V3.5C13 2.67157 12.3284 2 11.5 2H3.5ZM4 4.5C4.27614 4.5 4.5 4.27614 4.5 4C4.5 3.72386 4.27614 3.5 4 3.5C3.72386 3.5 3.5 3.72386 3.5 4C3.5 4.27614 3.72386 4.5 4 4.5ZM3.5 5.5H4.5V11.5H3.5V5.5ZM6 5.5H7V6.5H6V5.5ZM6 7H7V11.5H6V7ZM8.5 5.5C8.5 5.22386 8.72386 5 9 5H10.5C10.7761 5 11 5.22386 11 5.5V11.5H10V7.5C10 7.22386 9.77614 7 9.5 7H9C8.72386 7 8.5 7.22386 8.5 7.5V11.5H7.5V5.5Z" fill="currentColor"/>
+              </svg>
+              <span class="spectrum-Menu-itemLabel">Share Playlist on LinkedIn</span>
+            </a>
+          </li>
+          <li>
+            <a class="video-playlist-container__social-share-menu__item social-share-link" data-platform="link" daa-ll="Link_Share Playlist" aria-label="Share with link" href="#" target="_blank">
+              <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M4.5 2C3.67157 2 3 2.67157 3 3.5V4.5C3 5.32843 3.67157 6 4.5 6H5.5C6.32843 6 7 5.32843 7 4.5V3.5C7 2.67157 6.32843 2 5.5 2H4.5ZM4.5 3H5.5V4.5H4.5V3ZM8 2C7.17157 2 6.5 2.67157 6.5 3.5V4.5C6.5 5.32843 7.17157 6 8 6H9C9.82843 6 10.5 5.32843 10.5 4.5V3.5C10.5 2.67157 9.82843 2 9 2H8ZM8 3H9V4.5H8V3ZM3 7.5C3 6.67157 3.67157 6 4.5 6H5.5C6.32843 6 7 6.67157 7 7.5V8.5C7 9.32843 6.32843 10 5.5 10H4.5C3.67157 10 3 9.32843 3 8.5V7.5ZM4.5 7H5.5V8.5H4.5V7ZM8 6C7.17157 6 6.5 6.67157 6.5 7.5V8.5C6.5 9.32843 7.17157 10 8 10H9C9.82843 10 10.5 9.32843 10.5 8.5V7.5C10.5 6.67157 9.82843 6 9 6H8ZM8 7H9V8.5H8V7Z" fill="currentColor"/>
+              </svg>
+              <span class="spectrum-Menu-itemLabel">Share with link</span>
+            </a>
+          </li>
+        </ul>
       </div>
     `;
   }
