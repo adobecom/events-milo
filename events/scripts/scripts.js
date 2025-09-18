@@ -254,8 +254,6 @@ updateConfig({
   ],
 });
 
-await dictionaryManager.initialize(MILO_CONFIG);
-
 replaceDotMedia(document);
 
 // Decorate the page with site specific needs.
