@@ -61,7 +61,6 @@ export default function decorateArea(area = document) {
   }());
 
   if (getMetadata('event-details-page') !== 'yes') return;
-
   decorateEvent(area);
 }
 
