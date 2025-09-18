@@ -771,7 +771,7 @@
   position: absolute;
   top: 100%;
   right: 0;
-  background: white;
+  background: white; 
   border: 1px solid #d2d2d2;
   border-radius: 4px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
@@ -784,10 +784,6 @@
   list-style: none;
   margin: 0;
   padding: 0;
-}
-
-.video-playlist-container__social-share-menu {
-  padding: 7px 12px 7px 10px;
 }
 
 .video-playlist-container__social-share-menu.active {
@@ -823,9 +819,13 @@
   border-radius: 0 0 4px 4px;
 }
 
+.video-playlist-container__social-share-menu__item:last-child:hover {
+  text-decoration: underline;
+}
+
 .video-playlist-container__social-share-menu li {
   margin: 0;
-  padding: 0;
+  padding: 7px 12px 7px 10px;
 }
 
 .video-playlist-container__social-share-menu li:first-child .video-playlist-container__social-share-menu__item {
