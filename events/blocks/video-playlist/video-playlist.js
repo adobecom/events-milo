@@ -694,19 +694,20 @@ class VideoPlaylist {
 
   setupSocialSharing(header) {
     const shareButton = header.querySelector('.video-playlist-container__social-share');
+    const shareMenuWrapper = header.querySelector('.video-playlist-container__social-share-wrapper > div');
     const shareMenu = header.querySelector('.video-playlist-container__social-share-menu');
     
-    if (shareButton && shareMenu) {
+    if (shareButton && shareMenuWrapper && shareMenu) {
       // Toggle menu on button click
       shareButton.addEventListener('click', (e) => {
         e.stopPropagation();
-        shareMenu.classList.toggle('active');
+        shareMenuWrapper.classList.toggle('active');
       });
 
       // Close menu when clicking outside
       document.addEventListener('click', (e) => {
         if (!header.contains(e.target)) {
-          shareMenu.classList.remove('active');
+          shareMenuWrapper.classList.remove('active');
         }
       });
 
@@ -718,7 +719,7 @@ class VideoPlaylist {
           e.stopPropagation();
           const platform = item.dataset.platform;
           this.handleShare(platform, item);
-          shareMenu.classList.remove('active');
+          shareMenuWrapper.classList.remove('active');
         });
       });
     }

@@ -768,15 +768,10 @@
 }
 
 .video-playlist-container__social-share-wrapper > div {
-  position: relative;
-  padding: 4px 0;
-}
-
-.video-playlist-container__social-share-menu {
   position: absolute;
   top: 100%;
   right: 0;
-  background: white; 
+  background: white;
   border: 1px solid #d2d2d2;
   border-radius: 4px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
@@ -786,12 +781,16 @@
   visibility: hidden;
   transform: translateY(-10px);
   transition: opacity 0.2s ease, visibility 0.2s ease, transform 0.2s ease;
+  padding: 4px 0;
+}
+
+.video-playlist-container__social-share-menu {
   list-style: none;
   margin: 0;
   padding: 0;
 }
 
-.video-playlist-container__social-share-menu.active {
+.video-playlist-container__social-share-wrapper > div.active {
   opacity: 1;
   visibility: visible;
   transform: translateY(0);
