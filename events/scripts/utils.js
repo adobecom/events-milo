@@ -19,6 +19,9 @@ export const EVENT_LIBS = (() => {
     return `http://localhost:3868/event-libs/${version}`;
   }
 
-  const eventLibs = branch.includes('--') ? `https://${branch}.aem.live/event-libs/${version}` : `https://${branch}--event-libs--adobecom.aem.live/event-libs/${version}`;
-  return eventLibs;
+  if (branch.includes('--')) {
+    return `https://${branch}.aem.live/event-libs/${version}`;
+  }
+
+  return `https://${branch}--event-libs--adobecom.aem.live/event-libs/${version}`;
 })();
