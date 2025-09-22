@@ -794,7 +794,7 @@
 .video-playlist-container__social-share-menu__item {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   border: none;
   background: none;
   text-align: left;
