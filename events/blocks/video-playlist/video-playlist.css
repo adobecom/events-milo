@@ -110,6 +110,7 @@
   --sessions-duration-background-color: rgb(75 75 75 / 80%);
   --hover-title-color: #d2dcf3;
   --related-playlist-separator-color: #575454;
+  font-family: inherit;
   max-width: 360px;
   height: 675px;
   flex-shrink: 0;
