@@ -851,8 +851,8 @@
 
 .video-playlist-container__social-share-menu__item svg {
   flex-shrink: 0;
-  width: 16px;
-  height: 16px;
+  width: 15px;
+  height: 15px;
 }
 
 /* Dark theme support */
