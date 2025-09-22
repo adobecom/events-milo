@@ -803,6 +803,7 @@
   cursor: pointer;
   transition: background-color 0.2s ease;
   text-decoration: none;
+  width: 100%;
 }
 
 .video-playlist-container__social-share-menu__item:hover {
