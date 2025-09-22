@@ -838,6 +838,7 @@
   font-weight: 400;
   font-style: normal;
   text-decoration: none;
+  line-height: 1.3;
 }
 
 .video-playlist-container__social-share-menu li:first-child .video-playlist-container__social-share-menu__item {
