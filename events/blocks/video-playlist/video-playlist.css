@@ -781,7 +781,7 @@
 
 .video-playlist-container__social-share-menu {
   list-style: none;
-  margin: 0;
+  margin: 4px 0;
   padding: 0;
 }
 
@@ -823,8 +823,21 @@
 }
 
 .video-playlist-container__social-share-menu li {
+  cursor: pointer;
+  position: relative;
+  display: -ms-flexbox;
+  display: flex;
+  -ms-flex-align: center;
+  align-items: center;
+  box-sizing: border-box;
+  padding: 7px 12px 7px 10px;
   margin: 0;
-  padding: 6px 0;
+  border-left: 2px solid transparent;
+  min-height: 32px;
+  font-size: 14px;
+  font-weight: 400;
+  font-style: normal;
+  text-decoration: none;
 }
 
 .video-playlist-container__social-share-menu li:first-child .video-playlist-container__social-share-menu__item {
