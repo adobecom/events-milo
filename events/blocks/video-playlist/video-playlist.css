@@ -5,8 +5,6 @@
   --spectrum-switch-spacing-top-to-control: 9px;
 }
 
-/* Hide configuration divs but keep video container */
-/* Modern browsers with :has() support */
 .video-playlist > div:not(.video-playlist-container):not(:has(.milo-video)) {
   display: none !important;
 }
