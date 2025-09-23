@@ -355,6 +355,10 @@
   background: none;
 }
 
+.video-playlist-container__social-share svg {
+  fill: currentColor;
+}
+
 /* Sessions Styles */
 .video-playlist-container__sessions {
   position: relative;
