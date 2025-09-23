@@ -37,7 +37,6 @@
   min-height: 400px; /* Minimum height to ensure visibility */
 }
 
-/* Ensure video container has proper width */
 .video-playlist > div:has(.milo-video) {
   width: 100%;
   flex: 1;
