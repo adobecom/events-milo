@@ -111,7 +111,7 @@
   --sessions-duration-background-color: rgb(75 75 75 / 80%);
   --hover-title-color: #d2dcf3;
   --related-playlist-separator-color: #575454;
-  --header-toggle-text-color:#222222;
+  --header-toggle-text-color:#ebebeb;
   max-width: 360px;
   height: 675px;
   flex-shrink: 0;
@@ -136,7 +136,19 @@
   --highlighted-background-color: #fff;
   --hover-title-color: #1473e6;
   --related-playlist-separator-color: #adaaaa;
-  --header-toggle-text-color: #ebebeb;
+  --header-toggle-text-color: #222222;
+}
+
+/* Light theme social share button */
+.video-playlist-container.consonant--light .video-playlist-container__social-share {
+  background: rgba(0, 0, 0, 0.1);
+  color: #4b4b4b;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+}
+
+.video-playlist-container.consonant--light .video-playlist-container__social-share:hover {
+  background: rgba(0, 0, 0, 0.2);
+  border-color: rgba(0, 0, 0, 0.3);
 }
 
 
@@ -329,7 +341,7 @@
 /* Social Share Button */
 .video-playlist-container__social-share {
   background: rgba(255, 255, 255, 0.1);
-  color: #4b4b4b;
+  color: #fff;
   border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 4px;
   cursor: pointer;
