@@ -25,14 +25,14 @@
 .video-playlist {
   display: flex;
   align-items: flex-start;
-  min-height: 100vh;
+  gap: 20px;
 }
 
 .video-playlist-container {
   max-width: 360px;
   flex-shrink: 0;
   font-family: inherit;
-  height: 100vh;
+  height: fit-content;
   max-height: 100vh;
 }
 
@@ -40,7 +40,27 @@
 .video-playlist > div:has(.milo-video) {
   width: 100%;
   flex: 1;
-  height: 100%;
+}
+
+/* Match playlist container height to video player height using aspect ratio */
+.video-playlist-container {
+  height: calc((100vw - 400px) * 0.5625); /* Approximate calculation: (viewport - playlist width - gap) * 16:9 ratio */
+  max-height: 100vh;
+  min-height: 400px;
+}
+
+/* Responsive adjustments for different screen sizes */
+@media (max-width: 1200px) {
+  .video-playlist-container {
+    height: calc((100vw - 380px) * 0.5625);
+  }
+}
+
+@media (max-width: 768px) {
+  .video-playlist-container {
+    height: auto;
+    max-height: 50vh;
+  }
 }
 
 .video-playlist .milo-video {
