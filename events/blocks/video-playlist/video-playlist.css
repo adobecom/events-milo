@@ -45,13 +45,18 @@
 /* Match playlist container height to video player height using aspect ratio */
 .video-playlist-container {
   width: 360px;
-  height: calc(100vw * 0.5625); /* Match video player height based on viewport */
+  height: var(--video-player-height, calc(100vw * 0.5625)); /* Use dynamic height or fallback */
   position: relative;
 }
 
 .video-playlist .milo-video {
   width: 100%;
   display: block;
+}
+
+/* JavaScript will set --video-player-height dynamically */
+.video-playlist {
+  --video-player-height: auto;
 }
 
 /* Fallback for older browsers (including Edge Legacy) */
