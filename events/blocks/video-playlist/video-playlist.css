@@ -27,6 +27,8 @@
   display: flex;
   align-items: flex-start;
   gap: 20px;
+  height: 100vh;
+  max-height: 100vh;
 }
 
 .video-playlist-container {
@@ -41,6 +43,7 @@
 .video-playlist > div:has(.milo-video) {
   width: 100%;
   flex: 1;
+  height: 100%;
 }
 
 .video-playlist .milo-video {
@@ -363,12 +366,13 @@
   fill: currentColor;
 }
 
-/* Sessions Styles */
 .video-playlist-container__sessions {
   position: relative;
   flex: 1;
   overflow-y: auto;
   height: 100%;
+  max-height: calc(100vh - 120px);
+  min-height: 0;
   margin-bottom: 8px;
   scrollbar-width: thin;
   scrollbar-color: var(--scrollbar-thumb-color) transparent;
@@ -388,6 +392,8 @@
   flex-direction: column;
   gap: 8px;
   padding: 11px 12px 4px;
+  height: auto;
+  min-height: 0;
 }
 
 .video-playlist-container__sessions__wrapper__session {
