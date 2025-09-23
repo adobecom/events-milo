@@ -22,7 +22,6 @@
   display: block !important;
 }
 
-/* Display milo-video and video-playlist-container side by side */
 .video-playlist {
   display: flex;
   align-items: flex-start;
