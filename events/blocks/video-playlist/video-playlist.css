@@ -33,7 +33,7 @@
   max-width: 360px;
   flex-shrink: 0;
   font-family: inherit;
-  height: fit-content;
+  height: 100%;
   max-height: 100vh;
 }
 
@@ -116,7 +116,7 @@
   --related-playlist-separator-color: #575454;
   --header-toggle-text-color:#ebebeb;
   max-width: 360px;
-  height: fit-content;
+  height: 100%;
   max-height: 100vh;
   flex-shrink: 0;
   background-color: var(--container-background-color);
@@ -368,9 +368,7 @@
   position: relative;
   flex: 1;
   overflow-y: auto;
-  height: auto;
-  min-height: 400px;
-  max-height: 60vh;
+  height: 100%;
   margin-bottom: 8px;
   scrollbar-width: thin;
   scrollbar-color: var(--scrollbar-thumb-color) transparent;
@@ -387,6 +385,7 @@
 
 .video-playlist-container__sessions__wrapper {
   display: flex;
+  flex-direction: column;
   gap: 8px;
   padding: 11px 12px 4px;
 }
@@ -769,7 +768,8 @@
 @media (min-width: 1575px) {
   .video-playlist-container__container {
     width: 360px;
-    height: 675px;
+    height: 100%;
+    max-height: 100vh;
   }
 
   .video-playlist-container__sessions {
@@ -787,7 +787,6 @@
 
   .video-playlist-container__sessions__wrapper {
     margin-bottom: 0;
-    flex-direction: column;
     padding: 14px;
   }
 
