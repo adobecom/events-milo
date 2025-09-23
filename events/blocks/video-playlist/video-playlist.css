@@ -44,23 +44,11 @@
 
 /* Match playlist container height to video player height using aspect ratio */
 .video-playlist-container {
-  height: calc((100vw - 400px) * 0.5625); /* Approximate calculation: (viewport - playlist width - gap) * 16:9 ratio */
-  max-height: 100vh;
-  min-height: 400px;
-}
-
-/* Responsive adjustments for different screen sizes */
-@media (max-width: 1200px) {
-  .video-playlist-container {
-    height: calc((100vw - 380px) * 0.5625);
-  }
-}
-
-@media (max-width: 768px) {
-  .video-playlist-container {
-    height: auto;
-    max-height: 50vh;
-  }
+  flex: 1 1 1%;
+  min-height: 0;
+  height: auto;
+  padding-bottom: 42.1875%;
+  position: relative;
 }
 
 .video-playlist .milo-video {
@@ -136,8 +124,6 @@
   --related-playlist-separator-color: #575454;
   --header-toggle-text-color:#ebebeb;
   max-width: 360px;
-  height: 100%;
-  max-height: 100vh;
   flex-shrink: 0;
   background-color: var(--container-background-color);
   color: var(--text-color);
@@ -384,11 +370,12 @@
 }
 
 .video-playlist-container__sessions {
-  position: relative;
-  flex: 1;
+  position: absolute;
+  top: 120px; /* Start after header */
+  left: 0;
+  right: 0;
+  bottom: 0;
   overflow-y: auto;
-  height: auto;
-  min-height: 0;
   margin-bottom: 8px;
   scrollbar-width: thin;
   scrollbar-color: var(--scrollbar-thumb-color) transparent;
