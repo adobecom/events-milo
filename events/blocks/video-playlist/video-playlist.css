@@ -45,8 +45,7 @@
 /* Match playlist container height to video player height using aspect ratio */
 .video-playlist-container {
   width: 360px;
-  height: 0;
-  padding-bottom: 56.25%; /* Same aspect ratio as video player */
+  height: calc(100vw * 0.5625); /* Match video player height based on viewport */
   position: relative;
 }
 
