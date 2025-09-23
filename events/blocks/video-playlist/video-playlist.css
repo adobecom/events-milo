@@ -962,36 +962,18 @@
   height: 15px;
 }
 
-/* Dark theme support */
-.video-playlist-container.consonant--light .video-playlist-container__social-share-menu {
+/* Social share menu - same styling for both themes */
+.video-playlist-container__social-share-menu {
   background: white;
   border-color: #d2d2d2;
 }
 
-.video-playlist-container.consonant--light .video-playlist-container__social-share-menu__item {
+.video-playlist-container__social-share-menu__item {
   color: #333;
 }
 
-.video-playlist-container.consonant--light .video-playlist-container__social-share-menu__item:hover {
-  background-color: #f5f5f5;
-}
-
-.video-playlist-container.consonant--light .video-playlist-container__social-share-menu__item:hover .spectrum-Menu-itemLabel {
-  text-decoration: underline;
-}
-
-/* Default dark theme */
-.video-playlist-container__social-share-menu {
-  background: #1d1d1d;
-  border-color: #373737;
-}
-
-.video-playlist-container__social-share-menu__item {
-  color: #fff;
-}
-
 .video-playlist-container__social-share-menu__item:hover {
-  background-color: #404040;
+  background-color: #f5f5f5;
 }
 
 .video-playlist-container__social-share-menu__item:hover .spectrum-Menu-itemLabel {
