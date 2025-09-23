@@ -913,8 +913,9 @@
 }
 
 .video-playlist-container__social-share-menu__item:hover .spectrum-Menu-itemLabel {
-  text-decoration: none;
+  text-decoration: underline;
   color: #333;
+  text-decoration-color: #333;
 }
 
 .video-playlist-container__social-share-menu__item:first-child {
@@ -980,6 +981,7 @@
 }
 
 .video-playlist-container__social-share-menu__item:hover .spectrum-Menu-itemLabel {
-  text-decoration: none;
+  text-decoration: underline;
   color: #333;
+  text-decoration-color: #333;
 }
