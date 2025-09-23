@@ -271,7 +271,7 @@
 .consonant-switch-label {
   font-size: 14px;
   font-weight: 500;
-  color: #222222;
+  color: var(--header-toggle-text-color);
   cursor: pointer;
   margin-inline: 10px;
   margin-block-start: 6px;
