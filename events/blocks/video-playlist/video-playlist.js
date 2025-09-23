@@ -631,6 +631,16 @@ class VideoPlaylist {
   }
 
   createSocialSharingButton() {
+    // Parse social sharing configuration
+    const socialConfig = this.parseSocialConfig();
+    
+    // Only show button if at least one platform is enabled
+    if (!this.hasEnabledPlatforms(socialConfig)) {
+      return '';
+    }
+
+    const menuItems = this.generateSocialMenuItems(socialConfig);
+    
     return `
       <div class="video-playlist-container__social-share-wrapper">
         <button class="video-playlist-container__social-share" daa-ll="Social_Share">
@@ -640,43 +650,84 @@ class VideoPlaylist {
         </button>
         <div>
           <ul class="video-playlist-container__social-share-menu">
-            <li>
-              <a class="video-playlist-container__social-share-menu__item social-share-link" data-platform="facebook" daa-ll="Facebook_Share Playlist" aria-label="Share Playlist on Facebook" href="#" target="_blank">
-                <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M15 2.5C14.9774 1.84415 14.7067 1.22133 14.2427 0.757298C13.7787 0.29327 13.1558 0.0226174 12.5 0L2.5 0C1.84415 0.0226174 1.22133 0.29327 0.757298 0.757298C0.29327 1.22133 0.0226174 1.84415 0 2.5L0 12.5C0.0226174 13.1558 0.29327 13.7787 0.757298 14.2427C1.22133 14.7067 1.84415 14.9774 2.5 15H7.5V9.33333H5.66667V6.83333H7.5V5.85917C7.46729 5.0672 7.7415 4.29316 8.26546 3.6984C8.78943 3.10364 9.52273 2.73405 10.3125 2.66667H12.3333V5.16667H10.3125C10.0917 5.16667 9.83333 5.435 9.83333 5.83333V6.83333H12.3333V9.33333H9.83333V15H12.5C13.1558 14.9774 13.7787 14.7067 14.2427 14.2427C14.7067 13.7787 14.9774 13.1558 15 12.5V2.5Z" fill="black"></path>
-                </svg>
-                <span class="spectrum-Menu-itemLabel">Share Playlist on Facebook</span>
-              </a>
-            </li>
-            <li>
-              <a class="video-playlist-container__social-share-menu__item social-share-link" data-platform="twitter" daa-ll="Twitter_Share Playlist" aria-label="Share Playlist on X" href="#" target="_blank">
-                <svg width="15" height="15" viewBox="0 0 1200 1227" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M714.163 519.284L1160.89 0H1055.03L667.137 450.887L357.328 0H0L468.492 681.821L0 1226.37H105.866L515.491 750.218L842.672 1226.37H1200L714.137 519.284H714.163ZM569.165 687.828L521.697 619.934L144.011 79.6944H306.615L611.412 515.685L658.88 583.579L1055.08 1150.3H892.476L569.165 687.854V687.828Z" fill="gray"></path>
-                </svg>
-                <span class="spectrum-Menu-itemLabel">Share Playlist on X</span>
-              </a>
-            </li>
-            <li>
-              <a class="video-playlist-container__social-share-menu__item social-share-link" data-platform="linkedin" daa-ll="LinkedIn_Share Playlist" aria-label="Share Playlist on LinkedIn" href="#" target="_blank">
-                <svg width="16" height="15" viewBox="0 0 16 15" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M4.35803 14.9983H1.25053V4.98415H4.35803V14.9983ZM2.80136 3.61832C2.44359 3.61996 2.09335 3.51548 1.79495 3.3181C1.49654 3.12071 1.26336 2.83928 1.12488 2.50938C0.986411 2.17948 0.948862 1.81593 1.01699 1.46469C1.08511 1.11346 1.25585 0.790304 1.50761 0.536094C1.75937 0.281884 2.08086 0.10803 2.43142 0.0365126C2.78198 -0.0350043 3.14588 -0.000972847 3.4771 0.134304C3.80832 0.269582 4.092 0.50003 4.29226 0.796514C4.49252 1.093 4.60038 1.4422 4.6022 1.79998C4.60287 2.27942 4.41392 2.73966 4.07655 3.08031C3.73918 3.42096 3.28078 3.61436 2.80136 3.61832ZM16.0005 14.9983H12.8939V10.1233C12.8939 8.96165 12.8705 7.47165 11.2772 7.47165C9.66053 7.47165 9.4122 8.73415 9.4122 10.04V14.9983H6.30637V4.98415H9.28886V6.34998H9.33386C9.63207 5.83935 10.0633 5.41921 10.5815 5.13435C11.0996 4.84949 11.6854 4.7106 12.2764 4.73248C15.4222 4.73332 16.0005 6.80582 16.0005 9.49831V14.9983Z" fill="black"></path>
-                </svg>
-                <span class="spectrum-Menu-itemLabel">Share Playlist on LinkedIn</span>
-              </a>
-            </li>
-            <li>
-              <a class="video-playlist-container__social-share-menu__item social-share-link" data-platform="link" daa-ll="Link_Share Playlist" aria-label="Share with link" href="#" target="_blank">
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M10.5976 0.67421C10.165 0.792718 9.7546 0.981031 9.38262 1.23172C9.23095 1.33588 8.43679 2.09673 7.61929 2.91423L6.13011 4.40839H6.69761C7.21674 4.39759 7.73367 4.47914 8.22427 4.64923L8.52678 4.74838L9.50512 3.77505C10.6868 2.60255 10.7859 2.54171 11.4951 2.54171C11.7445 2.51126 11.9973 2.55901 12.2184 2.67838C12.5529 2.85629 12.8237 3.13383 12.9934 3.47254C13.1068 3.68729 13.153 3.9312 13.1259 4.17254C13.1259 4.91504 13.1351 4.90089 11.1926 6.85755C10.2801 7.77422 9.42929 8.59671 9.29679 8.69087C8.98114 8.90526 8.60146 9.00486 8.22122 8.97301C7.84098 8.94116 7.48319 8.77979 7.20761 8.51588C7.15379 8.44707 7.0848 8.39164 7.00601 8.35391C6.92723 8.31618 6.8408 8.29719 6.75345 8.29839C6.42012 8.27006 6.31845 8.3267 5.78012 8.87004L5.33594 9.3192L5.51093 9.56004C5.8782 10.0146 6.34844 10.3752 6.88272 10.612C7.417 10.8488 7.99998 10.9549 8.58344 10.9217C9.26266 10.8834 9.91686 10.6521 10.4693 10.2551C10.8284 9.99505 14.2601 6.55338 14.4693 6.24171C14.7152 5.87067 14.8942 5.45946 14.9984 5.0267C15.1414 4.37234 15.1153 3.69235 14.9226 3.05087C14.7459 2.511 14.4439 2.02061 14.0414 1.61972C13.639 1.21883 13.1473 0.918832 12.6068 0.744223C11.9523 0.560287 11.2633 0.536267 10.5976 0.67421Z" fill="black"></path>
-                  <path d="M6.15423 5.27963C5.70839 5.36722 5.28028 5.5286 4.88757 5.75713C4.10995 6.36787 3.38516 7.04304 2.7209 7.77546C1.70923 8.77546 0.796734 9.72297 0.693401 9.8788C0.417757 10.2795 0.219878 10.7284 0.110067 11.2021C-0.00751559 11.8325 0.0232978 12.4816 0.200067 13.098C0.374617 13.6386 0.674596 14.1302 1.07549 14.5327C1.47639 14.9352 1.96683 15.2371 2.50673 15.4138C3.14823 15.6064 3.8282 15.6325 4.48257 15.4896C4.94785 15.3767 5.38735 15.1762 5.77757 14.8988C5.9384 14.7805 6.7234 14.0288 7.52757 13.2205L8.99257 11.7505H8.42507C7.90593 11.7612 7.38901 11.6797 6.8984 11.5096L6.5959 11.4105L5.6259 12.378C4.43507 13.5546 4.3309 13.6213 3.6309 13.6213C3.39964 13.6419 3.16695 13.6029 2.95507 13.508C2.60866 13.3333 2.32462 13.0559 2.14173 12.7138C2.01821 12.4941 1.96855 12.2405 2.00007 11.9905C2.00007 11.2338 1.9859 11.258 3.9284 9.30546C4.84507 8.3888 5.7009 7.5663 5.8284 7.47213C6.14405 7.25774 6.52371 7.15816 6.90395 7.19001C7.28419 7.22186 7.64198 7.38323 7.91757 7.64714C7.97138 7.71594 8.04038 7.77138 8.11916 7.80911C8.19795 7.84684 8.28439 7.86584 8.37173 7.86464C8.70507 7.89297 8.80673 7.8363 9.34507 7.28797L9.78923 6.8388L9.5959 6.57881C9.13876 6.0323 8.53775 5.62469 7.8609 5.40214C7.30857 5.2329 6.72507 5.19101 6.15423 5.27963Z" fill="black"></path>
-                </svg>
-                <span class="spectrum-Menu-itemLabel">Share with link</span>
-              </a>
-            </li>
+            ${menuItems}
           </ul>
         </div>
       </div>
     `;
+  }
+
+  parseSocialConfig() {
+    // Try to get social config from data attribute first
+    const socialDataAttr = this.el.getAttribute('data-socials');
+    if (socialDataAttr) {
+      try {
+        return JSON.parse(socialDataAttr);
+      } catch (e) {
+        console.warn('Failed to parse social config from data attribute:', e);
+      }
+    }
+
+    // Fallback to default configuration
+    return {
+      facebook: { enabled: true, altText: "Share Playlist on Facebook" },
+      twitter: { enabled: true, altText: "Share Playlist on X" },
+      linkedin: { enabled: true, altText: "Share Playlist on LinkedIn" },
+      copy: { enabled: true, altText: "Share with link", toasterText: "Link copied to clipboard" }
+    };
+  }
+
+  hasEnabledPlatforms(socialConfig) {
+    return Object.values(socialConfig).some(platform => platform.enabled);
+  }
+
+  generateSocialMenuItems(socialConfig) {
+    const platforms = {
+      facebook: {
+        icon: `<svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M15 2.5C14.9774 1.84415 14.7067 1.22133 14.2427 0.757298C13.7787 0.29327 13.1558 0.0226174 12.5 0L2.5 0C1.84415 0.0226174 1.22133 0.29327 0.757298 0.757298C0.29327 1.22133 0.0226174 1.84415 0 2.5L0 12.5C0.0226174 13.1558 0.29327 13.7787 0.757298 14.2427C1.22133 14.7067 1.84415 14.9774 2.5 15H7.5V9.33333H5.66667V6.83333H7.5V5.85917C7.46729 5.0672 7.7415 4.29316 8.26546 3.6984C8.78943 3.10364 9.52273 2.73405 10.3125 2.66667H12.3333V5.16667H10.3125C10.0917 5.16667 9.83333 5.435 9.83333 5.83333V6.83333H12.3333V9.33333H9.83333V15H12.5C13.1558 14.9774 13.7787 14.7067 14.2427 14.2427C14.7067 13.7787 14.9774 13.1558 15 12.5V2.5Z" fill="currentColor"/>
+        </svg>`,
+        daaLL: 'Facebook_Share Playlist'
+      },
+      twitter: {
+        icon: `<svg width="15" height="15" viewBox="0 0 1200 1227" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M714.163 519.284L1160.89 0H1055.03L667.137 450.887L357.328 0H0L468.492 681.821L0 1226.37H105.866L515.491 750.218L842.672 1226.37H1200L714.137 519.284H714.163ZM569.165 687.828L521.697 619.934L144.011 79.6944H306.615L611.412 515.685L658.88 583.579L1055.08 1150.3H892.476L569.165 687.854V687.828Z" fill="currentColor"/>
+        </svg>`,
+        daaLL: 'Twitter_Share Playlist'
+      },
+      linkedin: {
+        icon: `<svg width="16" height="15" viewBox="0 0 16 15" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M4.35803 14.9983H1.25053V4.98415H4.35803V14.9983ZM2.80136 3.61832C2.44359 3.61996 2.09335 3.51548 1.79495 3.3181C1.49654 3.12071 1.26336 2.83928 1.12488 2.50938C0.986411 2.17948 0.948862 1.81593 1.01699 1.46469C1.08511 1.11346 1.25585 0.790304 1.50761 0.536094C1.75937 0.281884 2.08086 0.10803 2.43142 0.0365126C2.78198 -0.0350043 3.14588 -0.000972847 3.4771 0.134304C3.80832 0.269582 4.092 0.50003 4.29226 0.796514C4.49252 1.093 4.60038 1.4422 4.6022 1.79998C4.60287 2.27942 4.41392 2.73966 4.07655 3.08031C3.73918 3.42096 3.28078 3.61436 2.80136 3.61832ZM16.0005 14.9983H12.8939V10.1233C12.8939 8.96165 12.8705 7.47165 11.2772 7.47165C9.66053 7.47165 9.4122 8.73415 9.4122 10.04V14.9983H6.30637V4.98415H9.28886V6.34998H9.33386C9.63207 5.83935 10.0633 5.41921 10.5815 5.13435C11.0996 4.84949 11.6854 4.7106 12.2764 4.73248C15.4222 4.73332 16.0005 6.80582 16.0005 9.49831V14.9983Z" fill="currentColor"/>
+        </svg>`,
+        daaLL: 'LinkedIn_Share Playlist'
+      },
+      copy: {
+        icon: `<svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M10.5976 0.67421C10.165 0.792718 9.7546 0.981031 9.38262 1.23172C9.23095 1.33588 8.43679 2.09673 7.61929 2.91423L6.13011 4.40839H6.69761C7.21674 4.39759 7.73367 4.47914 8.22427 4.64923L8.52678 4.74838L9.50512 3.77505C10.6868 2.60255 10.7859 2.54171 11.4951 2.54171C11.7445 2.51126 11.9973 2.55901 12.2184 2.67838C12.5529 2.85629 12.8237 3.13383 12.9934 3.47254C13.1068 3.68729 13.153 3.9312 13.1259 4.17254C13.1259 4.91504 13.1351 4.90089 11.1926 6.85755C10.2801 7.77422 9.42929 8.59671 9.29679 8.69087C8.98114 8.90526 8.60146 9.00486 8.22122 8.97301C7.84098 8.94116 7.48319 8.77979 7.20761 8.51588C7.15379 8.44707 7.0848 8.39164 7.00601 8.35391C6.92723 8.31618 6.8408 8.29719 6.75345 8.29839C6.42012 8.27006 6.31845 8.3267 5.78012 8.87004L5.33594 9.3192L5.51093 9.56004C5.8782 10.0146 6.34844 10.3752 6.88272 10.612C7.417 10.8488 7.99998 10.9549 8.58344 10.9217C9.26266 10.8834 9.91686 10.6521 10.4693 10.2551C10.8284 9.99505 14.2601 6.55338 14.4693 6.24171C14.7152 5.87067 14.8942 5.45946 14.9984 5.0267C15.1414 4.37234 15.1153 3.69235 14.9226 3.05087C14.7459 2.511 14.4439 2.02061 14.0414 1.61972C13.639 1.21883 13.1473 0.918832 12.6068 0.744223C11.9523 0.560287 11.2633 0.536267 10.5976 0.67421Z" fill="currentColor"/>
+          <path d="M6.15423 5.27963C5.70839 5.36722 5.28028 5.5286 4.88757 5.75713C4.10995 6.36787 3.38516 7.04304 2.7209 7.77546C1.70923 8.77546 0.796734 9.72297 0.693401 9.8788C0.417757 10.2795 0.219878 10.7284 0.110067 11.2021C-0.00751559 11.8325 0.0232978 12.4816 0.200067 13.098C0.374617 13.6386 0.674596 14.1302 1.07549 14.5327C1.47639 14.9352 1.96683 15.2371 2.50673 15.4138C3.14823 15.6064 3.8282 15.6325 4.48257 15.4896C4.94785 15.3767 5.38735 15.1762 5.77757 14.8988C5.9384 14.7805 6.7234 14.0288 7.52757 13.2205L8.99257 11.7505H8.42507C7.90593 11.7612 7.38901 11.6797 6.8984 11.5096L6.5959 11.4105L5.6259 12.378C4.43507 13.5546 4.3309 13.6213 3.6309 13.6213C3.39964 13.6419 3.16695 13.6029 2.95507 13.508C2.60866 13.3333 2.32462 13.0559 2.14173 12.7138C2.01821 12.4941 1.96855 12.2405 2.00007 11.9905C2.00007 11.2338 1.9859 11.258 3.9284 9.30546C4.84507 8.3888 5.7009 7.5663 5.8284 7.47213C6.14405 7.25774 6.52371 7.15816 6.90395 7.19001C7.28419 7.22186 7.64198 7.38323 7.91757 7.64714C7.97138 7.71594 8.04038 7.77138 8.11916 7.80911C8.19795 7.84684 8.28439 7.86584 8.37173 7.86464C8.70507 7.89297 8.80673 7.8363 9.34507 7.28797L9.78923 6.8388L9.5959 6.57881C9.13876 6.0323 8.53775 5.62469 7.8609 5.40214C7.30857 5.2329 6.72507 5.19101 6.15423 5.27963Z" fill="currentColor"/>
+        </svg>`,
+        daaLL: 'Link_Share Playlist'
+      }
+    };
+
+    return Object.entries(socialConfig)
+      .filter(([platform, config]) => config.enabled)
+      .map(([platform, config]) => {
+        const platformData = platforms[platform];
+        return `
+          <li>
+            <a class="video-playlist-container__social-share-menu__item social-share-link" 
+               data-platform="${platform}" 
+               daa-ll="${platformData.daaLL}" 
+               aria-label="${config.altText}" 
+               href="#" 
+               target="_blank">
+              ${platformData.icon}
+              <span class="spectrum-Menu-itemLabel">${config.altText}</span>
+            </a>
+          </li>
+        `;
+      }).join('');
   }
 
   setupAutoplayCheckbox(header) {
@@ -727,21 +778,30 @@ class VideoPlaylist {
 
   handleShare(platform, anchorElement) {
     const playlistUrl = window.location.href;
-    const playlistTitle = this.cfg.playlistTitle || 'Video Playlist';
-    const shareText = `Check out this playlist: ${playlistTitle}`;
+    const socialConfig = this.parseSocialConfig();
+    const platformConfig = socialConfig[platform];
+    
+    if (!platformConfig || !platformConfig.enabled) {
+      console.warn(`Platform ${platform} is not enabled`);
+      return;
+    }
 
     switch (platform) {
       case 'facebook':
         anchorElement.href = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(playlistUrl)}`;
         break;
       case 'twitter':
-        anchorElement.href = `https://twitter.com/intent/tweet?url=${encodeURIComponent(playlistUrl)}&text=${encodeURIComponent(shareText)}`;
+        // Support custom Twitter text if provided
+        const twitterText = platformConfig.twitterCustomText || platformConfig.extraText || '';
+        const twitterUrl = `https://twitter.com/intent/tweet?url=${encodeURIComponent(playlistUrl)}`;
+        anchorElement.href = twitterText ? `${twitterUrl}&text=${encodeURIComponent(twitterText)}` : twitterUrl;
         break;
       case 'linkedin':
         anchorElement.href = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(playlistUrl)}`;
         break;
-      case 'link':
-        this.copyToClipboard(playlistUrl);
+      case 'copy':
+        const notificationText = platformConfig.toasterText || 'Link copied to clipboard';
+        this.copyToClipboard(playlistUrl, notificationText);
         return;
     }
   }
@@ -761,19 +821,19 @@ class VideoPlaylist {
     this.openShareWindow(shareUrl, 'LinkedIn');
   }
 
-  copyToClipboard(text) {
+  copyToClipboard(text, notificationText = 'Link copied to clipboard!') {
     if (navigator.clipboard && window.isSecureContext) {
       navigator.clipboard.writeText(text).then(() => {
-        this.showNotification('Link copied to clipboard!');
+        this.showNotification(notificationText);
       }).catch(() => {
-        this.fallbackCopyToClipboard(text);
+        this.fallbackCopyToClipboard(text, notificationText);
       });
     } else {
-      this.fallbackCopyToClipboard(text);
+      this.fallbackCopyToClipboard(text, notificationText);
     }
   }
 
-  fallbackCopyToClipboard(text) {
+  fallbackCopyToClipboard(text, notificationText = 'Link copied to clipboard!') {
     const textArea = document.createElement('textarea');
     textArea.value = text;
     textArea.style.position = 'fixed';
@@ -785,7 +845,7 @@ class VideoPlaylist {
     
     try {
       document.execCommand('copy');
-      this.showNotification('Link copied to clipboard!');
+      this.showNotification(notificationText);
     } catch (err) {
       console.error('Failed to copy text: ', err);
       this.showNotification('Failed to copy link');
@@ -923,6 +983,13 @@ class VideoPlaylist {
 
   async setupFavorites() {
     try {
+      // Check if user is registered first
+      const isRegistered = await this.isUserRegistered();
+      if (!isRegistered) {
+        console.log('User not registered, skipping favorites setup');
+        return;
+      }
+
       const favoritesResponse = await mockAPI.getFavorites();
       const favorites = favoritesResponse.sessionInterests;
       
@@ -943,11 +1010,48 @@ class VideoPlaylist {
           
           const favoriteButton = this.createFavoriteButton(session, card, isFavorite);
           session.appendChild(favoriteButton);
+          
+          // Setup tooltip for desktop
+          this.attachFavoriteTooltipDesktop(session, favoriteButton);
         }
       });
     } catch (e) {
       console.error('Failed to setup favorites:', e);
     }
+  }
+
+  async isUserRegistered() {
+    // Mock implementation - in real implementation, this would check actual user registration
+    // For now, we'll simulate a registered user
+    try {
+      // Simulate API call delay
+      await new Promise(resolve => setTimeout(resolve, 100));
+      // Mock: return true for registered user, false for unregistered
+      return true; // Change this to false to test unregistered user behavior
+    } catch (e) {
+      console.error('Failed to check user registration:', e);
+      return false;
+    }
+  }
+
+  attachFavoriteTooltipDesktop(session, favoriteButton) {
+    const isDesktop = window.matchMedia('(min-width: 1024px)').matches;
+    const tooltip = session.querySelector('.consonant-tooltip');
+    const heartSVG = favoriteButton.querySelector('svg');
+    
+    if (!tooltip || !isDesktop) return;
+    
+    const isFavorite = () => heartSVG.classList.contains('filled');
+    
+    favoriteButton.addEventListener('mouseover', () => {
+      if (!isFavorite()) {
+        tooltip.classList.add('is-open');
+      }
+    });
+    
+    favoriteButton.addEventListener('mouseout', () => {
+      tooltip.classList.remove('is-open');
+    });
   }
 
   createFavoriteButton(session, card, isFavorite) {
@@ -975,11 +1079,20 @@ class VideoPlaylist {
 
   async toggleFavorite(favoriteButton, card) {
     try {
-      await mockAPI.toggleFavorite(card.search.sessionId);
+      // Disable button during API call to prevent multiple clicks
+      favoriteButton.disabled = true;
+      favoriteButton.classList.add('loading');
+      
+      const response = await mockAPI.toggleFavorite(card.search.sessionId);
+      
+      if (!response.success) {
+        throw new Error('API returned unsuccessful response');
+      }
       
       const favoriteSVG = favoriteButton.querySelector('svg');
       const isFavorite = favoriteSVG.classList.contains('filled');
       
+      // Update visual state
       favoriteSVG.classList.toggle('filled', !isFavorite);
       favoriteSVG.classList.toggle('unfilled', isFavorite);
       favoriteButton.setAttribute(
@@ -987,13 +1100,66 @@ class VideoPlaylist {
         isFavorite ? analytics.FAVORITE : analytics.UNFAVORITE,
       );
 
-      // Show notification
+      // Update aria-label for accessibility
+      const newState = !isFavorite ? 'Remove from favorites' : 'Add to favorites';
+      favoriteButton.setAttribute('aria-label', `${newState} ${card.contentArea.title}`);
+
+      // Show notification only when adding to favorites
       if (!isFavorite) {
         this.showNotification();
       }
+
+      // Update tooltip state
+      this.updateTooltipState(favoriteButton, !isFavorite);
+      
     } catch (e) {
       console.error('Failed to toggle favorite:', e);
+      // Show error notification to user
+      this.showErrorNotification('Failed to update favorites. Please try again.');
+    } finally {
+      // Re-enable button
+      favoriteButton.disabled = false;
+      favoriteButton.classList.remove('loading');
     }
+  }
+
+  updateTooltipState(favoriteButton, isFavorite) {
+    const session = favoriteButton.closest('.video-playlist-container__sessions__wrapper__session');
+    const tooltip = session?.querySelector('.consonant-tooltip');
+    
+    if (tooltip) {
+      if (isFavorite) {
+        tooltip.style.display = 'none';
+      } else {
+        tooltip.style.display = '';
+      }
+    }
+  }
+
+  showErrorNotification(message) {
+    const notification = createTag('div', {
+      class: 'video-playlist-container__notification video-playlist-container__notification--error',
+    });
+    
+    notification.innerHTML = `
+      <div class="video-playlist-container__notification__content">
+        <p>${message}</p>
+        <button class="video-playlist-container__notification__close">×</button>
+      </div>
+    `;
+
+    this.root.appendChild(notification);
+
+    // Auto-remove after 5 seconds
+    setTimeout(() => {
+      if (notification.parentNode) {
+        notification.remove();
+      }
+    }, 5000);
+
+    // Close button
+    const closeBtn = notification.querySelector('.video-playlist-container__notification__close');
+    closeBtn.addEventListener('click', () => notification.remove());
   }
 
   showNotification() {
