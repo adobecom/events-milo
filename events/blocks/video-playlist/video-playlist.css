@@ -26,6 +26,7 @@
   display: flex;
   align-items: stretch; /* This makes both containers the same height */
   gap: 20px;
+  --video-height: auto; /* CSS variable for dynamic height */
 }
 
 .video-playlist-container {
@@ -34,6 +35,8 @@
   font-family: inherit;
   display: flex;
   flex-direction: column;
+  height: var(--video-height, auto); /* Use dynamic height or fallback to auto */
+  min-height: 400px; /* Minimum height to ensure visibility */
 }
 
 /* Ensure video container has proper width */
