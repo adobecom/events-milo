@@ -387,7 +387,7 @@
   position: relative;
   flex: 1;
   overflow-y: auto;
-  height: 0;
+  height: auto;
   min-height: 0;
   margin-bottom: 8px;
   scrollbar-width: thin;
