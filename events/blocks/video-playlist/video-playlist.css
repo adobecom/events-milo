@@ -141,14 +141,13 @@
 
 /* Light theme social share button */
 .video-playlist-container.consonant--light .video-playlist-container__social-share {
-  background: rgba(0, 0, 0, 0.1);
+  background: none;
   color: #4b4b4b;
-  border: 1px solid rgba(0, 0, 0, 0.2);
+  border: none;
 }
 
 .video-playlist-container.consonant--light .video-playlist-container__social-share:hover {
-  background: rgba(0, 0, 0, 0.2);
-  border-color: rgba(0, 0, 0, 0.3);
+  background: none;
 }
 
 
@@ -340,10 +339,9 @@
 
 /* Social Share Button */
 .video-playlist-container__social-share {
-  background: rgba(255, 255, 255, 0.1);
+  background: none;
   color: #fff;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 4px;
+  border: none;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -354,8 +352,7 @@
 }
 
 .video-playlist-container__social-share:hover {
-  background: rgba(255, 255, 255, 0.2);
-  border-color: rgba(255, 255, 255, 0.3);
+  background: none;
 }
 
 /* Sessions Styles */
