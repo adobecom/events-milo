@@ -834,7 +834,6 @@
   /* Stack video and playlist vertically on mobile */
   .video-playlist {
     flex-direction: column;
-    gap: 16px;
   }
 
   .video-playlist-container {
