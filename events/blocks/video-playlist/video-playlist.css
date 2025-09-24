@@ -76,6 +76,7 @@
   .video-playlist-container__sessions__wrapper {
     margin-bottom: 0;
     padding: 14px;
+    flex-direction: column;
   }
   
   .video-playlist > div:has(.milo-video) {
@@ -96,8 +97,7 @@
     width: 100%;
   }
   
-  .video-playlist-container__sessions__wrapper {
-    flex-direction: row; /* Horizontal layout for sessions */
+  .video-playlist-container__sessions__wrapper { /* Horizontal layout for sessions */
     overflow-x: auto; /* Enable horizontal scrolling */
     padding: 8px;
   }
@@ -458,7 +458,7 @@
 
 .video-playlist-container__sessions__wrapper {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   gap: 8px;
   padding: 11px 12px 4px;
   height: auto;
