@@ -61,7 +61,6 @@
 @media (min-width: 1576px) {
   .video-playlist {
     flex-direction: row; /* Side-by-side layout */
-    align-items: stretch;
   }
   
   .video-playlist-container {
@@ -88,14 +87,10 @@
 @media (max-width: 1575px) {
   .video-playlist {
     flex-direction: column; /* Stacked layout */
-    align-items: stretch;
-    max-width: 1200px; /* Max width for smaller screens */
     margin: 0 auto; /* Center the container */
   }
   
   .video-playlist-container {
-    height: auto; /* Auto height for smaller screens */
-    min-height: 400px;
     max-width: 1200px; /* Max width constraint */
     width: 100%;
   }
