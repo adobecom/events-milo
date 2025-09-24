@@ -1153,12 +1153,17 @@ class VideoPlaylist {
     
     notification.innerHTML = `
       <div class="video-playlist-container__notification__content">
+        <div class="video-playlist-container__notification__icon">
+          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+          </svg>
+        </div>
         <p>${this.cfg.favoritesNotificationText}</p>
-        <button class="video-playlist-container__notification__button">
-          ${this.cfg.favoritesButtonText}
-        </button>
-        <button class="video-playlist-container__notification__close">×</button>
       </div>
+      <button class="video-playlist-container__notification__button">
+        ${this.cfg.favoritesButtonText}
+      </button>
+      <button class="video-playlist-container__notification__close">×</button>
     `;
 
     this.root.appendChild(notification);
