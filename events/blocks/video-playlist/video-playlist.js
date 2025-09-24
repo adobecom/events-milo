@@ -1168,13 +1168,6 @@ class VideoPlaylist {
 
     this.root.appendChild(notification);
 
-    // Auto-remove after 5 seconds
-    setTimeout(() => {
-      if (notification.parentNode) {
-        notification.remove();
-      }
-    }, 5000);
-
     // Close button
     const closeBtn = notification.querySelector('.video-playlist-container__notification__close');
     closeBtn.addEventListener('click', () => notification.remove());
