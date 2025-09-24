@@ -66,6 +66,7 @@
   .video-playlist-container {
     height: 675px; /* Fixed height for large screens */
     min-height: 675px;
+    max-width: 360px;
   }
   
   .video-playlist-container__sessions {
@@ -190,7 +191,6 @@
   --hover-title-color: #d2dcf3;
   --related-playlist-separator-color: #575454;
   --header-toggle-text-color:#ebebeb;
-  max-width: 360px;
   flex-shrink: 0;
   background-color: var(--container-background-color);
   color: var(--text-color);
