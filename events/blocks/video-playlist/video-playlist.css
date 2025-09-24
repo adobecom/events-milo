@@ -820,6 +820,7 @@
   .video-playlist-container__sessions__wrapper {
     margin-bottom: 0;
     padding: 14px;
+    flex-direction: column;
   }
 
   .video-playlist-container__sessions__wrapper__session {
