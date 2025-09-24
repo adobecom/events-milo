@@ -820,8 +820,13 @@
   display: block;
 }
 
-/* Favorite button tooltip specific styling */
+/* Hide all tooltips by default in session info */
 .video-playlist-container__sessions__wrapper__session__info .consonant-tooltip {
+  display: none;
+}
+
+.video-playlist-container__sessions__wrapper__session__info .consonant-tooltip.is-open {
+  display: block;
   position: absolute;
   background: #1473e6;
   color: white;
@@ -832,23 +837,14 @@
   white-space: nowrap;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
   z-index: 1000;
-  opacity: 0;
-  visibility: hidden;
-  transition: opacity 0.2s ease, visibility 0.2s ease;
-  pointer-events: none;
-  width: auto;
-  height: auto;
-  min-width: auto;
-  min-height: auto;
-  max-width: 150px;
   bottom: 100%;
   right: 0;
   margin-bottom: 8px;
-}
-
-.video-playlist-container__sessions__wrapper__session__info .consonant-tooltip.is-open {
+  max-width: 150px;
   opacity: 1;
   visibility: visible;
+  transition: opacity 0.2s ease;
+  pointer-events: none;
 }
 
 .video-playlist-container__sessions__wrapper__session__info .consonant-tooltip--left {
@@ -873,8 +869,13 @@
   padding: 0;
 }
 
-/* Specific styling for consonant-tooltip--info */
+/* Hide tooltip by default - only show on hover */
 .consonant-tooltip--info {
+  display: none !important;
+}
+
+.consonant-tooltip--info.is-open {
+  display: block !important;
   position: absolute !important;
   background: #1473e6 !important;
   color: white !important;
@@ -885,27 +886,17 @@
   white-space: nowrap !important;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15) !important;
   z-index: 1000 !important;
-  opacity: 0 !important;
-  visibility: hidden !important;
-  transition: opacity 0.2s ease, visibility 0.2s ease !important;
-  pointer-events: none !important;
-  width: auto !important;
-  height: auto !important;
-  min-width: auto !important;
-  min-height: auto !important;
-  max-width: 150px !important;
-  display: block !important;
   bottom: 100% !important;
   right: 0 !important;
   margin-bottom: 8px !important;
-}
-
-.consonant-tooltip--info.is-open {
+  max-width: 150px !important;
   opacity: 1 !important;
   visibility: visible !important;
+  transition: opacity 0.2s ease !important;
+  pointer-events: none !important;
 }
 
-.consonant-tooltip--info::after {
+.consonant-tooltip--info.is-open::after {
   content: '' !important;
   position: absolute !important;
   top: 100% !important;
