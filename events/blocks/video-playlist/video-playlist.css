@@ -570,6 +570,31 @@
   display: flex;
   justify-content: flex-end;
   align-items: flex-end;
+  transition: all 0.3s ease;
+}
+
+/* Favorite button hover effect */
+.video-playlist-container__sessions__wrapper__session__favorite:hover {
+  background-color: #1473e6;
+  border-radius: 4px;
+  padding: 8px 12px;
+  min-width: auto;
+  min-height: auto;
+  white-space: nowrap;
+  justify-content: center;
+  align-items: center;
+}
+
+.video-playlist-container__sessions__wrapper__session__favorite:hover::after {
+  content: "Favorite this session";
+  color: white;
+  font-size: 12px;
+  font-weight: 500;
+  margin-left: 8px;
+}
+
+.video-playlist-container__sessions__wrapper__session__favorite:hover svg {
+  margin-right: 0;
 }
 
 .video-playlist-container__sessions__wrapper__session__favorite:focus-visible {
