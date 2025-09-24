@@ -757,7 +757,7 @@
   content: attr(data-tooltip);
   position: absolute;
   bottom: 0;
-  right: 100%;
+  left: -200px;
   margin-bottom: 8px;
   background: #1473e6;
   color: white;
