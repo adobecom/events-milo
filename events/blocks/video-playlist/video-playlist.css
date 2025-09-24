@@ -820,6 +820,22 @@
   display: block;
 }
 
+/* Favorite button tooltip specific styling */
+.video-playlist-container__sessions__wrapper__session__info .consonant-tooltip {
+  background: #1473e6;
+  color: white;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.video-playlist-container__sessions__wrapper__session__info .consonant-tooltip--left::after {
+  border-left-color: #1473e6;
+}
+
 /* Responsive Design - Large screens (>1575px) */
 @media (min-width: 1576px) {
   .video-playlist-container__sessions {
