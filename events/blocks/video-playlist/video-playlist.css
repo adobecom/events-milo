@@ -48,6 +48,14 @@
     height: 675px; /* Fixed height for large screens */
     min-height: 675px;
     max-width: 360px;
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .video-playlist-container__sessions {
+    flex: 1;
+    min-height: 0; /* Allow flex child to shrink */
+    height: 0; /* Force flex calculation */
   }
   
   .video-playlist > div:has(.milo-video) {
@@ -67,6 +75,14 @@
     min-height: 400px;
     max-width: 100%;
     width: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .video-playlist-container__sessions {
+    flex: 1;
+    min-height: 0; /* Allow flex child to shrink */
+    height: 0; /* Force flex calculation */
   }
   
   .video-playlist > div:has(.milo-video) {
@@ -402,6 +418,8 @@
   margin-bottom: 8px;
   scrollbar-width: thin;
   scrollbar-color: var(--scrollbar-thumb-color) transparent;
+  min-height: 0; /* Important: allows flex child to shrink below content size */
+  height: 0; /* Forces the container to use flex: 1 for height calculation */
 }
 
 .video-playlist-container__sessions::-webkit-scrollbar {
