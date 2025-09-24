@@ -58,6 +58,7 @@
   .video-playlist {
     flex-direction: column; /* Stacked layout */
     margin: 0 auto; /* Center the container */
+    align-items: center;
   }
   
   .video-playlist-container {
