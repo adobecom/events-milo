@@ -770,6 +770,19 @@
   z-index: 1000;
   pointer-events: none;
   max-width: 150px;
+  transform: translateX(0);
+}
+
+.video-playlist-container__sessions__wrapper__session__favorite:hover::after {
+  content: '';
+  position: absolute;
+  bottom: 100%;
+  right: 12px;
+  margin-bottom: 0;
+  border: 4px solid transparent;
+  border-top-color: #1473e6;
+  z-index: 1000;
+  pointer-events: none;
 }
 
 
