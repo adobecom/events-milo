@@ -22,9 +22,7 @@
 
 .video-playlist {
   display: flex;
-  align-items: stretch; /* This makes both containers the same height */
-  --video-height: auto; /* CSS variable for dynamic height */
-  margin: 0 auto; /* Center the entire playlist */
+  justify-content: center;
 }
 
 .video-playlist-container {
@@ -82,6 +80,7 @@
   
   .video-playlist > div:has(.milo-video) {
     flex: 1; /* Video takes remaining space */
+    max-width: 1200px;
   }
 }
 
@@ -102,6 +101,7 @@
   .video-playlist > div:has(.milo-video) {
     width: 100%;
     height: auto;
+    max-width: 1200px;
   }
 }
 
