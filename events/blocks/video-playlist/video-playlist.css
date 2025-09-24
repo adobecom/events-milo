@@ -660,6 +660,9 @@
   right: 0;
   z-index: 1000;
   pointer-events: none;
+  max-width: 340px;
+  margin: 0 auto;
+  box-sizing: border-box;
 }
 
 #playlist-toasts-container > * {
@@ -668,23 +671,17 @@
 
 /* Toast Styles - Green Banner */
 .video-playlist-container__toast {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
   background-color: #12805c;
   color: white;
   padding: 16px 20px;
-  z-index: 1000;
   display: flex;
   align-items: center;
   justify-content: space-between;
   animation: slideInUp 0.3s ease-out;
   box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.15);
-  max-width: 340px;
-  margin: 0 auto;
-  box-sizing: border-box;
   border-radius: 4px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .video-playlist-container__toast--positive {
