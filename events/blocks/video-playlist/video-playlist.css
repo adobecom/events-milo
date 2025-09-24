@@ -752,12 +752,12 @@
   overflow: hidden !important;
 }
 
-/* Create a CSS-only tooltip using the favorite button - SHOW BY DEFAULT FOR TESTING */
+/* Create a CSS-only tooltip using the favorite button - HOVER ONLY WITH ANIMATION */
 .video-playlist-container__sessions__wrapper__session__favorite::before {
   content: attr(data-tooltip);
   position: absolute;
   bottom: 0;
-  left: -200px;
+  left: -130px;
   margin-bottom: 8px;
   background: #1473e6;
   color: white;
@@ -770,23 +770,42 @@
   z-index: 1000;
   pointer-events: none;
   max-width: 200px;
-  transform: translateX(0);
   border: none;
   display: flex;
   align-items: center;
   justify-content: center;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateX(-10px);
+  transition: opacity 0.3s ease, visibility 0.3s ease, transform 0.3s ease;
+}
+
+.video-playlist-container__sessions__wrapper__session__favorite:hover::before {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(0);
 }
 
 .video-playlist-container__sessions__wrapper__session__favorite::after {
   content: '';
   position: absolute;
   bottom: 40%;
-  right: 80%;
+  left: -23px;
   margin-bottom: 0;
   border: 4px solid transparent;
   border-left-color: #1473e6;
   z-index: 1000;
   pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateX(-10px);
+  transition: opacity 0.3s ease, visibility 0.3s ease, transform 0.3s ease;
+}
+
+.video-playlist-container__sessions__wrapper__session__favorite:hover::after {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(0);
 }
 
 
