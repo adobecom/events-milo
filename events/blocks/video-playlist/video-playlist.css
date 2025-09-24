@@ -53,6 +53,7 @@
     flex-direction: column; /* Stacked layout */
     margin: 0 auto; /* Center the container */
     align-items: center;
+    max-width: 83.4%;
   }
   
   .video-playlist-container {
@@ -842,11 +843,6 @@
     max-height: none;
   }
 
-  .video-playlist-container__sessions {
-    max-height: 50vh;
-    min-height: 300px;
-  }
-
   .video-playlist-container__sessions__wrapper {
     flex-direction: row;
     overflow-x: auto;
@@ -881,6 +877,14 @@
 
   .video-playlist-container__sessions__wrapper__session__info__description {
     font-size: 10px;
+  }
+}
+
+/* Small Mobile Responsive */
+@media (max-width: 600px) {
+  .video-playlist {
+    width: 100% !important;
+    max-width: 100% !important;
   }
 }
 
