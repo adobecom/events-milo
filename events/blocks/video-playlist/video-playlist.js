@@ -1035,23 +1035,9 @@ class VideoPlaylist {
   }
 
   attachFavoriteTooltipDesktop(session, favoriteButton) {
-    const isDesktop = window.matchMedia('(min-width: 1024px)').matches;
-    const tooltip = session.querySelector('.consonant-tooltip');
-    const heartSVG = favoriteButton.querySelector('svg');
-    
-    if (!tooltip || !isDesktop) return;
-    
-    const isFavorite = () => heartSVG.classList.contains('filled');
-    
-    favoriteButton.addEventListener('mouseover', () => {
-      if (!isFavorite()) {
-        tooltip.classList.add('is-open');
-      }
-    });
-    
-    favoriteButton.addEventListener('mouseout', () => {
-      tooltip.classList.remove('is-open');
-    });
+    // CSS-only tooltip implementation - no JavaScript needed
+    // The tooltip is now handled entirely by CSS using ::before and ::after pseudo-elements
+    return;
   }
 
   createFavoriteButton(session, card, isFavorite) {
@@ -1059,6 +1045,7 @@ class VideoPlaylist {
       class: 'video-playlist-container__sessions__wrapper__session__favorite',
       'daa-ll': isFavorite ? analytics.UNFAVORITE : analytics.FAVORITE,
       'aria-label': `Favorite session ${card.contentArea.title}`,
+      'data-tooltip': this.cfg.favoritesTooltipText || 'Add to favorites',
     });
 
     const heartClass = isFavorite ? 'filled' : 'unfilled';
