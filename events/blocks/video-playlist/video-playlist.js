@@ -561,7 +561,7 @@ class VideoPlaylist {
   }
 
   displayPlaylist(cards) {
-    this.root.style.display = 'block';
+    this.root.style.display = '';
     
     // Create header
     const header = this.createHeader();

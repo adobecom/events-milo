@@ -23,7 +23,6 @@
 .video-playlist {
   display: flex;
   align-items: stretch; /* This makes both containers the same height */
-  gap: 20px;
   --video-height: auto; /* CSS variable for dynamic height */
 }
 
