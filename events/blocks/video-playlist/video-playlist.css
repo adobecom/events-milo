@@ -37,10 +37,44 @@
   min-height: 400px; /* Minimum height to ensure visibility */
 }
 
-.video-playlist > div:has(.milo-video) {
-  width: 100%;
-  flex: 1;
+/* For screens > 1575px: Side-by-side layout with fixed height */
+@media (min-width: 1576px) {
+  .video-playlist {
+    flex-direction: row; /* Side-by-side layout */
+    align-items: stretch;
+  }
+  
+  .video-playlist-container {
+    height: 675px; /* Fixed height for large screens */
+    min-height: 675px;
+    max-width: 360px;
+  }
+  
+  .video-playlist > div:has(.milo-video) {
+    flex: 1; /* Video takes remaining space */
+  }
 }
+
+/* For screens <= 1575px: Stacked layout */
+@media (max-width: 1575px) {
+  .video-playlist {
+    flex-direction: column; /* Stacked layout */
+    align-items: stretch;
+  }
+  
+  .video-playlist-container {
+    height: auto; /* Auto height for smaller screens */
+    min-height: 400px;
+    max-width: 100%;
+    width: 100%;
+  }
+  
+  .video-playlist > div:has(.milo-video) {
+    width: 100%;
+    height: auto;
+  }
+}
+
 
 
 .video-playlist .milo-video {
@@ -762,14 +796,8 @@
   display: block;
 }
 
-/* Responsive Design */
-@media (min-width: 1575px) {
-  .video-playlist-container__container {
-    width: 360px;
-    height: 100%;
-    max-height: 100vh;
-  }
-
+/* Responsive Design - Large screens (>1575px) */
+@media (min-width: 1576px) {
   .video-playlist-container__sessions {
     margin-bottom: 0;
   }
