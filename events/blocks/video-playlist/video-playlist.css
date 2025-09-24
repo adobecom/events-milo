@@ -25,38 +25,6 @@
   justify-content: center;
 }
 
-.video-playlist-container {
-  --container-background-color: #000;
-  --text-color: #fff;
-  --header-background-color: #1d1d1d;
-  --header-border-color: #373737;
-  --sessions-session-border-color: #575757;
-  --skip-playlist-link-color: #909090;
-  --progress-track-color: #d9d9d9;
-  --scrollbar-thumb-color: var(--progress-track-color);
-  --sessions-session-vertical-padding: 9px;
-  --sessions-session-horizontal-padding: 10px;
-  --sessions-session-thumbnail-progress-bar-color: #1473e6;
-  --sessions-session-info-description-color: #d5d5d5;
-  --sessions-session-info-favorite-color: #fff;
-  --footer-background-color: #1d1d1d;
-  --highlighted-background-color: #404040;
-  --sessions-duration-background-color: rgb(75 75 75 / 80%);
-  --hover-title-color: #d2dcf3;
-  --related-playlist-separator-color: #575454;
-  --header-toggle-text-color: #ebebeb;
-  max-width: 360px;
-  flex-shrink: 0;
-  background-color: var(--container-background-color);
-  color: var(--text-color);
-  margin: 0;
-  font-family: inherit;
-  display: flex;
-  flex-direction: column;
-  height: var(--video-height, auto);
-  min-height: 400px;
-}
-
 /* For screens > 1575px: Side-by-side layout with fixed height */
 @media (min-width: 1576px) {
   .video-playlist {
