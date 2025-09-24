@@ -1147,6 +1147,15 @@ class VideoPlaylist {
   }
 
   showNotification() {
+    // Create or get the toasts container
+    let toastsContainer = document.getElementById('playlist-toasts-container');
+    if (!toastsContainer) {
+      toastsContainer = createTag('div', {
+        id: 'playlist-toasts-container'
+      });
+      this.root.appendChild(toastsContainer);
+    }
+
     const notification = createTag('div', {
       class: 'video-playlist-container__toast video-playlist-container__toast--positive',
       role: 'alert',
@@ -1175,7 +1184,7 @@ class VideoPlaylist {
       </div>
     `;
 
-    this.root.appendChild(notification);
+    toastsContainer.appendChild(notification);
 
     // Close button
     const closeBtn = notification.querySelector('.video-playlist-container__toast-close');
