@@ -658,7 +658,7 @@
   bottom: 0;
   left: 0;
   right: 0;
-  background: #4caf50;
+  background-color: #12805c;
   color: white;
   padding: 16px 20px;
   z-index: 1000;
@@ -707,7 +707,7 @@
 .video-playlist-container__notification__icon svg {
   width: 16px;
   height: 16px;
-  fill: #4caf50;
+  fill: #12805c;
 }
 
 .video-playlist-container__notification__content p {
