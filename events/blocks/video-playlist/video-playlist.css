@@ -752,8 +752,8 @@
   overflow: hidden !important;
 }
 
-/* Create a CSS-only tooltip using the favorite button */
-.video-playlist-container__sessions__wrapper__session__favorite:hover::before {
+/* Create a CSS-only tooltip using the favorite button - SHOW BY DEFAULT FOR TESTING */
+.video-playlist-container__sessions__wrapper__session__favorite::before {
   content: attr(data-tooltip);
   position: absolute;
   bottom: 100%;
@@ -777,7 +777,7 @@
   justify-content: center;
 }
 
-.video-playlist-container__sessions__wrapper__session__favorite:hover::after {
+.video-playlist-container__sessions__wrapper__session__favorite::after {
   content: '';
   position: absolute;
   bottom: 100%;
