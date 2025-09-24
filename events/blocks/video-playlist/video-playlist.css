@@ -24,7 +24,6 @@
   display: flex;
   align-items: stretch; /* This makes both containers the same height */
   --video-height: auto; /* CSS variable for dynamic height */
-  max-width: 1200px;
   margin: 0 auto; /* Center the entire playlist */
 }
 
