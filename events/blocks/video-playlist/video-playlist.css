@@ -41,12 +41,6 @@
     margin-bottom: 0;
   }
   
-  .video-playlist-container__sessions__wrapper {
-    margin-bottom: 0;
-    padding: 14px;
-    flex-direction: column;
-  }
-  
   .video-playlist > div:has(.milo-video) {
     flex: 1; /* Video takes remaining space */
     max-width: 1200px;
