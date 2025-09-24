@@ -761,16 +761,20 @@
   margin-bottom: 8px;
   background: #1473e6;
   color: white;
-  padding: 6px 10px;
-  border-radius: 4px;
-  font-size: 11px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 12px;
   font-weight: 500;
   white-space: nowrap;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
   z-index: 1000;
   pointer-events: none;
-  max-width: 150px;
+  max-width: 200px;
   transform: translateX(0);
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .video-playlist-container__sessions__wrapper__session__favorite:hover::after {
