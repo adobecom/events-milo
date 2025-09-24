@@ -935,10 +935,7 @@ class VideoPlaylist {
                 ${card.contentArea.description}
               </p>
               ${this.cfg.favoritesEnabled ? `
-                <span class="consonant-tooltip consonant-tooltip--left consonant-tooltip--info">
-                  <span class="consonant-tooltip-label">${this.cfg.favoritesTooltipText || 'Add to favorites'}</span>
-                  <span class="consonant-tooltip-tip"></span>
-                </span>
+                <!-- Tooltip removed - using CSS-only solution -->
               ` : ''}
             </div>
           </a>
