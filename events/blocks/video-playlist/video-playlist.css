@@ -652,8 +652,8 @@
   font-weight: 400;
 }
 
-/* Notification Styles - Green Banner */
-.video-playlist-container__notification {
+/* Toast Styles - Green Banner */
+.video-playlist-container__toast {
   position: absolute;
   bottom: 0;
   left: 0;
@@ -669,7 +669,11 @@
   box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.15);
 }
 
-.video-playlist-container__notification--error {
+.video-playlist-container__toast--positive {
+  background-color: #12805c;
+}
+
+.video-playlist-container__toast--error {
   background: #fff5f5;
   border: 1px solid #e34850;
   color: #d32f2f;
@@ -686,37 +690,29 @@
   }
 }
 
-.video-playlist-container__notification__content {
+.video-playlist-container__toast-icon {
+  width: 18px;
+  height: 18px;
+  fill: white;
+  flex-shrink: 0;
+  margin-right: 12px;
+}
+
+.video-playlist-container__toast-body {
   display: flex;
   align-items: center;
   gap: 12px;
   flex: 1;
 }
 
-.video-playlist-container__notification__icon {
-  width: 24px;
-  height: 24px;
-  background: white;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.video-playlist-container__notification__icon svg {
-  width: 16px;
-  height: 16px;
-  fill: #12805c;
-}
-
-.video-playlist-container__notification__content p {
+.video-playlist-container__toast-content {
   margin: 0;
   font-weight: 500;
   font-size: 14px;
+  color: white;
 }
 
-.video-playlist-container__notification__button {
+.video-playlist-container__toast-button {
   background: rgba(255, 255, 255, 0.2);
   border: 1px solid rgba(255, 255, 255, 0.3);
   color: white;
@@ -729,17 +725,25 @@
   margin-right: 12px;
 }
 
-.video-playlist-container__notification__button:hover {
+.video-playlist-container__toast-button:hover {
   background: rgba(255, 255, 255, 0.3);
 }
 
-.video-playlist-container__notification__close {
+.video-playlist-container__toast-button-label {
+  color: white;
+}
+
+.video-playlist-container__toast-buttons {
+  display: flex;
+  align-items: center;
+}
+
+.video-playlist-container__toast-close {
   background: none;
   border: none;
   color: white;
-  font-size: 20px;
   cursor: pointer;
-  padding: 0;
+  padding: 4px;
   opacity: 0.8;
   transition: opacity 0.2s ease;
   width: 24px;
@@ -749,8 +753,14 @@
   justify-content: center;
 }
 
-.video-playlist-container__notification__close:hover {
+.video-playlist-container__toast-close:hover {
   opacity: 1;
+}
+
+.video-playlist-container__toast-close-icon {
+  width: 16px;
+  height: 16px;
+  fill: white;
 }
 
 /* Remove general tooltip styles */
