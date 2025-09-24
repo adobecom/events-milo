@@ -756,12 +756,12 @@
 .video-playlist-container__sessions__wrapper__session__favorite::before {
   content: attr(data-tooltip);
   position: absolute;
-  bottom: 100%;
-  right: 0;
+  bottom: 0;
+  right: 100%;
   margin-bottom: 8px;
   background: #1473e6;
   color: white;
-  padding: 8px 12px;
+  padding: 12px 12px;
   border-radius: 6px;
   font-size: 12px;
   font-weight: 500;
@@ -780,11 +780,11 @@
 .video-playlist-container__sessions__wrapper__session__favorite::after {
   content: '';
   position: absolute;
-  bottom: 100%;
-  right: 12px;
+  bottom: 40%;
+  right: 80%;
   margin-bottom: 0;
   border: 4px solid transparent;
-  border-top-color: #1473e6;
+  border-left-color: #1473e6;
   z-index: 1000;
   pointer-events: none;
 }
