@@ -1148,32 +1148,41 @@ class VideoPlaylist {
 
   showNotification() {
     const notification = createTag('div', {
-      class: 'video-playlist-container__notification',
+      class: 'video-playlist-container__toast video-playlist-container__toast--positive',
+      role: 'alert',
+      'aria-live': 'assertive',
+      'aria-atomic': 'true',
+      'aria-hidden': 'false'
     });
     
     notification.innerHTML = `
-      <div class="video-playlist-container__notification__content">
-        <div class="video-playlist-container__notification__icon">
-          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-            <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
-          </svg>
-        </div>
-        <p>${this.cfg.favoritesNotificationText}</p>
+      <svg xmlns="http://www.w3.org/2000/svg" height="18" viewBox="0 0 18 18" width="18" class="video-playlist-container__toast-icon" focusable="false" aria-hidden="true">
+        <rect id="Canvas" fill="#ff13dc" opacity="0" width="18" height="18"></rect>
+        <path d="M9,1a8,8,0,1,0,8,8A8,8,0,0,0,9,1Zm5.333,4.54L8.009,13.6705a.603.603,0,0,1-.4375.2305H7.535a.6.6,0,0,1-.4245-.1755L3.218,9.829a.6.6,0,0,1-.00147-.84853L3.218,8.979l.663-.6625A.6.6,0,0,1,4.72953,8.315L4.731,8.3165,7.4,10.991l5.257-6.7545a.6.6,0,0,1,.8419-.10586L13.5,4.1315l.7275.5685A.6.6,0,0,1,14.333,5.54Z"></path>
+      </svg>
+      <div class="video-playlist-container__toast-body">
+        <div class="video-playlist-container__toast-content">${this.cfg.favoritesNotificationText}</div>
+        <button class="video-playlist-container__toast-button" daa-ll="View Schedule">
+          <span class="video-playlist-container__toast-button-label">${this.cfg.favoritesButtonText}</span>
+        </button>
       </div>
-      <button class="video-playlist-container__notification__button">
-        ${this.cfg.favoritesButtonText}
-      </button>
-      <button class="video-playlist-container__notification__close">×</button>
+      <div class="video-playlist-container__toast-buttons">
+        <button aria-label="close" class="video-playlist-container__toast-close" label="Close" daa-ll="Close Favorite Notification">
+          <svg class="video-playlist-container__toast-close-icon" focusable="false" aria-hidden="true" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 8 8">
+            <path d="m5.238 4 2.456-2.457A.875.875 0 1 0 6.456.306L4 2.763 1.543.306A.875.875 0 0 0 .306 1.544L2.763 4 .306 6.457a.875.875 0 1 0 1.238 1.237L4 5.237l2.456 2.457a.875.875 0 1 0 1.238-1.237z"></path>
+          </svg>
+        </button>
+      </div>
     `;
 
     this.root.appendChild(notification);
 
     // Close button
-    const closeBtn = notification.querySelector('.video-playlist-container__notification__close');
+    const closeBtn = notification.querySelector('.video-playlist-container__toast-close');
     closeBtn.addEventListener('click', () => notification.remove());
 
     // Action button
-    const actionBtn = notification.querySelector('.video-playlist-container__notification__button');
+    const actionBtn = notification.querySelector('.video-playlist-container__toast-button');
     actionBtn.addEventListener('click', () => {
       if (this.cfg.favoritesButtonLink) {
         window.location.href = this.cfg.favoritesButtonLink;
