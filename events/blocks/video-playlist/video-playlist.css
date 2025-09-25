@@ -866,7 +866,6 @@
   opacity: 0;
   visibility: hidden;
   transform: translateX(-10px);
-  transition: opacity 0.3s ease, visibility 0.3s ease, transform 0.3s ease;
 }
 
 .video-playlist-container__sessions__wrapper__session__favorite:hover::before {
@@ -888,7 +887,6 @@
   opacity: 0;
   visibility: hidden;
   transform: translateX(-10px);
-  transition: opacity 0.3s ease, visibility 0.3s ease, transform 0.3s ease;
 }
 
 .video-playlist-container__sessions__wrapper__session__favorite:hover::after {
