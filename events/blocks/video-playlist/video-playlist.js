@@ -1090,7 +1090,7 @@ class VideoPlaylist {
 
       // Show notification only when adding to favorites
       if (!isFavorite) {
-        this.showNotification();
+        this.showFavoriteNotification();
       }
 
       // Update tooltip state
@@ -1146,7 +1146,7 @@ class VideoPlaylist {
     closeBtn.addEventListener('click', () => notification.remove());
   }
 
-  showNotification() {
+  showFavoriteNotification() {
     // Create or get the toasts container
     let toastsContainer = document.getElementById('playlist-toasts-container');
     if (!toastsContainer) {
