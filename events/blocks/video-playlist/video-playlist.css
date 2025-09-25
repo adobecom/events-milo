@@ -555,7 +555,7 @@
 }
 
 .video-playlist-container__sessions__wrapper__session__favorite.loading {
-  /* position: relative; - already set on base class */
+  position: relative;
 }
 
 .video-playlist-container__sessions__wrapper__session__favorite.loading::after {
