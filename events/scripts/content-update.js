@@ -629,6 +629,16 @@ function flagEventState(parent) {
   }
 }
 
+function patchMetadata() {
+  const attendeeLimit = getMetadata('attendee-limit');
+  const attendeeCount = getMetadata('attendee-count');
+
+  if (attendeeLimit && attendeeCount) {
+    const isFull = +attendeeCount >= +attendeeLimit;
+    setMetadata('is-full', isFull);
+  }
+}
+
 // data -> dom gills
 export default function autoUpdateContent(parent, miloDeps, extraData) {
   const { getConfig, miloLibs } = miloDeps;
@@ -638,6 +648,8 @@ export default function autoUpdateContent(parent, miloDeps, extraData) {
   }
 
   if (!getMetadata('event-id')) return;
+
+  patchMetadata();
 
   const getImgData = (_match, p1, n) => {
     const data = parseMetadataPath(p1, extraData);

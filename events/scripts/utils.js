@@ -287,8 +287,46 @@ export function getCurrentTabId() {
 }
 
 /**
+ * Evaluates a single condition (with optional equality check)
+ * @param {string} condition - The condition to evaluate
+ * @param {Object} extraData - Optional extra data to fall back to if metadata is not found
+ * @returns {boolean} Whether the condition is true
+ */
+function evaluateCondition(condition, extraData = {}) {
+  const trimmedCondition = condition.trim();
+
+  // Check if this is an equality check (condition=value)
+  if (trimmedCondition.includes('=')) {
+    const [conditionPath, expected] = trimmedCondition.split('=');
+    const conditionValue = parseRegularPath(conditionPath.trim(), extraData);
+    let expectedValue = expected.trim();
+
+    // Remove quotes if present
+    if (expectedValue.startsWith('"') && expectedValue.endsWith('"')) {
+      expectedValue = expectedValue.slice(1, -1);
+    }
+
+    // Compare the actual value with the expected value
+    return String(conditionValue) === String(expectedValue);
+  }
+
+  // Regular truthy/falsy check
+  const conditionValue = parseRegularPath(trimmedCondition, extraData);
+
+  // Evaluate if condition is truthy
+  return conditionValue
+    && conditionValue !== ''
+    && conditionValue !== 'false'
+    && conditionValue !== '0'
+    && conditionValue !== 'null'
+    && conditionValue !== 'undefined';
+}
+
+/**
  * Parses conditional content syntax: condition?(true-content):(false-content)
  * Also supports equality checking: condition=value?(true-content):(false-content)
+ * Also supports logical operators: condition1&condition2?(true-content):(false-content)
+ * Also supports OR conditions: condition1||condition2?(true-content):(false-content)
  * @param {string} content - The content string that may contain conditional syntax
  * @param {Object} extraData - Optional extra data to fall back to if metadata is not found
  * @returns {string} The processed content with conditionals resolved
@@ -298,30 +336,25 @@ function parseConditionalContent(content, extraData = {}) {
 
   // Match conditional syntax: condition?(true-content):(false-content)
   // or condition=value?(true-content):(false-content)
-  const conditionalRegex = /(\w[\w.=\s-"]*)\?\(([^)]*)\):\(([^)]*)\)/g;
+  // or condition1&condition2?(true-content):(false-content)
+  // or condition1||condition2?(true-content):(false-content)
+  const conditionalRegex = /(\w[\w.=\s-&|"]*)\?\(([^)]*)\):\(([^)]*)\)/g;
 
   return content.replace(conditionalRegex, (match, condition, trueContent, falseContent) => {
-    let conditionValue;
-    let expectedValue = null;
     let isMatch = false;
 
-    // Check if this is an equality check (condition=value)
-    if (condition.includes('=')) {
-      const [conditionPath, expected] = condition.split('=');
-      conditionValue = parseRegularPath(conditionPath.trim(), extraData);
-      expectedValue = expected.trim();
-      // Compare the actual value with the expected value
-      isMatch = String(conditionValue) === String(expectedValue);
+    // Check for logical operators
+    if (condition.includes('&')) {
+      // AND condition: all conditions must be true
+      const conditions = condition.split('&').map((c) => c.trim());
+      isMatch = conditions.every((cond) => evaluateCondition(cond, extraData));
+    } else if (condition.includes('||')) {
+      // OR condition: at least one condition must be true
+      const conditions = condition.split('||').map((c) => c.trim());
+      isMatch = conditions.some((cond) => evaluateCondition(cond, extraData));
     } else {
-      // Regular truthy/falsy check
-      conditionValue = parseRegularPath(condition.trim(), extraData);
-      // Evaluate if condition is truthy
-      isMatch = conditionValue
-        && conditionValue !== ''
-        && conditionValue !== 'false'
-        && conditionValue !== '0'
-        && conditionValue !== 'null'
-        && conditionValue !== 'undefined';
+      // Single condition
+      isMatch = evaluateCondition(condition, extraData);
     }
 
     // Return the appropriate content
@@ -346,6 +379,8 @@ function parseConditionalContent(content, extraData = {}) {
  * - @array(attr.name) | (extract name attribute from objects with pipe separator)
  * - isFull?(This event has reached capacity.):() (conditional content)
  * - status=live?(Event is live.):(Event is not live.) (equality conditional)
+ * - isFull&status=live?(Event is full and live.):(Event is not full or not live.) (AND condition)
+ * - isVirtual||isOnline?(Virtual or online event.):(In-person event.) (OR condition)
  * @param {string} path - The metadata path to parse
  * @param {Object} extraData - Optional extra data to fall back to if metadata is not found
  * @returns {*} The parsed value from metadata
