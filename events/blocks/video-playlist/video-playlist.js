@@ -948,7 +948,7 @@ class VideoPlaylist {
 
     // Adding a toast container for notifications
     const toastsContainer = createTag('div', { id: TOAST_CONTAINER_ID });
-    sessions.appendChild(toastsContainer);
+    this.root.appendChild(toastsContainer);
 
     // Set initial progress bars
     this.setInitialProgressBars(sessionsWrapper);
