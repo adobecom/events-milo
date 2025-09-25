@@ -1153,7 +1153,13 @@ class VideoPlaylist {
       toastsContainer = createTag('div', {
         id: 'playlist-toasts-container'
       });
-      this.root.appendChild(toastsContainer);
+      // Append to sessions container instead of root
+      const sessionsContainer = this.root.querySelector('.video-playlist-container__sessions');
+      if (sessionsContainer) {
+        sessionsContainer.appendChild(toastsContainer);
+      } else {
+        this.root.appendChild(toastsContainer);
+      }
     }
 
     const notification = createTag('div', {
