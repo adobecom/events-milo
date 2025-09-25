@@ -670,12 +670,13 @@
 @media (min-width: 1575px) {
   #playlist-toasts-container {
     display: block;
-    position: sticky;
+    position: absolute;
     bottom: 0;
-    left: 10px;
-    right: auto;
-    margin: 0 0 10px 0;
-    max-width: 340px;
+    left: 0;
+    right: 0;
+    margin: 0 auto 10px auto;
+    width: 340px;
+    box-sizing: border-box;
   }
 }
 
