@@ -652,8 +652,9 @@
   font-weight: 400;
 }
 
-/* Toast Container */
+/* Toast Container - Hidden by default (mobile/tablet) */
 #playlist-toasts-container {
+  display: none;
   position: absolute;
   bottom: 0;
   left: 0;
@@ -661,8 +662,21 @@
   z-index: 1000;
   pointer-events: none;
   max-width: 340px;
-  margin: 0 auto;
+  margin: 0 auto 10px auto;
   box-sizing: border-box;
+}
+
+/* Desktop Only - 1575px and above */
+@media (min-width: 1575px) {
+  #playlist-toasts-container {
+    display: block;
+    position: sticky;
+    bottom: 0;
+    left: 10px;
+    right: auto;
+    margin: 0 0 10px 0;
+    max-width: 340px;
+  }
 }
 
 #playlist-toasts-container > * {
