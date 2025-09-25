@@ -521,8 +521,8 @@
   border: none;
   cursor: pointer;
   padding: var(--sessions-session-vertical-padding) var(--sessions-session-horizontal-padding);
+  position: relative;
   line-height: 0;
-  position: absolute;
   min-width: 40px;
   min-height: 40px;
   bottom: 0;
@@ -555,7 +555,7 @@
 }
 
 .video-playlist-container__sessions__wrapper__session__favorite.loading {
-  /* position: relative; */
+  /* position: relative; - already set on base class */
 }
 
 .video-playlist-container__sessions__wrapper__session__favorite.loading::after {
@@ -566,7 +566,7 @@
   border: 2px solid #f3f3f3;
   border-top: 2px solid var(--sessions-session-info-favorite-color);
   border-radius: 50%;
-  /* animation: spin 1s linear infinite; */
+  animation: spin 1s linear infinite;
 }
 
 @keyframes spin {
