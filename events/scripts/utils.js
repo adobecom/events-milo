@@ -287,9 +287,53 @@ export function getCurrentTabId() {
 }
 
 /**
+ * Parses conditional content syntax: condition?(true-content):(false-content)
+ * Also supports equality checking: condition=value?(true-content):(false-content)
+ * @param {string} content - The content string that may contain conditional syntax
+ * @param {Object} extraData - Optional extra data to fall back to if metadata is not found
+ * @returns {string} The processed content with conditionals resolved
+ */
+function parseConditionalContent(content, extraData = {}) {
+  if (!content || typeof content !== 'string') return content;
+
+  // Match conditional syntax: condition?(true-content):(false-content)
+  // or condition=value?(true-content):(false-content)
+  const conditionalRegex = /(\w[\w.=\s-"]*)\?\(([^)]*)\):\(([^)]*)\)/g;
+
+  return content.replace(conditionalRegex, (match, condition, trueContent, falseContent) => {
+    let conditionValue;
+    let expectedValue = null;
+    let isMatch = false;
+
+    // Check if this is an equality check (condition=value)
+    if (condition.includes('=')) {
+      const [conditionPath, expected] = condition.split('=');
+      conditionValue = parseRegularPath(conditionPath.trim(), extraData);
+      expectedValue = expected.trim();
+      // Compare the actual value with the expected value
+      isMatch = String(conditionValue) === String(expectedValue);
+    } else {
+      // Regular truthy/falsy check
+      conditionValue = parseRegularPath(condition.trim(), extraData);
+      // Evaluate if condition is truthy
+      isMatch = conditionValue
+        && conditionValue !== ''
+        && conditionValue !== 'false'
+        && conditionValue !== '0'
+        && conditionValue !== 'null'
+        && conditionValue !== 'undefined';
+    }
+
+    // Return the appropriate content
+    return isMatch ? trueContent : falseContent;
+  });
+}
+
+/**
  * Parses a metadata path string and returns the corresponding value from the metadata.
  * Supports combinations of object property access (.) and array indexing (:).
  * Also supports array iteration with @array(path)separator syntax.
+ * Also supports conditional content with condition?(true-content):(false-content) syntax.
  * Examples:
  * - attr (just accessing the attribute itself)
  * - attr.subattr (one level in object)
@@ -300,6 +344,8 @@ export function getCurrentTabId() {
  * - @array(attr) (iterate over array with space separator)
  * - @array(attr.subattr), (iterate over nested array with comma separator)
  * - @array(attr.name) | (extract name attribute from objects with pipe separator)
+ * - isFull?(This event has reached capacity.):() (conditional content)
+ * - status=live?(Event is live.):(Event is not live.) (equality conditional)
  * @param {string} path - The metadata path to parse
  * @param {Object} extraData - Optional extra data to fall back to if metadata is not found
  * @returns {*} The parsed value from metadata
@@ -310,6 +356,11 @@ export function parseMetadataPath(path, extraData = {}) {
   // Check if this is an array iteration request
   const arrayMatch = path.match(/^@array\(([^)]+)\)(.*)$/);
   if (!arrayMatch) {
+    // Check if the path contains conditional content syntax
+    if (path.includes('?(') && path.includes('):(')) {
+      return parseConditionalContent(path, extraData);
+    }
+
     // Regular path parsing (no array processing)
     return parseRegularPath(path, extraData);
   }
