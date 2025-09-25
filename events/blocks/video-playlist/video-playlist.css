@@ -555,7 +555,7 @@
 }
 
 .video-playlist-container__sessions__wrapper__session__favorite.loading {
-  position: relative;
+  /* position: relative; */
 }
 
 .video-playlist-container__sessions__wrapper__session__favorite.loading::after {
@@ -566,7 +566,7 @@
   border: 2px solid #f3f3f3;
   border-top: 2px solid var(--sessions-session-info-favorite-color);
   border-radius: 50%;
-  animation: spin 1s linear infinite;
+  /* animation: spin 1s linear infinite; */
 }
 
 @keyframes spin {
