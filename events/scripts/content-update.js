@@ -9,6 +9,7 @@ import {
   getSusiOptions,
   getEventServiceEnv,
   parseMetadataPath,
+  createContextualContent,
 } from './utils.js';
 
 const preserveFormatKeys = [
@@ -134,6 +135,7 @@ export async function updateRSVPButtonState(rsvpBtn, miloLibs) {
     eventFull = isFull
       || (!allowWaitlisting && attendeeCount >= attendeeLimit);
     waitlistEnabled = allowWaitlisting;
+    BlockMediator.set('eventData', eventInfo.data);
   }
 
   const rsvpData = BlockMediator.get('rsvpData');
@@ -439,6 +441,13 @@ function updateTextNode(child, matchCallback) {
 
   if (replacedText === originalText) return;
 
+  // Check if the parent element has contextual content
+  if (child.parentElement.dataset.contextualContent) {
+    // For contextual content, we still need to process it but preserve styling
+    // The content has already been processed in getContent, so we can return
+    return;
+  }
+
   if (isHTMLString(replacedText)) {
     child.parentElement.innerHTML = replacedText;
   } else {
@@ -467,11 +476,61 @@ function updateTextContent(child, matchCallback) {
 
   if (replacedText === originalText) return;
 
+  // Check if the element has contextual content
+  if (child.dataset.contextualContent) {
+    // For contextual content, we still need to process it but preserve styling
+    // The content has already been processed in getContent, so we can return
+    return;
+  }
+
   if (isHTMLString(replacedText)) {
     child.parentElement.innerHTML = replacedText;
   } else {
     child.textContent = replacedText;
   }
+}
+
+function updateContextualContentElements(parent, extraData) {
+  // Find all elements with contextual content syntax
+  const contextualElements = parent.querySelectorAll('[data-contextual-content]');
+
+  contextualElements.forEach((element) => {
+    const originalContent = element.dataset.contextualContent;
+    if (originalContent) {
+      createContextualContent(element, originalContent, extraData);
+    }
+  });
+
+  // Also check for conditional content in text nodes that might not have been caught
+  const allTextNodes = [];
+  const walker = document.createTreeWalker(
+    parent,
+    NodeFilter.SHOW_TEXT,
+    null,
+    false,
+  );
+
+  let node = walker.nextNode();
+  while (node) {
+    if (node.textContent.includes('?(') && node.textContent.includes('):(')) {
+      allTextNodes.push(node);
+    }
+    node = walker.nextNode();
+  }
+
+  allTextNodes.forEach((textNode) => {
+    const { parentElement } = textNode;
+    if (parentElement && !parentElement.dataset.contextualContent) {
+      // Extract conditional content from the text
+      const text = textNode.textContent;
+      const conditionalMatch = text.match(/(\w[\w.=\s-&|"]*)\?\(([^)]*)\):\(([^)]*)\)/);
+      if (conditionalMatch) {
+        const [fullMatch] = conditionalMatch;
+        parentElement.dataset.contextualContent = fullMatch;
+        createContextualContent(parentElement, fullMatch, extraData);
+      }
+    }
+  });
 }
 
 export async function getNonProdData(env) {
@@ -661,6 +720,15 @@ export default function autoUpdateContent(parent, miloDeps, extraData) {
   };
 
   const getContent = (_match, p1, n) => {
+    // Check if this is conditional content that needs reactive handling
+    if (p1.includes('?(') && p1.includes('):(')) {
+      // Store the original content and mark for reactive processing
+      n.parentNode.dataset.contextualContent = p1;
+      // Process the conditional content immediately to preserve styling
+      const processedContent = parseMetadataPath(p1, extraData);
+      return processedContent;
+    }
+
     let content = parseMetadataPath(p1, extraData);
 
     if (preserveFormatKeys.includes(p1)) {
@@ -710,4 +778,7 @@ export default function autoUpdateContent(parent, miloDeps, extraData) {
   autoUpdateLinks(parent, miloLibs);
   decorateProfileCardsZPattern(parent);
   if (getEventServiceEnv() !== 'prod') updateExtraMetaTags(parent);
+
+  // handle contextual content with BlockMediator store reactivity
+  updateContextualContentElements(parent, extraData);
 }

@@ -1,4 +1,5 @@
 import { SUSI_OPTIONS } from './constances.js';
+import BlockMediator from './deps/block-mediator.min.js';
 
 export const LIBS = (() => {
   const { hostname, search } = window.location;
@@ -287,6 +288,41 @@ export function getCurrentTabId() {
 }
 
 /**
+ * Parses a metadata path that may include BlockMediator store references
+ * @param {string} path - The metadata path to parse
+ * @param {Object} extraData - Optional extra data to fall back to if metadata is not found
+ * @returns {*} The parsed value from metadata or BlockMediator store
+ */
+function parseMetadataPathWithBlockMediator(path, extraData = {}) {
+  if (!path) return '';
+
+  // Check for BlockMediator store references (@BM.storeName.property)
+  if (path.startsWith('@BM.')) {
+    const storePath = path.substring(4); // Remove '@BM.'
+    const pathParts = storePath.split('.');
+    const storeName = pathParts[0];
+
+    const storeValue = BlockMediator.get(storeName);
+    if (storeValue === undefined) return '';
+
+    // Navigate through the store value using the remaining path parts
+    let currentValue = storeValue;
+    for (let i = 1; i < pathParts.length; i += 1) {
+      if (currentValue && typeof currentValue === 'object') {
+        currentValue = currentValue[pathParts[i]];
+      } else {
+        return '';
+      }
+    }
+
+    return currentValue || '';
+  }
+
+  // Fall back to regular metadata path parsing
+  return parseRegularPath(path, extraData);
+}
+
+/**
  * Evaluates a single condition (with optional equality check)
  * @param {string} condition - The condition to evaluate
  * @param {Object} extraData - Optional extra data to fall back to if metadata is not found
@@ -295,10 +331,12 @@ export function getCurrentTabId() {
 function evaluateCondition(condition, extraData = {}) {
   const trimmedCondition = condition.trim();
 
-  // Check if this is an equality check (condition=value)
-  if (trimmedCondition.includes('=')) {
-    const [conditionPath, expected] = trimmedCondition.split('=');
-    const conditionValue = parseRegularPath(conditionPath.trim(), extraData);
+  // Check for inequality operator (condition!=value)
+  if (trimmedCondition.includes('!=')) {
+    const [conditionPath, expected] = trimmedCondition.split('!=');
+    const conditionValue = trimmedCondition.startsWith('@BM.')
+      ? parseMetadataPathWithBlockMediator(conditionPath.trim(), extraData)
+      : parseRegularPath(conditionPath.trim(), extraData);
     let expectedValue = expected.trim();
 
     // Remove quotes if present
@@ -306,12 +344,39 @@ function evaluateCondition(condition, extraData = {}) {
       expectedValue = expectedValue.slice(1, -1);
     }
 
-    // Compare the actual value with the expected value
+    // Special handling for null/undefined checks
+    if (expectedValue === 'null') {
+      return conditionValue !== null && conditionValue !== undefined && conditionValue !== '';
+    }
+
+    return String(conditionValue) !== String(expectedValue);
+  }
+
+  // Check if this is an equality check (condition=value)
+  if (trimmedCondition.includes('=')) {
+    const [conditionPath, expected] = trimmedCondition.split('=');
+    const conditionValue = trimmedCondition.startsWith('@BM.')
+      ? parseMetadataPathWithBlockMediator(conditionPath.trim(), extraData)
+      : parseRegularPath(conditionPath.trim(), extraData);
+    let expectedValue = expected.trim();
+
+    // Remove quotes if present
+    if (expectedValue.startsWith('"') && expectedValue.endsWith('"')) {
+      expectedValue = expectedValue.slice(1, -1);
+    }
+
+    // Special handling for null/undefined checks
+    if (expectedValue === 'null') {
+      return conditionValue === null || conditionValue === undefined || conditionValue === '';
+    }
+
     return String(conditionValue) === String(expectedValue);
   }
 
   // Regular truthy/falsy check
-  const conditionValue = parseRegularPath(trimmedCondition, extraData);
+  const conditionValue = trimmedCondition.startsWith('@BM.')
+    ? parseMetadataPathWithBlockMediator(trimmedCondition, extraData)
+    : parseRegularPath(trimmedCondition, extraData);
 
   // Evaluate if condition is truthy
   return conditionValue
@@ -331,14 +396,14 @@ function evaluateCondition(condition, extraData = {}) {
  * @param {Object} extraData - Optional extra data to fall back to if metadata is not found
  * @returns {string} The processed content with conditionals resolved
  */
-function parseConditionalContent(content, extraData = {}) {
+export function parseConditionalContent(content, extraData = {}) {
   if (!content || typeof content !== 'string') return content;
 
   // Match conditional syntax: condition?(true-content):(false-content)
   // or condition=value?(true-content):(false-content)
   // or condition1&condition2?(true-content):(false-content)
   // or condition1||condition2?(true-content):(false-content)
-  const conditionalRegex = /(\w[\w.=\s-&|"]*)\?\(([^)]*)\):\(([^)]*)\)/g;
+  const conditionalRegex = /(\w[\w.=\s-&|"@!]*)\?\(([^)]*)\):\(([^)]*)\)/g;
 
   return content.replace(conditionalRegex, (match, condition, trueContent, falseContent) => {
     let isMatch = false;
@@ -363,6 +428,107 @@ function parseConditionalContent(content, extraData = {}) {
 }
 
 /**
+ * Updates contextual content based on current store values
+ * @param {HTMLElement} element - The element to update
+ * @param {string} originalContent - The original content with conditional syntax
+ * @param {Object} extraData - Optional extra data to fall back to if metadata is not found
+ */
+function updateContextualContent(element, originalContent, extraData = {}) {
+  const processedContent = parseConditionalContent(originalContent, extraData);
+
+  // Check if content should be visible
+  const hasContent = processedContent.trim() !== '';
+
+  if (hasContent) {
+    // Find and update text nodes to preserve styling
+    const textNodes = [];
+    const walker = document.createTreeWalker(
+      element,
+      NodeFilter.SHOW_TEXT,
+      null,
+      false,
+    );
+
+    let node = walker.nextNode();
+    while (node) {
+      textNodes.push(node);
+      node = walker.nextNode();
+    }
+
+    if (textNodes.length > 0) {
+      // Update the first text node with the processed content
+      textNodes[0].nodeValue = processedContent;
+      // Remove any additional text nodes
+      for (let i = 1; i < textNodes.length; i += 1) {
+        textNodes[i].remove();
+      }
+    } else {
+      // If no text nodes found, we need to preserve the structure
+      // Find the first child element that contains text and update it
+      const firstChild = element.firstElementChild;
+      if (firstChild) {
+        firstChild.textContent = processedContent;
+      } else {
+        // Fallback to innerHTML if no structure to preserve
+        element.innerHTML = processedContent;
+      }
+    }
+  } else {
+    // Clear content when no processed content
+    element.textContent = '';
+  }
+}
+
+/**
+ * Creates reactive contextual content that updates based on BlockMediator store changes
+ * @param {HTMLElement} element - The element containing the contextual content
+ * @param {string} originalContent - The original content with conditional syntax
+ * @param {Object} extraData - Optional extra data to fall back to if metadata is not found
+ */
+export function createContextualContent(element, originalContent, extraData = {}) {
+  // Add contextual-content class
+  element.classList.add('contextual-content');
+
+  // Check if any conditions use BlockMediator stores
+  const hasBlockMediatorConditions = originalContent.includes('@BM.');
+
+  if (!hasBlockMediatorConditions) {
+    // No BlockMediator conditions, process normally
+    const processedContent = parseConditionalContent(originalContent, extraData);
+    element.innerHTML = processedContent;
+    return;
+  }
+
+  // Extract all BlockMediator store names used in the conditions
+  const storeNames = new Set();
+  const storeRegex = /@BM\.([^.\s=&|!]+)/g;
+  let match = storeRegex.exec(originalContent);
+  while (match !== null) {
+    storeNames.add(match[1]);
+    match = storeRegex.exec(originalContent);
+  }
+
+  const allStoresAvailable = Array.from(storeNames).every(
+    (s) => BlockMediator.get(s) !== undefined,
+  );
+
+  if (!allStoresAvailable) {
+    // Some stores not available yet, clear content until stores are available
+    element.textContent = '';
+
+    // Subscribe to store updates
+    Array.from(storeNames).forEach((storeName) => {
+      BlockMediator.subscribe(storeName, () => {
+        updateContextualContent(element, originalContent, extraData);
+      });
+    });
+  }
+
+  // Initial content update
+  updateContextualContent(element, originalContent, extraData);
+}
+
+/**
  * Parses a metadata path string and returns the corresponding value from the metadata.
  * Supports combinations of object property access (.) and array indexing (:).
  * Also supports array iteration with @array(path)separator syntax.
@@ -379,8 +545,13 @@ function parseConditionalContent(content, extraData = {}) {
  * - @array(attr.name) | (extract name attribute from objects with pipe separator)
  * - isFull?(This event has reached capacity.):() (conditional content)
  * - status=live?(Event is live.):(Event is not live.) (equality conditional)
+ * - status!=live?(Event is not live.):(Event is live.) (inequality conditional)
+ * - @BM.rsvpData=null?(User not registered.):(User is registered.) (null check)
+ * - @BM.rsvpData!=null?(User is registered.):(User not registered.) (not null check)
  * - isFull&status=live?(Event is full and live.):(Event is not full or not live.) (AND condition)
  * - isVirtual||isOnline?(Virtual or online event.):(In-person event.) (OR condition)
+ * - @BM.rsvpData.registrationStatus=registered?(User is registered.):(User is not registered.)
+ * - allow-wait-listing&@BM.rsvpData.registrationStatus=registered&@BM.eventData.isFull?(Complex)
  * @param {string} path - The metadata path to parse
  * @param {Object} extraData - Optional extra data to fall back to if metadata is not found
  * @returns {*} The parsed value from metadata
@@ -394,6 +565,11 @@ export function parseMetadataPath(path, extraData = {}) {
     // Check if the path contains conditional content syntax
     if (path.includes('?(') && path.includes('):(')) {
       return parseConditionalContent(path, extraData);
+    }
+
+    // Check if this is a BlockMediator store reference
+    if (path.startsWith('@BM.')) {
+      return parseMetadataPathWithBlockMediator(path, extraData);
     }
 
     // Regular path parsing (no array processing)
