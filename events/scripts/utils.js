@@ -513,8 +513,10 @@ export function createContextualContent(element, originalContent, extraData = {}
   );
 
   if (!allStoresAvailable) {
-    // Some stores not available yet, clear content until stores are available
-    element.textContent = '';
+    // Some stores not available yet, treat as falsy condition and show falsy content
+    // This eliminates dual falsy logic - stores unavailable = condition false
+    const processedContent = parseConditionalContent(originalContent, extraData);
+    element.textContent = processedContent;
 
     // Subscribe to store updates
     Array.from(storeNames).forEach((storeName) => {
