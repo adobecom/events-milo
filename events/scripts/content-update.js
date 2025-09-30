@@ -523,7 +523,8 @@ function updateContextualContentElements(parent, extraData) {
     if (parentElement && !parentElement.dataset.contextualContent) {
       // Extract conditional content from the text
       const text = textNode.textContent;
-      const conditionalMatch = text.match(/(\w[\w.=\s-&|"]*)\?\(([^)]*)\):\(([^)]*)\)/);
+      // Updated regex to handle complex conditions with @BM references and nested parentheses
+      const conditionalMatch = text.match(/(\w[\w.=\s-&|"@!]*)\?\(([^)]*(?:\([^)]*\)[^)]*)*)\):\(([^)]*(?:\([^)]*\)[^)]*)*)\)/);
       if (conditionalMatch) {
         const [fullMatch] = conditionalMatch;
         parentElement.dataset.contextualContent = fullMatch;
@@ -688,16 +689,6 @@ function flagEventState(parent) {
   }
 }
 
-function patchMetadata() {
-  const attendeeLimit = getMetadata('attendee-limit');
-  const attendeeCount = getMetadata('attendee-count');
-
-  if (attendeeLimit && attendeeCount) {
-    const isFull = +attendeeCount >= +attendeeLimit;
-    setMetadata('is-full', isFull);
-  }
-}
-
 // data -> dom gills
 export default function autoUpdateContent(parent, miloDeps, extraData) {
   const { getConfig, miloLibs } = miloDeps;
@@ -707,8 +698,6 @@ export default function autoUpdateContent(parent, miloDeps, extraData) {
   }
 
   if (!getMetadata('event-id')) return;
-
-  patchMetadata();
 
   const getImgData = (_match, p1, n) => {
     const data = parseMetadataPath(p1, extraData);

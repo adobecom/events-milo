@@ -403,7 +403,8 @@ export function parseConditionalContent(content, extraData = {}) {
   // or condition=value?(true-content):(false-content)
   // or condition1&condition2?(true-content):(false-content)
   // or condition1||condition2?(true-content):(false-content)
-  const conditionalRegex = /(\w[\w.=\s-&|"@!]*)\?\(([^)]*)\):\(([^)]*)\)/g;
+  // Updated regex to handle nested parentheses in HTML content
+  const conditionalRegex = /(\w[\w.=\s-&|"@!]*)\?\(([^)]*(?:\([^)]*\)[^)]*)*)\):\(([^)]*(?:\([^)]*\)[^)]*)*)\)/g;
 
   return content.replace(conditionalRegex, (match, condition, trueContent, falseContent) => {
     let isMatch = false;
@@ -435,47 +436,45 @@ export function parseConditionalContent(content, extraData = {}) {
  */
 function updateContextualContent(element, originalContent, extraData = {}) {
   const processedContent = parseConditionalContent(originalContent, extraData);
-
   // Check if content should be visible
   const hasContent = processedContent.trim() !== '';
-
   if (hasContent) {
-    // Find and update text nodes to preserve styling
-    const textNodes = [];
-    const walker = document.createTreeWalker(
-      element,
-      NodeFilter.SHOW_TEXT,
-      null,
-      false,
-    );
+    // Check if the processed content contains HTML tags
+    const hasHTMLTags = /<[^>]+>/.test(processedContent);
 
-    let node = walker.nextNode();
-    while (node) {
-      textNodes.push(node);
-      node = walker.nextNode();
-    }
-
-    if (textNodes.length > 0) {
-      // Update the first text node with the processed content
-      textNodes[0].nodeValue = processedContent;
-      // Remove any additional text nodes
-      for (let i = 1; i < textNodes.length; i += 1) {
-        textNodes[i].remove();
-      }
+    if (hasHTMLTags) {
+      // For HTML content, use innerHTML to preserve tags
+      element.innerHTML = processedContent;
     } else {
-      // If no text nodes found, we need to preserve the structure
-      // Find the first child element that contains text and update it
-      const firstChild = element.firstElementChild;
-      if (firstChild) {
-        firstChild.textContent = processedContent;
+      // For plain text, try to preserve existing styling by updating text nodes
+      const textNodes = [];
+      const walker = document.createTreeWalker(
+        element,
+        NodeFilter.SHOW_TEXT,
+        null,
+        false,
+      );
+
+      let node = walker.nextNode();
+      while (node) {
+        textNodes.push(node);
+        node = walker.nextNode();
+      }
+
+      if (textNodes.length > 0) {
+        // Update the first text node with the processed content
+        textNodes[0].nodeValue = processedContent;
+        // Remove any additional text nodes
+        for (let i = 1; i < textNodes.length; i += 1) {
+          textNodes[i].remove();
+        }
       } else {
-        // Fallback to innerHTML if no structure to preserve
         element.innerHTML = processedContent;
       }
     }
   } else {
     // Clear content when no processed content
-    element.textContent = '';
+    element.innerHTML = '';
   }
 }
 
