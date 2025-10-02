@@ -1,4 +1,4 @@
-import { SUSI_OPTIONS } from './constances.js';
+import { SUSI_OPTIONS, CONDITIONAL_REG } from './constances.js';
 import BlockMediator from './deps/block-mediator.min.js';
 
 export const LIBS = (() => {
@@ -404,7 +404,7 @@ export function parseConditionalContent(content, extraData = {}) {
   // or condition1&condition2?(true-content):(false-content)
   // or condition1||condition2?(true-content):(false-content)
   // Updated regex to handle nested parentheses in HTML content
-  const conditionalRegex = /(\w[\w.=\s-&|"@!]*)\?\(([^)]*(?:\([^)]*\)[^)]*)*)\):\(([^)]*(?:\([^)]*\)[^)]*)*)\)/g;
+  const conditionalRegex = new RegExp(CONDITIONAL_REG.source, 'g');
 
   return content.replace(conditionalRegex, (match, condition, trueContent, falseContent) => {
     let isMatch = false;

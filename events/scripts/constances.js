@@ -1,5 +1,6 @@
 export const META_REG = /\[\[(.*?)\]\]/g;
 export const ICON_REG = /@@(.*?)@@/g;
+export const CONDITIONAL_REG = /(\w[\w.=\s-&|"@!]*)\?\(([^)]*(?:\([^)]*\))*[^)]*)\):\(([^)]*(?:\([^)]*\))*[^)]*)\)/;
 export const SUSI_OPTIONS = {
   dctx_id: {
     stage: 'v:2,s,bg:milo,51364e80-648b-11ef-9bf6-ad6724e2c153',

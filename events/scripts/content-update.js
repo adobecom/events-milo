@@ -1,4 +1,4 @@
-import { ICON_REG, META_REG, SERIES_404_MAP_PATH, ALLOWED_EMAIL_DOMAINS } from './constances.js';
+import { ICON_REG, META_REG, CONDITIONAL_REG, SERIES_404_MAP_PATH, ALLOWED_EMAIL_DOMAINS } from './constances.js';
 import BlockMediator from './deps/block-mediator.min.js';
 import { getEvent } from './esp-controller.js';
 import {
@@ -524,7 +524,7 @@ function updateContextualContentElements(parent, extraData) {
       // Extract conditional content from the text
       const text = textNode.textContent;
       // Updated regex to handle complex conditions with @BM references and nested parentheses
-      const conditionalMatch = text.match(/(\w[\w.=\s-&|"@!]*)\?\(([^)]*(?:\([^)]*\)[^)]*)*)\):\(([^)]*(?:\([^)]*\)[^)]*)*)\)/);
+      const conditionalMatch = text.match(CONDITIONAL_REG);
       if (conditionalMatch) {
         const [fullMatch] = conditionalMatch;
         parentElement.dataset.contextualContent = fullMatch;
