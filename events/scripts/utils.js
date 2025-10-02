@@ -404,11 +404,53 @@ export function parseConditionalContent(content, extraData = {}) {
   // or condition1&condition2?(true-content):(false-content)
   // or condition1||condition2?(true-content):(false-content)
   // Updated regex to handle nested parentheses in HTML content
-  const conditionalRegex = /(\w[\w.=\s-&|"@!]*)\?\(([^)]*(?:\([^)]*\)[^)]*)*)\):\(([^)]*(?:\([^)]*\)[^)]*)*)\)/g;
+  // Instead of regex, parse for balanced parentheses to avoid backtracking.
 
-  return content.replace(conditionalRegex, (match, condition, trueContent, falseContent) => {
+  let result = '';
+  let idx = 0;
+  while (idx < content.length) {
+    // Find conditional pattern: <condition>?(
+    const condMatch = content.slice(idx).match(/(\w[\w.=\s-&|"@!]*)\?\(/);
+    if (!condMatch) {
+      result += content.slice(idx);
+      break;
+    }
+    // Capture up to the condition
+    result += content.slice(idx, idx + condMatch.index);
+    const condStart = idx + condMatch.index;
+    const condStr = condMatch[1];
+    let cursor = condStart + condStr.length + 2; // after '?('
+    // Helper to find balanced parenthesis
+    const extractBalanced = (str, startIdx) => {
+      let depth = 1, i = startIdx, inner = '';
+      while (i < str.length) {
+        if (str[i] === '(') depth++;
+        else if (str[i] === ')') depth--;
+        if (depth === 0) break;
+        inner += str[i];
+        i++;
+      }
+      return {text: inner, end: i};
+    };
+    // Extract true-content
+    const trueBlock = extractBalanced(content, cursor);
+    cursor += trueBlock.end + 2; // skip ')', then expect ':('
+    if (
+      content.slice(cursor - 2, cursor) !== '):' ||
+      content[cursor] !== '('
+    ) {
+      // Pattern does not match, append rest and break
+      result += content.slice(condStart);
+      break;
+    }
+    // Extract false-content
+    cursor++; // skip '('
+    const falseBlock = extractBalanced(content, cursor);
+    cursor += falseBlock.end + 1; // skip ')'
+
+    // Evaluate the condition and insert the correct block
     let isMatch = false;
-
+    const condition = condStr;
     // Check for logical operators
     if (condition.includes('&')) {
       // AND condition: all conditions must be true
@@ -423,9 +465,10 @@ export function parseConditionalContent(content, extraData = {}) {
       isMatch = evaluateCondition(condition, extraData);
     }
 
-    // Return the appropriate content
-    return isMatch ? trueContent : falseContent;
-  });
+    result += isMatch ? trueBlock.text : falseBlock.text;
+    idx = cursor;
+  }
+  return result;
 }
 
 /**

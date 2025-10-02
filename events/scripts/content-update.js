@@ -523,8 +523,10 @@ function updateContextualContentElements(parent, extraData) {
     if (parentElement && !parentElement.dataset.contextualContent) {
       // Extract conditional content from the text
       const text = textNode.textContent;
-      // Updated regex to handle complex conditions with @BM references and nested parentheses
-      const conditionalMatch = text.match(/(\w[\w.=\s-&|"@!]*)\?\(([^)]*(?:\([^)]*\)[^)]*)*)\):\(([^)]*(?:\([^)]*\)[^)]*)*)\)/);
+      // for nested parentheses
+      const conditionalMatch = text.match(
+        /(\w[\w.=\s-&|"@!]*)\?\(((?:[^()]+|\([^()]*\))*)\):\(((?:[^()]+|\([^()]*\))*)\)/,
+      );
       if (conditionalMatch) {
         const [fullMatch] = conditionalMatch;
         parentElement.dataset.contextualContent = fullMatch;
