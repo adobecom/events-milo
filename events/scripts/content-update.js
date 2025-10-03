@@ -705,6 +705,92 @@ export function areTimestampsOnSameDay(startTimestamp, endTimestamp) {
 }
 
 /**
+ * Gets the localized timezone abbreviation
+ * @param {number} timestamp - UTC timestamp in milliseconds
+ * @param {string} locale - Locale string
+ * @returns {string} Timezone abbreviation (e.g., 'PST', 'EDT')
+ */
+function getLocalTimeZone(timestamp, locale) {
+  return new Date(timestamp)
+    .toLocaleTimeString(locale, { timeZoneName: 'short' }).split(' ').slice(-1)[0];
+}
+
+/**
+ * Gets the time interval between two timestamps
+ * @param {number} startTimestamp - Start timestamp in milliseconds
+ * @param {number} endTimestamp - End timestamp in milliseconds
+ * @param {string} locale - Locale string
+ * @returns {string} Time interval (e.g., '13:00 - 14:45')
+ */
+function getTimeInterval(startTimestamp, endTimestamp, locale) {
+  const options = { hour: '2-digit', minute: '2-digit' };
+
+  const startTime = new Date(startTimestamp).toLocaleTimeString(locale, options);
+  const endTime = new Date(endTimestamp).toLocaleTimeString(locale, options);
+
+  return `${startTime} - ${endTime}`;
+}
+
+/**
+ * Gets the localized day of month
+ * @param {number} timestamp - UTC timestamp in milliseconds
+ * @param {string} locale - Locale string
+ * @returns {string} Day of month, padded (e.g., '06', '20')
+ */
+function getDay(timestamp, locale) {
+  return new Date(timestamp).toLocaleDateString(locale, { day: '2-digit' });
+}
+
+/**
+ * Gets the localized month abbreviation
+ * @param {number} timestamp - UTC timestamp in milliseconds
+ * @param {string} locale - Locale string
+ * @returns {string} Month abbreviation (e.g., 'Aug', 'Oct')
+ */
+function getMonth(timestamp, locale) {
+  return new Date(timestamp).toLocaleDateString(locale, { month: 'short' });
+}
+
+/**
+ * Gets the localized day of the week
+ * @param {number} timestamp - UTC timestamp in milliseconds
+ * @param {string} locale - Locale string
+ * @returns {string} Day of week abbreviation (e.g., 'Tue', 'Fri')
+ */
+function getDayOfTheWeek(timestamp, locale) {
+  return new Date(timestamp).toLocaleDateString(locale, { weekday: 'short' });
+}
+
+/**
+ * Creates a formatted date string using a template
+ * @param {number} startTimestamp - Start timestamp in milliseconds
+ * @param {number} endTimestamp - End timestamp in milliseconds
+ * @param {string} locale - Locale string
+ * @param {string} template - Format template with tokens
+ * @returns {string} Formatted date string
+ */
+export function createTemplatedDateRange(startTimestamp, endTimestamp, locale, template) {
+  if (!startTimestamp || !endTimestamp || !template) return '';
+
+  const startNum = typeof startTimestamp === 'string' ? parseInt(startTimestamp, 10) : startTimestamp;
+  const endNum = typeof endTimestamp === 'string' ? parseInt(endTimestamp, 10) : endTimestamp;
+
+  if (Number.isNaN(startNum) || Number.isNaN(endNum)) return '';
+
+  try {
+    return template
+      .replace('{LLL}', getMonth(startNum, locale))
+      .replace('{dd}', getDay(startNum, locale))
+      .replace('{ddd}', getDayOfTheWeek(startNum, locale))
+      .replace('{timeRange}', getTimeInterval(startNum, endNum, locale))
+      .replace('{timeZone}', getLocalTimeZone(startNum, locale));
+  } catch (error) {
+    window.lana?.log(`Error creating templated date range: ${JSON.stringify(error)}`);
+    return '';
+  }
+}
+
+/**
  * Creates a smart date range display based on whether start and end are on the same day.
  * @param {string} startTimestamp - Start timestamp
  * @param {string} endTimestamp - End timestamp
@@ -749,6 +835,14 @@ const METADATA_MASSAGE_RULES = {
     transform: (locale) => {
       const startTimestamp = getMetadata('local-start-time-millis');
       const endTimestamp = getMetadata('local-end-time-millis');
+      const customTemplate = getMetadata('custom-date-time-format');
+
+      // If custom template is provided, use templated formatting
+      if (customTemplate) {
+        return createTemplatedDateRange(startTimestamp, endTimestamp, locale, customTemplate);
+      }
+
+      // Otherwise, use smart date range (fallback)
       return createSmartDateRange(startTimestamp, endTimestamp, locale);
     },
   },
