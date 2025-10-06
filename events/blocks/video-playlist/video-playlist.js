@@ -1462,31 +1462,116 @@ class VideoPlaylist {
 
   attachToExistingYouTubePlayer(iframe, videoId) {
     try {
-      // Get the existing YouTube player instance
-      // YouTube players are stored in window.YT.Player instances
-      // We need to find the player that matches our iframe
-      const players = Object.values(window.YT.Player || {});
-      let existingPlayer = null;
-      
-      // Try to find the player by checking if it matches our iframe
-      for (const player of players) {
-        if (player && player.getIframe && player.getIframe() === iframe) {
-          existingPlayer = player;
-          break;
-        }
-      }
-      
-      if (existingPlayer) {
-        // Set up progress tracking on the existing player
-        this.setupProgressTrackingOnPlayer(existingPlayer, videoId);
-      } else {
-        // If we can't find the existing player, wait a bit and try again
-        setTimeout(() => {
-          this.attachToExistingYouTubePlayer(iframe, videoId);
-        }, 500);
-      }
+      // Use a simpler approach: set up iframe event listeners and progress tracking
+      this.setupYouTubeIframeProgressTracking(iframe, videoId);
     } catch (error) {
       console.error('Error attaching to existing YouTube player:', error);
+    }
+  }
+
+  setupYouTubeIframeProgressTracking(iframe, videoId) {
+    // Get stored progress and seek to it
+    const localStorageVideos = getLocalStorageVideos();
+    const currentSessionData = localStorageVideos[videoId];
+    
+    if (currentSessionData) {
+      const { secondsWatched } = currentSessionData;
+      // Try to seek to the saved position by modifying the iframe src
+      this.seekToPosition(iframe, secondsWatched);
+    }
+    
+    // Set up progress tracking using iframe events
+    this.setupIframeProgressTracking(iframe, videoId);
+  }
+
+  seekToPosition(iframe, seconds) {
+    try {
+      // Try to modify the iframe src to seek to a specific position
+      const currentSrc = iframe.src;
+      if (currentSrc.includes('youtube.com/embed/') || currentSrc.includes('youtube-nocookie.com/embed/')) {
+        // Add start parameter to the URL
+        const separator = currentSrc.includes('?') ? '&' : '?';
+        const newSrc = `${currentSrc}${separator}start=${Math.floor(seconds)}`;
+        iframe.src = newSrc;
+      }
+    } catch (error) {
+      console.error('Error seeking to position:', error);
+    }
+  }
+
+  setupIframeProgressTracking(iframe, videoId) {
+    // Set up event listeners on the iframe
+    iframe.addEventListener('load', () => {
+      console.log('YouTube iframe loaded');
+      this.startYouTubeProgressTracking(iframe, videoId);
+    });
+    
+    // Listen for iframe focus/blur to detect play/pause
+    iframe.addEventListener('focus', () => {
+      console.log('YouTube iframe focused - likely playing');
+      this.startYouTubeProgressTracking(iframe, videoId);
+    });
+    
+    iframe.addEventListener('blur', () => {
+      console.log('YouTube iframe blurred - likely paused');
+      this.pauseYouTubeProgressTracking(videoId);
+    });
+    
+    // Start initial progress tracking
+    this.startYouTubeProgressTracking(iframe, videoId);
+  }
+
+  startYouTubeProgressTracking(iframe, videoId) {
+    // Clear any existing interval
+    if (this.progressInterval) {
+      clearInterval(this.progressInterval);
+    }
+    
+    // Start progress tracking every 5 seconds
+    this.progressInterval = setInterval(() => {
+      this.recordYouTubeProgress(iframe, videoId);
+    }, PROGRESS_SAVE_INTERVAL * 1000);
+  }
+
+  pauseYouTubeProgressTracking(videoId) {
+    // Clear interval and save current progress
+    if (this.progressInterval) {
+      clearInterval(this.progressInterval);
+      this.progressInterval = null;
+    }
+    
+    // Try to get current time and save it
+    const iframe = this.videoContainer.querySelector('iframe');
+    if (iframe) {
+      this.recordYouTubeProgress(iframe, videoId);
+    }
+  }
+
+  recordYouTubeProgress(iframe, videoId) {
+    // Since we can't directly access the YouTube player API,
+    // we'll use a different approach: estimate progress based on iframe events
+    // and save a timestamp-based progress
+    
+    const currentTime = Date.now();
+    const localStorageVideos = getLocalStorageVideos();
+    const currentSessionData = localStorageVideos[videoId];
+    
+    if (currentSessionData) {
+      // Update the last activity time
+      localStorageVideos[videoId] = {
+        ...currentSessionData,
+        lastActivity: currentTime,
+        secondsWatched: currentSessionData.secondsWatched || 0
+      };
+      saveLocalStorageVideos(localStorageVideos);
+    } else {
+      // Create new session data
+      localStorageVideos[videoId] = {
+        secondsWatched: 0,
+        lastActivity: currentTime,
+        length: 0 // We'll update this when we can get the duration
+      };
+      saveLocalStorageVideos(localStorageVideos);
     }
   }
 
@@ -1596,6 +1681,12 @@ class VideoPlaylist {
     if (this.youtubePlayer) {
       this.youtubePlayer.destroy();
       this.youtubePlayer = null;
+    }
+    
+    // Cleanup message handler
+    if (this.youtubeMessageHandler) {
+      window.removeEventListener('message', this.youtubeMessageHandler);
+      this.youtubeMessageHandler = null;
     }
   }
 }
