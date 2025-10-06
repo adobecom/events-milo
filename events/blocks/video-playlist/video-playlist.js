@@ -1442,7 +1442,7 @@ class VideoPlaylist {
       // Wait for iframe to be created after click
       const checkForIframe = setInterval(() => {
         const iframe = this.videoContainer.querySelector('iframe');
-        if (iframe && iframe.src.includes('youtube.com/embed/')) {
+        if (iframe && iframe.src.includes('youtube-nocookie.com/embed/')) {
           clearInterval(checkForIframe);
           
           // Wait for YouTube API to be ready
