@@ -1474,13 +1474,13 @@ class VideoPlaylist {
     const playerId = `player-${videoId}`;
     
     // Create a container for the player
-    const playerContainer = document.createElement('div');
-    playerContainer.id = playerId;
-    playerContainer.style.width = '100%';
-    playerContainer.style.height = '100%';
+    // const playerContainer = document.createElement('div');
+    // playerContainer.id = playerId;
+    // playerContainer.style.width = '100%';
+    // playerContainer.style.height = '100%';
     
     // Replace the iframe with our player container
-    iframe.parentNode.replaceChild(playerContainer, iframe);
+    // iframe.parentNode.replaceChild(playerContainer, iframe);
     
     // Create YouTube player with proper event listeners
     const player = new window.YT.Player(playerId, {
