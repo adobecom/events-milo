@@ -30,7 +30,7 @@ const analytics = {
     FAVORITE: 'Favorite',
     UNFAVORITE: 'Unfavorite',
     CLOSE_FAVORITE_NOTIFICATION: 'Close Favorite Notification',
-    VIEW_SCHEDULE: 'View Schedule',
+    VIEW_SCHEDULE: 'View',
     CLOSE_REGISTRATION_NOTIFICATION: 'Close Registration Notification',
     REGISTER: 'Register',
 };
