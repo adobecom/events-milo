@@ -3,7 +3,6 @@ import { LIBS } from '../../scripts/utils.js';
 
 const { createTag, getConfig } = await import(`${LIBS}/utils/utils.js`);
 
-// Constants
 const AUTOPLAY_PLAYLIST_KEY = 'shouldAutoPlayPlaylist';
 const PLAYLIST_VIDEOS_KEY = 'playlistVideos';
 const PLAYLIST_PLAY_ALL_ID = 'playlist-play-all';
