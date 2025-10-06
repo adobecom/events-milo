@@ -1742,9 +1742,27 @@ class VideoPlaylist {
       } else {
         console.log('No saved progress found, starting from beginning');
       }
+      
+      // Start progress tracking immediately after ready
+      console.log('Starting progress tracking after ready');
+      this.startProgressTrackingAfterReady(event.target, videoId);
     } catch (error) {
       console.error('Error in YouTube player ready handler:', error);
     }
+  }
+
+  startProgressTrackingAfterReady(player, videoId) {
+    // Clear any existing interval
+    if (this.progressInterval) {
+      clearInterval(this.progressInterval);
+    }
+    
+    // Start progress tracking every 5 seconds
+    this.progressInterval = setInterval(() => {
+      this.recordYouTubePlayerProgress(player, videoId);
+    }, 5000);
+    
+    console.log('Progress tracking started after ready');
   }
 
   handleYouTubePlayerStateChange(event, videoId) {
@@ -1753,6 +1771,13 @@ class VideoPlaylist {
       this.eventsFired = true;
       
       console.log('YouTube state changed to:', event.data, 'PLAYING:', window.YT.PlayerState.PLAYING, 'PAUSED:', window.YT.PlayerState.PAUSED);
+      console.log('All player states:', {
+        ENDED: window.YT.PlayerState.ENDED,
+        PLAYING: window.YT.PlayerState.PLAYING, 
+        PAUSED: window.YT.PlayerState.PAUSED,
+        BUFFERING: window.YT.PlayerState.BUFFERING,
+        CUED: window.YT.PlayerState.CUED
+      });
       
       if (event.data === window.YT.PlayerState.PLAYING) {
         console.log('Video started playing - starting progress tracking');
