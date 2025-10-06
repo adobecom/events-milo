@@ -1446,11 +1446,9 @@ class VideoPlaylist {
   }
 
   setupYouTubeProgressTracking(iframe, videoId) {
-    // Wait for YouTube API to be ready
     if (window.YT && window.YT.Player) {
       this.attachToExistingYouTubePlayer(iframe, videoId);
     } else {
-      // Wait for API to load
       const checkAPI = setInterval(() => {
         if (window.YT && window.YT.Player) {
           clearInterval(checkAPI);
