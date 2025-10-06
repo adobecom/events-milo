@@ -1458,10 +1458,28 @@ class VideoPlaylist {
       const currentSrc = iframe.src;
       console.log('Original iframe src:', currentSrc);
       
+      // Get stored progress to add start parameter
+      const localStorageVideos = getLocalStorageVideos();
+      const currentSessionData = localStorageVideos[videoId];
+      
       // Add enablejsapi=1 to the URL
       const url = new URL(currentSrc);
       url.searchParams.set('enablejsapi', '1');
       url.searchParams.set('origin', window.location.origin);
+      
+      // Add start parameter if we have saved progress
+      if (currentSessionData && currentSessionData.secondsWatched > 0) {
+        const RESTART_THRESHOLD = 30;
+        const shouldRestart = currentSessionData.secondsWatched > (currentSessionData.length || 0) - RESTART_THRESHOLD;
+        
+        if (!shouldRestart) {
+          const startSeconds = Math.floor(currentSessionData.secondsWatched);
+          url.searchParams.set('start', startSeconds);
+          console.log('Adding start parameter:', startSeconds, 'seconds');
+        } else {
+          console.log('Video was near the end, starting from beginning');
+        }
+      }
       
       const newSrc = url.toString();
       console.log('Modified iframe src:', newSrc);
@@ -1726,7 +1744,11 @@ class VideoPlaylist {
       
       console.log('Stored session data:', currentSessionData);
       
-      if (currentSessionData) {
+      // Check if we already have start parameter in the URL (which means we're starting from saved position)
+      const iframe = this.videoContainer.querySelector('iframe');
+      const hasStartParameter = iframe && iframe.src.includes('start=');
+      
+      if (currentSessionData && !hasStartParameter) {
         const { secondsWatched } = currentSessionData;
         console.log('Found saved progress:', secondsWatched, 'seconds');
         
@@ -1739,6 +1761,8 @@ class VideoPlaylist {
         // Seek to the saved position
         event.target.seekTo(startAt);
         console.log('Seeked to position:', startAt);
+      } else if (hasStartParameter) {
+        console.log('Video already starting from saved position via URL parameter');
       } else {
         console.log('No saved progress found, starting from beginning');
       }
