@@ -13,6 +13,7 @@ export const EVENT_ATTENDEE_DATA_FILTER = {
   registrationStatus: { type: 'string', submittable: true },
   invitedBy: { type: 'string', submittable: true },
   shareInfoWithPartners: { type: 'boolean', submittable: true },
+  ccSentiment: { type: 'string', submittable: true },
 };
 
 /**
