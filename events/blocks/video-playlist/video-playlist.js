@@ -1476,13 +1476,6 @@ class VideoPlaylist {
       playerId = `player-${videoId}`;
       iframe.setAttribute('id', playerId);
     }
-
-    // Do not rewrite iframe src to avoid reloading a currently playing video.
-    // If the embed already has enablejsapi=1, events will fire. Otherwise, the
-    // API may not emit events, in which case we still keep the current playback uninterrupted.
-    // We could add a non-invasive fallback if events never arrive.
-
-    // Create YouTube player with proper event listeners, reusing the existing iframe
     const player = new window.YT.Player(iframe, {
       events: {
         onReady: (event) => {
