@@ -1418,18 +1418,8 @@ class VideoPlaylist {
     // Check if this is a YouTube video
     if (!this.isYouTubeVideo(iframe.src)) return;
 
-    // Wait for YouTube API to be ready
-    if (window.YT && window.YT.Player) {
-      this.createYouTubePlayer(iframe, videoId);
-    } else {
-      // Wait for API to load
-      const checkAPI = setInterval(() => {
-        if (window.YT && window.YT.Player) {
-          clearInterval(checkAPI);
-          this.createYouTubePlayer(iframe, videoId);
-        }
-      }, 100);
-    }
+    // Set up progress tracking for the existing iframe
+    this.setupYouTubeProgressTracking(iframe, videoId);
   }
 
   isYouTubeVideo(iframeSrc) {
@@ -1445,18 +1435,8 @@ class VideoPlaylist {
         if (iframe && iframe.src.includes('youtube-nocookie.com/embed/')) {
           clearInterval(checkForIframe);
           
-          // Wait for YouTube API to be ready
-          if (window.YT && window.YT.Player) {
-            this.createYouTubePlayer(iframe, videoId);
-          } else {
-            // Wait for API to load
-            const checkAPI = setInterval(() => {
-              if (window.YT && window.YT.Player) {
-                clearInterval(checkAPI);
-                this.createYouTubePlayer(iframe, videoId);
-              }
-            }, 100);
-          }
+          // Set up progress tracking for the existing iframe
+          this.setupYouTubeProgressTracking(iframe, videoId);
         }
       }, 100);
     };
@@ -1465,79 +1445,115 @@ class VideoPlaylist {
     liteYoutube.addEventListener('click', clickHandler);
   }
 
-  createYouTubePlayer(iframe, videoId) {
-    try {
-      // Clean up existing player
-      if (this.youtubePlayer) {
-        this.youtubePlayer.destroy();
-        this.youtubePlayer = null;
-      }
-
-      // Create YouTube player instance
-      this.youtubePlayer = new YT.Player(iframe, {
-        events: {
-          onReady: (event) => this.onYouTubePlayerReady(event, videoId),
-          onStateChange: (event) => this.onYouTubePlayerStateChange(event, videoId)
+  setupYouTubeProgressTracking(iframe, videoId) {
+    // Wait for YouTube API to be ready
+    if (window.YT && window.YT.Player) {
+      this.attachToExistingYouTubePlayer(iframe, videoId);
+    } else {
+      // Wait for API to load
+      const checkAPI = setInterval(() => {
+        if (window.YT && window.YT.Player) {
+          clearInterval(checkAPI);
+          this.attachToExistingYouTubePlayer(iframe, videoId);
         }
-      });
-    } catch (error) {
-      console.error('Error creating YouTube player:', error);
+      }, 100);
     }
   }
 
-  onYouTubePlayerReady(event, videoId) {
-    const player = event.target;
-    const duration = player.getDuration();
+  attachToExistingYouTubePlayer(iframe, videoId) {
+    try {
+      // Get the existing YouTube player instance
+      // YouTube players are stored in window.YT.Player instances
+      // We need to find the player that matches our iframe
+      const players = Object.values(window.YT.Player || {});
+      let existingPlayer = null;
+      
+      // Try to find the player by checking if it matches our iframe
+      for (const player of players) {
+        if (player && player.getIframe && player.getIframe() === iframe) {
+          existingPlayer = player;
+          break;
+        }
+      }
+      
+      if (existingPlayer) {
+        // Set up progress tracking on the existing player
+        this.setupProgressTrackingOnPlayer(existingPlayer, videoId);
+      } else {
+        // If we can't find the existing player, wait a bit and try again
+        setTimeout(() => {
+          this.attachToExistingYouTubePlayer(iframe, videoId);
+        }, 500);
+      }
+    } catch (error) {
+      console.error('Error attaching to existing YouTube player:', error);
+    }
+  }
+
+  setupProgressTrackingOnPlayer(player, videoId) {
+    // Store reference to the player
+    this.youtubePlayer = player;
     
-    // Get stored progress
+    // Get stored progress and seek to it
     const localStorageVideos = getLocalStorageVideos();
     const currentSessionData = localStorageVideos[videoId];
     
     if (currentSessionData) {
       const { secondsWatched } = currentSessionData;
+      const duration = player.getDuration();
       const shouldRestart = secondsWatched > duration - RESTART_THRESHOLD;
       const startAt = shouldRestart ? 0 : secondsWatched;
       
       // Seek to the saved position
       player.seekTo(startAt);
     }
+    
+    // Set up progress tracking interval
+    this.startProgressTracking(player, videoId);
   }
 
-  onYouTubePlayerStateChange(event, videoId) {
-    const player = event.target;
-    const state = event.data;
+  startProgressTracking(player, videoId) {
+    // Clear any existing interval
+    if (this.progressInterval) {
+      clearInterval(this.progressInterval);
+    }
     
-    switch (state) {
-      case YT.PlayerState.PLAYING:
-        // Clear any existing interval
-        if (this.progressInterval) {
-          clearInterval(this.progressInterval);
-        }
-        // Start progress tracking every 5 seconds
-        this.progressInterval = setInterval(() => {
-          this.recordYouTubePlayerProgress(player, videoId);
-        }, PROGRESS_SAVE_INTERVAL * 1000);
-        break;
-        
-      case YT.PlayerState.PAUSED:
-        // Clear interval and save current progress
-        if (this.progressInterval) {
-          clearInterval(this.progressInterval);
-          this.progressInterval = null;
-        }
-        this.recordYouTubePlayerProgress(player, videoId);
-        break;
-        
-      case YT.PlayerState.ENDED:
-        // Clear interval and handle completion
-        if (this.progressInterval) {
-          clearInterval(this.progressInterval);
-          this.progressInterval = null;
-        }
-        this.handleYouTubeVideoComplete(videoId);
-        break;
+    // Start progress tracking every 5 seconds
+    this.progressInterval = setInterval(() => {
+      this.recordYouTubePlayerProgress(player, videoId);
+    }, PROGRESS_SAVE_INTERVAL * 1000);
+    
+    // Set up iframe event listeners for play/pause detection
+    this.setupIframeEventListeners(player, videoId);
+  }
+
+  setupIframeEventListeners(player, videoId) {
+    // Listen for iframe events to detect play/pause
+    const iframe = player.getIframe();
+    if (iframe) {
+      // Listen for focus events (when user interacts with video)
+      iframe.addEventListener('focus', () => {
+        console.log('YouTube iframe focused - video likely playing');
+        this.startProgressTracking(player, videoId);
+      });
+      
+      // Listen for blur events (when user stops interacting)
+      iframe.addEventListener('blur', () => {
+        console.log('YouTube iframe blurred - video likely paused');
+        this.pauseProgressTracking(player, videoId);
+      });
     }
   }
+
+  pauseProgressTracking(player, videoId) {
+    // Clear interval and save current progress
+    if (this.progressInterval) {
+      clearInterval(this.progressInterval);
+      this.progressInterval = null;
+    }
+    this.recordYouTubePlayerProgress(player, videoId);
+  }
+
 
   recordYouTubePlayerProgress(player, videoId) {
     const currentTime = player.getCurrentTime();
