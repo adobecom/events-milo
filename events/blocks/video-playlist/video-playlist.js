@@ -1420,11 +1420,7 @@ class VideoPlaylist {
 
     // For existing iframes, check if they have enablejsapi=1
     if (iframe.src.includes('enablejsapi=1')) {
-      console.log('Existing iframe has enablejsapi=1, setting up API tracking');
       this.setupYouTubeProgressTracking(iframe, videoId);
-    } else {
-      console.log('Existing iframe missing enablejsapi=1, using fallback tracking');
-      this.setupFallbackYouTubeTracking(iframe, videoId);
     }
   }
 
@@ -1433,30 +1429,23 @@ class VideoPlaylist {
   }
 
   setupLiteYouTubePlayer(liteYoutube, videoId) {
-    // Set up click listener for lite-youtube element
     const clickHandler = () => {
-      console.log('Lite YouTube clicked, setting up player with enablejsapi');
-      
       // Wait for iframe to be created after click
       const checkForIframe = setInterval(() => {
         const iframe = this.videoContainer.querySelector('iframe');
         if (iframe && iframe.src.includes('youtube-nocookie.com/embed/')) {
           clearInterval(checkForIframe);
-          
-          // Modify iframe src to add enablejsapi=1
           this.addEnableJsApiToIframe(iframe, videoId);
         }
       }, 100);
     };
 
-    // Add click listener to the lite-youtube element
     liteYoutube.addEventListener('click', clickHandler);
   }
 
   addEnableJsApiToIframe(iframe, videoId) {
     try {
       const currentSrc = iframe.src;
-      console.log('Original iframe src:', currentSrc);
       
       // Get stored progress to add start parameter
       const localStorageVideos = getLocalStorageVideos();
@@ -1475,28 +1464,19 @@ class VideoPlaylist {
         if (!shouldRestart) {
           const startSeconds = Math.floor(currentSessionData.secondsWatched);
           url.searchParams.set('start', startSeconds);
-          console.log('Adding start parameter:', startSeconds, 'seconds');
-        } else {
-          console.log('Video was near the end, starting from beginning');
         }
       }
       
-      const newSrc = url.toString();
-      console.log('Modified iframe src:', newSrc);
-      
       // Update the iframe src (this will reload the video)
-      iframe.src = newSrc;
+      iframe.src = url.toString();
       
       // Wait for the iframe to load with the new URL
       iframe.addEventListener('load', () => {
-        console.log('Iframe reloaded with enablejsapi=1, setting up API tracking');
         this.setupYouTubeProgressTracking(iframe, videoId);
       });
       
     } catch (error) {
       console.error('Error adding enablejsapi to iframe:', error);
-      // Fallback to regular tracking
-      this.setupYouTubeProgressTracking(iframe, videoId);
     }
   }
 
@@ -1523,19 +1503,6 @@ class VideoPlaylist {
   }
 
   createYouTubePlayerInstance(iframe, videoId) {
-    console.log('Creating YouTube player instance for video:', videoId);
-    console.log('Iframe src:', iframe.src);
-    
-    // Check if iframe has enablejsapi=1 for proper API events
-    const hasEnableJsApi = iframe.src.includes('enablejsapi=1');
-    console.log('Has enablejsapi:', hasEnableJsApi);
-    
-    if (!hasEnableJsApi) {
-      console.log('YouTube iframe missing enablejsapi=1, using fallback tracking');
-      this.setupFallbackYouTubeTracking(iframe, videoId);
-      return;
-    }
-    
     try {
       // Ensure the iframe has an id we can use
       let playerId = iframe.getAttribute('id');
@@ -1544,231 +1511,52 @@ class VideoPlaylist {
         iframe.setAttribute('id', playerId);
       }
       
-      console.log('Creating YT.Player with id:', playerId);
-      
       const player = new window.YT.Player(iframe, {
         events: {
           onReady: (event) => {
-            console.log('YouTube onReady event fired');
             this.handleYouTubePlayerReady(event, videoId);
           },
           onStateChange: (event) => {
-            console.log('YouTube onStateChange event fired, state:', event.data);
             this.handleYouTubePlayerStateChange(event, videoId);
           }
         }
       });
       
-      console.log('YT.Player created:', player);
-      
       // Store player reference
       this.youtubePlayer = player;
       
-      // Set up a timeout to detect if events never fire
-      this.setupEventDetectionTimeout(iframe, videoId);
-      
     } catch (error) {
       console.error('Error creating YT.Player:', error);
-      console.log('Falling back to iframe tracking');
-      this.setupFallbackYouTubeTracking(iframe, videoId);
     }
   }
 
-  setupEventDetectionTimeout(iframe, videoId) {
-    // Wait 3 seconds to see if events fire
-    setTimeout(() => {
-      if (!this.eventsFired) {
-        console.log('YouTube API events not firing, switching to fallback tracking');
-        this.setupFallbackYouTubeTracking(iframe, videoId);
-      }
-    }, 3000);
-  }
 
-  setupFallbackYouTubeTracking(iframe, videoId) {
-    console.log('Setting up fallback YouTube tracking for video:', videoId);
-    
-    // Use iframe event listeners as fallback
-    this.setupIframeEventListeners(iframe, videoId);
-    
-    // Get stored progress and try to seek
-    const localStorageVideos = getLocalStorageVideos();
-    const currentSessionData = localStorageVideos[videoId];
-    
-    console.log('Stored session data:', currentSessionData);
-    
-    if (currentSessionData && currentSessionData.secondsWatched > 0) {
-      console.log('Seeking to position:', currentSessionData.secondsWatched);
-      // Try to seek using URL parameter (this will reload the video)
-      this.seekToPositionViaUrl(iframe, currentSessionData.secondsWatched);
-    } else {
-      console.log('No stored progress found, starting from beginning');
-    }
-  }
-
-  setupIframeEventListeners(iframe, videoId) {
-    console.log('Setting up iframe event listeners for video:', videoId);
-    
-    // Listen for YouTube postMessage events to detect play/pause
-    this.setupYouTubeMessageListener(videoId);
-    
-    // Listen for iframe load event
-    iframe.addEventListener('load', () => {
-      console.log('YouTube iframe loaded - fallback tracking');
-      this.startFallbackProgressTracking(videoId);
-    });
-    
-    // Start initial tracking
-    console.log('Starting initial fallback progress tracking');
-    this.startFallbackProgressTracking(videoId);
-  }
-
-  setupYouTubeMessageListener(videoId) {
-    // Listen for YouTube postMessage events
-    const messageHandler = (event) => {
-      // Check if this is a YouTube message
-      if (event.origin !== 'https://www.youtube.com' && 
-          event.origin !== 'https://www.youtube-nocookie.com') {
-        return;
-      }
-      
-      try {
-        const data = JSON.parse(event.data);
-        this.handleYouTubeMessage(data, videoId);
-      } catch (e) {
-        // Not a JSON message, ignore
-      }
-    };
-    
-    window.addEventListener('message', messageHandler);
-    
-    // Store handler for cleanup
-    this.youtubeMessageHandler = messageHandler;
-  }
-
-  handleYouTubeMessage(data, videoId) {
-    console.log('YouTube message received:', data);
-    
-    // Handle different YouTube events
-    if (data.event === 'video-progress') {
-      // YouTube is reporting progress
-      this.recordYouTubeProgressFromMessage(data, videoId);
-    } else if (data.event === 'video-play') {
-      // Video started playing
-      console.log('YouTube video started playing');
-      this.startFallbackProgressTracking(videoId);
-    } else if (data.event === 'video-pause') {
-      // Video paused
-      console.log('YouTube video paused');
-      this.pauseFallbackProgressTracking(videoId);
-    } else if (data.event === 'video-ended') {
-      // Video ended
-      console.log('YouTube video ended');
-      this.handleYouTubeVideoComplete(videoId);
-    }
-  }
-
-  recordYouTubeProgressFromMessage(data, videoId) {
-    if (data.info && data.info.currentTime !== undefined) {
-      const currentTime = data.info.currentTime;
-      const duration = data.info.duration || 0;
-      saveCurrentVideoProgress(videoId, currentTime, duration);
-      console.log('Progress saved from message:', currentTime, duration);
-    }
-  }
-
-  startFallbackProgressTracking(videoId) {
-    if (this.progressInterval) {
-      clearInterval(this.progressInterval);
-    }
-    
-    this.progressInterval = setInterval(() => {
-      this.recordFallbackProgress(videoId);
-    }, 5000);
-  }
-
-  pauseFallbackProgressTracking(videoId) {
-    if (this.progressInterval) {
-      clearInterval(this.progressInterval);
-      this.progressInterval = null;
-    }
-    this.recordFallbackProgress(videoId);
-  }
-
-  recordFallbackProgress(videoId) {
-    // Record timestamp-based progress since we can't get exact time
-    const currentTime = Date.now();
-    const localStorageVideos = getLocalStorageVideos();
-    const currentSessionData = localStorageVideos[videoId];
-    
-    if (currentSessionData) {
-      localStorageVideos[videoId] = {
-        ...currentSessionData,
-        lastActivity: currentTime
-      };
-    } else {
-      localStorageVideos[videoId] = {
-        secondsWatched: 0,
-        lastActivity: currentTime,
-        length: 0
-      };
-    }
-    saveLocalStorageVideos(localStorageVideos);
-  }
-
-  seekToPositionViaUrl(iframe, seconds) {
-    try {
-      const currentSrc = iframe.src;
-      if (currentSrc.includes('youtube.com/embed/') || currentSrc.includes('youtube-nocookie.com/embed/')) {
-        const separator = currentSrc.includes('?') ? '&' : '?';
-        const newSrc = `${currentSrc}${separator}start=${Math.floor(seconds)}`;
-        iframe.src = newSrc;
-      }
-    } catch (error) {
-      console.error('Error seeking to position via URL:', error);
-    }
-  }
 
   handleYouTubePlayerReady(event, videoId) {
     try {
-      // Mark that events are firing
       this.eventsFired = true;
       
-      const videoData = event.target.getVideoData();
       const duration = event.target.getDuration();
-      
-      console.log('YouTube player ready - videoId:', videoId, 'duration:', duration);
-      
-      // Get stored progress
-      const localStorageVideos = getLocalStorageVideos();
-      const currentSessionData = localStorageVideos[videoId];
-      
-      console.log('Stored session data:', currentSessionData);
       
       // Check if we already have start parameter in the URL (which means we're starting from saved position)
       const iframe = this.videoContainer.querySelector('iframe');
       const hasStartParameter = iframe && iframe.src.includes('start=');
       
-      if (currentSessionData && !hasStartParameter) {
-        const { secondsWatched } = currentSessionData;
-        console.log('Found saved progress:', secondsWatched, 'seconds');
+      // Only seek if we don't already have start parameter in URL
+      if (!hasStartParameter) {
+        const localStorageVideos = getLocalStorageVideos();
+        const currentSessionData = localStorageVideos[videoId];
         
-        const RESTART_THRESHOLD = 30; // Restart if within 30 seconds of end
-        const shouldRestart = secondsWatched > duration - RESTART_THRESHOLD;
-        const startAt = shouldRestart ? 0 : secondsWatched;
-        
-        console.log('Should restart:', shouldRestart, 'Starting at:', startAt, 'seconds');
-        
-        // Seek to the saved position
-        event.target.seekTo(startAt);
-        console.log('Seeked to position:', startAt);
-      } else if (hasStartParameter) {
-        console.log('Video already starting from saved position via URL parameter');
-      } else {
-        console.log('No saved progress found, starting from beginning');
+        if (currentSessionData && currentSessionData.secondsWatched > 0) {
+          const RESTART_THRESHOLD = 30;
+          const shouldRestart = currentSessionData.secondsWatched > duration - RESTART_THRESHOLD;
+          const startAt = shouldRestart ? 0 : currentSessionData.secondsWatched;
+          
+          event.target.seekTo(startAt);
+        }
       }
       
-      // Start progress tracking immediately after ready
-      console.log('Starting progress tracking after ready');
+      // Start progress tracking
       this.startProgressTrackingAfterReady(event.target, videoId);
     } catch (error) {
       console.error('Error in YouTube player ready handler:', error);
@@ -1776,55 +1564,38 @@ class VideoPlaylist {
   }
 
   startProgressTrackingAfterReady(player, videoId) {
-    // Clear any existing interval
     if (this.progressInterval) {
       clearInterval(this.progressInterval);
     }
     
-    // Start progress tracking every 5 seconds
     this.progressInterval = setInterval(() => {
       this.recordYouTubePlayerProgress(player, videoId);
     }, 5000);
-    
-    console.log('Progress tracking started after ready');
   }
 
   handleYouTubePlayerStateChange(event, videoId) {
     try {
-      // Mark that events are firing
       this.eventsFired = true;
       
-      console.log('YouTube state changed to:', event.data, 'PLAYING:', window.YT.PlayerState.PLAYING, 'PAUSED:', window.YT.PlayerState.PAUSED);
-      console.log('All player states:', {
-        ENDED: window.YT.PlayerState.ENDED,
-        PLAYING: window.YT.PlayerState.PLAYING, 
-        PAUSED: window.YT.PlayerState.PAUSED,
-        BUFFERING: window.YT.PlayerState.BUFFERING,
-        CUED: window.YT.PlayerState.CUED
-      });
-      
       if (event.data === window.YT.PlayerState.PLAYING) {
-        console.log('Video started playing - starting progress tracking');
-        // Video started playing - start progress tracking
+        // Start progress tracking when playing
         if (this.progressInterval) {
           clearInterval(this.progressInterval);
         }
         
         this.progressInterval = setInterval(() => {
           this.recordYouTubePlayerProgress(event.target, videoId);
-        }, 5000); // Track every 5 seconds
+        }, 5000);
         
       } else if (event.data === window.YT.PlayerState.PAUSED) {
-        console.log('Video paused - stopping progress tracking');
-        // Video paused - stop tracking and save progress
+        // Stop tracking and save progress when paused
         if (this.progressInterval) {
           clearInterval(this.progressInterval);
         }
         this.recordYouTubePlayerProgress(event.target, videoId);
         
       } else if (event.data === window.YT.PlayerState.ENDED) {
-        console.log('Video ended - marking as completed');
-        // Video ended - mark as completed
+        // Mark as completed when ended
         this.handleYouTubeVideoComplete(videoId);
       }
     } catch (error) {
@@ -1837,11 +1608,8 @@ class VideoPlaylist {
       const currentTime = player.getCurrentTime();
       const duration = player.getDuration();
       
-      console.log('Recording progress - currentTime:', currentTime, 'duration:', duration);
-      
       if (currentTime && duration) {
         saveCurrentVideoProgress(videoId, currentTime, duration);
-        console.log('Progress saved successfully');
       }
     } catch (error) {
       console.error('Error recording YouTube progress:', error);
@@ -1892,7 +1660,6 @@ class VideoPlaylist {
   }
 
   cleanup() {
-    // Cleanup YouTube player and intervals
     if (this.progressInterval) {
       clearInterval(this.progressInterval);
       this.progressInterval = null;
@@ -1901,12 +1668,6 @@ class VideoPlaylist {
     if (this.youtubePlayer) {
       this.youtubePlayer.destroy();
       this.youtubePlayer = null;
-    }
-    
-    // Cleanup message handler
-    if (this.youtubeMessageHandler) {
-      window.removeEventListener('message', this.youtubeMessageHandler);
-      this.youtubeMessageHandler = null;
     }
   }
 }
