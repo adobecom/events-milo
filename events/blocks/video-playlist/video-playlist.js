@@ -1279,7 +1279,6 @@ class VideoPlaylist {
   findVideoId() {
     if (!this.videoContainer) return null;
     
-    // First check for lite-youtube element
     const liteYoutube = this.videoContainer.querySelector('lite-youtube');
     if (liteYoutube) {
       const videoId = liteYoutube.getAttribute('videoid');
