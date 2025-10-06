@@ -1468,38 +1468,54 @@ class VideoPlaylist {
   }
 
   createYouTubePlayerInstance(iframe, videoId) {
-    // Ensure the iframe has an id we can use
-    let playerId = iframe.getAttribute('id');
-    if (!playerId) {
-      playerId = `player-${videoId}`;
-      iframe.setAttribute('id', playerId);
-    }
+    console.log('Creating YouTube player instance for video:', videoId);
+    console.log('Iframe src:', iframe.src);
     
     // Check if iframe has enablejsapi=1 for proper API events
     const hasEnableJsApi = iframe.src.includes('enablejsapi=1');
+    console.log('Has enablejsapi:', hasEnableJsApi);
     
-    const player = new window.YT.Player(iframe, {
-      events: {
-        onReady: (event) => {
-          this.handleYouTubePlayerReady(event, videoId);
-        },
-        onStateChange: (event) => {
-          this.handleYouTubePlayerStateChange(event, videoId);
-        }
-      }
-    });
-    
-    // Store player reference
-    this.youtubePlayer = player;
-    
-    // If enablejsapi=1 is not present, events won't fire
-    // Set up a fallback tracking mechanism
     if (!hasEnableJsApi) {
       console.log('YouTube iframe missing enablejsapi=1, using fallback tracking');
       this.setupFallbackYouTubeTracking(iframe, videoId);
-    } else {
+      return;
+    }
+    
+    try {
+      // Ensure the iframe has an id we can use
+      let playerId = iframe.getAttribute('id');
+      if (!playerId) {
+        playerId = `player-${videoId}`;
+        iframe.setAttribute('id', playerId);
+      }
+      
+      console.log('Creating YT.Player with id:', playerId);
+      
+      const player = new window.YT.Player(iframe, {
+        events: {
+          onReady: (event) => {
+            console.log('YouTube onReady event fired');
+            this.handleYouTubePlayerReady(event, videoId);
+          },
+          onStateChange: (event) => {
+            console.log('YouTube onStateChange event fired, state:', event.data);
+            this.handleYouTubePlayerStateChange(event, videoId);
+          }
+        }
+      });
+      
+      console.log('YT.Player created:', player);
+      
+      // Store player reference
+      this.youtubePlayer = player;
+      
       // Set up a timeout to detect if events never fire
       this.setupEventDetectionTimeout(iframe, videoId);
+      
+    } catch (error) {
+      console.error('Error creating YT.Player:', error);
+      console.log('Falling back to iframe tracking');
+      this.setupFallbackYouTubeTracking(iframe, videoId);
     }
   }
 
@@ -1514,6 +1530,8 @@ class VideoPlaylist {
   }
 
   setupFallbackYouTubeTracking(iframe, videoId) {
+    console.log('Setting up fallback YouTube tracking for video:', videoId);
+    
     // Use iframe event listeners as fallback
     this.setupIframeEventListeners(iframe, videoId);
     
@@ -1521,13 +1539,20 @@ class VideoPlaylist {
     const localStorageVideos = getLocalStorageVideos();
     const currentSessionData = localStorageVideos[videoId];
     
+    console.log('Stored session data:', currentSessionData);
+    
     if (currentSessionData && currentSessionData.secondsWatched > 0) {
+      console.log('Seeking to position:', currentSessionData.secondsWatched);
       // Try to seek using URL parameter (this will reload the video)
       this.seekToPositionViaUrl(iframe, currentSessionData.secondsWatched);
+    } else {
+      console.log('No stored progress found, starting from beginning');
     }
   }
 
   setupIframeEventListeners(iframe, videoId) {
+    console.log('Setting up iframe event listeners for video:', videoId);
+    
     // Listen for iframe events to detect play/pause
     iframe.addEventListener('load', () => {
       console.log('YouTube iframe loaded - fallback tracking');
@@ -1546,6 +1571,7 @@ class VideoPlaylist {
     });
     
     // Start initial tracking
+    console.log('Starting initial fallback progress tracking');
     this.startFallbackProgressTracking(videoId);
   }
 
