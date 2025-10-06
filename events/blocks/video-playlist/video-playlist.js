@@ -1621,15 +1621,15 @@ class VideoPlaylist {
   }
 
   updateProgressBarForVideo(videoId, currentTime, duration) {
-    // Debug: Check all session elements and their data-video-id attributes
-    const allSessions = this.videoContainer.querySelectorAll('[data-video-id]');
+    // Search in the entire document since sessions might not be in videoContainer
+    const allSessions = document.querySelectorAll('[data-video-id]');
     console.log('All session elements with data-video-id:', allSessions);
     allSessions.forEach((session, index) => {
       console.log(`Session ${index}:`, session.getAttribute('data-video-id'));
     });
     
     // Find the session element for this video
-    const sessionElement = this.videoContainer.querySelector(`[data-video-id="${videoId}"]`);
+    const sessionElement = document.querySelector(`[data-video-id="${videoId}"]`);
     console.log('Looking for videoId:', videoId, 'sessionElement found:', sessionElement);
     
     if (sessionElement) {
