@@ -382,7 +382,7 @@ function findVideoIdFromIframeSrc(iframeSrc) {
 
 function startVideoFromSecond(videoContainer, seconds) {
   if (videoContainer) {
-    const iframe = videoContainer.querySelector('iframe');
+  const iframe = videoContainer.querySelector('iframe');
     iframe?.contentWindow?.postMessage(
       { type: 'mpcAction', action: 'play', currentTime: seconds },
       'https://video.tv.adobe.com',
@@ -430,7 +430,7 @@ function sortCards(cards, sort) {
       const bTime = new Date(b.startDate);
       return aTime - bTime;
     });
-    return sortedCards;
+      return sortedCards;
   }
   return cards;
 }
@@ -446,6 +446,7 @@ class VideoPlaylist {
     this.currentPlaylistId = null;
     this.youtubePlayer = null;
     this.progressInterval = null;
+    this.eventsFired = false;
     this.init();
   }
 
@@ -644,11 +645,11 @@ class VideoPlaylist {
     
     return `
       <div class="video-playlist-container__social-share-wrapper">
-        <button class="video-playlist-container__social-share" daa-ll="Social_Share">
-          <svg width="16" height="16" viewBox="0 0 16 16">
-            <path d="M12 6c.8 0 1.5.7 1.5 1.5S12.8 9 12 9s-1.5-.7-1.5-1.5S11.2 6 12 6zM4 6c.8 0 1.5.7 1.5 1.5S4.8 9 4 9s-1.5-.7-1.5-1.5S3.2 6 4 6zM8 6c.8 0 1.5.7 1.5 1.5S8.8 9 8 9s-1.5-.7-1.5-1.5S7.2 6 8 6z"/>
-          </svg>
-        </button>
+      <button class="video-playlist-container__social-share" daa-ll="Social_Share">
+        <svg width="16" height="16" viewBox="0 0 16 16">
+          <path d="M12 6c.8 0 1.5.7 1.5 1.5S12.8 9 12 9s-1.5-.7-1.5-1.5S11.2 6 12 6zM4 6c.8 0 1.5.7 1.5 1.5S4.8 9 4 9s-1.5-.7-1.5-1.5S3.2 6 4 6zM8 6c.8 0 1.5.7 1.5 1.5S8.8 9 8 9s-1.5-.7-1.5-1.5S7.2 6 8 6z"/>
+        </svg>
+      </button>
         <div>
           <ul class="video-playlist-container__social-share-menu">
             ${menuItems}
@@ -1473,6 +1474,10 @@ class VideoPlaylist {
       playerId = `player-${videoId}`;
       iframe.setAttribute('id', playerId);
     }
+    
+    // Check if iframe has enablejsapi=1 for proper API events
+    const hasEnableJsApi = iframe.src.includes('enablejsapi=1');
+    
     const player = new window.YT.Player(iframe, {
       events: {
         onReady: (event) => {
@@ -1486,10 +1491,121 @@ class VideoPlaylist {
     
     // Store player reference
     this.youtubePlayer = player;
+    
+    // If enablejsapi=1 is not present, events won't fire
+    // Set up a fallback tracking mechanism
+    if (!hasEnableJsApi) {
+      console.log('YouTube iframe missing enablejsapi=1, using fallback tracking');
+      this.setupFallbackYouTubeTracking(iframe, videoId);
+    } else {
+      // Set up a timeout to detect if events never fire
+      this.setupEventDetectionTimeout(iframe, videoId);
+    }
+  }
+
+  setupEventDetectionTimeout(iframe, videoId) {
+    // Wait 3 seconds to see if events fire
+    setTimeout(() => {
+      if (!this.eventsFired) {
+        console.log('YouTube API events not firing, switching to fallback tracking');
+        this.setupFallbackYouTubeTracking(iframe, videoId);
+      }
+    }, 3000);
+  }
+
+  setupFallbackYouTubeTracking(iframe, videoId) {
+    // Use iframe event listeners as fallback
+    this.setupIframeEventListeners(iframe, videoId);
+    
+    // Get stored progress and try to seek
+    const localStorageVideos = getLocalStorageVideos();
+    const currentSessionData = localStorageVideos[videoId];
+    
+    if (currentSessionData && currentSessionData.secondsWatched > 0) {
+      // Try to seek using URL parameter (this will reload the video)
+      this.seekToPositionViaUrl(iframe, currentSessionData.secondsWatched);
+    }
+  }
+
+  setupIframeEventListeners(iframe, videoId) {
+    // Listen for iframe events to detect play/pause
+    iframe.addEventListener('load', () => {
+      console.log('YouTube iframe loaded - fallback tracking');
+      this.startFallbackProgressTracking(videoId);
+    });
+    
+    // Use focus/blur to detect play/pause
+    iframe.addEventListener('focus', () => {
+      console.log('YouTube iframe focused - likely playing');
+      this.startFallbackProgressTracking(videoId);
+    });
+    
+    iframe.addEventListener('blur', () => {
+      console.log('YouTube iframe blurred - likely paused');
+      this.pauseFallbackProgressTracking(videoId);
+    });
+    
+    // Start initial tracking
+    this.startFallbackProgressTracking(videoId);
+  }
+
+  startFallbackProgressTracking(videoId) {
+    if (this.progressInterval) {
+      clearInterval(this.progressInterval);
+    }
+    
+    this.progressInterval = setInterval(() => {
+      this.recordFallbackProgress(videoId);
+    }, 5000);
+  }
+
+  pauseFallbackProgressTracking(videoId) {
+    if (this.progressInterval) {
+      clearInterval(this.progressInterval);
+      this.progressInterval = null;
+    }
+    this.recordFallbackProgress(videoId);
+  }
+
+  recordFallbackProgress(videoId) {
+    // Record timestamp-based progress since we can't get exact time
+    const currentTime = Date.now();
+    const localStorageVideos = getLocalStorageVideos();
+    const currentSessionData = localStorageVideos[videoId];
+    
+    if (currentSessionData) {
+      localStorageVideos[videoId] = {
+        ...currentSessionData,
+        lastActivity: currentTime
+      };
+    } else {
+      localStorageVideos[videoId] = {
+        secondsWatched: 0,
+        lastActivity: currentTime,
+        length: 0
+      };
+    }
+    saveLocalStorageVideos(localStorageVideos);
+  }
+
+  seekToPositionViaUrl(iframe, seconds) {
+    try {
+      const currentSrc = iframe.src;
+      if (currentSrc.includes('youtube.com/embed/') || currentSrc.includes('youtube-nocookie.com/embed/')) {
+        const separator = currentSrc.includes('?') ? '&' : '?';
+        const newSrc = `${currentSrc}${separator}start=${Math.floor(seconds)}`;
+        iframe.src = newSrc;
+      }
+    } catch (error) {
+      console.error('Error seeking to position via URL:', error);
+    }
   }
 
   handleYouTubePlayerReady(event, videoId) {
     try {
+      // Mark that events are firing
+      this.eventsFired = true;
+      
       const videoData = event.target.getVideoData();
       const duration = event.target.getDuration();
       
@@ -1513,6 +1629,9 @@ class VideoPlaylist {
 
   handleYouTubePlayerStateChange(event, videoId) {
     try {
+      // Mark that events are firing
+      this.eventsFired = true;
+      
       if (event.data === window.YT.PlayerState.PLAYING) {
         // Video started playing - start progress tracking
         if (this.progressInterval) {
