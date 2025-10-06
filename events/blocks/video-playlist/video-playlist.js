@@ -1570,7 +1570,7 @@ class VideoPlaylist {
     
     this.progressInterval = setInterval(() => {
       this.recordYouTubePlayerProgress(player, videoId);
-    }, 5000);
+    }, 1000); // Update every 1 second for more responsive progress bar
   }
 
   handleYouTubePlayerStateChange(event, videoId) {
@@ -1585,7 +1585,7 @@ class VideoPlaylist {
         
         this.progressInterval = setInterval(() => {
           this.recordYouTubePlayerProgress(event.target, videoId);
-        }, 5000);
+        }, 1000); // Update every 1 second for more responsive progress bar
         
       } else if (event.data === window.YT.PlayerState.PAUSED) {
         // Stop tracking and save progress when paused
