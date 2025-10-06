@@ -445,6 +445,8 @@ class VideoPlaylist {
     this.videoContainer = null;
     this.cards = [];
     this.currentPlaylistId = null;
+    this.youtubePlayer = null;
+    this.progressInterval = null;
     this.init();
   }
 
@@ -1379,9 +1381,133 @@ class VideoPlaylist {
 
     // Setup YouTube player when API is ready
     window.onYouTubeIframeAPIReady = () => {
-      // YouTube player setup would go here
-      console.log('YouTube API ready');
+      this.initializeYouTubePlayer();
     };
+  }
+
+  initializeYouTubePlayer() {
+    if (!this.videoContainer) return;
+    
+    const iframe = this.videoContainer.querySelector('iframe');
+    if (!iframe) return;
+
+    const videoId = findVideoIdFromIframeSrc(iframe.src);
+    if (!videoId) return;
+
+    // Check if this is a YouTube video
+    if (!this.isYouTubeVideo(iframe.src)) return;
+
+    // Wait for YouTube API to be ready
+    if (window.YT && window.YT.Player) {
+      this.createYouTubePlayer(iframe, videoId);
+    } else {
+      // Wait for API to load
+      const checkAPI = setInterval(() => {
+        if (window.YT && window.YT.Player) {
+          clearInterval(checkAPI);
+          this.createYouTubePlayer(iframe, videoId);
+        }
+      }, 100);
+    }
+  }
+
+  isYouTubeVideo(iframeSrc) {
+    return iframeSrc && iframeSrc.includes('youtube.com/embed/');
+  }
+
+  createYouTubePlayer(iframe, videoId) {
+    try {
+      // Clean up existing player
+      if (this.youtubePlayer) {
+        this.youtubePlayer.destroy();
+        this.youtubePlayer = null;
+      }
+
+      // Create YouTube player instance
+      this.youtubePlayer = new YT.Player(iframe, {
+        events: {
+          onReady: (event) => this.onYouTubePlayerReady(event, videoId),
+          onStateChange: (event) => this.onYouTubePlayerStateChange(event, videoId)
+        }
+      });
+    } catch (error) {
+      console.error('Error creating YouTube player:', error);
+    }
+  }
+
+  onYouTubePlayerReady(event, videoId) {
+    const player = event.target;
+    const duration = player.getDuration();
+    
+    // Get stored progress
+    const localStorageVideos = getLocalStorageVideos();
+    const currentSessionData = localStorageVideos[videoId];
+    
+    if (currentSessionData) {
+      const { secondsWatched } = currentSessionData;
+      const shouldRestart = secondsWatched > duration - RESTART_THRESHOLD;
+      const startAt = shouldRestart ? 0 : secondsWatched;
+      
+      // Seek to the saved position
+      player.seekTo(startAt);
+    }
+  }
+
+  onYouTubePlayerStateChange(event, videoId) {
+    const player = event.target;
+    const state = event.data;
+    
+    switch (state) {
+      case YT.PlayerState.PLAYING:
+        // Clear any existing interval
+        if (this.progressInterval) {
+          clearInterval(this.progressInterval);
+        }
+        // Start progress tracking every 5 seconds
+        this.progressInterval = setInterval(() => {
+          this.recordYouTubePlayerProgress(player, videoId);
+        }, PROGRESS_SAVE_INTERVAL * 1000);
+        break;
+        
+      case YT.PlayerState.PAUSED:
+        // Clear interval and save current progress
+        if (this.progressInterval) {
+          clearInterval(this.progressInterval);
+          this.progressInterval = null;
+        }
+        this.recordYouTubePlayerProgress(player, videoId);
+        break;
+        
+      case YT.PlayerState.ENDED:
+        // Clear interval and handle completion
+        if (this.progressInterval) {
+          clearInterval(this.progressInterval);
+          this.progressInterval = null;
+        }
+        this.handleYouTubeVideoComplete(videoId);
+        break;
+    }
+  }
+
+  recordYouTubePlayerProgress(player, videoId) {
+    const currentTime = player.getCurrentTime();
+    const duration = player.getDuration();
+    
+    // Save progress to localStorage
+    saveCurrentVideoProgress(videoId, currentTime, duration);
+  }
+
+  handleYouTubeVideoComplete(videoId) {
+    // Mark video as completed in localStorage
+    const localStorageVideos = getLocalStorageVideos();
+    if (localStorageVideos[videoId]) {
+      localStorageVideos[videoId] = {
+        ...localStorageVideos[videoId],
+        completed: true,
+        secondsWatched: localStorageVideos[videoId].length || 0
+      };
+      saveLocalStorageVideos(localStorageVideos);
+    }
   }
 
   static dispose() {
@@ -1392,6 +1518,19 @@ class VideoPlaylist {
         playlist.parentNode.removeChild(playlist);
       }
     });
+  }
+
+  cleanup() {
+    // Cleanup YouTube player and intervals
+    if (this.progressInterval) {
+      clearInterval(this.progressInterval);
+      this.progressInterval = null;
+    }
+    
+    if (this.youtubePlayer) {
+      this.youtubePlayer.destroy();
+      this.youtubePlayer = null;
+    }
   }
 }
 
