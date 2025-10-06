@@ -1608,6 +1608,8 @@ class VideoPlaylist {
       const currentTime = player.getCurrentTime();
       const duration = player.getDuration();
       
+      console.log('Recording progress for videoId:', videoId, 'currentTime:', currentTime, 'duration:', duration);
+      
       if (currentTime && duration) {
         saveCurrentVideoProgress(videoId, currentTime, duration);
         // Update the progress bar for this video
@@ -1619,9 +1621,16 @@ class VideoPlaylist {
   }
 
   updateProgressBarForVideo(videoId, currentTime, duration) {
+    // Debug: Check all session elements and their data-video-id attributes
+    const allSessions = this.videoContainer.querySelectorAll('[data-video-id]');
+    console.log('All session elements with data-video-id:', allSessions);
+    allSessions.forEach((session, index) => {
+      console.log(`Session ${index}:`, session.getAttribute('data-video-id'));
+    });
+    
     // Find the session element for this video
     const sessionElement = this.videoContainer.querySelector(`[data-video-id="${videoId}"]`);
-    console.log('Updating progress bar for video:', videoId, 'sessionElement:', sessionElement);
+    console.log('Looking for videoId:', videoId, 'sessionElement found:', sessionElement);
     
     if (sessionElement) {
       const progressBar = sessionElement.querySelector(
@@ -1641,6 +1650,7 @@ class VideoPlaylist {
       }
     } else {
       console.log('Session element not found for video:', videoId);
+      console.log('Available video IDs:', Array.from(allSessions).map(s => s.getAttribute('data-video-id')));
     }
   }
 
