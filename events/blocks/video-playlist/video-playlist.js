@@ -1718,18 +1718,29 @@ class VideoPlaylist {
       const videoData = event.target.getVideoData();
       const duration = event.target.getDuration();
       
+      console.log('YouTube player ready - videoId:', videoId, 'duration:', duration);
+      
       // Get stored progress
       const localStorageVideos = getLocalStorageVideos();
       const currentSessionData = localStorageVideos[videoId];
       
+      console.log('Stored session data:', currentSessionData);
+      
       if (currentSessionData) {
         const { secondsWatched } = currentSessionData;
+        console.log('Found saved progress:', secondsWatched, 'seconds');
+        
         const RESTART_THRESHOLD = 30; // Restart if within 30 seconds of end
         const shouldRestart = secondsWatched > duration - RESTART_THRESHOLD;
         const startAt = shouldRestart ? 0 : secondsWatched;
         
+        console.log('Should restart:', shouldRestart, 'Starting at:', startAt, 'seconds');
+        
         // Seek to the saved position
         event.target.seekTo(startAt);
+        console.log('Seeked to position:', startAt);
+      } else {
+        console.log('No saved progress found, starting from beginning');
       }
     } catch (error) {
       console.error('Error in YouTube player ready handler:', error);
@@ -1741,7 +1752,10 @@ class VideoPlaylist {
       // Mark that events are firing
       this.eventsFired = true;
       
+      console.log('YouTube state changed to:', event.data, 'PLAYING:', window.YT.PlayerState.PLAYING, 'PAUSED:', window.YT.PlayerState.PAUSED);
+      
       if (event.data === window.YT.PlayerState.PLAYING) {
+        console.log('Video started playing - starting progress tracking');
         // Video started playing - start progress tracking
         if (this.progressInterval) {
           clearInterval(this.progressInterval);
@@ -1752,6 +1766,7 @@ class VideoPlaylist {
         }, 5000); // Track every 5 seconds
         
       } else if (event.data === window.YT.PlayerState.PAUSED) {
+        console.log('Video paused - stopping progress tracking');
         // Video paused - stop tracking and save progress
         if (this.progressInterval) {
           clearInterval(this.progressInterval);
@@ -1759,6 +1774,7 @@ class VideoPlaylist {
         this.recordYouTubePlayerProgress(event.target, videoId);
         
       } else if (event.data === window.YT.PlayerState.ENDED) {
+        console.log('Video ended - marking as completed');
         // Video ended - mark as completed
         this.handleYouTubeVideoComplete(videoId);
       }
@@ -1772,8 +1788,11 @@ class VideoPlaylist {
       const currentTime = player.getCurrentTime();
       const duration = player.getDuration();
       
+      console.log('Recording progress - currentTime:', currentTime, 'duration:', duration);
+      
       if (currentTime && duration) {
         saveCurrentVideoProgress(videoId, currentTime, duration);
+        console.log('Progress saved successfully');
       }
     } catch (error) {
       console.error('Error recording YouTube progress:', error);
