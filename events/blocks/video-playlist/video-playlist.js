@@ -1423,7 +1423,7 @@ class VideoPlaylist {
   }
 
   isYouTubeVideo(iframeSrc) {
-    return iframeSrc && iframeSrc.includes('youtube.com/embed/');
+    return iframeSrc && (iframeSrc.includes('youtube.com/embed/') || iframeSrc.includes('youtube-nocookie.com/embed/'));
   }
 
   setupLiteYouTubePlayer(liteYoutube, videoId) {
@@ -1470,20 +1470,20 @@ class VideoPlaylist {
   }
 
   createYouTubePlayerInstance(iframe, videoId) {
-    // Create a unique player ID
-    const playerId = `player-${videoId}`;
-    
-    // Create a container for the player
-    // const playerContainer = document.createElement('div');
-    // playerContainer.id = playerId;
-    // playerContainer.style.width = '100%';
-    // playerContainer.style.height = '100%';
-    
-    // Replace the iframe with our player container
-    // iframe.parentNode.replaceChild(playerContainer, iframe);
-    
-    // Create YouTube player with proper event listeners
-    const player = new window.YT.Player(playerId, {
+    // Ensure the iframe has an id we can use
+    let playerId = iframe.getAttribute('id');
+    if (!playerId) {
+      playerId = `player-${videoId}`;
+      iframe.setAttribute('id', playerId);
+    }
+
+    // Do not rewrite iframe src to avoid reloading a currently playing video.
+    // If the embed already has enablejsapi=1, events will fire. Otherwise, the
+    // API may not emit events, in which case we still keep the current playback uninterrupted.
+    // We could add a non-invasive fallback if events never arrive.
+
+    // Create YouTube player with proper event listeners, reusing the existing iframe
+    const player = new window.YT.Player(iframe, {
       events: {
         onReady: (event) => {
           this.handleYouTubePlayerReady(event, videoId);
