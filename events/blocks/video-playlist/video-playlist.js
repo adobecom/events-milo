@@ -1610,9 +1610,25 @@ class VideoPlaylist {
       
       if (currentTime && duration) {
         saveCurrentVideoProgress(videoId, currentTime, duration);
+        // Update the progress bar for this video
+        this.updateProgressBarForVideo(videoId, currentTime, duration);
       }
     } catch (error) {
       console.error('Error recording YouTube progress:', error);
+    }
+  }
+
+  updateProgressBarForVideo(videoId, currentTime, duration) {
+    // Find the session element for this video
+    const sessionElement = this.videoContainer.querySelector(`[data-video-id="${videoId}"]`);
+    if (sessionElement) {
+      const progressBar = sessionElement.querySelector(
+        '.video-playlist-container__sessions__wrapper__session__thumbnail__progress__bar'
+      );
+      if (progressBar) {
+        const progress = (currentTime / duration) * 100;
+        progressBar.style.width = `${progress}%`;
+      }
     }
   }
 
@@ -1628,26 +1644,6 @@ class VideoPlaylist {
 
 
 
-  recordYouTubePlayerProgress(player, videoId) {
-    const currentTime = player.getCurrentTime();
-    const duration = player.getDuration();
-    
-    // Save progress to localStorage
-    saveCurrentVideoProgress(videoId, currentTime, duration);
-  }
-
-  handleYouTubeVideoComplete(videoId) {
-    // Mark video as completed in localStorage
-    const localStorageVideos = getLocalStorageVideos();
-    if (localStorageVideos[videoId]) {
-      localStorageVideos[videoId] = {
-        ...localStorageVideos[videoId],
-        completed: true,
-        secondsWatched: localStorageVideos[videoId].length || 0
-      };
-      saveLocalStorageVideos(localStorageVideos);
-    }
-  }
 
   static dispose() {
     // Cleanup method
