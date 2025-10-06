@@ -1621,14 +1621,26 @@ class VideoPlaylist {
   updateProgressBarForVideo(videoId, currentTime, duration) {
     // Find the session element for this video
     const sessionElement = this.videoContainer.querySelector(`[data-video-id="${videoId}"]`);
+    console.log('Updating progress bar for video:', videoId, 'sessionElement:', sessionElement);
+    
     if (sessionElement) {
       const progressBar = sessionElement.querySelector(
         '.video-playlist-container__sessions__wrapper__session__thumbnail__progress__bar'
       );
+      console.log('Progress bar element:', progressBar);
+      
       if (progressBar) {
         const progress = (currentTime / duration) * 100;
+        console.log('Setting progress bar width to:', progress + '%', 'currentTime:', currentTime, 'duration:', duration);
         progressBar.style.width = `${progress}%`;
+        // Ensure the progress bar is visible with a fallback color
+        progressBar.style.backgroundColor = '#1473e6';
+        progressBar.style.display = 'block';
+      } else {
+        console.log('Progress bar element not found');
       }
+    } else {
+      console.log('Session element not found for video:', videoId);
     }
   }
 
