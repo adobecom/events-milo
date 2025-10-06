@@ -1279,6 +1279,16 @@ class VideoPlaylist {
   findVideoId() {
     if (!this.videoContainer) return null;
     
+    // First check for lite-youtube element
+    const liteYoutube = this.videoContainer.querySelector('lite-youtube');
+    if (liteYoutube) {
+      const videoId = liteYoutube.getAttribute('videoid');
+      if (videoId) {
+        return videoId;
+      }
+    }
+    
+    // Then check for iframe
     const iframe = this.videoContainer.querySelector('iframe');
     if (!iframe) return null;
     
@@ -1388,6 +1398,18 @@ class VideoPlaylist {
   initializeYouTubePlayer() {
     if (!this.videoContainer) return;
     
+    // Check for lite-youtube element first
+    const liteYoutube = this.videoContainer.querySelector('lite-youtube');
+    if (liteYoutube) {
+      const videoId = liteYoutube.getAttribute('videoid');
+      if (videoId) {
+        // Set up click listener for lite-youtube
+        this.setupLiteYouTubePlayer(liteYoutube, videoId);
+        return;
+      }
+    }
+    
+    // Check for iframe (regular YouTube embed)
     const iframe = this.videoContainer.querySelector('iframe');
     if (!iframe) return;
 
@@ -1413,6 +1435,35 @@ class VideoPlaylist {
 
   isYouTubeVideo(iframeSrc) {
     return iframeSrc && iframeSrc.includes('youtube.com/embed/');
+  }
+
+  setupLiteYouTubePlayer(liteYoutube, videoId) {
+    // Set up click listener for lite-youtube element
+    const clickHandler = () => {
+      // Wait for iframe to be created after click
+      const checkForIframe = setInterval(() => {
+        const iframe = this.videoContainer.querySelector('iframe');
+        if (iframe && iframe.src.includes('youtube.com/embed/')) {
+          clearInterval(checkForIframe);
+          
+          // Wait for YouTube API to be ready
+          if (window.YT && window.YT.Player) {
+            this.createYouTubePlayer(iframe, videoId);
+          } else {
+            // Wait for API to load
+            const checkAPI = setInterval(() => {
+              if (window.YT && window.YT.Player) {
+                clearInterval(checkAPI);
+                this.createYouTubePlayer(iframe, videoId);
+              }
+            }, 100);
+          }
+        }
+      }, 100);
+    };
+
+    // Add click listener to the lite-youtube element
+    liteYoutube.addEventListener('click', clickHandler);
   }
 
   createYouTubePlayer(iframe, videoId) {
