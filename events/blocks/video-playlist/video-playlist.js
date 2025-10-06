@@ -1553,26 +1553,72 @@ class VideoPlaylist {
   setupIframeEventListeners(iframe, videoId) {
     console.log('Setting up iframe event listeners for video:', videoId);
     
-    // Listen for iframe events to detect play/pause
+    // Listen for YouTube postMessage events to detect play/pause
+    this.setupYouTubeMessageListener(videoId);
+    
+    // Listen for iframe load event
     iframe.addEventListener('load', () => {
       console.log('YouTube iframe loaded - fallback tracking');
       this.startFallbackProgressTracking(videoId);
     });
     
-    // Use focus/blur to detect play/pause
-    iframe.addEventListener('focus', () => {
-      console.log('YouTube iframe focused - likely playing');
-      this.startFallbackProgressTracking(videoId);
-    });
-    
-    iframe.addEventListener('blur', () => {
-      console.log('YouTube iframe blurred - likely paused');
-      this.pauseFallbackProgressTracking(videoId);
-    });
-    
     // Start initial tracking
     console.log('Starting initial fallback progress tracking');
     this.startFallbackProgressTracking(videoId);
+  }
+
+  setupYouTubeMessageListener(videoId) {
+    // Listen for YouTube postMessage events
+    const messageHandler = (event) => {
+      // Check if this is a YouTube message
+      if (event.origin !== 'https://www.youtube.com' && 
+          event.origin !== 'https://www.youtube-nocookie.com') {
+        return;
+      }
+      
+      try {
+        const data = JSON.parse(event.data);
+        this.handleYouTubeMessage(data, videoId);
+      } catch (e) {
+        // Not a JSON message, ignore
+      }
+    };
+    
+    window.addEventListener('message', messageHandler);
+    
+    // Store handler for cleanup
+    this.youtubeMessageHandler = messageHandler;
+  }
+
+  handleYouTubeMessage(data, videoId) {
+    console.log('YouTube message received:', data);
+    
+    // Handle different YouTube events
+    if (data.event === 'video-progress') {
+      // YouTube is reporting progress
+      this.recordYouTubeProgressFromMessage(data, videoId);
+    } else if (data.event === 'video-play') {
+      // Video started playing
+      console.log('YouTube video started playing');
+      this.startFallbackProgressTracking(videoId);
+    } else if (data.event === 'video-pause') {
+      // Video paused
+      console.log('YouTube video paused');
+      this.pauseFallbackProgressTracking(videoId);
+    } else if (data.event === 'video-ended') {
+      // Video ended
+      console.log('YouTube video ended');
+      this.handleYouTubeVideoComplete(videoId);
+    }
+  }
+
+  recordYouTubeProgressFromMessage(data, videoId) {
+    if (data.info && data.info.currentTime !== undefined) {
+      const currentTime = data.info.currentTime;
+      const duration = data.info.duration || 0;
+      saveCurrentVideoProgress(videoId, currentTime, duration);
+      console.log('Progress saved from message:', currentTime, duration);
+    }
   }
 
   startFallbackProgressTracking(videoId) {
@@ -1750,6 +1796,12 @@ class VideoPlaylist {
     if (this.youtubePlayer) {
       this.youtubePlayer.destroy();
       this.youtubePlayer = null;
+    }
+    
+    // Cleanup message handler
+    if (this.youtubeMessageHandler) {
+      window.removeEventListener('message', this.youtubeMessageHandler);
+      this.youtubeMessageHandler = null;
     }
   }
 }
