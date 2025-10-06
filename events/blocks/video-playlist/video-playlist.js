@@ -1418,8 +1418,14 @@ class VideoPlaylist {
     // Check if this is a YouTube video
     if (!this.isYouTubeVideo(iframe.src)) return;
 
-    // Set up progress tracking for the existing iframe
-    this.setupYouTubeProgressTracking(iframe, videoId);
+    // For existing iframes, check if they have enablejsapi=1
+    if (iframe.src.includes('enablejsapi=1')) {
+      console.log('Existing iframe has enablejsapi=1, setting up API tracking');
+      this.setupYouTubeProgressTracking(iframe, videoId);
+    } else {
+      console.log('Existing iframe missing enablejsapi=1, using fallback tracking');
+      this.setupFallbackYouTubeTracking(iframe, videoId);
+    }
   }
 
   isYouTubeVideo(iframeSrc) {
@@ -1429,20 +1435,51 @@ class VideoPlaylist {
   setupLiteYouTubePlayer(liteYoutube, videoId) {
     // Set up click listener for lite-youtube element
     const clickHandler = () => {
+      console.log('Lite YouTube clicked, setting up player with enablejsapi');
+      
       // Wait for iframe to be created after click
       const checkForIframe = setInterval(() => {
         const iframe = this.videoContainer.querySelector('iframe');
         if (iframe && iframe.src.includes('youtube-nocookie.com/embed/')) {
           clearInterval(checkForIframe);
           
-          // Set up progress tracking for the existing iframe
-          this.setupYouTubeProgressTracking(iframe, videoId);
+          // Modify iframe src to add enablejsapi=1
+          this.addEnableJsApiToIframe(iframe, videoId);
         }
       }, 100);
     };
 
     // Add click listener to the lite-youtube element
     liteYoutube.addEventListener('click', clickHandler);
+  }
+
+  addEnableJsApiToIframe(iframe, videoId) {
+    try {
+      const currentSrc = iframe.src;
+      console.log('Original iframe src:', currentSrc);
+      
+      // Add enablejsapi=1 to the URL
+      const url = new URL(currentSrc);
+      url.searchParams.set('enablejsapi', '1');
+      url.searchParams.set('origin', window.location.origin);
+      
+      const newSrc = url.toString();
+      console.log('Modified iframe src:', newSrc);
+      
+      // Update the iframe src (this will reload the video)
+      iframe.src = newSrc;
+      
+      // Wait for the iframe to load with the new URL
+      iframe.addEventListener('load', () => {
+        console.log('Iframe reloaded with enablejsapi=1, setting up API tracking');
+        this.setupYouTubeProgressTracking(iframe, videoId);
+      });
+      
+    } catch (error) {
+      console.error('Error adding enablejsapi to iframe:', error);
+      // Fallback to regular tracking
+      this.setupYouTubeProgressTracking(iframe, videoId);
+    }
   }
 
   setupYouTubeProgressTracking(iframe, videoId) {
