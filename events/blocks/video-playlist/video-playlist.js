@@ -1707,69 +1707,6 @@ class VideoPlaylist {
     }
   }
 
-  setupProgressTrackingOnPlayer(player, videoId) {
-    // Store reference to the player
-    this.youtubePlayer = player;
-    
-    // Get stored progress and seek to it
-    const localStorageVideos = getLocalStorageVideos();
-    const currentSessionData = localStorageVideos[videoId];
-    
-    if (currentSessionData) {
-      const { secondsWatched } = currentSessionData;
-      const duration = player.getDuration();
-      const shouldRestart = secondsWatched > duration - RESTART_THRESHOLD;
-      const startAt = shouldRestart ? 0 : secondsWatched;
-      
-      // Seek to the saved position
-      player.seekTo(startAt);
-    }
-    
-    // Set up progress tracking interval
-    this.startProgressTracking(player, videoId);
-  }
-
-  startProgressTracking(player, videoId) {
-    // Clear any existing interval
-    if (this.progressInterval) {
-      clearInterval(this.progressInterval);
-    }
-    
-    // Start progress tracking every 5 seconds
-    this.progressInterval = setInterval(() => {
-      this.recordYouTubePlayerProgress(player, videoId);
-    }, PROGRESS_SAVE_INTERVAL * 1000);
-    
-    // Set up iframe event listeners for play/pause detection
-    this.setupIframeEventListeners(player, videoId);
-  }
-
-  setupIframeEventListeners(player, videoId) {
-    // Listen for iframe events to detect play/pause
-    const iframe = player.getIframe();
-    if (iframe) {
-      // Listen for focus events (when user interacts with video)
-      iframe.addEventListener('focus', () => {
-        console.log('YouTube iframe focused - video likely playing');
-        this.startProgressTracking(player, videoId);
-      });
-      
-      // Listen for blur events (when user stops interacting)
-      iframe.addEventListener('blur', () => {
-        console.log('YouTube iframe blurred - video likely paused');
-        this.pauseProgressTracking(player, videoId);
-      });
-    }
-  }
-
-  pauseProgressTracking(player, videoId) {
-    // Clear interval and save current progress
-    if (this.progressInterval) {
-      clearInterval(this.progressInterval);
-      this.progressInterval = null;
-    }
-    this.recordYouTubePlayerProgress(player, videoId);
-  }
 
 
   recordYouTubePlayerProgress(player, videoId) {
