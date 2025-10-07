@@ -129,23 +129,54 @@ class VideoPlaylist {
         }
     }
 
+    /* VideoPlaylist.js */
+
+// ... (other methods)
+
     /**
-     * Filters cards based on their `endDate` being in the past.
+     * Filters cards to show only sessions whose end date is in the past (archived content).
+     * If the server date API fails, it returns all cards as a fallback.
      * @param {Array} cards - The array of session cards.
      * @returns {Array} The filtered array.
      */
     _filterCards(cards) {
-        if (!Array.isArray(cards)) return [];
-        const currentDate = window?.northstar?.servertime?.currentTime?.getInstance()?.getTime() || Date.now();
+      if (!Array.isArray(cards)) {
+          console.error('Invalid input: cards must be an array.');
+          return [];
+      }
+      
+      let currentDate;
+      try {
+          // Attempt to get the server-side current time
+          currentDate = window?.northstar?.servertime?.currentTime?.getInstance()?.getTime();
+          if (!currentDate) {
+              throw new Error('Server current date is not available.');
+          }
+      } catch (error) {
+          // FALLBACK: If server time fails, return all cards (as per old implementation logic)
+          console.error('Error accessing current date for filtering. Returning all cards:', error);
+          return cards;
+      }
 
-        return cards.filter((card) => {
-            const hasVideoId = card.search?.mpcVideoId || card.search?.videoId;
-            if (!hasVideoId || !card.endDate) return false;
+      return cards.filter((card) => {
+          const hasMpcVideoId = card.search?.mpcVideoId;
+          const hasVideoId = card.search?.videoId;
+          
+          // 1. Must have a video ID
+          if (!hasMpcVideoId && !hasVideoId) {
+              return false;
+          }
+          
+          // 2. Must have a valid end date
+          if (!card.endDate || isNaN(Date.parse(card.endDate))) {
+              return false;
+          }
 
-            const endDate = new Date(card.endDate).getTime();
-            return endDate < currentDate;
-        });
-    }
+          // 3. The card's end date must be in the past to be included (archived)
+          const endDate = new Date(card.endDate).getTime();
+          return endDate < currentDate;
+      });
+  }
 
     /**
      * Sorts cards, primarily by `startDate` if configured.
