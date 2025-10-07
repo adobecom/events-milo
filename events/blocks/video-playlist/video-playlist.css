@@ -156,8 +156,8 @@
   --related-playlist-separator-color: #575454;
   --header-toggle-text-color:#ebebeb;
   --switch-background-color: #545454;
-  --switch-btn-background-color: #FDFDFD;
-  --switch-btn-border-color: #6D6D6D;
+  --switch-btn-background-color: #262626;
+  --switch-btn-border-color: #B2B2B2;
   --switch-btn-border-color-checked: #D1D1D1;
   flex-shrink: 0;
   background-color: var(--container-background-color);
@@ -183,9 +183,9 @@
   --hover-title-color: #1473e6;
   --related-playlist-separator-color: #adaaaa;
   --header-toggle-text-color: #222222;
-  --switch-background-color: #FDFDFD;
-  --switch-btn-background-color: #262626;
-  --switch-btn-border-color: #545454;
+  --switch-background-color: #D5D5D5;
+  --switch-btn-background-color: #FDFDFD;
+  --switch-btn-border-color: #6D6D6D;
   --switch-btn-border-color-checked: #464646;
 }
 
