@@ -274,8 +274,11 @@ class VideoPlaylist {
         return `
             <div class="video-playlist-container__social-share-wrapper">
                 <button class="video-playlist-container__social-share" daa-ll="Social_Share">
-                    <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M14 8L10 4V7C7 7 4 8 2 11C4 8 7 7 10 7V10L14 6L10 2V5C7 5 4 6 2 9C4 6 7 5 10 5V8Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    <svg width="16" height="16" viewBox="0 0 16 16">
+                        <path d="M12 6c.8 0 1.5.7 1.5 1.5S12.8 9 12 9s-1.5-.7-1.5-1.5S11.2 6 12 6zM4 6c.8 0 1.5.7 1.5 1.5S4.8 9 4 9s-1.5-.7-1.5-1.5S3.2 6 4 6zM8 6c.8 0 1.5.7 1.5 1.5S8.8 9 8 9s-1.5-.7-1.5-1.5S7.2 6 8 6z"/>
+                    </svg>
                 </button>
+
                 <div class="share-menu-wrapper">
                     <ul class="video-playlist-container__social-share-menu">${menuItems}</ul>
                 </div>
