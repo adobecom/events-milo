@@ -320,7 +320,7 @@ class VideoPlaylist {
 
     _setupSocialSharing(header) {
         const shareButton = header.querySelector('.video-playlist-container__social-share');
-        const menu = header.querySelector('.video-playlist-container__social-share-menu');
+        const menu = header.querySelector('.share-menu-wrapper');
 
         if (!shareButton || !menu) return;
 
@@ -328,7 +328,7 @@ class VideoPlaylist {
         shareButton.addEventListener('click', (e) => {
             e.stopPropagation();
             menu.classList.toggle('active');
-            shareButton.setAttribute('aria-expanded', menu.classList.contains('open'));
+            shareButton.setAttribute('aria-expanded', menu.classList.contains('active'));
         });
 
         // Close menu when clicking outside
