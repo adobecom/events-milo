@@ -553,22 +553,6 @@
   cursor: not-allowed;
   opacity: 0.6;
 }
-
-.video-playlist-container__sessions__wrapper__session__favorite.loading {
-  position: relative;
-}
-
-.video-playlist-container__sessions__wrapper__session__favorite.loading::after {
-  content: '';
-  position: absolute;
-  width: 16px;
-  height: 16px;
-  border: 2px solid #f3f3f3;
-  border-top: 2px solid var(--sessions-session-info-favorite-color);
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-}
-
 /* Hover Effects */
 .video-playlist-container__sessions__wrapper__session:not(.highlighted):hover {
   opacity: 1;
