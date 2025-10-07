@@ -1,8 +1,8 @@
-/* VideoPlaylist.js */
+/* VideoPlaylist.js (Corrected Class Names) */
 
 /* eslint-disable no-underscore-dangle */
 import { LIBS } from '../../scripts/utils.js';
-// Utility imports (assuming a structure where these are accessible)
+// Utility imports
 import {
     getLocalStorageVideos,
     saveLocalStorageVideos,
@@ -12,7 +12,7 @@ import {
     getCurrentPlaylistId,
     findVideoIdFromIframeSrc,
     startVideoFromSecond
-} from './utils.js'; // Assuming utils.js is in the same directory
+} from './utils.js'; 
 
 import {
     PLAYLIST_PLAY_ALL_ID,
@@ -25,10 +25,9 @@ import {
     EVENT_STATES,
     ANALYTICS,
     MOCK_API,
-    PLAYLIST_SKIP_TO_ID,
-} from './constants.js'; // Assuming constants.js is in the same directory
+} from './constants.js'; 
 
-const { createTag } = await import(`${LIBS}/utils/utils.js`); // Utility to create DOM elements
+const { createTag } = await import(`${LIBS}/utils/utils.js`); 
 
 export default function init(el) {
     return new VideoPlaylist(el);
@@ -67,10 +66,6 @@ class VideoPlaylist {
         }
     }
 
-    /**
-     * Parses configuration from the Helix-generated DOM structure.
-     * @returns {object} The configuration object.
-     */
     _parseCfg() {
         const meta = Object.fromEntries(
             [...this.el.querySelectorAll(':scope > div > div:first-child')].map((div) => [
@@ -130,61 +125,40 @@ class VideoPlaylist {
         }
     }
 
-    /* VideoPlaylist.js */
-
-// ... (other methods)
-
-    /**
-     * Filters cards to show only sessions whose end date is in the past (archived content).
-     * If the server date API fails, it returns all cards as a fallback.
-     * @param {Array} cards - The array of session cards.
-     * @returns {Array} The filtered array.
-     */
     _filterCards(cards) {
-      if (!Array.isArray(cards)) {
-          console.error('Invalid input: cards must be an array.');
-          return [];
-      }
-      
-      let currentDate;
-      try {
-          // Attempt to get the server-side current time
-          currentDate = window?.northstar?.servertime?.currentTime?.getInstance()?.getTime();
-          if (!currentDate) {
-              throw new Error('Server current date is not available.');
-          }
-      } catch (error) {
-          // FALLBACK: If server time fails, return all cards (as per old implementation logic)
-          console.error('Error accessing current date for filtering. Returning all cards:', error);
-          return cards;
-      }
+        if (!Array.isArray(cards)) {
+            console.error('Invalid input: cards must be an array.');
+            return [];
+        }
+        
+        let currentDate;
+        try {
+            currentDate = window?.northstar?.servertime?.currentTime?.getInstance()?.getTime();
+            if (!currentDate) {
+                throw new Error('Server current date is not available.');
+            }
+        } catch (error) {
+            console.error('Error accessing current date for filtering. Returning all cards:', error);
+            return cards;
+        }
 
-      return cards.filter((card) => {
-          const hasMpcVideoId = card.search?.mpcVideoId;
-          const hasVideoId = card.search?.videoId;
-          
-          // 1. Must have a video ID
-          if (!hasMpcVideoId && !hasVideoId) {
-              return false;
-          }
-          
-          // 2. Must have a valid end date
-          if (!card.endDate || isNaN(Date.parse(card.endDate))) {
-              return false;
-          }
+        return cards.filter((card) => {
+            const hasMpcVideoId = card.search?.mpcVideoId;
+            const hasVideoId = card.search?.videoId;
+            
+            if (!hasMpcVideoId && !hasVideoId) {
+                return false;
+            }
+            
+            if (!card.endDate || isNaN(Date.parse(card.endDate))) {
+                return false;
+            }
 
-          // 3. The card's end date must be in the past to be included (archived)
-          const endDate = new Date(card.endDate).getTime();
-          return endDate < currentDate;
-      });
-  }
+            const endDate = new Date(card.endDate).getTime();
+            return endDate < currentDate;
+        });
+    }
 
-    /**
-     * Sorts cards, primarily by `startDate` if configured.
-     * @param {Array} cards - The array of session cards.
-     * @param {string} sort - The sort type.
-     * @returns {Array} The sorted array.
-     */
     _sortCards(cards, sort) {
         if (!sort || cards.length === 0) return cards;
 
@@ -214,11 +188,13 @@ class VideoPlaylist {
         }
     }
 
-    /* --- Header and Sharing --- */
+    /* --- Header and Sharing (Original Class Names Restored) --- */
 
     _createHeader() {
         const header = createTag('div', { class: 'video-playlist-container__header' });
         const isAutoPlayChecked = getLocalStorageShouldAutoPlay();
+        // The original logic used a class of 'button' on the skip link
+        // The original toggle classes were consonant-switch and consonant-switch--sizeM
 
         header.innerHTML = `
             <div class="video-playlist-container__header__upper">
@@ -267,18 +243,18 @@ class VideoPlaylist {
         if (!Object.values(socialConfig).some(p => p.enabled)) return '';
         const menuItems = this._generateSocialMenuItems(socialConfig);
 
+        // Original class names for share wrapper and menu
         return `
             <div class="video-playlist-container__social-share-wrapper">
                 <button class="video-playlist-container__social-share" daa-ll="Social_Share">...</button>
-                <div>
+                <div class="share-menu-wrapper">
                     <ul class="video-playlist-container__social-share-menu">${menuItems}</ul>
                 </div>
             </div>
-        `; // SVG path removed for brevity in refactor
+        `; 
     }
 
     _parseSocialConfig() {
-        // Implementation remains the same: check data attribute, fallback to default
         const socialDataAttr = this.el.getAttribute('data-socials');
         if (socialDataAttr) {
             try {
@@ -296,13 +272,12 @@ class VideoPlaylist {
     }
 
     _generateSocialMenuItems(socialConfig) {
-        // Implementation remains the same, using embedded SVGs and analytics
-        // ... (Return string of <li><a>...</a></li> elements)
+        // Class names like 'video-playlist-container__social-share-menu__item' are preserved
         return `
-            <li><a class="social-share-link" data-platform="facebook" daa-ll="Facebook_Share Playlist" aria-label="Share Playlist on Facebook" href="#" target="_blank">...</a></li>
-            <li><a class="social-share-link" data-platform="twitter" daa-ll="Twitter_Share Playlist" aria-label="Share Playlist on X" href="#" target="_blank">...</a></li>
-            <li><a class="social-share-link" data-platform="linkedin" daa-ll="LinkedIn_Share Playlist" aria-label="Share Playlist on LinkedIn" href="#" target="_blank">...</a></li>
-            <li><a class="social-share-link" data-platform="copy" daa-ll="Link_Share Playlist" aria-label="Share with link" href="#">...</a></li>
+            <li><a class="video-playlist-container__social-share-menu__item" data-platform="facebook" daa-ll="Facebook_Share Playlist" aria-label="Share Playlist on Facebook" href="#" target="_blank">...</a></li>
+            <li><a class="video-playlist-container__social-share-menu__item" data-platform="twitter" daa-ll="Twitter_Share Playlist" aria-label="Share Playlist on X" href="#" target="_blank">...</a></li>
+            <li><a class="video-playlist-container__social-share-menu__item" data-platform="linkedin" daa-ll="LinkedIn_Share Playlist" aria-label="Share Playlist on LinkedIn" href="#" target="_blank">...</a></li>
+            <li><a class="video-playlist-container__social-share-menu__item" data-platform="copy" daa-ll="Link_Share Playlist" aria-label="Share with link" href="#">...</a></li>
         `;
     }
 
@@ -318,7 +293,8 @@ class VideoPlaylist {
 
     _setupSocialSharing(header) {
         const shareButton = header.querySelector('.video-playlist-container__social-share');
-        const shareMenuWrapper = header.querySelector('.video-playlist-container__social-share-wrapper > div');
+        // Original wrapper class was share-menu-wrapper
+        const shareMenuWrapper = header.querySelector('.share-menu-wrapper'); 
         const shareMenu = header.querySelector('.video-playlist-container__social-share-menu');
 
         if (shareButton && shareMenuWrapper && shareMenu) {
@@ -333,7 +309,8 @@ class VideoPlaylist {
                 }
             });
 
-            shareMenu.querySelectorAll('.social-share-link').forEach(item => {
+            // Selector for original menu items
+            shareMenu.querySelectorAll('.video-playlist-container__social-share-menu__item').forEach(item => { 
                 item.addEventListener('click', (e) => {
                     e.preventDefault();
                     e.stopPropagation();
@@ -369,12 +346,6 @@ class VideoPlaylist {
             default:
                 this._openShareWindow(anchorElement.href, platform);
         }
-
-        if (platform !== 'copy') {
-             // For social platforms, allow the default link action (window.open is handled by the browser if href is set)
-             // If this should open in a popup, use _openShareWindow explicitly.
-             // Given the original implementation sets the href, we assume a standard anchor click behavior which may open a new window/tab.
-        }
     }
 
     _copyToClipboard(text, notificationText = 'Link copied to clipboard!') {
@@ -391,7 +362,9 @@ class VideoPlaylist {
 
     _fallbackCopyToClipboard(text, notificationText) {
         const textArea = createTag('textarea', { value: text });
-        textArea.style.position = 'fixed'; // Keep off-screen
+        textArea.style.position = 'fixed';
+        textArea.style.left = '-999999px'; // Ensure off-screen positioning is maintained
+        textArea.style.top = '-999999px';
         document.body.appendChild(textArea);
         textArea.select();
 
@@ -406,17 +379,42 @@ class VideoPlaylist {
     }
 
     _openShareWindow(url, platform) {
-        window.open(url, `${platform}Share`, 'width=600,height=400,scrollbars=yes,resizable=yes');
+        const width = 600;
+        const height = 400;
+        const left = (window.innerWidth - width) / 2;
+        const top = (window.innerHeight - height) / 2;
+        
+        window.open(
+            url,
+            `${platform}Share`,
+            `width=${width},height=${height},left=${left},top=${top},scrollbars=yes,resizable=yes`
+        );
     }
 
     _showNotification(message) {
+        // Original notification class name
         const notification = createTag('div', { class: 'video-playlist-container__share-notification' });
         notification.textContent = message;
+        
+        // Re-applying inline styles from original code to ensure positioning
+        notification.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #333;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 4px;
+            z-index: 10000;
+            font-size: 14px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+        `;
+
         document.body.appendChild(notification);
         setTimeout(() => notification.remove(), 3000);
     }
 
-    /* --- Sessions List --- */
+    /* --- Sessions List (Original Class Names Restored) --- */
 
     _createSessionsWrapper(cards) {
         const sessions = createTag('div', { class: 'video-playlist-container__sessions' });
@@ -431,17 +429,27 @@ class VideoPlaylist {
                     <a daa-ll="${ANALYTICS.VIDEO_SELECT}" href="${card.overlayLink}" class="video-playlist-container__sessions__wrapper__session__link">
                         <div class="video-playlist-container__sessions__wrapper__session__thumbnail">
                             <img src="${card.search.thumbnailUrl}" alt="${linkText}" />
-                            <div class="video-playlist-container__sessions__wrapper__session__thumbnail__play-icon">...</div>
+                            <div class="video-playlist-container__sessions__wrapper__session__thumbnail__play-icon">
+                                <svg xmlns="http://www.w3.org/2000/svg" height="40" viewBox="0 0 18 18" width="40">
+                                    <rect id="Canvas" fill="#ff13dc" opacity="0" width="18" height="18" />
+                                    <path fill="#e5e5e5" d="M9,1a8,8,0,1,0,8,8A8,8,0,0,0,9,1Zm4.2685,8.43L7.255,12.93A.50009.50009,0,0,1,7,13H6.5a.5.5,0,0,1-.5-.5v-7A.5.5,0,0,1,6.5,5H7a.50009.50009,0,0,1,.255.07l6.0135,3.5a.5.5,0,0,1,0,.86Z" />
+                                </svg>
+                            </div>
                             <div class="video-playlist-container__sessions__wrapper__session__thumbnail__duration">
-                                <p>${card.search.videoDuration}</p>
+                                <p class="video-playlist-container__sessions__wrapper__session__thumbnail__duration__text">${card.search.videoDuration}</p>
                             </div>
                             <div class="video-playlist-container__sessions__wrapper__session__thumbnail__progress">
                                 <div class="video-playlist-container__sessions__wrapper__session__thumbnail__progress__bar"></div>
                             </div>
                         </div>
                         <div class="video-playlist-container__sessions__wrapper__session__info">
-                            <h4>${linkText}</h4>
-                            <p>${card.contentArea.description}</p>
+                            <h4 class="video-playlist-container__sessions__wrapper__session__info__title">
+                                ${linkText}
+                            </h4>
+                            <p class="video-playlist-container__sessions__wrapper__session__info__description">
+                                ${card.contentArea.description}
+                            </p>
+                            ${this.cfg.favoritesEnabled ? '' : ''}
                         </div>
                     </a>
                 </div>
@@ -472,7 +480,7 @@ class VideoPlaylist {
         });
     }
 
-    /* --- Favorites --- */
+    /* --- Favorites (Original Class Names Restored) --- */
 
     async _setupFavorites() {
         try {
@@ -502,13 +510,18 @@ class VideoPlaylist {
         const buttonText = isFavorite ? 'Remove from favorites' : this.cfg.favoritesTooltipText;
 
         const favoriteButton = createTag('button', {
+            // Original favorite button class name
             class: 'video-playlist-container__sessions__wrapper__session__favorite',
             'daa-ll': isFavorite ? ANALYTICS.UNFAVORITE : ANALYTICS.FAVORITE,
             'aria-label': `${buttonText} ${card.contentArea.title}`,
-            'data-tooltip': this.cfg.favoritesTooltipText, // Used for CSS tooltip
+            'data-tooltip': this.cfg.favoritesTooltipText,
         });
 
-        favoriteButton.innerHTML = `<svg class="heart ${heartClass}" width="15" height="14" viewBox="0 0 15 14">...</svg>`; // SVG path removed for brevity
+        favoriteButton.innerHTML = `
+            <svg class="heart ${heartClass}" xmlns="http://www.w3.org/2000/svg" width="15" height="14" viewBox="0 0 15 14">
+                <path d="M10.5895 1.82617C10.0133 1.85995 9.45382 2.03175 8.95885 2.32693C8.46389 2.62211 8.04809 3.0319 7.74691 3.52137C7.44573 3.0319 7.02993 2.62211 6.53496 2.32693C6.04 2.03175 5.48056 1.85995 4.90436 1.82617C3.99978 1.82617 3.13226 2.18337 2.49262 2.8192C1.85299 3.45502 1.49365 4.31738 1.49365 5.21657C1.49365 8.45423 7.74691 12.563 7.74691 12.563C7.74691 12.563 14.0002 8.49774 14.0002 5.21657C14.0002 4.31738 13.6408 3.45502 13.0012 2.8192C12.3616 2.18337 11.494 1.82617 10.5895 1.82617Z" stroke-width="2"/>
+            </svg>
+        `;
 
         favoriteButton.addEventListener('click', (event) => {
             event.preventDefault();
@@ -554,8 +567,16 @@ class VideoPlaylist {
     }
 
     _showErrorNotification(message) {
+        // Original notification classes
         const notification = createTag('div', { class: 'video-playlist-container__notification video-playlist-container__notification--error', });
-        notification.innerHTML = `<p>${message}</p><button class="video-playlist-container__notification__close">×</button>`;
+        
+        notification.innerHTML = `
+            <div class="video-playlist-container__notification__content">
+                <p>${message}</p>
+                <button class="video-playlist-container__notification__close">×</button>
+            </div>
+        `;
+        
         this.root.appendChild(notification);
 
         setTimeout(() => notification.remove(), 5000);
@@ -570,22 +591,33 @@ class VideoPlaylist {
         }
 
         const notification = createTag('div', {
+            // Original toast classes
             class: 'video-playlist-container__toast video-playlist-container__toast--positive',
             role: 'alert',
             'aria-live': 'assertive',
+            'aria-atomic': 'true',
+            'aria-hidden': 'false'
         });
 
         notification.innerHTML = `
+            <svg xmlns="http://www.w3.org/2000/svg" height="18" viewBox="0 0 18 18" width="18" class="video-playlist-container__toast-icon" focusable="false" aria-hidden="true">
+                <rect id="Canvas" fill="#ff13dc" opacity="0" width="18" height="18"></rect>
+                <path d="M9,1a8,8,0,1,0,8,8A8,8,0,0,0,9,1Zm5.333,4.54L8.009,13.6705a.603.603,0,0,1-.4375.2305H7.535a.6.6,0,0,1-.4245-.1755L3.218,9.829a.6.6,0,0,1-.00147-.84853L3.218,8.979l.663-.6625A.6.6,0,0,1,4.72953,8.315L4.731,8.3165,7.4,10.991l5.257-6.7545a.6.6,0,0,1,.8419-.10586L13.5,4.1315l.7275.5685A.6.6,0,0,1,14.333,5.54Z"></path>
+            </svg>
             <div class="video-playlist-container__toast-body">
                 <div class="video-playlist-container__toast-content">${this.cfg.favoritesNotificationText}</div>
                 <button class="video-playlist-container__toast-button" daa-ll="${ANALYTICS.VIEW_SCHEDULE}">
-                    <span>${this.cfg.favoritesButtonText}</span>
+                    <span class="video-playlist-container__toast-button-label">${this.cfg.favoritesButtonText}</span>
                 </button>
             </div>
             <div class="video-playlist-container__toast-buttons">
-                <button aria-label="close" class="video-playlist-container__toast-close" daa-ll="${ANALYTICS.CLOSE_FAVORITE_NOTIFICATION}">...</button>
+                <button aria-label="close" class="video-playlist-container__toast-close" label="Close" daa-ll="${ANALYTICS.CLOSE_FAVORITE_NOTIFICATION}">
+                    <svg class="video-playlist-container__toast-close-icon" focusable="false" aria-hidden="true" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 8 8">
+                        <path d="m5.238 4 2.456-2.457A.875.875 0 1 0 6.456.306L4 2.763 1.543.306A.875.875 0 0 0 .306 1.544L2.763 4 .306 6.457a.875.875 0 1 0 1.238 1.237L4 5.237l2.456 2.457a.875.875 0 1 0 1.238-1.237z"></path>
+                    </svg>
+                </button>
             </div>
-        `; // SVG paths removed for brevity
+        `;
 
         toastsContainer.appendChild(notification);
         setTimeout(() => notification.remove(), 5000); // Auto-remove after 5s
@@ -597,6 +629,7 @@ class VideoPlaylist {
     }
 
     /* --- Video Player Integration --- */
+    // (Classes here are generally for selecting elements like .milo-video, which should be stable)
 
     _setupVideoPlayer() {
         this.videoContainer = document.querySelector('.milo-video');
@@ -682,21 +715,17 @@ class VideoPlaylist {
         let startAt = 0;
 
         if (currentSessionData && currentSessionData.secondsWatched) {
-            // Restart if near end, otherwise continue
             startAt = currentSessionData.secondsWatched > length - RESTART_THRESHOLD ? 0 : currentSessionData.secondsWatched;
         }
         startVideoFromSecond(this.videoContainer, startAt);
     }
 
     _handleVideoComplete(videoId) {
-        // Stop any progress tracking interval
         if (this.progressInterval) clearInterval(this.progressInterval);
 
-        // Update localStorage as completed
         const localStorageVideos = getLocalStorageVideos();
         if (localStorageVideos[videoId]) {
             localStorageVideos[videoId].completed = true;
-            // Ensure secondsWatched is duration if known
             if (localStorageVideos[videoId].length) {
                 localStorageVideos[videoId].secondsWatched = localStorageVideos[videoId].length;
             }
@@ -746,16 +775,14 @@ class VideoPlaylist {
         if (!videoId || !this._isYouTubeVideo(liteYoutube ? videoId : iframe?.src)) return;
 
         if (liteYoutube) {
-            // Lite-youtube requires modification of the generated iframe
             this._setupLiteYouTubePlayer(liteYoutube, videoId);
         } else if (iframe && iframe.src.includes('enablejsapi=1')) {
-            // Already an API-enabled iframe
             this._setupYouTubeProgressTracking(iframe, videoId);
         }
     }
 
     _isYouTubeVideo(srcOrId) {
-        return srcOrId && (srcOrId.includes('youtube.com') || srcOrId.includes('youtube-nocookie.com') || srcOrId.length === 11); // ID length check for lite-youtube
+        return srcOrId && (srcOrId.includes('youtube.com') || srcOrId.includes('youtube-nocookie.com') || srcOrId.length === 11);
     }
 
     _setupLiteYouTubePlayer(liteYoutube, videoId) {
@@ -832,7 +859,7 @@ class VideoPlaylist {
 
         this.progressInterval = setInterval(() => {
             this._recordYouTubePlayerProgress(player, videoId);
-        }, 1000); // Check progress every second
+        }, 1000);
     }
 
     _handleYouTubePlayerStateChange(event, videoId) {
@@ -855,9 +882,7 @@ class VideoPlaylist {
             const duration = player.getDuration();
 
             if (currentTime && duration) {
-                // Save to local storage
                 await saveCurrentVideoProgress(videoId, currentTime, duration);
-                // Update DOM progress bar
                 this._updateProgressBarForVideo(videoId, currentTime, duration);
             }
         } catch (error) {
@@ -876,7 +901,7 @@ class VideoPlaylist {
             if (progressBar) {
                 const progress = (currentTime / duration) * 100;
                 progressBar.style.width = `${Math.min(100, progress)}%`;
-                progressBar.style.backgroundColor = '#1473e6'; // Ensure color is set
+                progressBar.style.backgroundColor = '#1473e6';
                 progressBar.style.display = 'block';
             }
         }
