@@ -147,7 +147,7 @@
   --sessions-session-vertical-padding: 9px;
   --sessions-session-horizontal-padding: 10px;
   --sessions-session-thumbnail-progress-bar-color: #1473e6;
-  --sessions-session-info-description-color: #d5d5d5;
+  --sessions-session-info-description-color: #464646;
   --sessions-session-info-favorite-color: #fff;
   --footer-background-color: #1d1d1d;
   --highlighted-background-color: #404040;
@@ -510,7 +510,7 @@
   -webkit-box-orient: vertical;
   overflow: hidden;
   margin: 0;
-  color: #464646;
+  color: var(--sessions-session-info-description-color);
 }
 
 /* Remove session info tooltip positioning */
