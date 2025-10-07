@@ -528,7 +528,7 @@ class VideoPlaylist {
     async _toggleFavorite(favoriteButton, card) {
         try {
             favoriteButton.disabled = true;
-            favoriteButton.classList.add('loading');
+            //  favoriteButton.classList.add('loading');
 
             const response = await MOCK_API.toggleFavorite(card.search.sessionId);
 
