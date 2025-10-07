@@ -147,7 +147,7 @@
   --sessions-session-vertical-padding: 9px;
   --sessions-session-horizontal-padding: 10px;
   --sessions-session-thumbnail-progress-bar-color: #1473e6;
-  --sessions-session-info-description-color: #464646;
+  --sessions-session-info-description-color: #d5d5d5;
   --sessions-session-info-favorite-color: #fff;
   --footer-background-color: #1d1d1d;
   --highlighted-background-color: #404040;
@@ -172,7 +172,7 @@
   --skip-playlist-link-color: #0265dc;
   --scrollbar-thumb-color: #b1b1b1;
   --sessions-session-border-color: #d2d2d2;
-  --sessions-session-info-description-color: #d5d5d5;
+  --sessions-session-info-description-color: #464646;
   --sessions-session-info-favorite-color: #000;
   --footer-background-color: #d9d9d9;
   --highlighted-background-color: #fff;
