@@ -27,6 +27,7 @@ export const ANALYTICS = {
     UNFAVORITE: 'Unfavorite',
     CLOSE_FAVORITE_NOTIFICATION: 'Close Favorite Notification',
     VIEW_SCHEDULE: 'View Schedule',
+    PLAYLIST_SKIP_TO_ID: 'playlist-skip-to',
 };
 
 export const MOCK_API = {
