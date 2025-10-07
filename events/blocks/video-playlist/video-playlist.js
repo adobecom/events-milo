@@ -698,6 +698,7 @@ class VideoPlaylist {
             case EVENT_STATES.TICK:
                 if (data.currentTime % PROGRESS_SAVE_INTERVAL === 0) {
                     saveCurrentVideoProgress(data.id, data.currentTime, data.length);
+                    this._updateProgressBarForVideo(data.id, data.currentTime, data.length);
                 }
                 break;
             case EVENT_STATES.COMPLETE:
