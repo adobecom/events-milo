@@ -314,7 +314,7 @@
 }
 
 .consonant-switch-input:checked + .consonant-switch-switch {
-  background: #464646;
+  background: var(--sessions-session-info-description-color);
 }
 
 .consonant-switch-input:checked + .consonant-switch-switch::before {
