@@ -327,13 +327,13 @@ class VideoPlaylist {
         // Toggle menu visibility
         shareButton.addEventListener('click', (e) => {
             e.stopPropagation();
-            menu.classList.toggle('open');
+            menu.classList.toggle('active');
             shareButton.setAttribute('aria-expanded', menu.classList.contains('open'));
         });
 
         // Close menu when clicking outside
         document.addEventListener('click', () => {
-            menu.classList.remove('open');
+            menu.classList.remove('active');
             shareButton.setAttribute('aria-expanded', 'false');
         });
         
