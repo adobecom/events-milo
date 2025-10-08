@@ -305,8 +305,9 @@ class VideoPlaylist {
         const sessions = createTag('div', { class: 'video-playlist-container__sessions' });
         this.sessionsWrapper = createTag('div', { class: 'video-playlist-container__sessions__wrapper' });
 
-        this.sessionsWrapper.innerHTML = cards.map((card) => {
+        this.sessionsWrapper.innerHTML = cards.map((card, idx) => {
             const videoId = card.search.mpcVideoId || card.search.videoId;
+            console.log(`Creating session ${idx}: videoId =`, videoId, 'card =', card);
             return `
                 <div daa-lh="${card.contentArea.title}" class="video-playlist-container__sessions__wrapper__session" data-video-id="${videoId}">
                     <a daa-ll="${ANALYTICS.VIDEO_SELECT}" href="${card.overlayLink}" class="video-playlist-container__sessions__wrapper__session__link">
@@ -364,10 +365,31 @@ class VideoPlaylist {
             const favs = await MOCK_API.getFavorites();
             const favIds = new Set(favs.sessionInterests.map(f => f.sessionID));
 
-            this.sessionsWrapper.querySelectorAll('.video-playlist-container__sessions__wrapper__session').forEach((session) => {
+            // Create a map for faster lookups by videoId
+            const cardsByVideoId = new Map();
+            this.cards.forEach((card) => {
+                const videoId = card.search.mpcVideoId || card.search.videoId;
+                if (videoId) cardsByVideoId.set(videoId, card);
+            });
+
+            this.sessionsWrapper.querySelectorAll('.video-playlist-container__sessions__wrapper__session').forEach((session, index) => {
                 const videoId = session.getAttribute('data-video-id');
-                const card = this.cards.find((c) => c.search.mpcVideoId === videoId || c.search.videoId === videoId);
-                if (card) session.appendChild(this._createFavoriteButton(card, favIds.has(card.search.sessionId)));
+                console.log(`Session ${index}: videoId from attribute =`, videoId);
+                
+                // Try to get card from map
+                let card = cardsByVideoId.get(videoId);
+                
+                // Fallback: try to match by index if videoId lookup fails
+                if (!card && this.cards[index]) {
+                    card = this.cards[index];
+                    console.warn(`Using fallback: matched session ${index} by index instead of videoId`);
+                }
+                
+                if (card) {
+                    session.appendChild(this._createFavoriteButton(card, favIds.has(card.search.sessionId)));
+                } else {
+                    console.error(`No card found for session with videoId: ${videoId}`);
+                }
             });
         } catch (e) {
             console.error('Failed to setup favorites:', e);
