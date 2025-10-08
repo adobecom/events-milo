@@ -641,14 +641,14 @@
 /* Toast Container - Hidden by default (mobile/tablet) */
 #playlist-toasts-container {
   display: none;
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  z-index: 1000;
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10000;
   pointer-events: none;
   max-width: 340px;
-  margin: 0 auto 10px auto;
+  width: calc(100% - 40px);
   box-sizing: border-box;
 }
 
@@ -656,11 +656,10 @@
 @media (min-width: 1575px) {
   #playlist-toasts-container {
     display: block;
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    margin: 0 auto 10px auto;
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
     width: 340px;
     box-sizing: border-box;
   }
@@ -686,6 +685,19 @@
 
 .video-playlist-container__toast--positive {
   background-color: #12805c;
+}
+
+.video-playlist-container__toast--info {
+  background-color: #1473e6;
+  border-radius: 0;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  transform: none;
 }
 
 .video-playlist-container__toast--error {

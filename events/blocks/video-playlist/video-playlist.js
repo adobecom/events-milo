@@ -236,7 +236,7 @@ class VideoPlaylist {
                 if (link.dataset.platform === 'copy') {
                     e.preventDefault();
                     this._copyToClipboard(window.location.href);
-                    this._showToast(this.cfg.copyNotificationText);
+                    this._showToast(this.cfg.copyNotificationText, 'info');
                 } else {
                     e.preventDefault();
                     window.open(e.currentTarget.href, 'share-window', 'width=600,height=400,scrollbars=yes');
@@ -265,15 +265,16 @@ class VideoPlaylist {
         let container = document.getElementById(TOAST_CONTAINER_ID);
         if (!container) {
             container = createTag('div', { id: TOAST_CONTAINER_ID });
-            this.root.appendChild(container);
+            document.body.appendChild(container);
         }
 
         const toast = createTag('div', {
-            class: `video-playlist-container__toast ${type === 'positive' ? 'video-playlist-container__toast--positive' : ''}`,
+            class: `video-playlist-container__toast ${type === 'positive' ? 'video-playlist-container__toast--positive' : type === 'info' ? 'video-playlist-container__toast--info' : ''}`,
             role: 'alert', 'aria-live': 'assertive', 'aria-atomic': 'true'
         });
 
-        const icon = type === 'positive' ? '<svg xmlns="http://www.w3.org/2000/svg" height="18" viewBox="0 0 18 18" width="18" class="video-playlist-container__toast-icon"><rect id="Canvas" fill="#ff13dc" opacity="0" width="18" height="18"></rect><path d="M9,1a8,8,0,1,0,8,8A8,8,0,0,0,9,1Zm5.333,4.54L8.009,13.6705a.603.603,0,0,1-.4375.2305H7.535a.6.6,0,0,1-.4245-.1755L3.218,9.829a.6.6,0,0,1-.00147-.84853L3.218,8.979l.663-.6625A.6.6,0,0,1,4.72953,8.315L4.731,8.3165,7.4,10.991l5.257-6.7545a.6.6,0,0,1,.8419-.10586L13.5,4.1315l.7275.5685A.6.6,0,0,1,14.333,5.54Z"></path></svg>' : '';
+        const icon = type === 'positive' ? '<svg xmlns="http://www.w3.org/2000/svg" height="18" viewBox="0 0 18 18" width="18" class="video-playlist-container__toast-icon"><rect id="Canvas" fill="#ff13dc" opacity="0" width="18" height="18"></rect><path d="M9,1a8,8,0,1,0,8,8A8,8,0,0,0,9,1Zm5.333,4.54L8.009,13.6705a.603.603,0,0,1-.4375.2305H7.535a.6.6,0,0,1-.4245-.1755L3.218,9.829a.6.6,0,0,1-.00147-.84853L3.218,8.979l.663-.6625A.6.6,0,0,1,4.72953,8.315L4.731,8.3165,7.4,10.991l5.257-6.7545a.6.6,0,0,1,.8419-.10586L13.5,4.1315l.7275.5685A.6.6,0,0,1,14.333,5.54Z"></path></svg>' : 
+                type === 'info' ? '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.5" fill="none"/><path d="M8 4v4M8 11h.01" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>' : '';
 
         toast.innerHTML = `
             ${icon}
@@ -289,7 +290,7 @@ class VideoPlaylist {
         `;
 
         container.appendChild(toast);
-        setTimeout(() => toast.remove(), 5000);
+        setTimeout(() => toast.remove(), 3000);
 
         toast.querySelector('.video-playlist-container__toast-close').addEventListener('click', () => toast.remove());
         if (button) {
@@ -305,9 +306,8 @@ class VideoPlaylist {
         const sessions = createTag('div', { class: 'video-playlist-container__sessions' });
         this.sessionsWrapper = createTag('div', { class: 'video-playlist-container__sessions__wrapper' });
 
-        this.sessionsWrapper.innerHTML = cards.map((card, idx) => {
+        this.sessionsWrapper.innerHTML = cards.map((card) => {
             const videoId = card.search.mpcVideoId || card.search.videoId;
-            console.log(`Creating session ${idx}: videoId =`, videoId, 'card =', card);
             return `
                 <div daa-lh="${card.contentArea.title}" class="video-playlist-container__sessions__wrapper__session" data-video-id="${videoId}">
                     <a daa-ll="${ANALYTICS.VIDEO_SELECT}" href="${card.overlayLink}" class="video-playlist-container__sessions__wrapper__session__link">
@@ -374,7 +374,6 @@ class VideoPlaylist {
 
             this.sessionsWrapper.querySelectorAll('.video-playlist-container__sessions__wrapper__session').forEach((session, index) => {
                 const videoId = session.getAttribute('data-video-id');
-                console.log(`Session ${index}: videoId from attribute =`, videoId);
                 
                 // Try to get card from map
                 let card = cardsByVideoId.get(videoId);
@@ -382,13 +381,10 @@ class VideoPlaylist {
                 // Fallback: try to match by index if videoId lookup fails
                 if (!card && this.cards[index]) {
                     card = this.cards[index];
-                    console.warn(`Using fallback: matched session ${index} by index instead of videoId`);
                 }
                 
                 if (card) {
                     session.appendChild(this._createFavoriteButton(card, favIds.has(card.search.sessionId)));
-                } else {
-                    console.error(`No card found for session with videoId: ${videoId}`);
                 }
             });
         } catch (e) {

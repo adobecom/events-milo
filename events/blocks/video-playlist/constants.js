@@ -46,27 +46,38 @@ export const SOCIAL_ICONS = {
 export const MOCK_API = {
     getSessions: async () => {
         await new Promise(resolve => setTimeout(resolve, 100));
-        const baseSession = {
-            search: { thumbnailUrl: 'https://images-tv.adobe.com/mpcv3/b8f920e0-0298-4d82-9ec3-c17d4c9ceda9/38f837a1-0b27-4319-9a7c-2429d88e3058/61f09647c0884bc3840da53bd2c2ffc0_1742533829-200x113.jpg', videoDuration: '00:51:53' },
-            endDate: new Date(Date.now() + 86400000).toISOString(),
-            startDate: new Date(Date.now() - 86400000).toISOString()
-        };
+        const baseThumbnail = 'https://images-tv.adobe.com/mpcv3/b8f920e0-0298-4d82-9ec3-c17d4c9ceda9/38f837a1-0b27-4319-9a7c-2429d88e3058/61f09647c0884bc3840da53bd2c2ffc0_1742533829-200x113.jpg';
+        const endDate = new Date(Date.now() + 86400000).toISOString();
+        const startDate = new Date(Date.now() - 86400000).toISOString();
+        
         return {
             cards: [
-                { id: '1', search: { ...baseSession.search, mpcVideoId: '3449120', videoId: 'yt_001', videoService: 'mpc', sessionId: 'sess_001', sessionCode: 'S744' }, contentArea: { title: 'Unlocking Modern Marketing\'s Potential', description: 'Discover Choreo, a transformative framework.' }, overlayLink: 'https://business.adobe.com/summit/2025/sessions/s744.html', ...baseSession },
-                { id: '2', search: { ...baseSession.search, mpcVideoId: '5-bUvwi2L-E', videoId: 'yt_002', videoService: 'mpc', sessionId: 'sess_002', sessionCode: 'S745' }, contentArea: { title: 'Pitch Perfect', description: 'Secure funding and resources.' }, overlayLink: 'https://business.adobe.com/summit/2025/sessions/s745.html', ...baseSession },
-                { id: '3', search: { ...baseSession.search, mpcVideoId: '3424768', videoId: 'yt_003', videoService: 'mpc', sessionId: 'sess_003', sessionCode: 'S746' }, contentArea: { title: 'The Future of Adobe Workfront', description: 'Transforming project management.' }, overlayLink: 'https://business.adobe.com/summit/2025/sessions/s746.html', ...baseSession },
-                { id: '4', search: { ...baseSession.search, mpcVideoId: '3442589', videoId: 'yt_004', videoService: 'mpc', sessionId: 'sess_004', sessionCode: 'S747' }, contentArea: { title: 'Maximize Martech Investments', description: 'Learn best practices on bridging IT and marketing.' }, overlayLink: 'https://business.adobe.com/summit/2025/sessions/s747.html', ...baseSession },
-                { id: '5', search: { ...baseSession.search, mpcVideoId: '3424767', videoId: 'yt_005', videoService: 'mpc', sessionId: 'sess_005', sessionCode: 'S748' }, contentArea: { title: 'Data-Driven Marketing', description: 'Analytics and insights for better ROI.' }, overlayLink: 'https://business.adobe.com/summit/2025/sessions/s748.html', ...baseSession },
+                { id: '1', search: { thumbnailUrl: baseThumbnail, videoDuration: '00:51:53', mpcVideoId: '3449120', videoId: 'yt_001', videoService: 'mpc', sessionId: 'sess_001', sessionCode: 'S744' }, contentArea: { title: 'Unlocking Modern Marketing\'s Potential', description: 'Discover Choreo, a transformative framework.' }, overlayLink: 'https://business.adobe.com/summit/2025/sessions/s744.html', endDate, startDate },
+                { id: '2', search: { thumbnailUrl: baseThumbnail, videoDuration: '00:51:53', mpcVideoId: '5-bUvwi2L-E', videoId: 'yt_002', videoService: 'mpc', sessionId: 'sess_002', sessionCode: 'S745' }, contentArea: { title: 'Pitch Perfect', description: 'Secure funding and resources.' }, overlayLink: 'https://business.adobe.com/summit/2025/sessions/s745.html', endDate, startDate },
+                { id: '3', search: { thumbnailUrl: baseThumbnail, videoDuration: '00:51:53', mpcVideoId: '3424768', videoId: 'yt_003', videoService: 'mpc', sessionId: 'sess_003', sessionCode: 'S746' }, contentArea: { title: 'The Future of Adobe Workfront', description: 'Transforming project management.' }, overlayLink: 'https://business.adobe.com/summit/2025/sessions/s746.html', endDate, startDate },
+                { id: '4', search: { thumbnailUrl: baseThumbnail, videoDuration: '00:51:53', mpcVideoId: '3442589', videoId: 'yt_004', videoService: 'mpc', sessionId: 'sess_004', sessionCode: 'S747' }, contentArea: { title: 'Maximize Martech Investments', description: 'Learn best practices on bridging IT and marketing.' }, overlayLink: 'https://business.adobe.com/summit/2025/sessions/s747.html', endDate, startDate },
+                { id: '5', search: { thumbnailUrl: baseThumbnail, videoDuration: '00:51:53', mpcVideoId: '3424767', videoId: 'yt_005', videoService: 'mpc', sessionId: 'sess_005', sessionCode: 'S748' }, contentArea: { title: 'Data-Driven Marketing', description: 'Analytics and insights for better ROI.' }, overlayLink: 'https://business.adobe.com/summit/2025/sessions/s748.html', endDate, startDate },
             ]
         };
     },
     getFavorites: async () => {
         await new Promise(resolve => setTimeout(resolve, 50));
-        return { sessionInterests: [{ sessionID: 'sess_001' }, { sessionID: 'sess_003' }] };
+        const stored = localStorage.getItem('mockFavorites');
+        const favorites = stored ? JSON.parse(stored) : ['sess_001', 'sess_003'];
+        return { sessionInterests: favorites.map(id => ({ sessionID: id })) };
     },
-    toggleFavorite: async () => {
+    toggleFavorite: async (sessionId) => {
         await new Promise(resolve => setTimeout(resolve, 200));
+        const stored = localStorage.getItem('mockFavorites');
+        let favorites = stored ? JSON.parse(stored) : ['sess_001', 'sess_003'];
+        
+        if (favorites.includes(sessionId)) {
+            favorites = favorites.filter(id => id !== sessionId);
+        } else {
+            favorites.push(sessionId);
+        }
+        
+        localStorage.setItem('mockFavorites', JSON.stringify(favorites));
         return { success: true };
     },
     isUserRegistered: async () => {
