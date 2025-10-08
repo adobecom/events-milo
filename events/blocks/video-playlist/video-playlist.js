@@ -265,7 +265,7 @@ class VideoPlaylist {
         let container = document.getElementById(TOAST_CONTAINER_ID);
         if (!container) {
             container = createTag('div', { id: TOAST_CONTAINER_ID });
-            document.body.appendChild(container);
+            this.root.appendChild(container);
         }
 
         const toast = createTag('div', {
