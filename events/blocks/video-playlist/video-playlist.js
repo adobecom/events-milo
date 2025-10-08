@@ -140,8 +140,8 @@ class VideoPlaylist {
     _displayPlaylist(cards) {
         this.root.style.display = '';
         this.root.appendChild(this._createHeader());
-        this.sessionsWrapper = this._createSessionsWrapper(cards);
-        this.root.appendChild(this.sessionsWrapper);
+        const sessionsContainer = this._createSessionsWrapper(cards);
+        this.root.appendChild(sessionsContainer);
         if (this.cfg.favoritesEnabled) this._setupFavorites();
         this.root.appendChild(createTag('div', { id: PLAYLIST_SKIP_TO_ID, style: 'height: 1px;' }));
     }
