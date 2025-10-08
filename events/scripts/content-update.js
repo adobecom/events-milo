@@ -492,7 +492,7 @@ export async function getNonProdData(env) {
     const json = await resp.json();
     let { pathname } = window.location;
     if (pathname.endsWith('.html')) pathname = pathname.slice(0, -5);
-    const pageData = json.data.find((d) => {
+    const pageData = json.data.reverse().find((d) => {
       let pageUrl = '';
 
       try {
