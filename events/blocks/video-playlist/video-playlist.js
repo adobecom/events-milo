@@ -290,7 +290,7 @@ class VideoPlaylist {
         `;
 
         container.appendChild(toast);
-        setTimeout(() => toast.remove(), 3000);
+        // setTimeout(() => toast.remove(), 3000);
 
         toast.querySelector('.video-playlist-container__toast-close').addEventListener('click', () => toast.remove());
         if (button) {
