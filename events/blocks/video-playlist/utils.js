@@ -1,36 +1,38 @@
-/* utils.js (Includes Storage and Time Helpers) */
-import {
-    PLAYLIST_VIDEOS_KEY,
-    AUTOPLAY_PLAYLIST_KEY,
-    VIDEO_ORIGIN
-} from './constants.js'; // Assuming constants.js is in the same directory
+/* utils.js */
+import { PLAYLIST_VIDEOS_KEY, AUTOPLAY_PLAYLIST_KEY, VIDEO_ORIGIN } from './constants.js';
 
 /* --- Storage Helpers --- */
 
-export const getLocalStorageVideos = () => {
+const safeLocalStorage = (key, defaultValue, parse = true) => {
     try {
-        return JSON.parse(localStorage.getItem(PLAYLIST_VIDEOS_KEY)) || {};
+        const item = localStorage.getItem(key);
+        return item ? (parse ? JSON.parse(item) : item) : defaultValue;
     } catch (error) {
-        console.error('Error parsing videos from local storage:', error);
-        return {};
+        console.error(`Error reading ${key} from localStorage:`, error);
+        return defaultValue;
     }
 };
 
-export const saveLocalStorageVideos = (videos) => {
+const saveToLocalStorage = (key, value) => {
     try {
-        localStorage.setItem(PLAYLIST_VIDEOS_KEY, JSON.stringify(videos));
+        localStorage.setItem(key, JSON.stringify(value));
     } catch (error) {
-        console.error('Error saving videos to local storage:', error);
+        console.error(`Error saving ${key} to localStorage:`, error);
     }
 };
+
+export const getLocalStorageVideos = () => safeLocalStorage(PLAYLIST_VIDEOS_KEY, {});
+export const saveLocalStorageVideos = (videos) => saveToLocalStorage(PLAYLIST_VIDEOS_KEY, videos);
+export const getLocalStorageShouldAutoPlay = () => safeLocalStorage(AUTOPLAY_PLAYLIST_KEY, true);
+export const saveShouldAutoPlayToLocalStorage = (shouldAutoPlay) => saveToLocalStorage(AUTOPLAY_PLAYLIST_KEY, shouldAutoPlay);
+
+export const getCurrentPlaylistId = () => new URLSearchParams(window.location.search).get('playlistId');
 
 const fetchVideoDuration = async (videoId) => {
     try {
-        const url = new URL(`${VIDEO_ORIGIN}/v/${videoId}?format=json-ld`);
-        const response = await fetch(url);
+        const response = await fetch(`${VIDEO_ORIGIN}/v/${videoId}?format=json-ld`);
         const data = await response.json();
-        const durationIso = data?.jsonLinkedData?.duration;
-        return durationIso ? convertIsoDurationToSeconds(durationIso) : null;
+        return convertIsoDurationToSeconds(data?.jsonLinkedData?.duration || '');
     } catch (error) {
         console.error(`Failed to fetch duration for ${videoId}:`, error);
         return null;
@@ -38,91 +40,45 @@ const fetchVideoDuration = async (videoId) => {
 };
 
 export const saveCurrentVideoProgress = async (id, currentTime, length = null) => {
-    const localStorageVideos = getLocalStorageVideos();
-    const currentSessionData = localStorageVideos[id];
+    const videos = getLocalStorageVideos();
+    const existing = videos[id];
 
-    if (currentSessionData) {
-        localStorageVideos[id] = {
-            ...currentSessionData,
+    if (existing) {
+        videos[id] = {
+            ...existing,
             secondsWatched: currentTime,
-            completed: currentSessionData.completed || (length && currentTime >= length),
+            completed: existing.completed || (length && currentTime >= length),
         };
-        saveLocalStorageVideos(localStorageVideos);
     } else if (length) {
-        localStorageVideos[id] = { secondsWatched: currentTime, length };
-        saveLocalStorageVideos(localStorageVideos);
-    } else if (id && !length) {
-        const seconds = await fetchVideoDuration(id);
-        if (seconds) {
-            localStorageVideos[id] = { secondsWatched: currentTime, length: seconds };
-            saveLocalStorageVideos(localStorageVideos);
-        }
+        videos[id] = { secondsWatched: currentTime, length };
+    } else if (id) {
+        const duration = await fetchVideoDuration(id);
+        if (duration) videos[id] = { secondsWatched: currentTime, length: duration };
     }
+
+    saveLocalStorageVideos(videos);
 };
 
-export const getLocalStorageShouldAutoPlay = () => {
-    try {
-        return JSON.parse(localStorage.getItem(AUTOPLAY_PLAYLIST_KEY)) ?? true;
-    } catch (error) {
-        console.error('Error parsing autoplay flag:', error);
-        return true;
-    }
-};
+/* --- Time Conversion --- */
 
-export const saveShouldAutoPlayToLocalStorage = (shouldAutoPlayPlaylist) => {
-    try {
-        localStorage.setItem(AUTOPLAY_PLAYLIST_KEY, JSON.stringify(shouldAutoPlayPlaylist));
-    } catch (error) {
-        console.error('Error saving autoplay flag:', error);
-    }
-};
-
-export const getCurrentPlaylistId = () => {
-    const urlParams = new URLSearchParams(window.location.search);
-    return urlParams.get('playlistId');
-};
-
-/* --- Time Conversion Operations --- */
-
-/**
- * Converts an ISO 8601 duration string (e.g., 'PT51M53S') to total seconds.
- * Note: Only supports T (Time) components (H, M, S).
- * @param {string} isoDuration
- * @returns {number}
- */
-export function convertIsoDurationToSeconds(isoDuration) {
-    const pattern = /P(?:(\d+)Y)?(?:(\d+)M)?(?:(\d+)D)?(?:T(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?)?/;
-    const match = isoDuration.match(pattern);
-
+export const convertIsoDurationToSeconds = (isoDuration) => {
+    const match = isoDuration.match(/P(?:(\d+)Y)?(?:(\d+)M)?(?:(\d+)D)?(?:T(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?)?/);
     if (!match) return 0;
+    return (parseInt(match[4] || 0, 10) * 3600) + (parseInt(match[5] || 0, 10) * 60) + parseInt(match[6] || 0, 10);
+};
 
-    const hours = parseInt(match[4] || 0, 10);
-    const minutes = parseInt(match[5] || 0, 10);
-    const seconds = parseInt(match[6] || 0, 10);
+/* --- Player Helpers --- */
 
-    return (hours * 3600 + minutes * 60 + seconds);
-}
+export const findVideoIdFromIframeSrc = (src) => {
+    const mpcMatch = src.match(/v\/(\d+)\?/);
+    if (mpcMatch) return mpcMatch[1];
+    const ytMatch = src.match(/youtube\.com\/embed\/([a-zA-Z0-9_-]+)/);
+    return ytMatch ? ytMatch[1] : null;
+};
 
-/* --- Player & DOM Helpers --- */
-
-export function findVideoIdFromIframeSrc(iframeSrc) {
-  const patterns = {
-      mpc: /v\/(\d+)\?/,
-      youtube: /youtube\.com\/embed\/([a-zA-Z0-9_-]+)/,
-  };
-  const mpcMatch = iframeSrc.match(patterns.mpc);
-  if (mpcMatch) return mpcMatch[1];
-
-  const youtubeMatch = iframeSrc.match(patterns.youtube);
-  return youtubeMatch ? youtubeMatch[1] : null;
-}
-
-export function startVideoFromSecond(videoContainer, seconds) {
-  const iframe = videoContainer.querySelector('iframe');
-  // Ensure seconds is an integer for cleaner API call
-  const startSeconds = Math.floor(seconds); 
-  iframe?.contentWindow?.postMessage(
-      { type: 'mpcAction', action: 'play', currentTime: startSeconds },
-      VIDEO_ORIGIN,
-  );
-}
+export const startVideoFromSecond = (container, seconds) => {
+    container?.querySelector('iframe')?.contentWindow?.postMessage(
+        { type: 'mpcAction', action: 'play', currentTime: Math.floor(seconds) },
+        VIDEO_ORIGIN
+    );
+};
