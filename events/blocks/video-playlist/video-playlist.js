@@ -108,15 +108,15 @@ class VideoPlaylist {
                 ? await MOCK_API.getSessions()
                 : await MOCK_API.getSessions(this.cfg.playlistId);
 
-            this.cards = response.cards.filter(card => card.search.thumbnailUrl);
-            const sortedCards = this._sortCards(this.cards, this.cfg.sort);
+            const filteredCards = response.cards.filter(card => card.search.thumbnailUrl);
+            this.cards = this._sortCards(filteredCards, this.cfg.sort);
 
-            if (sortedCards.length < this.cfg.minimumSessions) {
+            if (this.cards.length < this.cfg.minimumSessions) {
                 console.warn('Not enough sessions. Minimum required:', this.cfg.minimumSessions);
                 return;
             }
 
-            this._displayPlaylist(sortedCards);
+            await this._displayPlaylist(this.cards);
         } catch (e) {
             console.error('Failed to load sessions:', e);
         }
@@ -137,12 +137,12 @@ class VideoPlaylist {
         return sorted;
     }
 
-    _displayPlaylist(cards) {
+    async _displayPlaylist(cards) {
         this.root.style.display = '';
         this.root.appendChild(this._createHeader());
         const sessionsContainer = this._createSessionsWrapper(cards);
         this.root.appendChild(sessionsContainer);
-        if (this.cfg.favoritesEnabled) this._setupFavorites();
+        if (this.cfg.favoritesEnabled) await this._setupFavorites();
         this.root.appendChild(createTag('div', { id: PLAYLIST_SKIP_TO_ID, style: 'height: 1px;' }));
     }
 
