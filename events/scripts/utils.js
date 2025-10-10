@@ -9,31 +9,31 @@ export const LIBS = (() => {
 })();
 
 export function getEventServiceEnv() {
-  const validEnvs = ['dev', 'stage', 'prod'];
-  const { host, search } = window.location;
-  const SLD = host.includes('.aem.') ? 'aem' : 'hlx';
-  const usp = new URLSearchParams(search);
-  const eccEnv = usp.get('eccEnv');
+  // const validEnvs = ['dev', 'stage', 'prod'];
+  // const { host, search } = window.location;
+  // const SLD = host.includes('.aem.') ? 'aem' : 'hlx';
+  // const usp = new URLSearchParams(search);
+  // const eccEnv = usp.get('eccEnv');
 
-  if (validEnvs.includes(eccEnv)) return eccEnv;
+  // if (validEnvs.includes(eccEnv)) return eccEnv;
 
-  if ((host.includes(`${SLD}.page`) || host.includes(`${SLD}.live`))) {
-    if (host.startsWith('dev--')) return 'dev';
-    if (host.startsWith('dev02--') || host.startsWith('main02--')) return 'dev02';
-    if (host.startsWith('stage--')) return 'stage';
-    if (host.startsWith('stage02--')) return 'stage02';
-    if (host.startsWith('main--')) return 'prod';
-  }
+  // if ((host.includes(`${SLD}.page`) || host.includes(`${SLD}.live`))) {
+  //   if (host.startsWith('dev--')) return 'dev';
+  //   if (host.startsWith('dev02--') || host.startsWith('main02--')) return 'dev02';
+  //   if (host.startsWith('stage--')) return 'stage';
+  //   if (host.startsWith('stage02--')) return 'stage02';
+  //   if (host.startsWith('main--')) return 'prod';
+  // }
 
-  if (host.includes('localhost')) return 'local';
+  // if (host.includes('localhost')) return 'local';
 
-  if (host.includes('stage.adobe')
-    || host.includes('corp.adobe')
-    || host.includes('graybox.adobe')) return 'stage';
+  // if (host.includes('stage.adobe')
+  //   || host.includes('corp.adobe')
+  //   || host.includes('graybox.adobe')) return 'stage';
 
-  if (host.endsWith('adobe.com')) return 'prod';
+  // if (host.endsWith('adobe.com')) return 'prod';
   // fallback to dev
-  return 'dev';
+  return 'prod';
 }
 
 export function createTag(tag, attributes, html, options = {}) {
