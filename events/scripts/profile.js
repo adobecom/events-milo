@@ -10,13 +10,33 @@ export async function getProfile() {
       return feds?.services?.universalnav?.interface?.adobeProfile?.getUserProfile()
           || adobeProfile?.getUserProfile();
     }
-
+    let token = localStorage.getItem("token");
+    if(!token){
+      const url = new URL(window.location.href);
+      const params = new URLSearchParams(url.search);
+      token = params.get('token')
+    }
     return (
       feds?.services?.profile?.interface?.adobeProfile?.getUserProfile()
       || adobeProfile?.getUserProfile()
-      || adobeIMS?.getProfile()
+      || token ? getCustomeProfile(token) : adobeIMS?.getProfile()
     );
   };
+
+  const getCustomeProfile = async(token) =>{
+    try {
+        const response = await fetch('https://ims-na1-stg1.adobelogin.com/ims/profile/v1?client_id=events-milo', {
+          method: 'GET',
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        return response.json();
+      }
+      catch (error) {
+        throw error;
+      }
+  }
 
   const profile = await getUserProfile();
 

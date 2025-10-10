@@ -276,6 +276,20 @@ if (getMetadata('event-details-page') === 'yes') await validatePageAndRedirect(L
 }());
 
 (async function loadPage() {
+  const url = new URL(window.location.href);
+  const params = new URLSearchParams(url.search);
+  let token = "";
+  if(params.has('token')){
+    token = params.get('token');
+  }else{
+    const frameElement = window.frameElement;
+    token = frameElement.getAttribute("data-token");
+  }
+  if(token || localStorage.getItem("token")){
+    localStorage.setItem("token", params.get('token'));
+    document.getElementsByTagName('header')[0].style.display = 'none';
+    document.getElementsByTagName('footer')[0].style.display = 'none';
+  }
   await loadLana({ clientId: 'events-milo' });
   await loadArea().then(() => {
     if (getMetadata('event-details-page') === 'yes') lazyCaptureProfile();
