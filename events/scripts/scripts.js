@@ -281,12 +281,14 @@ if (getMetadata('event-details-page') === 'yes') await validatePageAndRedirect(L
   let token = "";
   if(params.has('token')){
     token = params.get('token');
-  }else{
+  }else if(window.frameElement){
     const frameElement = window.frameElement;
-    token = frameElement.getAttribute("data-token");
+    token = frameElement?.getAttribute("data-token");
+  }else {
+    token = document.body.getAttribute('data-token');
   }
   if(token || localStorage.getItem("token")){
-    localStorage.setItem("token", params.get('token'));
+    localStorage.setItem("token", token || localStorage.getItem("token"));
     document.getElementsByTagName('header')[0].style.display = 'none';
     document.getElementsByTagName('footer')[0].style.display = 'none';
   }
