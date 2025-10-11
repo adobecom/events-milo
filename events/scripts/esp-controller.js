@@ -142,25 +142,35 @@ export async function getAttendee() {
   const options = await constructRequestOptions('GET');
 
   try {
-    const response = await fetch(`${host}/v1/attendees/me`, options);
+    // const response = await fetch(`${host}/v1/attendees/me`, options);
 
-    if (!response.ok) {
-      window.lana?.log(`Error: Failed to get attendee details. Status:${JSON.stringify(response)}`);
-      let textResp;
-      try {
-        textResp = await response.text();
-      } catch (e) {
-        window.lana?.log(`Error: Failed to parse response text:${JSON.stringify(e)}`);
-      }
+    // if (!response.ok) {
+    //   window.lana?.log(`Error: Failed to get attendee details. Status:${JSON.stringify(response)}`);
+    //   let textResp;
+    //   try {
+    //     textResp = await response.text();
+    //   } catch (e) {
+    //     window.lana?.log(`Error: Failed to parse response text:${JSON.stringify(e)}`);
+    //   }
 
-      return {
-        ok: response.ok,
-        status: response.status,
-        error: textResp || response.status,
-      };
+    //   return {
+    //     ok: response.ok,
+    //     status: response.status,
+    //     error: textResp || response.status,
+    //   };
+    // }
+    const json = {
+      "firstName": "Vikrant",
+      "lastName": "Agrawal",
+      "isGuest": false,
+      "companyName": "Adobe",
+      "jobTitle": "Animator",
+      "attendeeId": "17a929ce63be75c40a495cca@adobeid",
+      "email": "vikranta@adobe.com",
+      "creationTime": 1760166130891,
+      "modificationTime": 1760166130891
     }
-
-    return { ok: true, data: await response.json() };
+    return { ok: true, data: json };
   } catch (error) {
     window.lana?.log(`Error: Failed to get attendee. Error:${JSON.stringify(error)}`);
     return { ok: false, status: 'Network Error', error: error.message };
