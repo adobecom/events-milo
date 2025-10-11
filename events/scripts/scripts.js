@@ -264,6 +264,36 @@ if (getMetadata('event-details-page') === 'yes') await validatePageAndRedirect(L
  * ------------------------------------------------------------
  */
 
+async function getJumpToken(token) {
+  const options = {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+      'X-IMS-ClientId': 'CreativeCloud_v6_8',
+      'User-Agent': 'Creative Cloud',
+    },
+    body: new URLSearchParams({
+      bearer_token: token,
+      target_client_id: 'events-milo',
+      target_redirect_uri: 'https://www.stage.adobe.com/events.html',
+      target_scope: 'AdobeID,openid,gnav',
+      target_response_type: 'token',
+      locale: 'en_US',
+      client_id: 'CreativeCloud_v6_8',
+      target_remember_me: 'true',
+    }),
+  };
+
+  try {
+    const response = await fetch('https://adobeid-na1.services.adobe.com/ims/jumptoken/v1', options);
+    const data = await response.json();
+    console.log('========>', data);
+    return data;
+  } catch (error) {
+    console.error('=======err=>', error);
+    throw error;
+  }
+}
 (function loadStyles() {
   const paths = [`${LIBS}/styles/styles.css`];
   if (STYLES) { paths.push(STYLES); }
@@ -292,6 +322,9 @@ if (getMetadata('event-details-page') === 'yes') await validatePageAndRedirect(L
     document.getElementsByTagName('header')[0].style.display = 'none';
     document.getElementsByTagName('footer')[0].style.display = 'none';
   }
+  const jumpToken = await getJumpToken(token);
+  localStorage.setItem("token", jumpToken || token)
+  console.log("=====>",jumpToken)
   await loadLana({ clientId: 'events-milo' });
   await loadArea().then(() => {
     if (getMetadata('event-details-page') === 'yes') lazyCaptureProfile();
