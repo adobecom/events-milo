@@ -268,7 +268,7 @@ const addBackButton = () =>{
   const backButton = document.createElement("button");
 
   // Set button text and icon
-  backButton.innerHTML = "← Back";
+  backButton.innerHTML = `<span class="arrow"></span>`;
 
   // Style it
   backButton.style.position = "fixed";
@@ -289,7 +289,19 @@ const addBackButton = () =>{
   backButton.addEventListener("click", () => {
     window.history.back();
   });
-
+  const style = document.createElement("style");
+  style.textContent = `
+    .arrow {
+      display: inline-block;
+      width: 10px;
+      height: 10px;
+      border-left: 4px solid black;
+      border-bottom: 4px solid black;
+      transform: rotate(45deg);
+      margin-right: 4px;
+    }
+  `;
+document.head.appendChild(style);
   // Append to the body
   document.body.appendChild(backButton);
 }
