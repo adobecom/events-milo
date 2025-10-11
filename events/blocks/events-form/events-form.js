@@ -28,7 +28,7 @@ const ShareType = {
   X: 'x',
 };
 
-function openSharePopup(shareType, url, title, summary) {
+function openSharePopup(shareType, url) {
   const encodedUrl = encodeURIComponent(url);
   const encodedTitle = encodeURIComponent(title);
   const encodedSummary = encodeURIComponent(summary);
@@ -51,7 +51,9 @@ function openSharePopup(shareType, url, title, summary) {
   }
 
   // Copy title to clipboard for user convenience
-  navigator.clipboard.writeText(`${title}\n${summary}`).catch((err) => {
+  const prefilledText = `Can’t keep calm — heading to the Adobe event! 🎉
+  Always inspired by the creativity, innovation, and people that make Adobe what it is. Can’t wait to connect, learn, and bring back a spark of that creative energy! 🚀`;
+  navigator.clipboard.writeText(prefilledText).catch((err) => {
     console.warn('Failed to copy to clipboard:', err);
   });
   
@@ -610,7 +612,7 @@ function decorateSuccessScreen(screen) {
     // Add click handler for Facebook share
     facebookButton.addEventListener('click', (e) => {
       e.preventDefault();
-      openSharePopup(ShareType.Facebook, url, 'Check out this amazing event!', 'Join us for an incredible experience you won\'t want to miss!');
+      openSharePopup(ShareType.Facebook, url);
     });
 
     // X button with icon
@@ -623,7 +625,7 @@ function decorateSuccessScreen(screen) {
     // Add click handler for X share
     xButton.addEventListener('click', (e) => {
       e.preventDefault();
-      openSharePopup(ShareType.X, url, 'Check out this amazing event!', 'Join us for an incredible experience you won\'t want to miss!');
+      openSharePopup(ShareType.X, url);
     });
 
     // LinkedIn button with icon
@@ -636,7 +638,7 @@ function decorateSuccessScreen(screen) {
     // Add click handler for LinkedIn share with custom text
     linkedinButton.addEventListener('click', (e) => {
       e.preventDefault();
-      openSharePopup(ShareType.LinkedIn, url, 'Check out this amazing event!', 'Join us for an incredible experience you won\'t want to miss!');
+      openSharePopup(ShareType.LinkedIn, url);
     });
     socialMediaSharingButtons.append(facebookButton, xButton, linkedinButton);
     const p = ss.querySelector(':scope > p:nth-of-type(2)');
