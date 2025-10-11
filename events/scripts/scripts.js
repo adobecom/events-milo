@@ -269,8 +269,6 @@ async function getJumpToken(token) {
     method: 'POST',
     headers: {
       'Content-Type': 'application/x-www-form-urlencoded',
-      'X-IMS-ClientId': 'CreativeCloud_v6_8',
-      'User-Agent': 'Creative Cloud',
     },
     body: new URLSearchParams({
       bearer_token: token,
