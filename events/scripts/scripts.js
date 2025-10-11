@@ -335,9 +335,12 @@ const addBackButton = () =>{
     document.getElementsByTagName('header')[0].style.display = 'none';
     document.getElementsByTagName('footer')[0].style.display = 'none';
   }
-  addBackButton()
+  
   await loadLana({ clientId: 'events-milo' });
   await loadArea().then(() => {
-    if (getMetadata('event-details-page') === 'yes') lazyCaptureProfile();
+    if (getMetadata('event-details-page') === 'yes') {
+      addBackButton();
+      lazyCaptureProfile();
+    }
   });
 }());
