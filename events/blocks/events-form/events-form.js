@@ -896,8 +896,8 @@ async function initFormBasedOnRSVPData(bp) {
     eventFormSendAnalytics(bp, 'Confirmation Modal View');
   } else if (profile.account_type !== 'guest') {
     let existingAttendeeData = {};
-    // const attendeeResp = await getAttendee();
-    // if (attendeeResp.ok) existingAttendeeData = attendeeResp.data;
+    const attendeeResp = await getAttendee();
+    if (attendeeResp.ok) existingAttendeeData = attendeeResp.data;
     personalizeForm(block, { profile, existingAttendeeData });
   } else {
     const countryInput = block.querySelector('select#consentStringId');

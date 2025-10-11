@@ -111,64 +111,61 @@ export async function getEventAttendee(eventId) {
   const { host } = API_CONFIG.esl[getEventServiceEnv()];
   const options = await constructRequestOptions('GET');
 
-  // try {
-    // const response = await fetch(`${host}/v1/events/${eventId}/attendees/me`, options);
+  try {
+    const response = await fetch(`${host}/v1/events/${eventId}/attendees/me`, options);
 
-    // if (!response.ok) {
-    //   window.lana?.log(`Error: Failed to get attendee for event ${eventId}:${JSON.stringify(response)}`);
-    //   let textResp;
-    //   try {
-    //     textResp = await response.text();
-    //   } catch (e) {
-    //     window.lana?.log(`Error: Failed to parse response text:${JSON.stringify(e)}`);
-    //   }
+    if (!response.ok) {
+      window.lana?.log(`Error: Failed to get attendee for event ${eventId}:${JSON.stringify(response)}`);
+      let textResp;
+      try {
+        textResp = await response.text();
+      } catch (e) {
+        window.lana?.log(`Error: Failed to parse response text:${JSON.stringify(e)}`);
+      }
 
-    //   return {
-    //     ok: response.ok,
-    //     status: response.status,
-    //     error: textResp || response.status,
-    //   };
-    // }
+      return {
+        ok: response.ok,
+        status: response.status,
+        error: textResp || response.status,
+      };
+    }
 
     return { ok: true, data: await response.json() };
-  } 
-  // catch (error) {
-  //   window.lana?.log(`Error: Failed to get attendee for event ${eventId}. E:${JSON.stringify(error)}`);
-  //   return { ok: false, status: 'Network Error', error: error.message };
-  // }
-// }
+  } catch (error) {
+    window.lana?.log(`Error: Failed to get attendee for event ${eventId}. E:${JSON.stringify(error)}`);
+    return { ok: false, status: 'Network Error', error: error.message };
+  }
+}
 
 export async function getAttendee() {
   const { host } = API_CONFIG.esl[getEventServiceEnv()];
   const options = await constructRequestOptions('GET');
 
-  // try {
-  //   const response = await fetch(`${host}/v1/attendees/me`, options);
+  try {
+    const response = await fetch(`${host}/v1/attendees/me`, options);
 
-  //   if (!response.ok) {
-  //     window.lana?.log(`Error: Failed to get attendee details. Status:${JSON.stringify(response)}`);
-  //     let textResp;
-  //     try {
-  //       textResp = await response.text();
-  //     } catch (e) {
-  //       window.lana?.log(`Error: Failed to parse response text:${JSON.stringify(e)}`);
-  //     }
+    if (!response.ok) {
+      window.lana?.log(`Error: Failed to get attendee details. Status:${JSON.stringify(response)}`);
+      let textResp;
+      try {
+        textResp = await response.text();
+      } catch (e) {
+        window.lana?.log(`Error: Failed to parse response text:${JSON.stringify(e)}`);
+      }
 
-  //     return {
-  //       ok: response.ok,
-  //       status: response.status,
-  //       error: textResp || response.status,
-  //     };
-  //   }
+      return {
+        ok: response.ok,
+        status: response.status,
+        error: textResp || response.status,
+      };
+    }
 
     return { ok: true, data: await response.json() };
-  } 
-  
-  // catch (error) {
-  //   window.lana?.log(`Error: Failed to get attendee. Error:${JSON.stringify(error)}`);
-  //   return { ok: false, status: 'Network Error', error: error.message };
-  // }
-// }
+  } catch (error) {
+    window.lana?.log(`Error: Failed to get attendee. Error:${JSON.stringify(error)}`);
+    return { ok: false, status: 'Network Error', error: error.message };
+  }
+}
 
 export async function createAttendee(attendeeData) {
   if (!attendeeData) return false;
@@ -224,13 +221,13 @@ export async function updateAttendee(attendeeData) {
   const options = await constructRequestOptions('PUT', raw);
 
   try {
-    // const response = await fetch(`${host}/v1/attendees/me`, options);
-    // const data = await response.json();
+    const response = await fetch(`${host}/v1/attendees/me`, options);
+    const data = await response.json();
 
-    // if (!response.ok) {
-    //   window.lana?.log(`Error: Failed to update attendee. Status:${JSON.stringify(response)}`);
-    //   return { ok: response.ok, status: response.status, error: data };
-    // }
+    if (!response.ok) {
+      window.lana?.log(`Error: Failed to update attendee. Status:${JSON.stringify(response)}`);
+      return { ok: response.ok, status: response.status, error: data };
+    }
 
     return { ok: true, data };
   } catch (error) {
@@ -250,7 +247,7 @@ export async function deleteAttendeeFromEvent(eventId, attendeeId = null) {
     if (attendeeId) {
       response = await fetch(`${host}/v1/events/${eventId}/attendees/${attendeeId}`, options);
     } else {
-      // response = await fetch(`${host}/v1/events/${eventId}/attendees/me`, options);
+      response = await fetch(`${host}/v1/events/${eventId}/attendees/me`, options);
     }
 
     if (!response.ok) {
@@ -292,18 +289,18 @@ export async function getAndCreateAndAddAttendee(eventId, attendeeData) {
     const filteredPayload = getBaseAttendeePayload(attendeeData);
     attendee = await createAttendee(filteredPayload);
   } else {
-    // const attendeeResp = await getAttendee();
+    const attendeeResp = await getAttendee();
 
-    // if (!attendeeResp.ok && attendeeResp.status === 404) {
-    //   // Use BaseAttendee filter for creating new attendee
-    //   const filteredPayload = getBaseAttendeePayload(attendeeData);
-    //   attendee = await createAttendee(filteredPayload);
-    // } else if (attendeeResp.data?.attendeeId) {
-    //   // Use BaseAttendee filter for updating existing attendee
-    //   const payload = { ...attendeeResp.data, ...attendeeData };
-    //   const filteredPayload = getBaseAttendeePayload(payload);
-    //   attendee = await updateAttendee(filteredPayload);
-    // }
+    if (!attendeeResp.ok && attendeeResp.status === 404) {
+      // Use BaseAttendee filter for creating new attendee
+      const filteredPayload = getBaseAttendeePayload(attendeeData);
+      attendee = await createAttendee(filteredPayload);
+    } else if (attendeeResp.data?.attendeeId) {
+      // Use BaseAttendee filter for updating existing attendee
+      const payload = { ...attendeeResp.data, ...attendeeData };
+      const filteredPayload = getBaseAttendeePayload(payload);
+      attendee = await updateAttendee(filteredPayload);
+    }
   }
 
   if (!attendee?.ok) return { ok: false, error: 'Failed to create or update attendee' };
