@@ -216,7 +216,15 @@ export async function addAttendeeToEvent(eventId, attendee) {
     //   return { ok: response.ok, status: response.status, error: data };
     // }
 
-    return { ok: true, data:{} };
+    return { ok: true, data:{
+      "attendeeId": "80ef1d8e624186350a495cab@adobe.com",
+      "externalAttendeeId": "st-826937432",
+      "registrationStatus": "registered",
+      "checkedIn": false,
+      "isGuest": false,
+      "creationTime": 1760168709567,
+      "modificationTime": 1760168709567
+  } };
   } catch (error) {
     window.lana?.log(`Error: Failed to add attendee for event ${eventId}:${JSON.stringify(error)}`);
     return { ok: false, status: 'Network Error', error: error.message };

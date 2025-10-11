@@ -196,7 +196,7 @@ async function submitForm(bp) {
 
   if (!isValid) return false;
 
-  // return getAndCreateAndAddAttendee(getMetadata('event-id'), payload);
+  return getAndCreateAndAddAttendee(getMetadata('event-id'), payload);
 }
 
 function clearForm(form) {
