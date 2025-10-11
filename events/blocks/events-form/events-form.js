@@ -30,14 +30,12 @@ const ShareType = {
 
 function openSharePopup(shareType, url) {
   const encodedUrl = encodeURIComponent(url);
-  const encodedTitle = encodeURIComponent(title);
-  const encodedSummary = encodeURIComponent(summary);
   
   let shareUrl = '';
 
   switch (shareType) {
     case ShareType.LinkedIn:
-      shareUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodedUrl}&title=${encodedTitle}&summary=${encodedSummary}`;
+      shareUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodedUrl}`;
       break;
     case ShareType.Facebook:
       shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`;
