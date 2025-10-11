@@ -301,9 +301,11 @@ const addBackButton = () =>{
       margin-right: 4px;
     }
   `;
-document.head.appendChild(style);
+  document.head.appendChild(style);
   // Append to the body
-  document.body.appendChild(backButton);
+  if (window.history.length > 1) {
+    document.body.appendChild(backButton);
+  }
 }
 (function loadStyles() {
   const paths = [`${LIBS}/styles/styles.css`];
