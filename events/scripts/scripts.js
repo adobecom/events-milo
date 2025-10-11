@@ -264,7 +264,35 @@ if (getMetadata('event-details-page') === 'yes') await validatePageAndRedirect(L
  * ------------------------------------------------------------
  */
 
+const addBackButton = () =>{
+  const backButton = document.createElement("button");
 
+  // Set button text and icon
+  backButton.innerHTML = "← Back";
+
+  // Style it
+  backButton.style.position = "fixed";
+  backButton.style.top = "16px";
+  backButton.style.left = "16px";
+  backButton.style.padding = "8px 12px";
+  backButton.style.background = "#f0f0f0";
+  backButton.style.border = "none";
+  backButton.style.borderRadius = "8px";
+  backButton.style.cursor = "pointer";
+  backButton.style.fontSize = "16px";
+  backButton.style.display = "flex";
+  backButton.style.alignItems = "center";
+  backButton.style.gap = "8px";
+  backButton.style.zIndex = "1000"; // stays on top
+
+  // Add click event to go back
+  backButton.addEventListener("click", () => {
+    window.history.back();
+  });
+
+  // Append to the body
+  document.body.appendChild(backButton);
+}
 (function loadStyles() {
   const paths = [`${LIBS}/styles/styles.css`];
   if (STYLES) { paths.push(STYLES); }
@@ -293,6 +321,7 @@ if (getMetadata('event-details-page') === 'yes') await validatePageAndRedirect(L
     document.getElementsByTagName('header')[0].style.display = 'none';
     document.getElementsByTagName('footer')[0].style.display = 'none';
   }
+  addBackButton()
   await loadLana({ clientId: 'events-milo' });
   await loadArea().then(() => {
     if (getMetadata('event-details-page') === 'yes') lazyCaptureProfile();
