@@ -25,7 +25,7 @@ export async function getProfile() {
 
   const getCustomeProfile = async(token) =>{
     try {
-        const response = await fetch('https://adobeid-na1.services.adobe.com/ims/profile/v1?client_id=events-milo', {
+        const response = await fetch('https://ims-na1-stg1.adobelogin.com/ims/profile/v1?client_id=events-milo', {
           method: 'GET',
           headers: {
             Authorization: `Bearer ${token}`,
