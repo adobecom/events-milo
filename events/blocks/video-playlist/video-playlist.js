@@ -393,7 +393,7 @@ class VideoPlaylist {
     }
 
     _createFavoriteButton(card, isFavorite) {
-        const tooltip = isFavorite ? 'Remove from favorites' : this.cfg.favoritesTooltipText;
+        const tooltip = this.cfg.favoritesTooltipText;
         const btn = createTag('button', {
             class: 'video-playlist-container__sessions__wrapper__session__favorite',
             'daa-ll': isFavorite ? ANALYTICS.UNFAVORITE : ANALYTICS.FAVORITE,
@@ -424,9 +424,8 @@ class VideoPlaylist {
             svg.classList.toggle('unfilled', !isFav);
 
             btn.setAttribute('daa-ll', isFav ? ANALYTICS.FAVORITE : ANALYTICS.UNFAVORITE);
-            const tooltip = isFav ? 'Remove from favorites' : this.cfg.favoritesTooltipText;
-            btn.setAttribute('data-tooltip', tooltip);
-            btn.setAttribute('aria-label', `${tooltip} ${card.contentArea.title}`);
+            btn.setAttribute('data-tooltip', this.cfg.favoritesTooltipText);
+            btn.setAttribute('aria-label', `${this.cfg.favoritesTooltipText} ${card.contentArea.title}`);
 
             if (isFav) {
                 this._showToast(this.cfg.favoritesNotificationText, 'positive', {
