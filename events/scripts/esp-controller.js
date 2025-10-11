@@ -221,13 +221,13 @@ export async function updateAttendee(attendeeData) {
   const options = await constructRequestOptions('PUT', raw);
 
   try {
-    // const response = await fetch(`${host}/v1/attendees/me`, options);
-    // const data = await response.json();
+    const response = await fetch(`${host}/v1/attendees/me`, options);
+    const data = await response.json();
 
-    // if (!response.ok) {
-    //   window.lana?.log(`Error: Failed to update attendee. Status:${JSON.stringify(response)}`);
-    //   return { ok: response.ok, status: response.status, error: data };
-    // }
+    if (!response.ok) {
+      window.lana?.log(`Error: Failed to update attendee. Status:${JSON.stringify(response)}`);
+      return { ok: response.ok, status: response.status, error: data };
+    }
 
     return { ok: true, data };
   } catch (error) {
