@@ -208,15 +208,15 @@ export async function addAttendeeToEvent(eventId, attendee) {
   const options = await constructRequestOptions('POST', raw);
 
   try {
-    const response = await fetch(`${host}/v1/events/${eventId}/attendees/${attendee.attendeeId}`, options);
-    const data = await response.json();
+    // const response = await fetch(`${host}/v1/events/${eventId}/attendees/${attendee.attendeeId}`, options);
+    // const data = await response.json();
 
-    if (!response.ok) {
-      window.lana?.log(`Error: Failed to add attendee for event ${eventId}. Status:${JSON.stringify(response)}`);
-      return { ok: response.ok, status: response.status, error: data };
-    }
+    // if (!response.ok) {
+    //   window.lana?.log(`Error: Failed to add attendee for event ${eventId}. Status:${JSON.stringify(response)}`);
+    //   return { ok: response.ok, status: response.status, error: data };
+    // }
 
-    return { ok: true, data };
+    return { ok: true, data:{} };
   } catch (error) {
     window.lana?.log(`Error: Failed to add attendee for event ${eventId}:${JSON.stringify(error)}`);
     return { ok: false, status: 'Network Error', error: error.message };
