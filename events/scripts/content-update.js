@@ -481,7 +481,7 @@ export async function getNonProdData(env) {
 
   const localeMatch = window.location.pathname.match(/^(\/[^/]+)?\/events\//);
   const localePath = localeMatch?.[1] || '';
-  const resp = await fetch(`${localePath}/events/default/${env === 'prod' ? '' : `${env}/`}metadata${isPreviewMode ? '-preview' : ''}.json`, {
+  const resp = await fetch(`${localePath}/events/default/${env === 'prod' ? '' : `${env}/`}metadata${isPreviewMode ? '-preview' : ''}.json?limit=999999`, {
     headers: {
       'Content-Type': 'application/json',
       'Cache-Control': 'no-cache',
@@ -492,7 +492,7 @@ export async function getNonProdData(env) {
     const json = await resp.json();
     let { pathname } = window.location;
     if (pathname.endsWith('.html')) pathname = pathname.slice(0, -5);
-    const pageData = json.data.find((d) => {
+    const pageData = json.data.reverse().find((d) => {
       let pageUrl = '';
 
       try {
