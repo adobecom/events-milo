@@ -1,4 +1,4 @@
-import { LIBS, getMetadata, getSusiOptions } from '../../scripts/utils.js';
+import { LIBS, getMetadata, getSusiOptions, getIcon } from '../../scripts/utils.js';
 import { deleteAttendeeFromEvent, getAndCreateAndAddAttendee, getAttendee, getEvent } from '../../scripts/esp-controller.js';
 import BlockMediator from '../../scripts/deps/block-mediator.min.js';
 import autoUpdateContent, { miloReplaceKey, signIn } from '../../scripts/content-update.js';
@@ -20,6 +20,43 @@ const RULE_OPERATORS = {
   includes: 'inc',
   excludes: 'exc',
 };
+
+// Share Types Enum
+const ShareType = {
+  LinkedIn: 'linkedin',
+  Facebook: 'facebook',
+  X: 'x',
+};
+
+function openSharePopup(shareType, url) {
+  const encodedUrl = encodeURIComponent(url);
+  
+  let shareUrl = '';
+
+  switch (shareType) {
+    case ShareType.LinkedIn:
+      shareUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodedUrl}`;
+      break;
+    case ShareType.Facebook:
+      shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`;
+      break;
+    case ShareType.X:
+      shareUrl = '';//`https://x.com/intent/tweet?url=${encodedUrl}&text=${encodedTitle}`;
+      break;
+    default:
+      console.warn('Unknown share type:', shareType);
+      return;
+  }
+
+  // Copy title to clipboard for user convenience
+  const prefilledText = `Can’t keep calm — heading to the Adobe event! 🎉
+  Always inspired by the creativity, innovation, and people that make Adobe what it is. Can’t wait to connect, learn, and bring back a spark of that creative energy! 🚀`;
+  navigator.clipboard.writeText(prefilledText).catch((err) => {
+    console.warn('Failed to copy to clipboard:', err);
+  });
+  
+  window.open(shareUrl, '_blank', 'width=600,height=400,scrollbars=yes,resizable=yes');
+}
 
 function snakeToCamel(str) {
   return str
@@ -552,6 +589,60 @@ function decorateSuccessScreen(screen) {
       hgroup.append(h);
     });
 
+    // //add social media sharing buttons
+    const url = 'https://www.adobe.com/events/virtual-learn-events/virtual-learn-event-photoshop/2025-10-14.html';
+    
+    // Create divider with text
+    const socialMediaDivider = createTag('div', { class: 'social-media-divider' });
+    const dividerLine1 = createTag('span', { class: 'divider-line' });
+    const dividerText = createTag('span', { class: 'divider-text' }, 'Share via Social Media');
+    const dividerLine2 = createTag('span', { class: 'divider-line' });
+    socialMediaDivider.append(dividerLine1, dividerText, dividerLine2);
+    
+    const socialMediaSharingButtons = createTag('div', { class: 'social-media-sharing-buttons' });
+    // Facebook button with icon
+    const facebookButton = createTag('a', { 
+      href: '#', 
+      class: 'facebook-share-btn',
+      'aria-label': 'Share on Facebook'
+    }, getIcon('facebook3'));
+    
+    // Add click handler for Facebook share
+    facebookButton.addEventListener('click', (e) => {
+      e.preventDefault();
+      openSharePopup(ShareType.Facebook, url);
+    });
+
+    // X button with icon
+    const xButton = createTag('a', { 
+      href: '#', 
+      class: 'x-share-btn',
+      'aria-label': 'Share on X'
+    }, getIcon('x'));
+
+    // Add click handler for X share
+    xButton.addEventListener('click', (e) => {
+      e.preventDefault();
+      openSharePopup(ShareType.X, url);
+    });
+
+    // LinkedIn button with icon
+    const linkedinButton = createTag('a', { 
+      href: '#', 
+      class: 'linkedin-share-btn',
+      'aria-label': 'Share on LinkedIn'
+    }, getIcon('linkedin'));
+
+    // Add click handler for LinkedIn share with custom text
+    linkedinButton.addEventListener('click', (e) => {
+      e.preventDefault();
+      openSharePopup(ShareType.LinkedIn, url);
+    });
+    socialMediaSharingButtons.append(facebookButton, xButton, linkedinButton);
+    const p = ss.querySelector(':scope > p:nth-of-type(2)');
+    p.insertAdjacentElement('afterend', socialMediaDivider);
+    socialMediaDivider.insertAdjacentElement('afterend', socialMediaSharingButtons);
+
     if (eyeBrowText) {
       eyeBrowText.classList.add('eyebrow');
       hgroup.prepend(eyeBrowText);
@@ -893,7 +984,7 @@ async function initFormBasedOnRSVPData(bp) {
 
   if (validRegistrationStatus.includes(rsvpData?.registrationStatus)) {
     showSuccessMsgFirstScreen(bp);
-    eventFormSendAnalytics(bp, 'Confirmation Modal View');
+    //eventFormSendAnalytics(bp, 'Confirmation Modal View');
   } else if (profile.account_type !== 'guest') {
     let existingAttendeeData = {};
     const attendeeResp = await getAttendee();
