@@ -14,6 +14,7 @@ class TimingWorker {
     // Time management properties - optimized for scale
     this.cachedApiTime = null;
     this.lastApiCall = 0;
+    this.lastApiCallPerformance = 0;
     this.apiCallInterval = 300000; // 5 minutes minimum between API calls
     this.cacheTtl = 600000; // 10 minutes cache TTL (longer for better scaling)
     this.fallbackToLocal = true;
@@ -21,6 +22,7 @@ class TimingWorker {
     this.maxFailures = 3;
     this.backoffMultiplier = 2;
     this.maxBackoffInterval = 1800000; // 30 minutes max backoff
+    this.maxAllowedDrift = 60000; // 1 minute max drift before cache invalidation
 
     this.setupMessageHandler();
   }
@@ -83,9 +85,27 @@ class TimingWorker {
       timeChannel.onmessage = (event) => {
         const { type, data } = event.data;
         if (type === 'time-update' && data) {
-          // Update local cache with shared time data
-          this.cachedApiTime = data;
-          this.consecutiveFailures = 0; // Reset failures when we get shared time
+          // Validate the shared time data before using it
+          const now = Date.now();
+          const age = now - data.timestamp;
+          
+          // Only accept recent time updates (within TTL)
+          if (age < this.cacheTtl && age >= 0) {
+            // Validate that performanceTimestamp exists (new format)
+            if (data.performanceTimestamp !== undefined) {
+              // Reconstruct the cache with our local performance timestamp
+              // to ensure monotonic time calculations work correctly
+              this.cachedApiTime = {
+                time: data.time + age, // Adjust for age
+                timestamp: now,
+                performanceTimestamp: performance.now(),
+              };
+              this.consecutiveFailures = 0; // Reset failures when we get shared time
+            } else {
+              // Legacy format without performanceTimestamp - ignore for safety
+              window.lana?.log('Received time update in legacy format, ignoring for safety');
+            }
+          }
         }
       };
       this.channels.set('timeCache', timeChannel);
@@ -116,16 +136,30 @@ class TimingWorker {
    */
   async getAuthoritativeTime() {
     const now = Date.now();
+    const perfNow = performance.now();
 
     // If in testing mode, skip API calls and use local time
     if (this.testingManager.isTesting()) {
       return now;
     }
 
-    // If we have a valid cached API time, use it
+    // Detect clock drift if we have cached time
+    if (this.cachedApiTime) {
+      const wallClockElapsed = now - this.cachedApiTime.timestamp;
+      const monotonicElapsed = perfNow - this.cachedApiTime.performanceTimestamp;
+      const drift = Math.abs(wallClockElapsed - monotonicElapsed);
+
+      // If drift exceeds threshold, invalidate cache to force fresh API call
+      if (drift > this.maxAllowedDrift) {
+        window.lana?.log(`Clock drift detected: ${drift}ms. Invalidating cache.`);
+        this.cachedApiTime = null;
+      }
+    }
+
+    // If we have a valid cached API time, use it with monotonic clock
     if (this.cachedApiTime && (now - this.cachedApiTime.timestamp) < this.cacheTtl) {
-      const timeSinceCache = now - this.cachedApiTime.timestamp;
-      return this.cachedApiTime.time + timeSinceCache;
+      const elapsedMs = perfNow - this.cachedApiTime.performanceTimestamp;
+      return this.cachedApiTime.time + elapsedMs;
     }
 
     // Calculate backoff interval based on consecutive failures
@@ -138,12 +172,16 @@ class TimingWorker {
     const jitter = Math.random() * 0.3 * backoffInterval;
     const effectiveInterval = backoffInterval + jitter;
 
-    // Check if enough time has passed since last API call (with backoff)
-    if (now - this.lastApiCall < effectiveInterval) {
+    // Check if enough time has passed since last API call (with backoff) using monotonic clock
+    const timeSinceLastCall = this.lastApiCallPerformance > 0
+      ? perfNow - this.lastApiCallPerformance
+      : Infinity; // Force API call if never called
+
+    if (timeSinceLastCall < effectiveInterval) {
       // Use cached time if available, otherwise fall back to local
       if (this.cachedApiTime) {
-        const timeSinceCache = now - this.cachedApiTime.timestamp;
-        return this.cachedApiTime.time + timeSinceCache;
+        const elapsedMs = perfNow - this.cachedApiTime.performanceTimestamp;
+        return this.cachedApiTime.time + elapsedMs;
       }
       return now;
     }
@@ -152,11 +190,13 @@ class TimingWorker {
     try {
       const apiTime = await TimingWorker.getCurrentTimeFromAPI();
       this.lastApiCall = now;
+      this.lastApiCallPerformance = perfNow;
 
       if (apiTime !== null) {
         this.cachedApiTime = {
           time: apiTime,
           timestamp: now,
+          performanceTimestamp: perfNow,
         };
         // Reset failure count on success
         this.consecutiveFailures = 0;
@@ -191,8 +231,8 @@ class TimingWorker {
 
     // If fallback is disabled and API failed, use cached time or current time
     if (this.cachedApiTime) {
-      const timeSinceCache = now - this.cachedApiTime.timestamp;
-      return this.cachedApiTime.time + timeSinceCache;
+      const elapsedMs = perfNow - this.cachedApiTime.performanceTimestamp;
+      return this.cachedApiTime.time + elapsedMs;
     }
 
     return now;
