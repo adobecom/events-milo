@@ -45,7 +45,7 @@ class TimingWorker {
       try {
         const channel = new BroadcastChannel(channelName);
         channel.onmessage = (event) => {
-          const { tabId, key, value } = event.data;
+          const { tabId } = event.data;
           // Only process messages from this tab
           if (tabId === this.tabId) {
             const store = this.plugins.get(pluginName);
