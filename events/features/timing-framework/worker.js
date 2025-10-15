@@ -13,7 +13,6 @@ class TimingWorker {
 
     // Time management properties - optimized for scale
     this.cachedApiTime = null;
-    this.lastApiCall = 0;
     this.lastApiCallPerformance = 0;
     this.apiCallInterval = 300000; // 5 minutes minimum between API calls
     this.cacheTtl = 600000; // 10 minutes cache TTL (longer for better scaling)
@@ -205,7 +204,6 @@ class TimingWorker {
     // Try to get fresh time from API
     try {
       const apiTime = await TimingWorker.getCurrentTimeFromAPI();
-      this.lastApiCall = now;
       this.lastApiCallPerformance = perfNow;
 
       if (apiTime !== null) {

@@ -242,7 +242,6 @@ describe('TimingWorker', () => {
     beforeEach(() => {
       // Reset the worker's time management properties
       worker.cachedApiTime = null;
-      worker.lastApiCall = 0;
       worker.lastApiCallPerformance = 0;
       perfStub = sinon.stub(performance, 'now');
     });
@@ -267,7 +266,6 @@ describe('TimingWorker', () => {
       perfStub.returns(1000);
       // 700 seconds ago (expired)
       worker.cachedApiTime = { time: apiTime, timestamp: now - 700000, performanceTimestamp: 0 };
-      worker.lastApiCall = now - 400000; // 400 seconds ago
       worker.lastApiCallPerformance = 0;
 
       // Mock successful API response
@@ -284,7 +282,6 @@ describe('TimingWorker', () => {
       const now = Date.now();
       perfStub.returns(100000); // 100 seconds
       // 100 seconds ago (rate limit not reached for 5 min interval)
-      worker.lastApiCall = now - 100000;
       worker.lastApiCallPerformance = 1000; // Set to non-zero so rate limit is enforced
 
       const result = await worker.getAuthoritativeTime();
@@ -295,7 +292,6 @@ describe('TimingWorker', () => {
     it('should fall back to local time if API fails', async () => {
       const now = Date.now();
       perfStub.returns(40000);
-      worker.lastApiCall = now - 400000; // 400 seconds ago to trigger API call
       worker.lastApiCallPerformance = 0;
 
       // Mock failed API response
@@ -310,7 +306,6 @@ describe('TimingWorker', () => {
       const apiTime = now - 1000;
       perfStub.returns(30000);
       worker.cachedApiTime = { time: apiTime, timestamp: now - 30000, performanceTimestamp: 0 };
-      worker.lastApiCall = now - 400000; // Force API call
       worker.lastApiCallPerformance = 0;
 
       // Mock API returning null
@@ -321,9 +316,7 @@ describe('TimingWorker', () => {
     });
 
     it('should implement progressive backoff on failures', async () => {
-      const now = Date.now();
       perfStub.returns(400000);
-      worker.lastApiCall = now - 400000; // 400 seconds ago
       worker.lastApiCallPerformance = 0;
       worker.consecutiveFailures = 0; // Start with no failures
 
@@ -338,7 +331,6 @@ describe('TimingWorker', () => {
       const now = Date.now();
       const apiTime = now - 1000;
       perfStub.returns(400000);
-      worker.lastApiCall = now - 400000; // 400 seconds ago
       worker.lastApiCallPerformance = 0;
       worker.consecutiveFailures = 0; // Start with no failures to ensure API call happens
 
@@ -353,7 +345,6 @@ describe('TimingWorker', () => {
       const now = Date.now();
       const apiTime = now - 1000;
       perfStub.returns(400000);
-      worker.lastApiCall = now - 400000; // 400 seconds ago
       worker.lastApiCallPerformance = 0;
 
       // Mock successful API response
@@ -511,7 +502,6 @@ describe('TimingWorker', () => {
     beforeEach(() => {
       perfStub = sinon.stub(performance, 'now');
       worker.cachedApiTime = null;
-      worker.lastApiCall = 0;
       worker.lastApiCallPerformance = 0;
     });
 
@@ -620,12 +610,9 @@ describe('TimingWorker', () => {
     });
 
     it('should use performance.now() for rate limiting checks', async () => {
-      const now = Date.now();
-
       // Set last API call timestamp
       perfStub.returns(1000);
       worker.lastApiCallPerformance = 1000;
-      worker.lastApiCall = now;
 
       // Advance performance.now() by 2 minutes (120 seconds)
       perfStub.returns(121000);
