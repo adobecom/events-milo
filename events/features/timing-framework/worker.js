@@ -35,48 +35,42 @@ class TimingWorker {
           channel.close();
         }
       } catch (error) {
-        window.lana?.log(`Error closing BroadcastChannel: ${JSON.stringify(error)}`);
+        TimingWorker.logError('Error closing BroadcastChannel', error);
       }
     });
     this.channels.clear();
 
-    // Only set up channels for enabled plugins
-    if (plugins.has('metadata')) {
+    // Helper to create plugin channels with consistent pattern
+    const createPluginChannel = (channelName, pluginName, messageHandler) => {
       try {
-        const channel = new BroadcastChannel('metadata-store');
+        const channel = new BroadcastChannel(channelName);
         channel.onmessage = (event) => {
           const { tabId, key, value } = event.data;
           // Only process messages from this tab
           if (tabId === this.tabId) {
-            const metadataStore = this.plugins.get('metadata');
-            if (metadataStore) {
-              metadataStore.set(key, value);
+            const store = this.plugins.get(pluginName);
+            if (store) {
+              messageHandler(event.data, store);
             }
           }
         };
-        this.channels.set('metadata', channel);
+        this.channels.set(pluginName, channel);
       } catch (error) {
-        window.lana?.log(`Error setting up metadata BroadcastChannel: ${JSON.stringify(error)}`);
+        TimingWorker.logError(`Error setting up ${pluginName} BroadcastChannel`, error);
       }
+    };
+
+    // Set up plugin-specific channels
+    if (plugins.has('metadata')) {
+      createPluginChannel('metadata-store', 'metadata', (data, store) => {
+        store.set(data.key, data.value);
+      });
     }
 
     if (plugins.has('mobileRider')) {
-      try {
-        const channel = new BroadcastChannel('mobile-rider-store');
-        channel.onmessage = (event) => {
-          const { tabId, sessionId, isActive } = event.data;
-          // Only process messages from this tab
-          if (tabId === this.tabId) {
-            const mobileRiderStore = this.plugins.get('mobileRider');
-            if (mobileRiderStore) {
-              mobileRiderStore.set(sessionId, isActive);
-            }
-          }
-        };
-        this.channels.set('mobileRider', channel);
-      } catch (error) {
-        window.lana?.log(`Error setting up mobileRider BroadcastChannel: ${JSON.stringify(error)}`);
-      }
+      createPluginChannel('mobile-rider-store', 'mobileRider', (data, store) => {
+        store.set(data.sessionId, data.isActive);
+      });
     }
 
     // Set up shared time cache channel
@@ -88,7 +82,7 @@ class TimingWorker {
           // Validate the shared time data before using it
           const now = Date.now();
           const age = now - data.timestamp;
-          
+
           // Only accept recent time updates (within TTL)
           if (age < this.cacheTtl && age >= 0) {
             // Validate that performanceTimestamp exists (new format)
@@ -110,8 +104,36 @@ class TimingWorker {
       };
       this.channels.set('timeCache', timeChannel);
     } catch (error) {
-      window.lana?.log(`Error setting up time cache BroadcastChannel: ${JSON.stringify(error)}`);
+      TimingWorker.logError('Error setting up time cache BroadcastChannel', error);
     }
+  }
+
+  /**
+   * Helper to calculate elapsed time from cached API time using monotonic clock
+   * @returns {number}
+   */
+  getCachedTimeWithElapsed() {
+    const elapsedMs = performance.now() - this.cachedApiTime.performanceTimestamp;
+    return this.cachedApiTime.time + elapsedMs;
+  }
+
+  /**
+   * Helper to convert toggleTime to number
+   * @param {string|number} toggleTime
+   * @returns {number}
+   */
+  static parseToggleTime(toggleTime) {
+    return typeof toggleTime === 'string' ? parseInt(toggleTime, 10) : toggleTime;
+  }
+
+  /**
+   * Helper to log errors properly
+   * @param {string} message
+   * @param {Error} error
+   */
+  static logError(message, error) {
+    const errorDetails = error?.message || error?.stack || String(error);
+    window.lana?.log(`${message}: ${errorDetails}`);
   }
 
   /**
@@ -122,10 +144,9 @@ class TimingWorker {
     try {
       const response = await fetch('https://time.akamai.com/');
       const data = await response.text();
-      const currentTimeInMs = Number.parseInt(data, 10) * 1000;
-      return currentTimeInMs;
+      return Number.parseInt(data, 10) * 1000;
     } catch (error) {
-      window.lana?.log(`Error fetching time from API: ${JSON.stringify(error)}`);
+      TimingWorker.logError('Error fetching time from API', error);
       return null;
     }
   }
@@ -158,8 +179,7 @@ class TimingWorker {
 
     // If we have a valid cached API time, use it with monotonic clock
     if (this.cachedApiTime && (now - this.cachedApiTime.timestamp) < this.cacheTtl) {
-      const elapsedMs = perfNow - this.cachedApiTime.performanceTimestamp;
-      return this.cachedApiTime.time + elapsedMs;
+      return this.getCachedTimeWithElapsed();
     }
 
     // Calculate backoff interval based on consecutive failures
@@ -179,11 +199,7 @@ class TimingWorker {
 
     if (timeSinceLastCall < effectiveInterval) {
       // Use cached time if available, otherwise fall back to local
-      if (this.cachedApiTime) {
-        const elapsedMs = perfNow - this.cachedApiTime.performanceTimestamp;
-        return this.cachedApiTime.time + elapsedMs;
-      }
-      return now;
+      return this.cachedApiTime ? this.getCachedTimeWithElapsed() : now;
     }
 
     // Try to get fresh time from API
@@ -211,7 +227,7 @@ class TimingWorker {
             });
           }
         } catch (error) {
-          window.lana?.log(`Error broadcasting time update: ${JSON.stringify(error)}`);
+          TimingWorker.logError('Error broadcasting time update', error);
         }
 
         return apiTime;
@@ -219,22 +235,15 @@ class TimingWorker {
       // Increment failure count if API returns null
       this.consecutiveFailures = Math.min(this.consecutiveFailures + 1, this.maxFailures);
     } catch (error) {
-      window.lana?.log(`Error getting authoritative time: ${JSON.stringify(error)}`);
+      TimingWorker.logError('Error getting authoritative time', error);
       // Increment failure count on error
       this.consecutiveFailures = Math.min(this.consecutiveFailures + 1, this.maxFailures);
     }
 
-    // Fall back to local time if API fails or returns null
-    if (this.fallbackToLocal) {
-      return now;
+    // Fall back to cached time or local time depending on settings
+    if (this.cachedApiTime && !this.fallbackToLocal) {
+      return this.getCachedTimeWithElapsed();
     }
-
-    // If fallback is disabled and API failed, use cached time or current time
-    if (this.cachedApiTime) {
-      const elapsedMs = perfNow - this.cachedApiTime.performanceTimestamp;
-      return this.cachedApiTime.time + elapsedMs;
-    }
-
     return now;
   }
 
@@ -253,9 +262,8 @@ class TimingWorker {
     let start = null;
 
     while (pointer) {
-      const { toggleTime: t } = pointer;
-      // Convert toggleTime to number if it's a string, like in shouldTriggerNextSchedule
-      const numericToggleTime = typeof t === 'string' ? parseInt(t, 10) : t;
+      const { toggleTime } = pointer;
+      const numericToggleTime = TimingWorker.parseToggleTime(toggleTime);
       const toggleTimePassed = typeof numericToggleTime !== 'number' || adjustedTime > numericToggleTime;
 
       if (!toggleTimePassed) break;
@@ -298,10 +306,9 @@ class TimingWorker {
   async hasToggleTimePassed(scheduleItem) {
     const { toggleTime } = scheduleItem;
     if (!toggleTime) return true; // No toggleTime means no time restriction
-    
+
     const currentTime = await this.getCurrentTime();
-    // Convert toggleTime to number if it's a string
-    const numericToggleTime = typeof toggleTime === 'string' ? parseInt(toggleTime, 10) : toggleTime;
+    const numericToggleTime = TimingWorker.parseToggleTime(toggleTime);
     return currentTime > numericToggleTime;
   }
 
@@ -320,8 +327,6 @@ class TimingWorker {
         const { sessionId } = this.currentScheduleItem.mobileRider;
         const isActive = mobileRiderStore.get(sessionId);
         if (isActive) return false; // Wait for session to end
-         // Check if current item has mobileRider that's ended (underrun)
-        return true;
       }
     }
 
@@ -329,7 +334,7 @@ class TimingWorker {
       // Check if toggleTime has passed before checking mobileRider status
       const timePassed = await this.hasToggleTimePassed(scheduleItem);
       if (!timePassed) return false;
-      
+
       const mobileRiderStore = this.plugins.get('mobileRider');
       if (mobileRiderStore) {
         const { sessionId } = scheduleItem.mobileRider;
@@ -361,7 +366,7 @@ class TimingWorker {
     }
 
     // If no plugins are blocking, check toggleTime
-    return await this.hasToggleTimePassed(scheduleItem);
+    return this.hasToggleTimePassed(scheduleItem);
   }
 
   async runTimer() {
