@@ -5,12 +5,17 @@ import { LIBS, setMetadata } from '../../../events/scripts/utils.js';
 import BlockMediator from '../../../events/scripts/deps/block-mediator.min.js';
 
 const {
-  default: decorateEvent,
+  default: autoUpdateContent,
   updateAnalyticTag,
   signIn,
   validatePageAndRedirect,
   updatePictureElement,
   getNonProdData,
+  convertUtcTimestampToLocalDateTime,
+  massageMetadata,
+  areTimestampsOnSameDay,
+  createSmartDateRange,
+  createTemplatedDateRange,
 } = await import('../../../events/scripts/content-update.js');
 const { getConfig } = await import(`${LIBS}/utils/utils.js`);
 const head = await readFile({ path: './mocks/head.html' });
@@ -38,7 +43,7 @@ describe('Content Update Script', () => {
       miloLibs: LIBS,
     };
 
-    decorateEvent(document, miloDeps);
+    autoUpdateContent(document, miloDeps);
     expect(checkForDoubleSquareBrackets()).to.be.false;
   });
 
@@ -49,7 +54,7 @@ describe('Content Update Script', () => {
       miloLibs: LIBS,
     };
 
-    decorateEvent(document, miloDeps);
+    autoUpdateContent(document, miloDeps);
     expect(checkForDoubleSquareBrackets()).to.be.false;
   });
 
@@ -86,7 +91,7 @@ describe('Content Update Script', () => {
     BlockMediator.set('imsProfile', profile);
 
     const buttonOriginalText = document.querySelector('a[href$="#rsvp-form-1"]').textContent;
-    decorateEvent(document, miloDeps);
+    autoUpdateContent(document, miloDeps);
     BlockMediator.set('rsvpData', null);
 
     expect(document.querySelector('a[href$="#rsvp-form-1"]').textContent).to.be.equal(buttonOriginalText);
@@ -169,7 +174,590 @@ describe('getNonProdData', () => {
   });
 });
 
-describe('decorateEvent - Array Iteration', () => {
+describe('UTC Timestamp to Local DateTime Conversion', () => {
+  let originalLana;
+
+  beforeEach(() => {
+    // Mock lana for testing
+    originalLana = window.lana;
+    window.lana = { log: () => {} };
+  });
+
+  afterEach(() => {
+    window.lana = originalLana;
+  });
+
+  it('should convert valid UTC timestamp to local date time string', () => {
+    const timestamp = '1759251599990';
+    const result = convertUtcTimestampToLocalDateTime(timestamp);
+    
+    // Should return a formatted date string
+    expect(result).to.be.a('string');
+    expect(result).to.not.be.empty;
+    expect(result).to.match(/\d{4}/); // Should contain a year
+    expect(result).to.match(/\d{1,2}:\d{2}/); // Should contain time
+  });
+
+  it('should handle numeric timestamp input', () => {
+    const timestamp = 1759251599990;
+    const result = convertUtcTimestampToLocalDateTime(timestamp);
+    
+    expect(result).to.be.a('string');
+    expect(result).to.not.be.empty;
+  });
+
+  it('should return empty string for invalid timestamp', () => {
+    const result = convertUtcTimestampToLocalDateTime('invalid');
+    expect(result).to.equal('');
+  });
+
+  it('should return empty string for null/undefined timestamp', () => {
+    expect(convertUtcTimestampToLocalDateTime(null)).to.equal('');
+    expect(convertUtcTimestampToLocalDateTime(undefined)).to.equal('');
+    expect(convertUtcTimestampToLocalDateTime('')).to.equal('');
+  });
+
+  it('should use custom locale when provided', () => {
+    const timestamp = '1759251599990';
+    const resultEn = convertUtcTimestampToLocalDateTime(timestamp, 'en-US');
+    const resultDe = convertUtcTimestampToLocalDateTime(timestamp, 'de-DE');
+    
+    expect(resultEn).to.be.a('string');
+    expect(resultDe).to.be.a('string');
+    expect(resultEn).to.not.equal(resultDe); // Different locales should produce different formats
+  });
+
+  it('should handle edge case timestamps', () => {
+    // Test with current timestamp
+    const currentTimestamp = Date.now().toString();
+    const result = convertUtcTimestampToLocalDateTime(currentTimestamp);
+    expect(result).to.be.a('string');
+    expect(result).to.not.be.empty;
+  });
+
+  it('should log error for invalid timestamps', () => {
+    const logSpy = sinon.spy(window.lana, 'log');
+    
+    convertUtcTimestampToLocalDateTime('not-a-number');
+    expect(logSpy.calledWith(sinon.match(/Invalid timestamp provided/))).to.be.true;
+    
+    logSpy.restore();
+  });
+});
+
+describe('Date Range Utilities', () => {
+  let originalLana;
+
+  beforeEach(() => {
+    // Mock lana for testing
+    originalLana = window.lana;
+    window.lana = { log: () => {} };
+  });
+
+  afterEach(() => {
+    window.lana = originalLana;
+  });
+
+  describe('areTimestampsOnSameDay', () => {
+    it('should return true for timestamps on the same day', () => {
+      // Same day, different times
+      const startTimestamp = '1759251599990'; // Jan 15, 2025 2:30 PM
+      const endTimestamp = '1759255199990';   // Jan 15, 2025 3:30 PM
+      
+      expect(areTimestampsOnSameDay(startTimestamp, endTimestamp)).to.be.true;
+    });
+
+    it('should return false for timestamps on different days', () => {
+      // Different days
+      const startTimestamp = '1759251599990'; // Jan 15, 2025
+      const endTimestamp = '1759337999990';   // Jan 16, 2025
+      
+      expect(areTimestampsOnSameDay(startTimestamp, endTimestamp)).to.be.false;
+    });
+
+    it('should handle numeric timestamps', () => {
+      const startTimestamp = 1759251599990;
+      const endTimestamp = 1759255199990;
+      
+      expect(areTimestampsOnSameDay(startTimestamp, endTimestamp)).to.be.true;
+    });
+
+    it('should return false for invalid timestamps', () => {
+      expect(areTimestampsOnSameDay('invalid', '1759255199990')).to.be.false;
+      expect(areTimestampsOnSameDay('1759251599990', 'invalid')).to.be.false;
+      expect(areTimestampsOnSameDay(null, '1759255199990')).to.be.false;
+      expect(areTimestampsOnSameDay('1759251599990', undefined)).to.be.false;
+    });
+
+    it('should handle edge cases around midnight', () => {
+      // Just before and after midnight (different days)
+      const startTimestamp = '1759251599990'; // Jan 15, 2025 11:59 PM
+      const endTimestamp = '1759251600000';   // Jan 15, 2025 12:00 AM (next day)
+      
+      // These are actually the same day, let's use a proper midnight crossing
+      const startTimestamp2 = '1759251599990'; // Jan 15, 2025 11:59 PM
+      const endTimestamp2 = '1759337999990';   // Jan 16, 2025 11:59 PM (next day)
+      
+      expect(areTimestampsOnSameDay(startTimestamp2, endTimestamp2)).to.be.false;
+    });
+  });
+
+  describe('createSmartDateRange', () => {
+    it('should return single date for same-day events', () => {
+      const startTimestamp = '1759251599990';
+      const endTimestamp = '1759255199990';
+      
+      const result = createSmartDateRange(startTimestamp, endTimestamp, 'en-US');
+      
+      expect(result).to.be.a('string');
+      expect(result).to.not.include(' - '); // Should not contain range separator
+      expect(result).to.match(/\d{4}/); // Should contain a year
+    });
+
+    it('should return date range for multi-day events', () => {
+      const startTimestamp = '1759251599990'; // Jan 15, 2025
+      const endTimestamp = '1759337999990';   // Jan 16, 2025
+      
+      const result = createSmartDateRange(startTimestamp, endTimestamp, 'en-US');
+      
+      expect(result).to.be.a('string');
+      expect(result).to.include(' - '); // Should contain range separator
+      expect(result).to.match(/\d{4}/); // Should contain a year
+    });
+
+    it('should handle missing timestamps gracefully', () => {
+      expect(createSmartDateRange('', '1759255199990', 'en-US')).to.equal('');
+      expect(createSmartDateRange('1759251599990', '', 'en-US')).to.equal('');
+      expect(createSmartDateRange(null, '1759255199990', 'en-US')).to.equal('');
+      expect(createSmartDateRange('1759251599990', null, 'en-US')).to.equal('');
+    });
+
+    it('should use different locales for formatting', () => {
+      const startTimestamp = '1759251599990';
+      const endTimestamp = '1759337999990';
+      
+      const resultEn = createSmartDateRange(startTimestamp, endTimestamp, 'en-US');
+      const resultDe = createSmartDateRange(startTimestamp, endTimestamp, 'de-DE');
+      
+      expect(resultEn).to.be.a('string');
+      expect(resultDe).to.be.a('string');
+      expect(resultEn).to.not.equal(resultDe); // Different locales should produce different formats
+    });
+
+    it('should handle invalid timestamps gracefully', () => {
+      const result = createSmartDateRange('invalid', '1759255199990', 'en-US');
+      expect(result).to.equal('');
+    });
+  });
+
+  describe('createTemplatedDateRange', () => {
+    it('should format date using template tokens', () => {
+      const startTimestamp = '1759251599990'; // Jan 15, 2025
+      const endTimestamp = '1759255199990';   // Jan 15, 2025 (1 hour later)
+      const template = '{LLL} {dd} | {timeRange} {timeZone}';
+      
+      const result = createTemplatedDateRange(startTimestamp, endTimestamp, 'en-US', template);
+      
+      expect(result).to.be.a('string');
+      expect(result).to.match(/\w{3} \d{2} \| \d{1,2}:\d{2} [AP]M - \d{1,2}:\d{2} [AP]M \w{3}/); // Pattern like "Jan 15 | 2:30 PM - 3:30 PM PST"
+    });
+
+    it('should handle different template formats', () => {
+      const startTimestamp = '1759251599990';
+      const endTimestamp = '1759255199990';
+      
+      const template1 = '{ddd}, {LLL} {dd}';
+      const template2 = '{timeRange} {timeZone}';
+      const template3 = '{ddd}, {LLL} {dd} | {timeRange} {timeZone}';
+      
+      const result1 = createTemplatedDateRange(startTimestamp, endTimestamp, 'en-US', template1);
+      const result2 = createTemplatedDateRange(startTimestamp, endTimestamp, 'en-US', template2);
+      const result3 = createTemplatedDateRange(startTimestamp, endTimestamp, 'en-US', template3);
+      
+      expect(result1).to.match(/\w{3}, \w{3} \d{2}/); // "Wed, Jan 15"
+      expect(result2).to.match(/\d{1,2}:\d{2} [AP]M - \d{1,2}:\d{2} [AP]M \w{3}/); // "2:30 PM - 3:30 PM PST"
+      expect(result3).to.include('|'); // Should contain separator
+    });
+
+    it('should handle different locales', () => {
+      const startTimestamp = '1759251599990';
+      const endTimestamp = '1759255199990';
+      const template = '{ddd}, {LLL} {dd}';
+      
+      const resultEn = createTemplatedDateRange(startTimestamp, endTimestamp, 'en-US', template);
+      const resultDe = createTemplatedDateRange(startTimestamp, endTimestamp, 'de-DE', template);
+      
+      expect(resultEn).to.be.a('string');
+      expect(resultDe).to.be.a('string');
+      expect(resultEn).to.not.equal(resultDe); // Different locales should produce different formats
+    });
+
+    it('should handle missing parameters gracefully', () => {
+      expect(createTemplatedDateRange('', '1759255199990', 'en-US', '{LLL} {dd}')).to.equal('');
+      expect(createTemplatedDateRange('1759251599990', '', 'en-US', '{LLL} {dd}')).to.equal('');
+      expect(createTemplatedDateRange('1759251599990', '1759255199990', 'en-US', '')).to.equal('');
+      expect(createTemplatedDateRange('1759251599990', '1759255199990', 'en-US', null)).to.equal('');
+    });
+
+    it('should handle invalid timestamps gracefully', () => {
+      const template = '{LLL} {dd} | {timeRange} {timeZone}';
+      const result = createTemplatedDateRange('invalid', '1759255199990', 'en-US', template);
+      expect(result).to.equal('');
+    });
+
+    it('should handle numeric timestamps', () => {
+      const startTimestamp = 1759251599990;
+      const endTimestamp = 1759255199990;
+      const template = '{LLL} {dd}';
+      
+      const result = createTemplatedDateRange(startTimestamp, endTimestamp, 'en-US', template);
+      
+      expect(result).to.be.a('string');
+      expect(result).to.match(/\w{3} \d{2}/); // Should match pattern like "Jan 15"
+    });
+  });
+});
+
+describe('Metadata Massaging', () => {
+  let originalLana;
+
+  beforeEach(() => {
+    // Mock lana for testing
+    originalLana = window.lana;
+    window.lana = { log: () => {} };
+  });
+
+  afterEach(() => {
+    window.lana = originalLana;
+    // Clean up metadata
+    const startMeta = document.head.querySelector('meta[name="local-start-time-millis"]');
+    if (startMeta) document.head.removeChild(startMeta);
+    const endMeta = document.head.querySelector('meta[name="local-end-time-millis"]');
+    if (endMeta) document.head.removeChild(endMeta);
+    const templateMeta = document.head.querySelector('meta[name="custom-date-time-format"]');
+    if (templateMeta) document.head.removeChild(templateMeta);
+  });
+
+  it('should massage start time metadata', () => {
+    // Set up test metadata
+    setMetadata('local-start-time-millis', '1759251599990');
+
+    // Call massageMetadata
+    const result = massageMetadata('en-US');
+
+    // Verify the timestamp was converted
+    expect(result).to.have.property('user-start-date-time');
+    expect(result['user-start-date-time']).to.be.a('string');
+    expect(result['user-start-date-time']).to.not.be.empty;
+    expect(result['user-start-date-time']).to.match(/\d{4}/); // Should contain a year
+  });
+
+  it('should massage end time metadata', () => {
+    // Set up test metadata
+    setMetadata('local-end-time-millis', '1759251599990');
+
+    // Call massageMetadata
+    const result = massageMetadata('en-US');
+
+    // Verify the timestamp was converted
+    expect(result).to.have.property('user-end-date-time');
+    expect(result['user-end-date-time']).to.be.a('string');
+    expect(result['user-end-date-time']).to.not.be.empty;
+  });
+
+  it('should massage multiple metadata fields', () => {
+    // Set up test metadata
+    setMetadata('local-start-time-millis', '1759251599990');
+    setMetadata('local-end-time-millis', '1759255199990');
+
+    // Call massageMetadata
+    const result = massageMetadata('en-US');
+
+    // Verify both timestamps were converted
+    expect(result).to.have.property('user-start-date-time');
+    expect(result).to.have.property('user-end-date-time');
+    expect(result['user-start-date-time']).to.be.a('string');
+    expect(result['user-end-date-time']).to.be.a('string');
+  });
+
+  it('should massage smart date range for same-day events', () => {
+    // Set up test metadata for same-day event
+    setMetadata('local-start-time-millis', '1759251599990');
+    setMetadata('local-end-time-millis', '1759255199990');
+
+    // Call massageMetadata
+    const result = massageMetadata('en-US');
+
+    // Verify smart date range was created
+    expect(result).to.have.property('user-event-date-time-range');
+    expect(result['user-event-date-time-range']).to.be.a('string');
+    expect(result['user-event-date-time-range']).to.not.include(' - '); // Same day, no range separator
+  });
+
+  it('should massage smart date range for multi-day events', () => {
+    // Set up test metadata for multi-day event
+    setMetadata('local-start-time-millis', '1759251599990');
+    setMetadata('local-end-time-millis', '1759337999990');
+
+    // Call massageMetadata
+    const result = massageMetadata('en-US');
+
+    // Verify smart date range was created
+    expect(result).to.have.property('user-event-date-time-range');
+    expect(result['user-event-date-time-range']).to.be.a('string');
+    expect(result['user-event-date-time-range']).to.include(' - '); // Multi-day, should have range separator
+  });
+
+  it('should handle missing timestamps for smart date range', () => {
+    // Call massageMetadata without setting any timestamps
+    const result = massageMetadata('en-US');
+
+    // Should not have the smart date range for missing timestamps
+    expect(result).to.not.have.property('user-event-date-time-range');
+  });
+
+  it('should use custom template when provided', () => {
+    // Set up test metadata with custom template
+    setMetadata('local-start-time-millis', '1759251599990');
+    setMetadata('local-end-time-millis', '1759255199990');
+    setMetadata('custom-date-time-format', '{LLL} {dd} | {timeRange} {timeZone}');
+
+    // Call massageMetadata
+    const result = massageMetadata('en-US');
+
+    // Verify templated date range was created
+    expect(result).to.have.property('user-event-date-time-range');
+    expect(result['user-event-date-time-range']).to.be.a('string');
+    expect(result['user-event-date-time-range']).to.match(/\w{3} \d{2} \| \d{1,2}:\d{2} [AP]M - \d{1,2}:\d{2} [AP]M \w{3}/);
+  });
+
+  it('should fallback to smart date range when no custom template', () => {
+    // Set up test metadata without custom template
+    setMetadata('local-start-time-millis', '1759251599990');
+    setMetadata('local-end-time-millis', '1759255199990');
+
+    // Call massageMetadata
+    const result = massageMetadata('en-US');
+
+    // Verify smart date range was created (fallback behavior)
+    expect(result).to.have.property('user-event-date-time-range');
+    expect(result['user-event-date-time-range']).to.be.a('string');
+    expect(result['user-event-date-time-range']).to.not.include(' - '); // Same day, no range separator
+  });
+
+  it('should use custom locale for formatting', () => {
+    // Set up test metadata
+    setMetadata('local-start-time-millis', '1759251599990');
+
+    // Call massageMetadata with different locales
+    const resultEn = massageMetadata('en-US');
+    const resultDe = massageMetadata('de-DE');
+
+    // Both should have the property but with different formatting
+    expect(resultEn).to.have.property('user-start-date-time');
+    expect(resultDe).to.have.property('user-start-date-time');
+    expect(resultEn['user-start-date-time']).to.not.equal(resultDe['user-start-date-time']);
+  });
+
+  it('should handle invalid metadata gracefully', () => {
+    // Set up test metadata with invalid timestamp
+    setMetadata('local-start-time-millis', 'invalid-timestamp');
+
+    // Call massageMetadata
+    const result = massageMetadata('en-US');
+
+    // Should not have the hydrated field for invalid data
+    expect(result).to.not.have.property('user-start-date-time');
+  });
+
+  it('should log errors for transformation failures', () => {
+    // Set up test metadata with invalid timestamp
+    setMetadata('local-start-time-millis', 'invalid-timestamp');
+    const logSpy = sinon.spy(window.lana, 'log');
+
+    // Call massageMetadata
+    massageMetadata('en-US');
+
+    // Should log error for invalid timestamp
+    expect(logSpy.calledWith(sinon.match(/Invalid timestamp provided/))).to.be.true;
+
+    logSpy.restore();
+  });
+
+  it('should handle transformation errors gracefully', () => {
+    // Set up test metadata with invalid timestamp
+    setMetadata('local-start-time-millis', 'invalid');
+
+    // Call massageMetadata
+    const result = massageMetadata('en-US');
+
+    // Should handle error gracefully
+    expect(result).to.be.an('object');
+    expect(result).to.not.have.property('user-start-date-time');
+  });
+});
+
+describe('autoUpdateContent - Timestamp Integration', () => {
+  let container;
+
+  beforeEach(() => {
+    container = document.createElement('div');
+    document.body.appendChild(container);
+    // Mock lana for testing
+    window.lana = { log: () => {} };
+  });
+
+  afterEach(() => {
+    document.body.removeChild(container);
+    // Clean up metadata
+    const meta = document.head.querySelector('meta[name="local-start-time-millis"]');
+    if (meta) document.head.removeChild(meta);
+    const eventIdMeta = document.head.querySelector('meta[name="event-id"]');
+    if (eventIdMeta) document.head.removeChild(eventIdMeta);
+  });
+
+  it('should hydrate metadata and convert timestamps in autoUpdateContent', () => {
+    // Set up test metadata
+    setMetadata('local-start-time-millis', '1759251599990');
+    setMetadata('local-end-time-millis', '1759255199990');
+    setMetadata('event-id', 'test-event');
+
+    // Create test HTML that uses the converted timestamps
+    container.innerHTML = '<p>Event starts: [[user-start-date-time]] and ends: [[user-end-date-time]]</p>';
+
+    // Mock miloDeps
+    const miloDeps = {
+      getConfig: () => ({ locale: { ietf: 'en-US' } }),
+      miloLibs: '/libs',
+    };
+
+    // Call autoUpdateContent
+    autoUpdateContent(container, miloDeps, {});
+
+    // Verify both timestamps were converted and used
+    expect(container.textContent).to.not.include('[[');
+    expect(container.textContent).to.not.include(']]');
+    expect(container.textContent).to.match(/\d{4}/); // Should contain a year
+    expect(container.textContent).to.match(/\d{1,2}:\d{2}/); // Should contain time
+  });
+
+  it('should massage smart date range in autoUpdateContent for same-day events', () => {
+    // Set up test metadata for same-day event
+    setMetadata('local-start-time-millis', '1759251599990');
+    setMetadata('local-end-time-millis', '1759255199990');
+    setMetadata('event-id', 'test-event');
+
+    // Create test HTML that uses the smart date range
+    container.innerHTML = '<p>Event: [[user-event-date-time-range]]</p>';
+
+    // Mock miloDeps
+    const miloDeps = {
+      getConfig: () => ({ locale: { ietf: 'en-US' } }),
+      miloLibs: '/libs',
+    };
+
+    // Call autoUpdateContent
+    autoUpdateContent(container, miloDeps, {});
+
+    // Verify smart date range was used (should not contain range separator for same day)
+    expect(container.textContent).to.not.include('[[');
+    expect(container.textContent).to.not.include(']]');
+    expect(container.textContent).to.not.include(' - '); // Same day, no range separator
+    expect(container.textContent).to.match(/\d{4}/); // Should contain a year
+  });
+
+  it('should massage smart date range in autoUpdateContent for multi-day events', () => {
+    // Set up test metadata for multi-day event
+    setMetadata('local-start-time-millis', '1759251599990');
+    setMetadata('local-end-time-millis', '1759337999990');
+    setMetadata('event-id', 'test-event');
+
+    // Create test HTML that uses the smart date range
+    container.innerHTML = '<p>Event: [[user-event-date-time-range]]</p>';
+
+    // Mock miloDeps
+    const miloDeps = {
+      getConfig: () => ({ locale: { ietf: 'en-US' } }),
+      miloLibs: '/libs',
+    };
+
+    // Call autoUpdateContent
+    autoUpdateContent(container, miloDeps, {});
+
+    // Verify smart date range was used (should contain range separator for multi-day)
+    expect(container.textContent).to.not.include('[[');
+    expect(container.textContent).to.not.include(']]');
+    expect(container.textContent).to.include(' - '); // Multi-day, should have range separator
+    expect(container.textContent).to.match(/\d{4}/); // Should contain a year
+  });
+
+  it('should handle missing local-start-time-millis gracefully', () => {
+    // Set up test metadata without timestamp
+    setMetadata('event-id', 'test-event');
+
+    // Create test HTML
+    container.innerHTML = '<p>Event starts: [[user-start-date-time]]</p>';
+
+    // Mock miloDeps
+    const miloDeps = {
+      getConfig: () => ({ locale: { ietf: 'en-US' } }),
+      miloLibs: '/libs',
+    };
+
+    // Call autoUpdateContent
+    autoUpdateContent(container, miloDeps, {});
+
+    // Should replace placeholder with empty string when no metadata
+    expect(container.textContent).to.equal('Event starts: ');
+  });
+
+  it('should use locale from config for timestamp conversion', () => {
+    // Set up test metadata
+    setMetadata('local-start-time-millis', '1759251599990');
+    setMetadata('event-id', 'test-event');
+
+    // Create test HTML
+    container.innerHTML = '<p>Event starts: [[user-start-date-time]]</p>';
+
+    // Mock miloDeps with German locale
+    const miloDeps = {
+      getConfig: () => ({ locale: { ietf: 'de-DE' } }),
+      miloLibs: '/libs',
+    };
+
+    // Call autoUpdateContent
+    autoUpdateContent(container, miloDeps, {});
+
+    // Verify the timestamp was converted using German locale
+    expect(container.textContent).to.not.include('[[');
+    expect(container.textContent).to.not.include(']]');
+    expect(container.textContent).to.be.a('string');
+    expect(container.textContent.length).to.be.greaterThan(0);
+  });
+
+  it('should handle invalid timestamp gracefully', () => {
+    // Set up test metadata with invalid timestamp
+    setMetadata('local-start-time-millis', 'invalid-timestamp');
+    setMetadata('event-id', 'test-event');
+
+    // Create test HTML
+    container.innerHTML = '<p>Event starts: [[user-start-date-time]]</p>';
+
+    // Mock miloDeps
+    const miloDeps = {
+      getConfig: () => ({ locale: { ietf: 'en-US' } }),
+      miloLibs: '/libs',
+    };
+
+    // Call autoUpdateContent
+    autoUpdateContent(container, miloDeps, {});
+
+    // Should replace placeholder with empty string for invalid timestamp
+    expect(container.textContent).to.equal('Event starts: ');
+  });
+});
+
+describe('autoUpdateContent - Array Iteration', () => {
   let container;
 
   beforeEach(() => {
@@ -201,7 +789,7 @@ describe('decorateEvent - Array Iteration', () => {
     it('should process @array(contacts) with English commas', () => {
       // Set up test metadata
       setMetadata('contacts', JSON.stringify(['John Doe', 'Jane Smith', 'Bob Johnson']));
-      setMetadata('event-id', 'test-event'); // Required for decorateEvent to run
+      setMetadata('event-id', 'test-event'); // Required for autoUpdateContent to run
 
       // Create test HTML with @array syntax
       container.innerHTML = '<p>Contact us: [[@array(contacts),]]</p>';
@@ -212,8 +800,8 @@ describe('decorateEvent - Array Iteration', () => {
         miloLibs: '/libs',
       };
 
-      // Call decorateEvent
-      decorateEvent(container, miloDeps, {});
+      // Call autoUpdateContent
+      autoUpdateContent(container, miloDeps, {});
 
       // Debug: log the actual content
       console.log('Actual content:', container.textContent);
@@ -237,8 +825,8 @@ describe('decorateEvent - Array Iteration', () => {
         miloLibs: '/libs',
       };
 
-      // Call decorateEvent
-      decorateEvent(container, miloDeps, {});
+      // Call autoUpdateContent
+      autoUpdateContent(container, miloDeps, {});
 
       // Verify the result uses custom separator
       expect(container.textContent).to.equal('Contact us: John Doe | Jane Smith | Bob Johnson');
@@ -258,8 +846,8 @@ describe('decorateEvent - Array Iteration', () => {
         miloLibs: '/libs',
       };
 
-      // Call decorateEvent
-      decorateEvent(container, miloDeps, {});
+      // Call autoUpdateContent
+      autoUpdateContent(container, miloDeps, {});
 
       // Verify the result uses space as default separator
       expect(container.textContent).to.equal('Contact us: John Doe Jane Smith Bob Johnson');
@@ -279,8 +867,8 @@ describe('decorateEvent - Array Iteration', () => {
         miloLibs: '/libs',
       };
 
-      // Call decorateEvent
-      decorateEvent(container, miloDeps, {});
+      // Call autoUpdateContent
+      autoUpdateContent(container, miloDeps, {});
 
       // Verify the result uses the comma as provided (no locale-specific handling)
       expect(container.textContent).to.equal('連絡先: 田中太郎,佐藤花子,鈴木一郎');
@@ -300,8 +888,8 @@ describe('decorateEvent - Array Iteration', () => {
         miloLibs: '/libs',
       };
 
-      // Call decorateEvent
-      decorateEvent(container, miloDeps, {});
+      // Call autoUpdateContent
+      autoUpdateContent(container, miloDeps, {});
 
       // Verify the result uses the comma as provided (no locale-specific handling)
       expect(container.textContent).to.equal('联系人: 张三,李四,王五');
@@ -321,8 +909,8 @@ describe('decorateEvent - Array Iteration', () => {
         miloLibs: '/libs',
       };
 
-      // Call decorateEvent
-      decorateEvent(container, miloDeps, {});
+      // Call autoUpdateContent
+      autoUpdateContent(container, miloDeps, {});
 
       // Verify the result is empty
       expect(container.textContent).to.equal('Contact us: ');
@@ -342,8 +930,8 @@ describe('decorateEvent - Array Iteration', () => {
         miloLibs: '/libs',
       };
 
-      // Call decorateEvent
-      decorateEvent(container, miloDeps, {});
+      // Call autoUpdateContent
+      autoUpdateContent(container, miloDeps, {});
 
       // Verify the result is empty (non-array returns empty string)
       expect(container.textContent).to.equal('Contact us: ');
@@ -363,8 +951,8 @@ describe('decorateEvent - Array Iteration', () => {
         miloLibs: '/libs',
       };
 
-      // Call decorateEvent
-      decorateEvent(container, miloDeps, {});
+      // Call autoUpdateContent
+      autoUpdateContent(container, miloDeps, {});
 
       // Verify the result uses the comma as provided (no locale-specific handling)
       expect(container.textContent).to.equal('Contact us: John Doe,Jane Smith');
@@ -387,8 +975,8 @@ describe('decorateEvent - Array Iteration', () => {
         miloLibs: '/libs',
       };
 
-      // Call decorateEvent
-      decorateEvent(container, miloDeps, {});
+      // Call autoUpdateContent
+      autoUpdateContent(container, miloDeps, {});
 
       // Verify the result
       expect(container.textContent).to.equal('Contact us: John Doe,Jane Smith');
@@ -412,8 +1000,8 @@ describe('decorateEvent - Array Iteration', () => {
         miloLibs: '/libs',
       };
 
-      // Call decorateEvent
-      decorateEvent(container, miloDeps, {});
+      // Call autoUpdateContent
+      autoUpdateContent(container, miloDeps, {});
 
       // Debug: log the actual content
       console.log('Actual content:', container.textContent);
@@ -440,8 +1028,8 @@ describe('decorateEvent - Array Iteration', () => {
         miloLibs: '/libs',
       };
 
-      // Call decorateEvent
-      decorateEvent(container, miloDeps, {});
+      // Call autoUpdateContent
+      autoUpdateContent(container, miloDeps, {});
 
       // Verify the result uses custom separator
       expect(container.textContent).to.equal('Speakers: Dr. Alice Brown | Prof. Charlie Wilson');
@@ -467,8 +1055,8 @@ describe('decorateEvent - Array Iteration', () => {
         miloLibs: '/libs',
       };
 
-      // Call decorateEvent
-      decorateEvent(container, miloDeps, {});
+      // Call autoUpdateContent
+      autoUpdateContent(container, miloDeps, {});
 
       // Verify the result
       expect(container.textContent).to.equal('Speakers: Dr. Alice Brown,Prof. Charlie Wilson');
@@ -491,8 +1079,8 @@ describe('decorateEvent - Array Iteration', () => {
         miloLibs: '/libs',
       };
 
-      // Call decorateEvent
-      decorateEvent(container, miloDeps, {});
+      // Call autoUpdateContent
+      autoUpdateContent(container, miloDeps, {});
 
       // Verify the result converts objects to JSON strings
       expect(container.textContent).to.include('Speakers: {"name":"Dr. Alice Brown","title":"Senior Researcher"},{"name":"Prof. Charlie Wilson","title":"Professor"}');
@@ -516,8 +1104,8 @@ describe('decorateEvent - Array Iteration', () => {
         miloLibs: '/libs',
       };
 
-      // Call decorateEvent
-      decorateEvent(container, miloDeps, {});
+      // Call autoUpdateContent
+      autoUpdateContent(container, miloDeps, {});
 
       // Verify the result handles missing attributes
       expect(container.textContent).to.equal('Speakers: Dr. Alice Brown,Prof. Charlie Wilson,');
