@@ -237,16 +237,25 @@ describe('TimingWorker', () => {
   });
 
   describe('getAuthoritativeTime', () => {
+    let perfStub;
+
     beforeEach(() => {
       // Reset the worker's time management properties
       worker.cachedApiTime = null;
       worker.lastApiCall = 0;
+      worker.lastApiCallPerformance = 0;
+      perfStub = sinon.stub(performance, 'now');
+    });
+
+    afterEach(() => {
+      if (perfStub) perfStub.restore();
     });
 
     it('should return cached API time if valid', async () => {
       const now = Date.now();
       const apiTime = now - 1000; // API time is 1 second behind
-      worker.cachedApiTime = { time: apiTime, timestamp: now - 30000 }; // 30 seconds ago
+      perfStub.returns(30000); // 30 seconds elapsed
+      worker.cachedApiTime = { time: apiTime, timestamp: now - 30000, performanceTimestamp: 0 };
 
       const result = await worker.getAuthoritativeTime();
       expect(result).to.be.closeTo(apiTime + 30000, 100); // Allow 100ms tolerance
@@ -255,9 +264,11 @@ describe('TimingWorker', () => {
     it('should call API if cache is expired', async () => {
       const now = Date.now();
       const apiTime = now - 1000;
+      perfStub.returns(1000);
       // 700 seconds ago (expired)
-      worker.cachedApiTime = { time: apiTime, timestamp: now - 700000 };
+      worker.cachedApiTime = { time: apiTime, timestamp: now - 700000, performanceTimestamp: 0 };
       worker.lastApiCall = now - 400000; // 400 seconds ago
+      worker.lastApiCallPerformance = 0;
 
       // Mock successful API response
       mockFetch.resolves({ text: () => Promise.resolve(Math.floor(apiTime / 1000).toString()) });
@@ -271,8 +282,10 @@ describe('TimingWorker', () => {
 
     it('should not call API if rate limit not reached', async () => {
       const now = Date.now();
+      perfStub.returns(100000); // 100 seconds
       // 100 seconds ago (rate limit not reached for 5 min interval)
       worker.lastApiCall = now - 100000;
+      worker.lastApiCallPerformance = 1000; // Set to non-zero so rate limit is enforced
 
       const result = await worker.getAuthoritativeTime();
       expect(mockFetch.called).to.be.false;
@@ -281,7 +294,9 @@ describe('TimingWorker', () => {
 
     it('should fall back to local time if API fails', async () => {
       const now = Date.now();
-      worker.lastApiCall = now - 40000; // 40 seconds ago
+      perfStub.returns(40000);
+      worker.lastApiCall = now - 400000; // 400 seconds ago to trigger API call
+      worker.lastApiCallPerformance = 0;
 
       // Mock failed API response
       mockFetch.rejects(new Error('Network error'));
@@ -293,8 +308,10 @@ describe('TimingWorker', () => {
     it('should use cached time if API returns null', async () => {
       const now = Date.now();
       const apiTime = now - 1000;
-      worker.cachedApiTime = { time: apiTime, timestamp: now - 30000 };
-      worker.lastApiCall = now - 40000;
+      perfStub.returns(30000);
+      worker.cachedApiTime = { time: apiTime, timestamp: now - 30000, performanceTimestamp: 0 };
+      worker.lastApiCall = now - 400000; // Force API call
+      worker.lastApiCallPerformance = 0;
 
       // Mock API returning null
       mockFetch.resolves({ text: () => Promise.resolve('invalid') });
@@ -305,7 +322,9 @@ describe('TimingWorker', () => {
 
     it('should implement progressive backoff on failures', async () => {
       const now = Date.now();
+      perfStub.returns(400000);
       worker.lastApiCall = now - 400000; // 400 seconds ago
+      worker.lastApiCallPerformance = 0;
       worker.consecutiveFailures = 0; // Start with no failures
 
       // Mock failed API response
@@ -318,7 +337,9 @@ describe('TimingWorker', () => {
     it('should reset failure count on successful API call', async () => {
       const now = Date.now();
       const apiTime = now - 1000;
+      perfStub.returns(400000);
       worker.lastApiCall = now - 400000; // 400 seconds ago
+      worker.lastApiCallPerformance = 0;
       worker.consecutiveFailures = 0; // Start with no failures to ensure API call happens
 
       // Mock successful API response
@@ -331,7 +352,9 @@ describe('TimingWorker', () => {
     it('should broadcast time updates to other tabs', async () => {
       const now = Date.now();
       const apiTime = now - 1000;
+      perfStub.returns(400000);
       worker.lastApiCall = now - 400000; // 400 seconds ago
+      worker.lastApiCallPerformance = 0;
 
       // Mock successful API response
       mockFetch.resolves({ text: () => Promise.resolve(Math.floor(apiTime / 1000).toString()) });
@@ -479,6 +502,429 @@ describe('TimingWorker', () => {
 
       // Session should be set
       expect(mobileRiderStore.get('session1')).to.be.true;
+    });
+  });
+
+  describe('Clock drift detection', () => {
+    let perfStub;
+
+    beforeEach(() => {
+      perfStub = sinon.stub(performance, 'now');
+      worker.cachedApiTime = null;
+      worker.lastApiCall = 0;
+      worker.lastApiCallPerformance = 0;
+    });
+
+    afterEach(() => {
+      perfStub.restore();
+    });
+
+    it('should detect clock jump forward and invalidate cache', async () => {
+      const now = Date.now();
+      const apiTime = now - 1000;
+
+      // Set up initial cache
+      perfStub.returns(1000); // performance.now() = 1s
+      worker.cachedApiTime = {
+        time: apiTime,
+        timestamp: now,
+        performanceTimestamp: 1000,
+      };
+
+      // Simulate clock jump forward by 10 minutes
+      const futureTime = now + 600000; // 10 minutes later
+      sinon.stub(Date, 'now').returns(futureTime);
+      perfStub.returns(2000); // performance.now() only advanced 1s
+
+      // Drift: wallClock = 600s, monotonic = 1s, drift = 599s > 60s threshold
+      await worker.getAuthoritativeTime();
+
+      // Cache should be invalidated due to drift
+      expect(worker.cachedApiTime).to.be.null;
+
+      Date.now.restore();
+    });
+
+    it('should detect clock jump backward and invalidate cache', async () => {
+      const now = Date.now();
+      const apiTime = now - 1000;
+
+      // Set up initial cache
+      perfStub.returns(1000);
+      worker.cachedApiTime = {
+        time: apiTime,
+        timestamp: now,
+        performanceTimestamp: 1000,
+      };
+
+      // Simulate clock jump backward by 10 minutes
+      const pastTime = now - 600000;
+      sinon.stub(Date, 'now').returns(pastTime);
+      perfStub.returns(2000); // performance.now() moved forward normally
+
+      // Drift: wallClock = -600s, monotonic = 1s, drift = 601s > 60s threshold
+      await worker.getAuthoritativeTime();
+
+      // Cache should be invalidated due to drift
+      expect(worker.cachedApiTime).to.be.null;
+
+      Date.now.restore();
+    });
+
+    it('should use monotonic time for elapsed calculations when no drift', async () => {
+      const now = Date.now();
+      const apiTime = now - 1000;
+
+      // Set up cache with known values
+      perfStub.returns(1000);
+      worker.cachedApiTime = {
+        time: apiTime,
+        timestamp: now,
+        performanceTimestamp: 1000,
+      };
+
+      // Advance performance.now() by 5 seconds
+      perfStub.returns(6000);
+
+      const result = await worker.getAuthoritativeTime();
+
+      // Result should be apiTime + 5000ms (monotonic elapsed time)
+      expect(result).to.equal(apiTime + 5000);
+    });
+
+    it('should handle small acceptable clock drift', async () => {
+      const now = Date.now();
+      const apiTime = now - 1000;
+
+      // Set up cache
+      perfStub.returns(1000);
+      worker.cachedApiTime = {
+        time: apiTime,
+        timestamp: now,
+        performanceTimestamp: 1000,
+      };
+
+      // Simulate small drift (30 seconds - below 60s threshold)
+      const slightlyOffTime = now + 30000;
+      sinon.stub(Date, 'now').returns(slightlyOffTime);
+      perfStub.returns(31000); // performance.now() advanced 30s
+
+      // Drift: wallClock = 30s, monotonic = 30s, drift = 0s (acceptable)
+      const result = await worker.getAuthoritativeTime();
+
+      // Cache should still be valid
+      expect(worker.cachedApiTime).to.not.be.null;
+      expect(result).to.equal(apiTime + 30000);
+
+      Date.now.restore();
+    });
+
+    it('should use performance.now() for rate limiting checks', async () => {
+      const now = Date.now();
+
+      // Set last API call timestamp
+      perfStub.returns(1000);
+      worker.lastApiCallPerformance = 1000;
+      worker.lastApiCall = now;
+
+      // Advance performance.now() by 2 minutes (120 seconds)
+      perfStub.returns(121000);
+
+      // Mock API to ensure it's not called (rate limit not reached - need 5 min)
+      mockFetch.resolves({ text: () => Promise.resolve('1234567890') });
+
+      await worker.getAuthoritativeTime();
+
+      // API should not be called because rate limit not reached
+      expect(mockFetch.called).to.be.false;
+    });
+
+    it('should handle cache invalidation and force fresh API call', async () => {
+      const now = Date.now();
+      const apiTime = now - 1000;
+
+      // Set up cache with drift
+      perfStub.returns(1000);
+      worker.cachedApiTime = {
+        time: apiTime,
+        timestamp: now,
+        performanceTimestamp: 1000,
+      };
+      worker.lastApiCallPerformance = 0; // Allow API call
+
+      // Simulate extreme drift
+      const driftedTime = now + 1000000; // Way in future
+      sinon.stub(Date, 'now').returns(driftedTime);
+      perfStub.returns(2000);
+
+      // Mock successful API response
+      const newApiTime = driftedTime;
+      mockFetch.resolves({ text: () => Promise.resolve(Math.floor(newApiTime / 1000).toString()) });
+
+      await worker.getAuthoritativeTime();
+
+      // API should have been called due to cache invalidation
+      expect(mockFetch.called).to.be.true;
+
+      Date.now.restore();
+    });
+  });
+
+  describe('Shared cache validation', () => {
+    let perfStub;
+    let sharedWorker;
+
+    beforeEach(() => {
+      perfStub = sinon.stub(performance, 'now');
+      // Create a new worker for these tests
+      sharedWorker = new TimingWorker();
+    });
+
+    afterEach(() => {
+      perfStub.restore();
+    });
+
+    it('should accept valid time updates from other tabs', async () => {
+      const now = Date.now();
+      const apiTime = now - 1000;
+
+      perfStub.returns(5000);
+
+      // Initialize worker - setupBroadcastChannels requires plugins to be provided
+      sharedWorker.handleMessage({
+        data: {
+          tabId: 'test-tab-id',
+          plugins: {}, // Empty plugins to trigger setupBroadcastChannels
+          schedule: { toggleTime: Date.now() },
+        },
+      });
+
+      // Wait for async initialization
+      await new Promise((resolve) => { setTimeout(resolve, 0); });
+
+      const timeChannel = sharedWorker.channels.get('timeCache');
+      expect(timeChannel).to.exist;
+
+      // Simulate receiving a time update from another tab
+      if (timeChannel && timeChannel.onmessage) {
+        timeChannel.onmessage({
+          data: {
+            type: 'time-update',
+            data: {
+              time: apiTime,
+              timestamp: now - 5000, // 5 seconds old
+              performanceTimestamp: 1000,
+            },
+          },
+        });
+      }
+
+      // Cache should be updated with adjusted time
+      expect(sharedWorker.cachedApiTime).to.not.be.null;
+      expect(sharedWorker.cachedApiTime.performanceTimestamp).to.equal(5000);
+    });
+
+    it('should reject expired time updates', async () => {
+      const now = Date.now();
+      const apiTime = now - 1000000;
+
+      perfStub.returns(5000);
+
+      sharedWorker.handleMessage({
+        data: {
+          tabId: 'test-tab-id',
+          plugins: {},
+          schedule: { toggleTime: Date.now() },
+        },
+      });
+
+      await new Promise((resolve) => { setTimeout(resolve, 0); });
+
+      const timeChannel = sharedWorker.channels.get('timeCache');
+
+      // Simulate receiving an expired time update (15 minutes old, TTL is 10 min)
+      if (timeChannel && timeChannel.onmessage) {
+        timeChannel.onmessage({
+          data: {
+            type: 'time-update',
+            data: {
+              time: apiTime,
+              timestamp: now - 900000, // 15 minutes old
+              performanceTimestamp: 1000,
+            },
+          },
+        });
+      }
+
+      // Cache should not be updated
+      expect(sharedWorker.cachedApiTime).to.be.null;
+    });
+
+    it('should reject time updates with negative age', async () => {
+      const now = Date.now();
+      const apiTime = now + 1000;
+
+      perfStub.returns(5000);
+
+      sharedWorker.handleMessage({
+        data: {
+          tabId: 'test-tab-id',
+          plugins: {},
+          schedule: { toggleTime: Date.now() },
+        },
+      });
+
+      await new Promise((resolve) => { setTimeout(resolve, 0); });
+
+      const timeChannel = sharedWorker.channels.get('timeCache');
+
+      // Simulate receiving a time update from the future
+      if (timeChannel && timeChannel.onmessage) {
+        timeChannel.onmessage({
+          data: {
+            type: 'time-update',
+            data: {
+              time: apiTime,
+              timestamp: now + 60000, // 1 minute in future
+              performanceTimestamp: 1000,
+            },
+          },
+        });
+      }
+
+      // Cache should not be updated
+      expect(sharedWorker.cachedApiTime).to.be.null;
+    });
+
+    it('should reject legacy format time updates without performanceTimestamp', async () => {
+      const now = Date.now();
+      const apiTime = now - 1000;
+
+      perfStub.returns(5000);
+
+      sharedWorker.handleMessage({
+        data: {
+          tabId: 'test-tab-id',
+          plugins: {},
+          schedule: { toggleTime: Date.now() },
+        },
+      });
+
+      await new Promise((resolve) => { setTimeout(resolve, 0); });
+
+      const timeChannel = sharedWorker.channels.get('timeCache');
+
+      // Simulate receiving a legacy format time update
+      if (timeChannel && timeChannel.onmessage) {
+        timeChannel.onmessage({
+          data: {
+            type: 'time-update',
+            data: {
+              time: apiTime,
+              timestamp: now - 5000,
+              // No performanceTimestamp
+            },
+          },
+        });
+      }
+
+      // Cache should not be updated for safety
+      expect(sharedWorker.cachedApiTime).to.be.null;
+    });
+  });
+
+  describe('Last schedule item handling', () => {
+    it('should stop polling when last schedule item is reached', async () => {
+      const clock = sinon.useFakeTimers();
+      const perfStub = sinon.stub(performance, 'now');
+      perfStub.returns(1000);
+
+      // Set up schedule with last item having no next
+      worker.nextScheduleItem = { toggleTime: Date.now() - 1000, pathToFragment: '/last-item', next: null };
+      worker.currentScheduleItem = { pathToFragment: '/previous-item' };
+
+      // Run timer
+      await worker.runTimer();
+
+      // nextScheduleItem should now be null (moved to next which is null)
+      expect(worker.nextScheduleItem).to.be.null;
+
+      // Timer should not be set (polling stopped)
+      expect(worker.timerId).to.be.null;
+
+      clock.restore();
+      perfStub.restore();
+    });
+
+    it('should send the last schedule item before stopping', async () => {
+      const clock = sinon.useFakeTimers();
+      const perfStub = sinon.stub(performance, 'now');
+      perfStub.returns(1000);
+
+      // Set up schedule with last item
+      worker.nextScheduleItem = { toggleTime: Date.now() - 1000, pathToFragment: '/final-content', next: null };
+      worker.currentScheduleItem = { pathToFragment: '/previous' };
+      worker.previouslySentItem = null;
+
+      // Run timer
+      await worker.runTimer();
+
+      // Should have posted the final item
+      expect(mockPostMessage.called).to.be.true;
+      expect(mockPostMessage.firstCall.args[0].pathToFragment).to.equal('/final-content');
+
+      clock.restore();
+      perfStub.restore();
+    });
+
+    it('should not send duplicate messages when staying on last item', async () => {
+      const clock = sinon.useFakeTimers();
+      const perfStub = sinon.stub(performance, 'now');
+      perfStub.returns(1000);
+
+      const lastItem = { pathToFragment: '/final-content', next: null };
+
+      // Set up as if we're already on the last item
+      worker.nextScheduleItem = null;
+      worker.currentScheduleItem = lastItem;
+      worker.previouslySentItem = lastItem;
+
+      // Run timer
+      await worker.runTimer();
+
+      // Should not post message again (same item)
+      expect(mockPostMessage.called).to.be.false;
+
+      // Polling should have stopped
+      expect(worker.timerId).to.be.null;
+
+      clock.restore();
+      perfStub.restore();
+    });
+
+    it('should continue polling when not on last item', async () => {
+      const clock = sinon.useFakeTimers();
+      const perfStub = sinon.stub(performance, 'now');
+      perfStub.returns(1000);
+
+      // Set up schedule with items remaining
+      const futureTime1 = Date.now() + 1000;
+      const futureTime2 = Date.now() + 2000;
+      worker.nextScheduleItem = {
+        toggleTime: futureTime1,
+        pathToFragment: '/next-item',
+        next: { toggleTime: futureTime2, pathToFragment: '/after-next', next: null },
+      };
+      worker.currentScheduleItem = { pathToFragment: '/current' };
+
+      // Run timer
+      await worker.runTimer();
+
+      // Timer should be set (polling continues)
+      expect(worker.timerId).to.not.be.null;
+
+      clock.restore();
+      perfStub.restore();
     });
   });
 });

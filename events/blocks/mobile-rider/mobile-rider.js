@@ -25,9 +25,7 @@ const CONFIG = {
     PROD_URL: 'https://overlay-admin-integration.mobilerider.com',
     DEV_URL: 'https://overlay-admin-integration.mobilerider.com',
   },
-  STORAGE: {
-    CURRENT_VIDEO_KEY: 'mobile-rider-current-video',
-  },
+  STORAGE: { CURRENT_VIDEO_KEY: 'mobile-rider-current-video' },
 };
 
 // --- Storage helpers ---------------------------------------------------------
@@ -173,7 +171,7 @@ class MobileRider {
 
       if (savedVideo && isConcurrent) {
         // Find the saved video in the concurrent videos array
-        const savedVideoObj = videos.find(v => v.videoid === savedVideo.videoId);
+        const savedVideoObj = videos.find((v) => v.videoid === savedVideo.videoId);
         if (savedVideoObj) {
           initialVideo = savedVideoObj;
           window.lana?.log(`Restoring saved video: ${savedVideo.videoId}`);
