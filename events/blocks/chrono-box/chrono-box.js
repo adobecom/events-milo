@@ -106,8 +106,6 @@ export default async function init(el) {
   const [{ default: loadFragment }, { createTag, getLocale, getConfig }] = await Promise.all([
     import(`${LIBS}/blocks/fragment/fragment.js`),
     import(`${LIBS}/utils/utils.js`),
-    import(`${LIBS}/features/spectrum-web-components/dist/theme.js`),
-    import(`${LIBS}/features/spectrum-web-components/dist/progress-circle.js`),
   ]);
 
   // Parse block config directly from text content to avoid issues with auto-linked content
@@ -165,18 +163,13 @@ export default async function init(el) {
       const { prefix } = getLocale(getConfig().locales);
       el.style.height = `${el.clientHeight}px`;
 
-      // load sp progress circle
-      const spTheme = createTag('sp-theme', { color: 'light', scale: 'medium', class: 'loading-screen' });
-      createTag('sp-progress-circle', { size: 'l', indeterminate: true }, '', { parent: spTheme });
       el.innerHTML = '';
       el.classList.add('loading');
-      el.append(spTheme);
 
       const a = createTag('a', { href: `${prefix}${pathToFragment}` }, '', { parent: el });
 
       loadFragment(a).then(() => {
         // set el height to current height
-        spTheme.remove();
         el.removeAttribute('style');
         el.classList.remove('loading');
       }).catch((error) => {
@@ -184,7 +177,6 @@ export default async function init(el) {
         window.lana?.log(`Error loading fragment ${pathToFragment}: ${JSON.stringify(error)}`);
 
         // Remove loading state
-        spTheme.remove();
         el.removeAttribute('style');
         el.classList.remove('loading');
 
