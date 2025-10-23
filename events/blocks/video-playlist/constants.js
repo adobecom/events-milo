@@ -72,21 +72,34 @@ export const MOCK_API = {
     },
 
     // User-authored playlist (new implementation)
-    getUserAuthoredPlaylist: async (playlistId) => {
+    getUserAuthoredPlaylist: async (config) => {
         await new Promise(resolve => setTimeout(resolve, 150));
+        
+        // Parse session paths from config (comma-separated string)
+        const sessionPaths = config.sessionPaths ? config.sessionPaths.split(',').map(path => path.trim()) : [];
+        
+        // Generate sessions array from parsed session paths
+        const sessions = sessionPaths.map((sessionPath, index) => {
+            // Extract session code from URL (e.g., s744 from /sessions/s744.html)
+            const sessionCodeMatch = sessionPath.match(/\/sessions\/([^\/]+)\.html$/);
+            const sessionCode = sessionCodeMatch ? sessionCodeMatch[1].toUpperCase() : `S${744 + index}`;
+            
+            // Generate entity ID (hardcoded for now)
+            const entityId = `entity_1234${5 + index}`;
+            
+            return {
+                sessionCode,
+                entityId,
+                sessionPath
+            };
+        });
         
         // Simulate backend response from VideoPlaylistService.getJsonFromPlayList()
         const mockUserAuthoredData = {
-            playlistID: playlistId || '123',
-            playlistTitle: 'Sample playlistTitle',
-            topicEyebrow: 'Eyebrow text',
-            sessions: [
-                { sessionCode: 'S744', entityId: 'entity_12345', sessionPath: 'https://business.adobe.com/summit/2025/sessions/s744.html' },
-                { sessionCode: 'S745', entityId: 'entity_12346', sessionPath: 'https://business.adobe.com/summit/2025/sessions/s745.html' },
-                { sessionCode: 'S746', entityId: 'entity_12347', sessionPath: 'https://business.adobe.com/summit/2025/sessions/s746.html' },
-                { sessionCode: 'S747', entityId: 'entity_12348', sessionPath: 'https://business.adobe.com/summit/2025/sessions/s747.html' },
-                { sessionCode: 'S748', entityId: 'entity_12349', sessionPath: 'https://business.adobe.com/summit/2025/sessions/s748.html' }
-            ]
+            playlistID: config.playlistId || '123',
+            playlistTitle: config.playlistTitle || 'Sample playlistTitle',
+            topicEyebrow: config.topicEyebrow || 'Eyebrow text',
+            sessions
         };
 
         return mockUserAuthoredData;

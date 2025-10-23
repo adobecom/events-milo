@@ -90,6 +90,7 @@ class VideoPlaylist {
             enableCopyLink: parseBool(meta['enable-copy-link'], true),
             copyLinkAltText: meta['copy-link-alt-text'] || 'Share with link',
             copyNotificationText: meta['copy-notification-text'] || 'Link copied to clipboard!',
+            sessionPaths: meta['sessionpath'] || '', // Parse session paths from config
         };
     }
 
@@ -110,8 +111,8 @@ class VideoPlaylist {
                 // Tag-based playlist: Get sessions from Chimera API
                 response = await MOCK_API.getSessions();
             } else {
-                // User-authored playlist: Get playlist data and then fetch session details
-                const playlistData = await MOCK_API.getUserAuthoredPlaylist(this.cfg.playlistId);
+                // User-authored playlist: Parse session paths from config and fetch session details
+                const playlistData = await MOCK_API.getUserAuthoredPlaylist(this.cfg);
                 
                 // Update config with playlist-specific data
                 this.cfg.playlistTitle = playlistData.playlistTitle || this.cfg.playlistTitle;
