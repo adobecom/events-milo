@@ -1,4 +1,4 @@
-import { readBlockConfig, LIBS, getMetadata } from '../../scripts/utils.js';
+import { LIBS, getMetadata } from '../../scripts/utils.js';
 
 function buildScheduleDoubleLinkedList(entries) {
   if (!entries.length) return null;
@@ -108,37 +108,29 @@ export default async function init(el) {
     import(`${LIBS}/utils/utils.js`),
   ]);
 
-  const blockConfig = readBlockConfig(el);
-  const scheduleId = blockConfig?.['schedule-id'];
-  let staticSchedule;
+  // Parse block config directly from text content to avoid issues with auto-linked content
+  const rows = el.querySelectorAll(':scope > div');
+  let scheduleId = null;
+  let staticSchedule = null;
 
-  if (blockConfig?.schedule) {
-    // Try to get raw text content from the schedule row
-    // This handles cases where CMS auto-links numbers in JSON, breaking the parsed config
-    const rows = el.querySelectorAll(':scope > div');
-    let scheduleTextContent = null;
-    rows.forEach((row) => {
-      const cols = Array.from(row.children);
-      if (cols.length >= 2) {
-        const label = cols[0].textContent.trim().toLowerCase();
-        if (label === 'schedule') {
-          scheduleTextContent = cols[1].textContent.trim();
+  rows.forEach((row) => {
+    const cols = Array.from(row.children);
+    if (cols.length >= 2) {
+      const key = cols[0].textContent.trim().toLowerCase();
+      const value = cols[1].textContent.trim();
+
+      if (key === 'schedule-id') {
+        scheduleId = value;
+      } else if (key === 'schedule') {
+        try {
+          staticSchedule = JSON.parse(value);
+        } catch (e) {
+          window.lana?.log(`Error parsing static schedule: ${JSON.stringify(e)}`);
         }
       }
-    });
-
-    // Prefer text content if it looks like valid JSON
-    let scheduleSource = blockConfig.schedule;
-    if (scheduleTextContent && scheduleTextContent.startsWith('[')) {
-      scheduleSource = scheduleTextContent;
     }
+  });
 
-    try {
-      staticSchedule = JSON.parse(scheduleSource);
-    } catch (e) {
-      window.lana?.log(`Error parsing static schedule: ${JSON.stringify(e)}`);
-    }
-  }
   const scheduleById = scheduleId ? getSchedule(scheduleId) : null;
   const thisSchedule = staticSchedule || scheduleById;
 
