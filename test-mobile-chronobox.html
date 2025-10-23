@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mobile Chrono-Box Diagnostics</title>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 10px;
+            font-size: 14px;
+        }
+        .diagnostic {
+            background: #000;
+            color: #0f0;
+            padding: 10px;
+            margin: 10px 0;
+            border: 2px solid #0f0;
+            font-family: monospace;
+            font-size: 12px;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+        .error {
+            background: #f00;
+            color: #fff;
+            border-color: #fff;
+        }
+        .success {
+            background: #0f0;
+            color: #000;
+            border-color: #000;
+        }
+        h1 {
+            font-size: 18px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔍 Mobile Chrono-Box Diagnostics</h1>
+    
+    <div id="diagnostics"></div>
+
+    <!-- Test chrono-box block -->
+    <div class="chrono-box" data-block-name="chrono-box">
+        <div>
+            <div>schedule-id</div>
+            <div>test-schedule</div>
+        </div>
+    </div>
+
+    <script>
+        const log = (msg, isError = false) => {
+            const div = document.createElement('div');
+            div.className = isError ? 'diagnostic error' : 'diagnostic success';
+            div.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
+            document.getElementById('diagnostics').appendChild(div);
+            console.log(msg);
+        };
+
+        // Log basic environment info
+        log('✅ Script started');
+        log(`User Agent: ${navigator.userAgent}`);
+        log(`Screen: ${window.screen.width}x${window.screen.height}`);
+        log(`Viewport: ${window.innerWidth}x${window.innerHeight}`);
+        
+        // Check if block exists
+        const blocks = document.querySelectorAll('[data-block-name="chrono-box"]');
+        log(`Found ${blocks.length} chrono-box block(s)`);
+        
+        // Check browser capabilities
+        log(`Worker API: ${typeof Worker !== 'undefined' ? '✅' : '❌'}`);
+        log(`Modules: ${typeof import !== 'undefined' ? '✅' : '❌'}`);
+        log(`crypto.randomUUID: ${typeof crypto?.randomUUID === 'function' ? '✅' : '❌'}`);
+        
+        // Try to dynamically import the chrono-box module
+        log('Attempting to import chrono-box module...');
+        
+        import('./events/blocks/chrono-box/chrono-box.js')
+            .then((module) => {
+                log('✅ Chrono-box module imported successfully');
+                log(`Module exports: ${Object.keys(module).join(', ')}`);
+                
+                // Try to initialize
+                if (blocks.length > 0 && module.default) {
+                    log('Calling init function...');
+                    module.default(blocks[0])
+                        .then(() => log('✅ Init completed'))
+                        .catch(err => log(`❌ Init error: ${err.message}`, true));
+                }
+            })
+            .catch((err) => {
+                log(`❌ Failed to import chrono-box: ${err.message}`, true);
+                log(`Stack: ${err.stack}`, true);
+            });
+            
+        // Listen for any errors
+        window.addEventListener('error', (e) => {
+            log(`❌ Global error: ${e.message}`, true);
+            log(`  at ${e.filename}:${e.lineno}:${e.colno}`, true);
+        });
+        
+        window.addEventListener('unhandledrejection', (e) => {
+            log(`❌ Unhandled promise rejection: ${e.reason}`, true);
+        });
+    </script>
+</body>
+</html>
+

@@ -1,5 +1,27 @@
 import { readBlockConfig, LIBS, getMetadata } from '../../scripts/utils.js';
 
+// IMMEDIATE visual indicator that this file loaded
+(() => {
+  const marker = document.createElement('div');
+  marker.id = 'chrono-box-loaded-marker';
+  marker.innerHTML = '🟢 CHRONO-BOX FILE LOADED';
+  marker.style.cssText = 'position: fixed !important; top: 0 !important; left: 0 !important; right: 0 !important; background: lime !important; color: black !important; padding: 15px !important; z-index: 999999 !important; font-size: 14px !important; font-weight: bold !important; text-align: center !important; border-bottom: 3px solid green !important;';
+  
+  const addMarker = () => {
+    if (document.body && !document.getElementById('chrono-box-loaded-marker')) {
+      document.body.insertBefore(marker, document.body.firstChild);
+    } else if (!document.body) {
+      setTimeout(addMarker, 50);
+    }
+  };
+  
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', addMarker);
+  } else {
+    addMarker();
+  }
+})();
+
 // Debug logging function that displays messages on the page
 function debugLog(message, isError = false) {
   try {
