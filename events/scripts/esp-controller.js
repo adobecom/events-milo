@@ -282,7 +282,7 @@ export async function getAndCreateAndAddAttendee(eventId, attendeeData) {
   if (!eventObj.ok) return { ok: false, error: 'Failed to get event' };
 
   let attendee;
-  let registrationStatus = 'registered';
+  let targetStatus = 'registered';
 
   if (profile.account_type === 'guest') {
     // Use BaseAttendee filter for creating new attendee
@@ -307,13 +307,19 @@ export async function getAndCreateAndAddAttendee(eventId, attendeeData) {
 
   const newAttendeeData = attendee.data;
 
-  if (eventObj.data.isFull) registrationStatus = 'waitlisted';
+  const eventAttendeeResp = await getEventAttendee(eventId);
+
+  if (eventAttendeeResp.ok && eventAttendeeResp.data?.registrationStatus) {
+    return { ok: true, data: eventAttendeeResp.data };
+  }
+
+  if (eventObj.data.isFull) targetStatus = 'waitlisted';
 
   // Use EventAttendee filter for adding attendee to event
   const eventAttendeePayload = getEventAttendeePayload({
     ...newAttendeeData,
     ...attendeeData,
-    registrationStatus,
+    registrationStatus: targetStatus,
   });
 
   return addAttendeeToEvent(eventId, eventAttendeePayload);
