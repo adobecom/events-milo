@@ -205,6 +205,23 @@ export default async function init(el) {
     ]);
     debugLog('Dependencies loaded');
 
+    // Log the raw HTML structure before parsing
+    debugLog('=== RAW BLOCK HTML ===');
+    debugLog(`Block element tag: ${el.tagName}`);
+    debugLog(`Block element classes: ${el.className}`);
+    debugLog(`Block children count: ${el.children.length}`);
+
+    // Log each row in the block
+    const rows = el.querySelectorAll(':scope > div');
+    rows.forEach((row, i) => {
+      debugLog(`Row ${i + 1}: ${row.children.length} columns`);
+      Array.from(row.children).forEach((col, j) => {
+        debugLog(`  Col ${j + 1} innerHTML: ${col.innerHTML.substring(0, 100)}${col.innerHTML.length > 100 ? '...' : ''}`);
+        debugLog(`  Col ${j + 1} textContent: ${col.textContent.substring(0, 100)}${col.textContent.length > 100 ? '...' : ''}`);
+      });
+    });
+    debugLog('=== END RAW HTML ===');
+
     const blockConfig = readBlockConfig(el);
     debugLog(`Block config: ${JSON.stringify(blockConfig)}`);
 
@@ -215,11 +232,36 @@ export default async function init(el) {
 
     if (blockConfig?.schedule) {
       debugLog('Static schedule found in config');
+      debugLog(`Schedule config value type: ${typeof blockConfig.schedule}`);
+      debugLog(`Schedule config value: ${JSON.stringify(blockConfig.schedule)}`);
+
+      // Try to get raw text content from the schedule row
+      let scheduleTextContent = null;
+      rows.forEach((row) => {
+        const cols = Array.from(row.children);
+        if (cols.length >= 2) {
+          const label = cols[0].textContent.trim().toLowerCase();
+          if (label === 'schedule') {
+            scheduleTextContent = cols[1].textContent.trim();
+            debugLog(`Found raw schedule text: ${scheduleTextContent.substring(0, 200)}...`);
+          }
+        }
+      });
+
+      // Prefer text content if it looks like valid JSON
+      let scheduleSource = blockConfig.schedule;
+      if (scheduleTextContent && scheduleTextContent.startsWith('[')) {
+        debugLog('Using text content instead of parsed config (starts with [)');
+        scheduleSource = scheduleTextContent;
+      }
+
       try {
-        staticSchedule = JSON.parse((blockConfig?.schedule));
-        debugLog(`Static schedule parsed: ${staticSchedule.length} entries`);
+        staticSchedule = JSON.parse(scheduleSource);
+        debugLog(`✅ Static schedule parsed: ${staticSchedule.length} entries`);
+        debugLog(`First entry: ${JSON.stringify(staticSchedule[0])}`);
       } catch (e) {
-        debugLog(`Error parsing static schedule: ${e.message}`, true);
+        debugLog(`❌ Error parsing static schedule: ${e.message}`, true);
+        debugLog(`Failed to parse: ${typeof scheduleSource === 'string' ? scheduleSource.substring(0, 200) : JSON.stringify(scheduleSource)}`, true);
         window.lana?.log(`Error parsing static schedule: ${JSON.stringify(e)}`);
       }
     }

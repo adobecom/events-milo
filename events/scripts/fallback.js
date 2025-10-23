@@ -1,3 +1,15 @@
+// DIAGNOSTIC: Show if fallback is loading (means ES6 modules not supported)
+(function() {
+  var marker = document.createElement('div');
+  marker.id = 'fallback-loaded-marker';
+  marker.innerHTML = '🔴 FALLBACK.JS LOADED - NO MODULE SUPPORT';
+  marker.style.cssText = 'position: fixed !important; top: 0 !important; left: 0 !important; right: 0 !important; background: red !important; color: white !important; padding: 15px !important; z-index: 999999999 !important; font-size: 16px !important; font-weight: bold !important; text-align: center !important;';
+  if (document.body) {
+    document.body.insertBefore(marker, document.body.firstChild);
+  }
+  console.error('🔴 FALLBACK.JS LOADED - Browser does not support ES6 modules');
+})();
+
 var div = document.createElement('div');
 div.style.width = '100%';
 div.style.position = 'absolute';
