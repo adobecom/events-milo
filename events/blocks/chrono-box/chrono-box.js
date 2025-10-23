@@ -1,5 +1,30 @@
 import { readBlockConfig, LIBS, getMetadata } from '../../scripts/utils.js';
 
+// Debug logging function that displays messages on the page
+function debugLog(message, isError = false) {
+  let debugContainer = document.getElementById('chrono-box-debug-log');
+  if (!debugContainer) {
+    debugContainer = document.createElement('div');
+    debugContainer.id = 'chrono-box-debug-log';
+    debugContainer.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; background: #f0f0f0; border-bottom: 2px solid #333; padding: 10px; z-index: 10000; max-height: 200px; overflow-y: auto; font-family: monospace; font-size: 12px;';
+    document.body.insertBefore(debugContainer, document.body.firstChild);
+  }
+
+  const timestamp = new Date().toLocaleTimeString();
+  const logEntry = document.createElement('div');
+  logEntry.style.cssText = `margin: 2px 0; ${isError ? 'color: red; font-weight: bold;' : 'color: #333;'}`;
+  logEntry.textContent = `[${timestamp}] ${message}`;
+  debugContainer.appendChild(logEntry);
+  debugContainer.scrollTop = debugContainer.scrollHeight;
+
+  // Also log to console for reference
+  if (isError) {
+    console.error(message);
+  } else {
+    console.log(message);
+  }
+}
+
 function buildScheduleDoubleLinkedList(entries) {
   if (!entries.length) return null;
 
@@ -15,16 +40,21 @@ function buildScheduleDoubleLinkedList(entries) {
 }
 
 function getSchedule(scheduleId) {
+  debugLog(`Getting schedule with ID: ${scheduleId}`);
   const scheduleJSONString = getMetadata('schedules');
+  debugLog(`Schedule metadata: ${scheduleJSONString ? 'found' : 'not found'}`);
   let thisSchedule;
 
   try {
     thisSchedule = JSON.parse(scheduleJSONString)[scheduleId];
+    debugLog(`Schedule parsed successfully: ${thisSchedule ? 'yes' : 'no'}`);
   } catch (e) {
+    debugLog(`Error parsing schedule: ${e.message}`, true);
     window.lana?.log(`Error parsing schedule: ${JSON.stringify(e)}`);
   }
 
   if (!thisSchedule) {
+    debugLog(`Schedule not found: ${scheduleId}`, true);
     window.lana?.log(`Schedule not found: ${scheduleId}`);
     return null;
   }
@@ -33,12 +63,15 @@ function getSchedule(scheduleId) {
 }
 
 async function initPlugins(schedule) {
+  debugLog(`Initializing plugins for ${schedule.length} schedule entries`);
   const PLUGINS_MAP = {
     mobileRider: 'mobile-rider',
     metadata: 'metadata',
   };
   const hasPlugin = (plugin) => schedule.some((item) => item[plugin]);
   const pluginsNeeded = Object.keys(PLUGINS_MAP).filter(hasPlugin);
+  debugLog(`Plugins needed: ${pluginsNeeded.join(', ') || 'none'}`);
+
   const plugins = await Promise.all(pluginsNeeded.map((plugin) => {
     const pluginDir = PLUGINS_MAP[plugin];
     return import(`../../features/timing-framework/plugins/${pluginDir}/plugin.js`);
@@ -51,25 +84,33 @@ async function initPlugins(schedule) {
   if (!tabId) {
     tabId = crypto.randomUUID();
     sessionStorage.setItem('chrono-box-tab-id', tabId);
+    debugLog(`Created new tab ID: ${tabId}`);
+  } else {
+    debugLog(`Using existing tab ID: ${tabId}`);
   }
 
   const pluginsModules = new Map();
   await Promise.all(plugins.map(async (plugin, index) => {
     const pluginName = pluginsNeeded[index];
     pluginsModules.set(pluginName, await plugin.default(schedule));
+    debugLog(`Plugin initialized: ${pluginName}`);
   }));
 
   return { plugins: pluginsModules, tabId };
 }
 
 function setScheduleToScheduleWorker(schedule, plugins, tabId) {
+  debugLog(`Setting up worker for schedule with ${schedule.length} entries`);
   const scheduleLinkedList = buildScheduleDoubleLinkedList(schedule);
 
   // Add error handling for worker creation
   let worker;
   try {
+    debugLog('Creating worker...');
     worker = new Worker('/events/features/timing-framework/worker.js', { type: 'module' });
+    debugLog('Worker created successfully');
   } catch (error) {
+    debugLog(`Error creating worker: ${error.message}`, true);
     window.lana?.log(`Error creating worker: ${JSON.stringify(error)}`);
     throw error;
   }
@@ -78,6 +119,9 @@ function setScheduleToScheduleWorker(schedule, plugins, tabId) {
   const params = new URLSearchParams(document.location.search);
   const testTiming = params.get('timing');
   const testing = testTiming ? { toggleTime: testTiming } : null;
+  if (testing) {
+    debugLog(`Testing mode enabled with timing: ${testTiming}`);
+  }
 
   // Convert plugin instances to their serializable state
   const pluginStates = Object.fromEntries(
@@ -93,8 +137,11 @@ function setScheduleToScheduleWorker(schedule, plugins, tabId) {
   };
 
   try {
+    debugLog('Posting message to worker...');
     worker.postMessage(messageData);
+    debugLog('Message posted to worker successfully');
   } catch (error) {
+    debugLog(`Error posting message to worker: ${error.message}`, true);
     window.lana?.log(`Error posting message to worker: ${JSON.stringify(error)}`);
     throw error;
   }
@@ -103,19 +150,29 @@ function setScheduleToScheduleWorker(schedule, plugins, tabId) {
 }
 
 export default async function init(el) {
+  debugLog('=== CHRONO-BOX INIT START ===');
+
   const [{ default: loadFragment }, { createTag, getLocale, getConfig }] = await Promise.all([
     import(`${LIBS}/blocks/fragment/fragment.js`),
     import(`${LIBS}/utils/utils.js`),
   ]);
+  debugLog('Dependencies loaded');
 
   const blockConfig = readBlockConfig(el);
+  debugLog(`Block config: ${JSON.stringify(blockConfig)}`);
+
   const scheduleId = blockConfig?.['schedule-id'];
+  debugLog(`Schedule ID from config: ${scheduleId || 'none'}`);
+
   let staticSchedule;
 
   if (blockConfig?.schedule) {
+    debugLog('Static schedule found in config');
     try {
       staticSchedule = JSON.parse((blockConfig?.schedule));
+      debugLog(`Static schedule parsed: ${staticSchedule.length} entries`);
     } catch (e) {
+      debugLog(`Error parsing static schedule: ${e.message}`, true);
       window.lana?.log(`Error parsing static schedule: ${JSON.stringify(e)}`);
     }
   }
@@ -123,10 +180,12 @@ export default async function init(el) {
   const thisSchedule = staticSchedule || scheduleById;
 
   if (!thisSchedule) {
+    debugLog('No schedule found - removing element', true);
     el.remove();
     return Promise.resolve();
   }
 
+  debugLog(`Final schedule has ${thisSchedule.length} entries`);
   el.innerHTML = '';
 
   const pluginsOutputs = await initPlugins(thisSchedule);
@@ -138,7 +197,10 @@ export default async function init(el) {
 
   // Create a promise that resolves when the first message is received
   return new Promise((resolve) => {
+    debugLog('Waiting for worker message...');
+
     const timeout = setTimeout(() => {
+      debugLog('Timeout waiting for worker message (3s)', true);
       window.lana?.log('Timeout waiting for first worker message, continuing without CLS prevention');
       resolve(); // resolve the promise without waiting for the first message
     }, 3000); // 3 second timeout - balances CLS prevention with LCP/FCP
@@ -146,23 +208,34 @@ export default async function init(el) {
     // Set up the message handler that resolves the promise
     worker.onmessage = (event) => {
       clearTimeout(timeout);
+      debugLog('Received message from worker');
 
       const { pathToFragment } = event.data;
+      debugLog(`Fragment path: ${pathToFragment}`);
+
       const { prefix } = getLocale(getConfig().locales);
+      debugLog(`Locale prefix: ${prefix}`);
+
       el.style.height = `${el.clientHeight}px`;
 
       // load sp progress circle
       el.innerHTML = '';
       el.classList.add('loading');
+      debugLog('Loading fragment...');
 
-      const a = createTag('a', { href: `${prefix}${pathToFragment}` }, '', { parent: el });
+      const fullPath = `${prefix}${pathToFragment}`;
+      debugLog(`Full fragment URL: ${fullPath}`);
+      const a = createTag('a', { href: fullPath }, '', { parent: el });
 
       loadFragment(a).then(() => {
         // set el height to current height
         el.removeAttribute('style');
         el.classList.remove('loading');
+        debugLog('Fragment loaded successfully');
+        debugLog('=== CHRONO-BOX INIT COMPLETE ===');
       }).catch((error) => {
         // Handle fragment loading errors
+        debugLog(`Error loading fragment: ${error.message}`, true);
         window.lana?.log(`Error loading fragment ${pathToFragment}: ${JSON.stringify(error)}`);
 
         // Remove loading state
