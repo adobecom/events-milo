@@ -2,28 +2,50 @@ import { readBlockConfig, LIBS, getMetadata } from '../../scripts/utils.js';
 
 // Debug logging function that displays messages on the page
 function debugLog(message, isError = false) {
-  let debugContainer = document.getElementById('chrono-box-debug-log');
-  if (!debugContainer) {
-    debugContainer = document.createElement('div');
-    debugContainer.id = 'chrono-box-debug-log';
-    debugContainer.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; background: #f0f0f0; border-bottom: 2px solid #333; padding: 10px; z-index: 10000; max-height: 200px; overflow-y: auto; font-family: monospace; font-size: 12px;';
-    document.body.insertBefore(debugContainer, document.body.firstChild);
-  }
+  try {
+    // Also log to console for reference
+    if (isError) {
+      console.error(message);
+    } else {
+      console.log(message);
+    }
 
-  const timestamp = new Date().toLocaleTimeString();
-  const logEntry = document.createElement('div');
-  logEntry.style.cssText = `margin: 2px 0; ${isError ? 'color: red; font-weight: bold;' : 'color: #333;'}`;
-  logEntry.textContent = `[${timestamp}] ${message}`;
-  debugContainer.appendChild(logEntry);
-  debugContainer.scrollTop = debugContainer.scrollHeight;
+    let debugContainer = document.getElementById('chrono-box-debug-log');
+    if (!debugContainer) {
+      debugContainer = document.createElement('div');
+      debugContainer.id = 'chrono-box-debug-log';
+      debugContainer.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; width: 100%; background: #f0f0f0; border-bottom: 2px solid #333; padding: 10px; z-index: 999999; max-height: 300px; overflow-y: auto; font-family: monospace; font-size: 11px; box-sizing: border-box;';
 
-  // Also log to console for reference
-  if (isError) {
-    console.error(message);
-  } else {
-    console.log(message);
+      // Ensure body exists before appending
+      if (document.body) {
+        document.body.insertBefore(debugContainer, document.body.firstChild);
+      } else {
+        // If body doesn't exist yet, wait for it
+        const observer = new MutationObserver(() => {
+          if (document.body) {
+            document.body.insertBefore(debugContainer, document.body.firstChild);
+            observer.disconnect();
+          }
+        });
+        observer.observe(document.documentElement, { childList: true });
+      }
+    }
+
+    const timestamp = new Date().toLocaleTimeString();
+    const logEntry = document.createElement('div');
+    logEntry.style.cssText = `margin: 2px 0; padding: 2px 0; ${isError ? 'color: red; font-weight: bold;' : 'color: #333;'}`;
+    logEntry.textContent = `[${timestamp}] ${message}`;
+    debugContainer.appendChild(logEntry);
+    debugContainer.scrollTop = debugContainer.scrollHeight;
+  } catch (e) {
+    // Fallback if anything goes wrong with debug logging
+    console.error('Debug log error:', e, 'Message was:', message);
   }
 }
+
+// Module-level log to confirm file is loaded
+console.log('[CHRONO-BOX] Module loaded at', new Date().toISOString());
+debugLog('CHRONO-BOX MODULE LOADED');
 
 function buildScheduleDoubleLinkedList(entries) {
   if (!entries.length) return null;
@@ -150,105 +172,114 @@ function setScheduleToScheduleWorker(schedule, plugins, tabId) {
 }
 
 export default async function init(el) {
-  debugLog('=== CHRONO-BOX INIT START ===');
+  try {
+    debugLog('=== CHRONO-BOX INIT START ===');
+    debugLog(`User agent: ${navigator.userAgent}`);
+    debugLog(`Element: ${el ? 'exists' : 'missing'}`);
 
-  const [{ default: loadFragment }, { createTag, getLocale, getConfig }] = await Promise.all([
-    import(`${LIBS}/blocks/fragment/fragment.js`),
-    import(`${LIBS}/utils/utils.js`),
-  ]);
-  debugLog('Dependencies loaded');
+    const [{ default: loadFragment }, { createTag, getLocale, getConfig }] = await Promise.all([
+      import(`${LIBS}/blocks/fragment/fragment.js`),
+      import(`${LIBS}/utils/utils.js`),
+    ]);
+    debugLog('Dependencies loaded');
 
-  const blockConfig = readBlockConfig(el);
-  debugLog(`Block config: ${JSON.stringify(blockConfig)}`);
+    const blockConfig = readBlockConfig(el);
+    debugLog(`Block config: ${JSON.stringify(blockConfig)}`);
 
-  const scheduleId = blockConfig?.['schedule-id'];
-  debugLog(`Schedule ID from config: ${scheduleId || 'none'}`);
+    const scheduleId = blockConfig?.['schedule-id'];
+    debugLog(`Schedule ID from config: ${scheduleId || 'none'}`);
 
-  let staticSchedule;
+    let staticSchedule;
 
-  if (blockConfig?.schedule) {
-    debugLog('Static schedule found in config');
-    try {
-      staticSchedule = JSON.parse((blockConfig?.schedule));
-      debugLog(`Static schedule parsed: ${staticSchedule.length} entries`);
-    } catch (e) {
-      debugLog(`Error parsing static schedule: ${e.message}`, true);
-      window.lana?.log(`Error parsing static schedule: ${JSON.stringify(e)}`);
+    if (blockConfig?.schedule) {
+      debugLog('Static schedule found in config');
+      try {
+        staticSchedule = JSON.parse((blockConfig?.schedule));
+        debugLog(`Static schedule parsed: ${staticSchedule.length} entries`);
+      } catch (e) {
+        debugLog(`Error parsing static schedule: ${e.message}`, true);
+        window.lana?.log(`Error parsing static schedule: ${JSON.stringify(e)}`);
+      }
     }
+    const scheduleById = scheduleId ? getSchedule(scheduleId) : null;
+    const thisSchedule = staticSchedule || scheduleById;
+
+    if (!thisSchedule) {
+      debugLog('No schedule found - removing element', true);
+      el.remove();
+      return Promise.resolve();
+    }
+
+    debugLog(`Final schedule has ${thisSchedule.length} entries`);
+    el.innerHTML = '';
+
+    const pluginsOutputs = await initPlugins(thisSchedule);
+    const worker = setScheduleToScheduleWorker(
+      thisSchedule,
+      pluginsOutputs.plugins,
+      pluginsOutputs.tabId,
+    );
+
+    // Create a promise that resolves when the first message is received
+    return new Promise((resolve) => {
+      debugLog('Waiting for worker message...');
+
+      const timeout = setTimeout(() => {
+        debugLog('Timeout waiting for worker message (3s)', true);
+        window.lana?.log('Timeout waiting for first worker message, continuing without CLS prevention');
+        resolve(); // resolve the promise without waiting for the first message
+      }, 3000); // 3 second timeout - balances CLS prevention with LCP/FCP
+
+      // Set up the message handler that resolves the promise
+      worker.onmessage = (event) => {
+        clearTimeout(timeout);
+        debugLog('Received message from worker');
+
+        const { pathToFragment } = event.data;
+        debugLog(`Fragment path: ${pathToFragment}`);
+
+        const { prefix } = getLocale(getConfig().locales);
+        debugLog(`Locale prefix: ${prefix}`);
+
+        el.style.height = `${el.clientHeight}px`;
+
+        // load sp progress circle
+        el.innerHTML = '';
+        el.classList.add('loading');
+        debugLog('Loading fragment...');
+
+        const fullPath = `${prefix}${pathToFragment}`;
+        debugLog(`Full fragment URL: ${fullPath}`);
+        const a = createTag('a', { href: fullPath }, '', { parent: el });
+
+        loadFragment(a).then(() => {
+          // set el height to current height
+          el.removeAttribute('style');
+          el.classList.remove('loading');
+          debugLog('Fragment loaded successfully');
+          debugLog('=== CHRONO-BOX INIT COMPLETE ===');
+        }).catch((error) => {
+          // Handle fragment loading errors
+          debugLog(`Error loading fragment: ${error.message}`, true);
+          window.lana?.log(`Error loading fragment ${pathToFragment}: ${JSON.stringify(error)}`);
+
+          // Remove loading state
+          el.removeAttribute('style');
+          el.classList.remove('loading');
+
+          // Show error state to user
+          el.innerHTML = '<div class="error-message">Unable to load content. Please refresh the page.</div>';
+          el.classList.add('error');
+        });
+
+        // Resolve the promise
+        resolve();
+      };
+    });
+  } catch (error) {
+    debugLog(`FATAL ERROR in init: ${error.message}`, true);
+    debugLog(`Stack: ${error.stack}`, true);
+    console.error('Chrono-box init error:', error);
+    throw error;
   }
-  const scheduleById = scheduleId ? getSchedule(scheduleId) : null;
-  const thisSchedule = staticSchedule || scheduleById;
-
-  if (!thisSchedule) {
-    debugLog('No schedule found - removing element', true);
-    el.remove();
-    return Promise.resolve();
-  }
-
-  debugLog(`Final schedule has ${thisSchedule.length} entries`);
-  el.innerHTML = '';
-
-  const pluginsOutputs = await initPlugins(thisSchedule);
-  const worker = setScheduleToScheduleWorker(
-    thisSchedule,
-    pluginsOutputs.plugins,
-    pluginsOutputs.tabId,
-  );
-
-  // Create a promise that resolves when the first message is received
-  return new Promise((resolve) => {
-    debugLog('Waiting for worker message...');
-
-    const timeout = setTimeout(() => {
-      debugLog('Timeout waiting for worker message (3s)', true);
-      window.lana?.log('Timeout waiting for first worker message, continuing without CLS prevention');
-      resolve(); // resolve the promise without waiting for the first message
-    }, 3000); // 3 second timeout - balances CLS prevention with LCP/FCP
-
-    // Set up the message handler that resolves the promise
-    worker.onmessage = (event) => {
-      clearTimeout(timeout);
-      debugLog('Received message from worker');
-
-      const { pathToFragment } = event.data;
-      debugLog(`Fragment path: ${pathToFragment}`);
-
-      const { prefix } = getLocale(getConfig().locales);
-      debugLog(`Locale prefix: ${prefix}`);
-
-      el.style.height = `${el.clientHeight}px`;
-
-      // load sp progress circle
-      el.innerHTML = '';
-      el.classList.add('loading');
-      debugLog('Loading fragment...');
-
-      const fullPath = `${prefix}${pathToFragment}`;
-      debugLog(`Full fragment URL: ${fullPath}`);
-      const a = createTag('a', { href: fullPath }, '', { parent: el });
-
-      loadFragment(a).then(() => {
-        // set el height to current height
-        el.removeAttribute('style');
-        el.classList.remove('loading');
-        debugLog('Fragment loaded successfully');
-        debugLog('=== CHRONO-BOX INIT COMPLETE ===');
-      }).catch((error) => {
-        // Handle fragment loading errors
-        debugLog(`Error loading fragment: ${error.message}`, true);
-        window.lana?.log(`Error loading fragment ${pathToFragment}: ${JSON.stringify(error)}`);
-
-        // Remove loading state
-        el.removeAttribute('style');
-        el.classList.remove('loading');
-
-        // Show error state to user
-        el.innerHTML = '<div class="error-message">Unable to load content. Please refresh the page.</div>';
-        el.classList.add('error');
-      });
-
-      // Resolve the promise
-      resolve();
-    };
-  });
 }
