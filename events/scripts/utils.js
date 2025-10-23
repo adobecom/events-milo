@@ -213,11 +213,11 @@ export function readBlockConfig(block) {
         } else if (valueEl.querySelector('p')) {
           const pArr = [...valueEl.querySelectorAll('p')];
           if (pArr.length === 1) {
-            config[name] = pArr[0].innerHTML;
+            config[name] = pArr[0].textContent;
           } else {
-            config[name] = pArr.map((p) => p.innerHTML);
+            config[name] = pArr.map((p) => p.textContent);
           }
-        } else config[name] = row.children[1].innerHTML;
+        } else config[name] = row.children[1].textContent;
       }
     }
 
