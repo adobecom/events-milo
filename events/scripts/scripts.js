@@ -10,24 +10,6 @@
  * governing permissions and limitations under the License.
  */
 
-// IMMEDIATE DIAGNOSTIC - Show that scripts.js is loading
-(() => {
-  const marker = document.createElement('div');
-  marker.id = 'scripts-js-loaded-marker';
-  marker.innerHTML = '🔵 SCRIPTS.JS LOADING...';
-  marker.style.cssText = 'position: fixed !important; top: 0 !important; left: 0 !important; right: 0 !important; background: blue !important; color: white !important; padding: 15px !important; z-index: 999999999 !important; font-size: 16px !important; font-weight: bold !important; text-align: center !important; border-bottom: 3px solid white !important;';
-  
-  const addMarker = () => {
-    if (document.body && !document.getElementById('scripts-js-loaded-marker')) {
-      document.body.insertBefore(marker, document.body.firstChild);
-      console.log('🔵 SCRIPTS.JS FILE STARTED LOADING');
-    } else if (!document.body) {
-      setTimeout(addMarker, 10);
-    }
-  };
-  addMarker();
-})();
-
 import { lazyCaptureProfile } from './profile.js';
 import autoUpdateContent, { getNonProdData, validatePageAndRedirect } from './content-update.js';
 import { getSusiOptions, setMetadata, getMetadata, getEventServiceEnv, LIBS } from './utils.js';
@@ -40,16 +22,6 @@ const {
   loadLana,
   getLocale,
 } = await import(`${LIBS}/utils/utils.js`);
-
-// Update marker after imports complete
-(() => {
-  const marker = document.getElementById('scripts-js-loaded-marker');
-  if (marker) {
-    marker.innerHTML = '🟢 SCRIPTS.JS FULLY LOADED';
-    marker.style.background = 'green !important';
-    console.log('🟢 SCRIPTS.JS IMPORTS COMPLETED');
-  }
-})();
 
 export default function decorateArea(area = document) {
   const parsePhotosData = () => {
