@@ -104,9 +104,25 @@ class VideoPlaylist {
 
     async _loadAndDisplaySessions() {
         try {
-            const response = this.cfg.isTagBased
-                ? await MOCK_API.getSessions()
-                : await MOCK_API.getSessions(this.cfg.playlistId);
+            let response;
+            
+            if (this.cfg.isTagBased) {
+                // Tag-based playlist: Get sessions from Chimera API
+                response = await MOCK_API.getSessions();
+            } else {
+                // User-authored playlist: Get playlist data and then fetch session details
+                const playlistData = await MOCK_API.getUserAuthoredPlaylist(this.cfg.playlistId);
+                
+                // Update config with playlist-specific data
+                this.cfg.playlistTitle = playlistData.playlistTitle || this.cfg.playlistTitle;
+                this.cfg.topicEyebrow = playlistData.topicEyebrow || this.cfg.topicEyebrow;
+                
+                // Get entity IDs from sessions
+                const entityIds = playlistData.sessions.map(session => session.entityId);
+                
+                // Fetch full session data from Chimera API
+                response = await MOCK_API.getChimeraFeaturedCards(entityIds);
+            }
 
             const filteredCards = response.cards.filter(card => card.search.thumbnailUrl);
             this.cards = this._sortCards(filteredCards, this.cfg.sort);

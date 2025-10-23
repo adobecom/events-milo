@@ -42,8 +42,18 @@ export const SOCIAL_ICONS = {
     copy: '<path d="M10.5976 0.67421C10.165 0.792718 9.7546 0.981031 9.38262 1.23172C9.23095 1.33588 8.43679 2.09673 7.61929 2.91423L6.13011 4.40839H6.69761C7.21674 4.39759 7.73367 4.47914 8.22427 4.64923L8.52678 4.74838L9.50512 3.77505C10.6868 2.60255 10.7859 2.54171 11.4951 2.54171C11.7445 2.51126 11.9973 2.55901 12.2184 2.67838C12.5529 2.85629 12.8237 3.13383 12.9934 3.47254C13.1068 3.68729 13.153 3.9312 13.1259 4.17254C13.1259 4.91504 13.1351 4.90089 11.1926 6.85755C10.2801 7.77422 9.42929 8.59671 9.29679 8.69087C8.98114 8.90526 8.60146 9.00486 8.22122 8.97301C7.84098 8.94116 7.48319 8.77979 7.20761 8.51588C7.15379 8.44707 7.0848 8.39164 7.00601 8.35391C6.92723 8.31618 6.8408 8.29719 6.75345 8.29839C6.42012 8.27006 6.31845 8.3267 5.78012 8.87004L5.33594 9.3192L5.51093 9.56004C5.8782 10.0146 6.34844 10.3752 6.88272 10.612C7.417 10.8488 7.99998 10.9549 8.58344 10.9217C9.26266 10.8834 9.91686 10.6521 10.4693 10.2551C10.8284 9.99505 14.2601 6.55338 14.4693 6.24171C14.7152 5.87067 14.8942 5.45946 14.9984 5.0267C15.1414 4.37234 15.1153 3.69235 14.9226 3.05087C14.7459 2.511 14.4439 2.02061 14.0414 1.61972C13.639 1.21883 13.1473 0.918832 12.6068 0.744223C11.9523 0.560287 11.2633 0.536267 10.5976 0.67421Z" fill="currentColor"/><path d="M6.15423 5.27963C5.70839 5.36722 5.28028 5.5286 4.88757 5.75713C4.10995 6.36787 3.38516 7.04304 2.7209 7.77546C1.70923 8.77546 0.796734 9.72297 0.693401 9.8788C0.417757 10.2795 0.219878 10.7284 0.110067 11.2021C-0.00751559 11.8325 0.0232978 12.4816 0.200067 13.098C0.374617 13.6386 0.674596 14.1302 1.07549 14.5327C1.47639 14.9352 1.96683 15.2371 2.50673 15.4138C3.14823 15.6064 3.8282 15.6325 4.48257 15.4896C4.94785 15.3767 5.38735 15.1762 5.77757 14.8988C5.9384 14.7805 6.7234 14.0288 7.52757 13.2205L8.99257 11.7505H8.42507C7.90593 11.7612 7.38901 11.6797 6.8984 11.5096L6.5959 11.4105L5.6259 12.378C4.43507 13.5546 4.3309 13.6213 3.6309 13.6213C3.39964 13.6419 3.16695 13.6029 2.95507 13.508C2.60866 13.3333 2.32462 13.0559 2.14173 12.7138C2.01821 12.4941 1.96855 12.2405 2.00007 11.9905C2.00007 11.2338 1.9859 11.258 3.9284 9.30546C4.84507 8.3888 5.7009 7.5663 5.8284 7.47213C6.14405 7.25774 6.52371 7.15816 6.90395 7.19001C7.28419 7.22186 7.64198 7.38323 7.91757 7.64714C7.97138 7.71594 8.04038 7.77138 8.11916 7.80911C8.19795 7.84684 8.28439 7.86584 8.37173 7.86464C8.70507 7.89297 8.80673 7.8363 9.34507 7.28797L9.78923 6.8388L9.5959 6.57881C9.13876 6.0323 8.53775 5.62469 7.8609 5.40214C7.30857 5.2329 6.72507 5.19101 6.15423 5.27963Z" fill="currentColor"/>',
 };
 
+// Chimera API Configuration
+export const CHIMERA_API = {
+    baseUrl: 'https://chimera-api.adobe.com', // Hardcoded for now
+    endpoints: {
+        featuredCards: '/api/v1/featured-cards',
+        sessions: '/api/v1/sessions'
+    }
+};
+
 // Mock API - Move to separate file in production
 export const MOCK_API = {
+    // Tag-based playlist (current implementation)
     getSessions: async () => {
         await new Promise(resolve => setTimeout(resolve, 100));
         const baseThumbnail = 'https://images-tv.adobe.com/mpcv3/b8f920e0-0298-4d82-9ec3-c17d4c9ceda9/38f837a1-0b27-4319-9a7c-2429d88e3058/61f09647c0884bc3840da53bd2c2ffc0_1742533829-200x113.jpg';
@@ -60,6 +70,81 @@ export const MOCK_API = {
             ]
         };
     },
+
+    // User-authored playlist (new implementation)
+    getUserAuthoredPlaylist: async (playlistId) => {
+        await new Promise(resolve => setTimeout(resolve, 150));
+        
+        // Simulate backend response from VideoPlaylistService.getJsonFromPlayList()
+        const mockUserAuthoredData = {
+            playlistID: playlistId || '123',
+            playlistTitle: 'Sample playlistTitle',
+            topicEyebrow: 'Eyebrow text',
+            sessions: [
+                { sessionCode: 'S744', entityId: 'entity_12345', sessionPath: 'https://business.adobe.com/summit/2025/sessions/s744.html' },
+                { sessionCode: 'S745', entityId: 'entity_12346', sessionPath: 'https://business.adobe.com/summit/2025/sessions/s745.html' },
+                { sessionCode: 'S746', entityId: 'entity_12347', sessionPath: 'https://business.adobe.com/summit/2025/sessions/s746.html' },
+                { sessionCode: 'S747', entityId: 'entity_12348', sessionPath: 'https://business.adobe.com/summit/2025/sessions/s747.html' },
+                { sessionCode: 'S748', entityId: 'entity_12349', sessionPath: 'https://business.adobe.com/summit/2025/sessions/s748.html' }
+            ]
+        };
+
+        return mockUserAuthoredData;
+    },
+
+    // Chimera API call for featured cards (user-authored)
+    getChimeraFeaturedCards: async (entityIds) => {
+        await new Promise(resolve => setTimeout(resolve, 200));
+        
+        // Simulate Chimera API response with featuredCards parameter
+        const baseThumbnail = 'https://images-tv.adobe.com/mpcv3/b8f920e0-0298-4d82-9ec3-c17d4c9ceda9/38f837a1-0b27-4319-9a7c-2429d88e3058/61f09647c0884bc3840da53bd2c2ffc0_1742533829-200x113.jpg';
+        const endDate = new Date(Date.now() + 86400000).toISOString();
+        const startDate = new Date(Date.now() - 86400000).toISOString();
+
+        // Map entityIds to full card data (this would come from Chimera API)
+        const entityToCardMap = {
+            'entity_12345': { 
+                id: '1', 
+                search: { thumbnailUrl: baseThumbnail, videoDuration: '00:45:30', mpcVideoId: '3449120', videoId: 'yt_001', videoService: 'mpc', sessionId: 'sess_001', sessionCode: 'S744' }, 
+                contentArea: { title: 'AI-Powered Marketing Automation', description: 'Learn how AI transforms marketing workflows.' }, 
+                overlayLink: 'https://business.adobe.com/summit/2025/sessions/s744.html', 
+                endDate, startDate 
+            },
+            'entity_12346': { 
+                id: '2', 
+                search: { thumbnailUrl: baseThumbnail, videoDuration: '00:38:15', mpcVideoId: '3449121', videoId: 'yt_002', videoService: 'mpc', sessionId: 'sess_002', sessionCode: 'S745' }, 
+                contentArea: { title: 'Machine Learning for Personalization', description: 'Advanced ML techniques for customer experiences.' }, 
+                overlayLink: 'https://business.adobe.com/summit/2025/sessions/s745.html', 
+                endDate, startDate 
+            },
+            'entity_12347': { 
+                id: '3', 
+                search: { thumbnailUrl: baseThumbnail, videoDuration: '00:52:20', mpcVideoId: '3449122', videoId: 'yt_003', videoService: 'mpc', sessionId: 'sess_003', sessionCode: 'S746' }, 
+                contentArea: { title: 'Deep Learning in Analytics', description: 'Neural networks for predictive analytics.' }, 
+                overlayLink: 'https://business.adobe.com/summit/2025/sessions/s746.html', 
+                endDate, startDate 
+            },
+            'entity_12348': { 
+                id: '4', 
+                search: { thumbnailUrl: baseThumbnail, videoDuration: '00:41:10', mpcVideoId: '3449123', videoId: 'yt_004', videoService: 'mpc', sessionId: 'sess_004', sessionCode: 'S747' }, 
+                contentArea: { title: 'Advanced Analytics Strategies', description: 'Data-driven insights for business growth.' }, 
+                overlayLink: 'https://business.adobe.com/summit/2025/sessions/s747.html', 
+                endDate, startDate 
+            },
+            'entity_12349': { 
+                id: '5', 
+                search: { thumbnailUrl: baseThumbnail, videoDuration: '00:35:45', mpcVideoId: '3449124', videoId: 'yt_005', videoService: 'mpc', sessionId: 'sess_005', sessionCode: 'S748' }, 
+                contentArea: { title: 'Customer Experience Optimization', description: 'Enhancing user journeys with data.' }, 
+                overlayLink: 'https://business.adobe.com/summit/2025/sessions/s748.html', 
+                endDate, startDate 
+            }
+        };
+
+        const cards = entityIds.map(entityId => entityToCardMap[entityId]).filter(Boolean);
+        
+        return { cards };
+    },
+
     getFavorites: async () => {
         await new Promise(resolve => setTimeout(resolve, 50));
         const stored = localStorage.getItem('mockFavorites');
