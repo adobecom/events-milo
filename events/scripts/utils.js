@@ -225,17 +225,85 @@ export function readBlockConfig(block) {
   }, {});
 }
 
+// Visual logger for mobile debugging
+function createVisualLogger() {
+  let logPanel = document.getElementById('mobile-debug-log');
+
+  if (!logPanel) {
+    logPanel = document.createElement('div');
+    logPanel.id = 'mobile-debug-log';
+    logPanel.style.cssText = `
+      position: fixed;
+      top: 10px;
+      right: 10px;
+      max-width: 90%;
+      max-height: 400px;
+      background: rgba(0, 0, 0, 0.9);
+      color: #0f0;
+      font-family: monospace;
+      font-size: 12px;
+      padding: 10px;
+      border-radius: 5px;
+      z-index: 999999;
+      overflow-y: auto;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+    `;
+    document.body.appendChild(logPanel);
+  }
+
+  return {
+    log: (message, data) => {
+      const timestamp = new Date().toLocaleTimeString();
+      const logEntry = document.createElement('div');
+      logEntry.style.cssText = 'margin-bottom: 5px; border-bottom: 1px solid #333; padding-bottom: 5px;';
+
+      let content = `[${timestamp}] ${message}`;
+      if (data !== undefined) {
+        content += `\n${typeof data === 'object' ? JSON.stringify(data, null, 2) : data}`;
+      }
+
+      logEntry.textContent = content;
+      logPanel.appendChild(logEntry);
+      logPanel.scrollTop = logPanel.scrollHeight;
+
+      // Keep only last 10 entries
+      while (logPanel.children.length > 10) {
+        logPanel.removeChild(logPanel.firstChild);
+      }
+    },
+    clear: () => {
+      logPanel.innerHTML = '';
+    },
+  };
+}
+
 export function readBlockConfigText(block) {
-  return [...block.querySelectorAll(':scope>div')].reduce((config, row) => {
+  const logger = createVisualLogger();
+  logger.log('=== readBlockConfigText called ===');
+
+  const rows = [...block.querySelectorAll(':scope>div')];
+  logger.log(`Found ${rows.length} rows in block`);
+
+  const result = rows.reduce((config, row, index) => {
     if (row.children) {
       const cols = [...row.children];
+      logger.log(`Row ${index}: ${cols.length} columns`);
+
       if (cols[1]) {
-        return cols[1].textContent;
+        const { innerHTML, textContent } = cols[1];
+
+        logger.log(`Row ${index} innerHTML:`, innerHTML.substring(0, 100));
+        logger.log(`Row ${index} textContent:`, textContent.substring(0, 100));
+
+        return textContent;
       }
     }
 
     return config;
   }, {});
+
+  logger.log('Final result:', result);
+  return result;
 }
 
 /**
