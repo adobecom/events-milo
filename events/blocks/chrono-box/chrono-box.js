@@ -1,4 +1,4 @@
-import { readBlockConfig, LIBS, getMetadata } from '../../scripts/utils.js';
+import { readBlockConfigText, LIBS, getMetadata } from '../../scripts/utils.js';
 
 function buildScheduleDoubleLinkedList(entries) {
   if (!entries.length) return null;
@@ -110,7 +110,7 @@ export default async function init(el) {
     import(`${LIBS}/features/spectrum-web-components/dist/progress-circle.js`),
   ]);
 
-  const blockConfig = readBlockConfig(el);
+  const blockConfig = readBlockConfigText(el);
   const scheduleId = blockConfig?.['schedule-id'];
   let staticSchedule;
 

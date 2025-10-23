@@ -225,6 +225,19 @@ export function readBlockConfig(block) {
   }, {});
 }
 
+export function readBlockConfigText(block) {
+  return [...block.querySelectorAll(':scope>div')].reduce((config, row) => {
+    if (row.children) {
+      const cols = [...row.children];
+      if (cols[1]) {
+        return cols[1].textContent;
+      }
+    }
+
+    return config;
+  }, {});
+}
+
 /**
  * Parses a regular metadata path without array processing.
  * @param {string} path - The metadata path to parse
