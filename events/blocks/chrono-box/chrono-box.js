@@ -164,25 +164,21 @@ export default async function init(el) {
       el.style.height = `${el.clientHeight}px`;
 
       el.innerHTML = '';
-      el.classList.add('loading');
 
       const a = createTag('a', { href: `${prefix}${pathToFragment}` }, '', { parent: el });
 
       loadFragment(a).then(() => {
         // set el height to current height
         el.removeAttribute('style');
-        el.classList.remove('loading');
       }).catch((error) => {
         // Handle fragment loading errors
         window.lana?.log(`Error loading fragment ${pathToFragment}: ${JSON.stringify(error)}`);
 
         // Remove loading state
         el.removeAttribute('style');
-        el.classList.remove('loading');
 
         // Show error state to user
         el.innerHTML = '<div class="error-message">Unable to load content. Please refresh the page.</div>';
-        el.classList.add('error');
       });
 
       // Resolve the promise
