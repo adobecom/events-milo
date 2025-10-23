@@ -146,7 +146,7 @@ export const MOCK_API = {
             },
             'entity_12349': { 
                 id: '5', 
-                search: { thumbnailUrl: baseThumbnail, videoDuration: '00:35:45', mpcVideoId: '3424167', videoId: 'yt_005', videoService: 'mpc', sessionId: 'sess_005', sessionCode: 'S748' }, 
+                search: { thumbnailUrl: baseThumbnail, videoDuration: '00:35:45', mpcVideoId: '3424767', videoId: 'yt_005', videoService: 'mpc', sessionId: 'sess_005', sessionCode: 'S748' }, 
                 contentArea: { title: 'Customer Experience Optimization', description: 'Enhancing user journeys with data.' }, 
                 overlayLink: 'https://business.adobe.com/summit/2025/sessions/s748.html', 
                 endDate, startDate 
