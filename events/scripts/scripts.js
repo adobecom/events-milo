@@ -281,5 +281,3 @@ if (getMetadata('event-details-page') === 'yes') await validatePageAndRedirect(L
     if (getMetadata('event-details-page') === 'yes') lazyCaptureProfile();
   });
 }());
-
-document.body.append(document.createElement('div').innerHTML = '🟢 PAGE LOADED');
