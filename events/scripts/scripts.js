@@ -60,7 +60,7 @@ export default function decorateArea(area = document) {
     eagerLoad(marquee, 'div:last-child > div:last-child img');
   }());
 
-  if (getMetadata('event-details-page') !== 'yes') return;
+  if (!getMetadata('event-id')) return;
   decorateEvent(area);
 }
 
@@ -279,6 +279,6 @@ if (EVENT_CONFIG.cmsType === 'SP') {
   await loadLana({ clientId: 'events-milo' });
   await loadArea().then(async () => {
     const { eventsDelayedActions } = await import(`${EVENT_LIBS}/libs.js`);
-    if (getMetadata('event-details-page') === 'yes') eventsDelayedActions();
+    if (getMetadata('event-id')) eventsDelayedActions();
   });
 }());
