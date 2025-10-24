@@ -684,8 +684,13 @@ function decorateSuccessScreen(screen) {
       'aria-label': 'Copy link'
     });
     copyLinkButton.innerHTML = `
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M16 1H4C2.9 1 2 1.9 2 3V17H4V3H16V1ZM19 5H8C6.9 5 6 5.9 6 7V21C6 22.1 6.9 23 8 23H19C20.1 23 21 22.1 21 21V7C21 5.9 20.1 5 19 5ZM19 21H8V7H19V21Z" fill="currentColor"/>
+      <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="20" cy="20" r="20" fill="#1473E6"/>
+        <g transform="translate(10, 10) rotate(45 10 10)">
+          <path d="M8 12.5C8 13.3 7.3 14 6.5 14H3.5C2.7 14 2 13.3 2 12.5V9.5C2 8.7 2.7 8 3.5 8H6.5C7.3 8 8 8.7 8 9.5V12.5Z" stroke="white" stroke-width="1.5" fill="none"/>
+          <path d="M14 6.5C14 5.7 14.7 5 15.5 5H18.5C19.3 5 20 5.7 20 6.5V9.5C20 10.3 19.3 11 18.5 11H15.5C14.7 11 14 10.3 14 9.5V6.5Z" stroke="white" stroke-width="1.5" fill="none"/>
+          <path d="M8 9.5H14" stroke="white" stroke-width="1.5"/>
+        </g>
       </svg>
     `;
 
