@@ -71,7 +71,7 @@ Always inspired by the creativity, innovation, and people that make Adobe what i
 
 // Copy current URL to clipboard and show toast
 function copyLinkToClipboard() {
-  const currentUrl = window.location.href;
+  const currentUrl = 'https://www.adobe.com/events/virtual-learn-events/virtual-learn-event-photoshop/2025-10-14.html';//window.location.href;
   
   navigator.clipboard.writeText(currentUrl).then(() => {
     showToast('Link copied to clipboard!');
