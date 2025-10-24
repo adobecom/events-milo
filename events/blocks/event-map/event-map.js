@@ -1,4 +1,5 @@
 import { LIBS, getMetadata } from '../../scripts/utils.js';
+import initShareWidget from '../../features/share-widget/share-widget.js';
 
 function decorateTextContainer(el, createTag, decorateButtons) {
   const wrapper = el.querySelector('.event-map-wrapper');
@@ -111,4 +112,7 @@ export default async function init(el) {
 
   decorateTextContainer(el, createTag, decorateButtons);
   decorateMap(el, createTag);
+  
+  // Initialize share widget
+  initShareWidget();
 }

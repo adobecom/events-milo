@@ -58,6 +58,44 @@ function openSharePopup(shareType, url) {
   window.open(shareUrl, '_blank', 'width=600,height=400,scrollbars=yes,resizable=yes');
 }
 
+// Copy link to clipboard and show toast
+function copyLinkToClipboard(url) {
+  navigator.clipboard.writeText(url).then(() => {
+    showToast('Link copied to clipboard!');
+  }).catch((err) => {
+    console.error('Failed to copy link:', err);
+    showToast('Failed to copy link', true);
+  });
+}
+
+// Show toast notification
+function showToast(message, isError = false) {
+  // Remove existing toast if any
+  const existingToast = document.querySelector('.share-toast');
+  if (existingToast) {
+    existingToast.remove();
+  }
+
+  const toast = createTag('div', { 
+    class: `share-toast ${isError ? 'error' : ''}` 
+  }, message);
+  
+  document.body.appendChild(toast);
+  
+  // Trigger animation
+  setTimeout(() => {
+    toast.classList.add('show');
+  }, 10);
+  
+  // Remove toast after 3 seconds
+  setTimeout(() => {
+    toast.classList.remove('show');
+    setTimeout(() => {
+      toast.remove();
+    }, 300);
+  }, 3000);
+}
+
 function snakeToCamel(str) {
   return str
     .split('_')
@@ -638,7 +676,26 @@ function decorateSuccessScreen(screen) {
       e.preventDefault();
       openSharePopup(ShareType.LinkedIn, url);
     });
-    socialMediaSharingButtons.append(facebookButton, xButton, linkedinButton);
+
+    // Copy Link button with icon
+    const copyLinkButton = createTag('a', { 
+      href: '#', 
+      class: 'copy-link-btn',
+      'aria-label': 'Copy link'
+    });
+    copyLinkButton.innerHTML = `
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M16 1H4C2.9 1 2 1.9 2 3V17H4V3H16V1ZM19 5H8C6.9 5 6 5.9 6 7V21C6 22.1 6.9 23 8 23H19C20.1 23 21 22.1 21 21V7C21 5.9 20.1 5 19 5ZM19 21H8V7H19V21Z" fill="currentColor"/>
+      </svg>
+    `;
+
+    // Add click handler for copy link
+    copyLinkButton.addEventListener('click', (e) => {
+      e.preventDefault();
+      copyLinkToClipboard(url);
+    });
+
+    socialMediaSharingButtons.append(facebookButton, xButton, linkedinButton, copyLinkButton);
     const p = ss.querySelector(':scope > p:nth-of-type(2)');
     p.insertAdjacentElement('afterend', socialMediaDivider);
     socialMediaDivider.insertAdjacentElement('afterend', socialMediaSharingButtons);
