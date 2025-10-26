@@ -3,8 +3,6 @@
  * A grid-based event agenda/schedule display component
  */
 
-import { isAuthor } from '@dexter/dexterui-tools/lib/environment';
-import fetching from '@dexter/dexterui-tools/lib/utils/json/fetching';
 // TODO: This is a temporary implementation of the agenda block. It will be replaced with a more robust implementation in the future.
 const MINUTE_MS = 60 * 1000;
 const HOUR_MS = 60 * MINUTE_MS;
@@ -80,11 +78,6 @@ class AgendaBlock {
      * Initialize the component
      */
     async init() {
-        if (isAuthor()) {
-            this.renderAuthorMode();
-            return;
-        }
-
         this.render();
         await this.fetchSessions();
         this.processSessions();
@@ -106,19 +99,50 @@ class AgendaBlock {
     }
 
     /**
-     * Fetch sessions from Chimera API
+     * Fetch sessions from mock API
      */
     async fetchSessions() {
         try {
             this.state.isLoading = true;
             this.render();
 
-            const endpoint = this.buildEndpoint();
-            const response = await fetching(endpoint);
+            // Simulate API delay
+            await new Promise(resolve => setTimeout(resolve, 500));
+
+            // Mock data for testing
+            const mockResponse = {
+                cards: [
+                    {
+                        search: {
+                            sessionStartTime: Date.now() + (3 * 60 * 60 * 1000), // 3 hours from now
+                            sessionEndTime: Date.now() + (4 * 60 * 60 * 1000),   // 4 hours from now
+                        },
+                        contentArea: {
+                            title: 'Mock Session 1',
+                            description: 'This is a mock session for testing purposes',
+                        },
+                        overlayLink: '#',
+                        tags: ['track-1'],
+                        featured: false,
+                    },
+                    {
+                        search: {
+                            sessionStartTime: Date.now() + (5 * 60 * 60 * 1000), // 5 hours from now
+                            sessionEndTime: Date.now() + (6 * 60 * 60 * 1000),   // 6 hours from now
+                        },
+                        contentArea: {
+                            title: 'Mock Session 2',
+                            description: 'Another mock session for testing',
+                        },
+                        overlayLink: '#',
+                        tags: ['track-2'],
+                        featured: true,
+                    },
+                ]
+            };
             
-            if (response && response.cards) {
-                this.state.sessions = response.cards.filter(card => {
-                    // Filter out cards without required fields
+            if (mockResponse.cards) {
+                this.state.sessions = mockResponse.cards.filter(card => {
                     return card.search && card.contentArea;
                 });
             }
