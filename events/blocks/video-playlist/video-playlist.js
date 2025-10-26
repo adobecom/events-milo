@@ -11,6 +11,7 @@ import {
     VIDEO_ORIGIN, VIDEO_PLAYLIST_ID_URL_KEY, TOAST_CONTAINER_ID, EVENT_STATES,
     ANALYTICS, MOCK_API, PLAYLIST_SKIP_TO_ID, SOCIAL_ICONS
 } from './constants.js';
+import { initAPI, ENDPOINTS } from './api.js';
 
 const { createTag } = await import(`${LIBS}/utils/utils.js`);
 
@@ -377,9 +378,15 @@ class VideoPlaylist {
 
     async _setupFavorites() {
         try {
-            if (!await MOCK_API.isUserRegistered()) return;
+            // Check if user is registered using feds utilities
+            if (!window?.feds?.utilities?.getEventData) return;
+            
+            const eventData = await window.feds.utilities.getEventData();
+            if (!eventData?.isRegistered) return;
 
-            const favs = await MOCK_API.getFavorites();
+            const favs = await initAPI(ENDPOINTS.GET_FAVORITES);
+            if (!favs || !favs.sessionInterests) return;
+            
             const favIds = new Set(favs.sessionInterests.map(f => f.sessionID));
 
             // Create a map for faster lookups by videoId
@@ -433,8 +440,13 @@ class VideoPlaylist {
     async _toggleFavorite(btn, card) {
         try {
             btn.disabled = true;
-            const response = await MOCK_API.toggleFavorite(card.search.sessionId);
-            if (!response.success) throw new Error('API toggle failed.');
+            
+            // Get sessionTimeId from card data - this might need to be adjusted based on your data structure
+            const sessionTimeId = card.search.sessionTimeId || card.search.sessionId;
+            const sessionId = card.search.sessionId;
+            
+            const response = await initAPI(ENDPOINTS.TOGGLE_FAVORITES, sessionTimeId, sessionId);
+            if (!response) throw new Error('API toggle failed.');
 
             const svg = btn.querySelector('svg');
             const isFav = svg.classList.toggle('filled');
