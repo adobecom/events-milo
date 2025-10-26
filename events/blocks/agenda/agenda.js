@@ -5,7 +5,7 @@
 
 import { isAuthor } from '@dexter/dexterui-tools/lib/environment';
 import fetching from '@dexter/dexterui-tools/lib/utils/json/fetching';
-
+// TODO: This is a temporary implementation of the agenda block. It will be replaced with a more robust implementation in the future.
 const MINUTE_MS = 60 * 1000;
 const HOUR_MS = 60 * MINUTE_MS;
 const TIME_SLOT_MINUTES = 15; // Each column represents 15 minutes
