@@ -649,11 +649,9 @@ class AgendaBlock {
 }
 
 /**
- * Initialize all agenda blocks on the page
+ * Initialize agenda block
  */
-export function agendaBlock(element) {
-    return new AgendaBlock(element);
+export default function init(el) {
+    return new AgendaBlock(el);
 }
-
-export default agendaBlock;
 
