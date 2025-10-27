@@ -399,7 +399,7 @@ class VanillaAgendaBlock {
         this.render();
         this.attachEventListeners();
         this.setupStickyHeader();
-        this.startLiveUpdates();
+        // this.startLiveUpdates(); // Commented out to prevent auto-refresh
     }
 
     /**
@@ -879,6 +879,9 @@ class VanillaAgendaBlock {
      */
     startLiveUpdates() {
         // Update every 30 seconds to refresh live status
+        // Note: Removed auto-refresh to prevent UI flickering
+        // Uncomment if needed for production
+        /*
         setInterval(() => {
             this.state.sessions = this.state.sessions.map(session => ({
                 ...session,
@@ -889,6 +892,7 @@ class VanillaAgendaBlock {
             this.attachEventListeners();
             this.setupStickyHeader();
         }, 30000);
+        */
     }
 }
 
