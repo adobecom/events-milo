@@ -206,7 +206,7 @@
     height: 140px;
     display: flex;
     flex-direction: column;
-    justify-content: center;
+    box-sizing: border-box;
 }
 
 @media (max-width: 768px) {
