@@ -398,6 +398,7 @@ class VanillaAgendaBlock {
         await this.fetchAndProcessData();
         this.render();
         this.attachEventListeners();
+        this.setupStickyHeader();
         this.startLiveUpdates();
     }
 
@@ -827,6 +828,50 @@ class VanillaAgendaBlock {
     }
 
     /**
+     * Setup sticky header using IntersectionObserver
+     */
+    setupStickyHeader() {
+        const header = this.element.querySelector('.agenda-block__header');
+        if (!header) return;
+
+        const subNavHeight = this.getSubNavHeight();
+
+        // Use IntersectionObserver to detect when header scrolls out of view
+        const observer = new IntersectionObserver(([entry]) => {
+            if (entry.intersectionRatio < 1) {
+                header.classList.add('agenda-block__header--pinned');
+            } else {
+                header.classList.remove('agenda-block__header--pinned');
+            }
+        }, {
+            threshold: [1],
+            rootMargin: `-${subNavHeight}px 0px 0px 0px`
+        });
+
+        observer.observe(header);
+    }
+
+    /**
+     * Get height of sub-navigation (sticky header + secondary nav)
+     */
+    getSubNavHeight() {
+        let top = 0;
+        
+        const stickyHeader = document.querySelector('.feds-header-wrapper--sticky');
+        const subNav = document.getElementById('AdobeSecondaryNav');
+        
+        if (subNav) {
+            top += subNav.offsetHeight;
+        }
+        
+        if (stickyHeader && !stickyHeader.classList.contains('feds-header-wrapper--retracted')) {
+            top += stickyHeader.offsetHeight;
+        }
+        
+        return top;
+    }
+
+    /**
      * Start live updates interval
      */
     startLiveUpdates() {
@@ -839,6 +884,7 @@ class VanillaAgendaBlock {
             }));
             this.render();
             this.attachEventListeners();
+            this.setupStickyHeader();
         }, 30000);
     }
 }
