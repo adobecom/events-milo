@@ -4,14 +4,26 @@
 
 .agenda-block {
     width: 100%;
-    margin: 0 auto;
-    padding: 2rem 1rem;
+    margin: 0;
+    padding: 0;
     background-color: #ffffff;
 }
 
 .agenda-block__container {
-    max-width: 1400px;
-    margin: 0 auto;
+    max-width: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+.agenda-block__gradient-bar {
+    height: 4px;
+    background: linear-gradient(
+        to right,
+        #8B5CF6 0%,
+        #06B6D4 50%,
+        #0EA5E9 100%
+    );
+    width: 100%;
 }
 
 .agenda-block__loading {
@@ -90,59 +102,65 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 2rem;
-    padding-bottom: 1rem;
-    border-bottom: 2px solid #e0e0e0;
+    padding: 1rem 2rem;
+    border-bottom: 1px solid #e0e0e0;
     gap: 1rem;
-    flex-wrap: wrap;
 }
 
 @media (max-width: 768px) {
     .agenda-block__header {
         flex-direction: column;
         align-items: stretch;
+        padding: 1rem;
     }
+}
+
+.agenda-block__watch-nav {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.agenda-block__watch-label {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #333;
 }
 
 .agenda-block__day-selector {
     display: flex;
-    gap: 0.5rem;
-    flex-wrap: wrap;
+    gap: 0;
 }
 
-.agenda-block__day-btn {
-    padding: 0.625rem 1.25rem;
-    background-color: #ffffff;
-    border: 1px solid #e0e0e0;
-    border-radius: 4px;
+.agenda-block__day-tab {
+    padding: 0.5rem 1rem;
+    background-color: transparent;
+    border: none;
+    border-bottom: 2px solid transparent;
     font-size: 0.875rem;
-    font-weight: 500;
-    color: #333;
+    font-weight: 400;
+    color: #666;
     cursor: pointer;
     transition: all 0.2s ease;
+    white-space: nowrap;
 }
 
-.agenda-block__day-btn:hover {
-    background-color: #f5f5f5;
-    border-color: #1473e6;
+.agenda-block__day-tab:hover {
+    color: #333;
 }
 
-.agenda-block__day-btn:focus {
+.agenda-block__day-tab:focus {
     outline: 2px solid #1473e6;
     outline-offset: 2px;
 }
 
-.agenda-block__day-btn.active {
-    background-color: #1473e6;
-    border-color: #1473e6;
-    color: #ffffff;
+.agenda-block__day-tab.active {
+    color: #1473e6;
+    border-bottom-color: #1473e6;
+    font-weight: 600;
 }
 
-.agenda-block__day-btn.active:hover {
-    background-color: #0d66d0;
-}
-
-.agenda-block__day-btn:disabled {
+.agenda-block__day-tab:disabled {
     opacity: 0.5;
     cursor: not-allowed;
 }
@@ -236,37 +254,29 @@
 
 .agenda-block__pagination {
     display: flex;
-    justify-content: center;
     gap: 0.5rem;
-    padding: 0.5rem 0;
 }
 
 .agenda-block__pagination-btn {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 40px;
-    height: 40px;
+    width: 36px;
+    height: 36px;
     background-color: #ffffff;
     border: 1px solid #e0e0e0;
     border-radius: 50%;
     cursor: pointer;
     transition: all 0.2s ease;
-}
-
-.agenda-block__pagination-btn svg {
-    width: 20px;
-    height: 20px;
-    fill: #333;
+    font-size: 1.25rem;
+    line-height: 1;
+    color: #1473e6;
+    padding: 0;
 }
 
 .agenda-block__pagination-btn:hover:not(:disabled) {
     background-color: #f5f5f5;
     border-color: #1473e6;
-}
-
-.agenda-block__pagination-btn:hover:not(:disabled) svg {
-    fill: #1473e6;
 }
 
 .agenda-block__pagination-btn:focus {
@@ -277,6 +287,7 @@
 .agenda-block__pagination-btn:disabled {
     opacity: 0.3;
     cursor: not-allowed;
+    color: #999;
 }
 
 .agenda-block__grid {

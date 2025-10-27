@@ -466,26 +466,22 @@ class VanillaAgendaBlock {
      */
     renderHeader() {
         return `
+            <div class="agenda-block__gradient-bar"></div>
             <div class="agenda-block__header">
-                <div class="agenda-block__day-selector">
-                    ${this.state.days.map((day, index) => `
-                        <button 
-                            class="agenda-block__day-btn ${index === this.state.currentDay ? 'active' : ''}"
-                            data-day-index="${index}">
-                            ${day.label}
-                        </button>
-                    `).join('')}
+                <div class="agenda-block__watch-nav">
+                    <span class="agenda-block__watch-label">Watch:</span>
+                    <div class="agenda-block__day-selector">
+                        ${this.state.days.map((day, index) => `
+                            <button 
+                                class="agenda-block__day-tab ${index === this.state.currentDay ? 'active' : ''}"
+                                data-day-index="${index}">
+                                ${day.label}
+                            </button>
+                        `).join('')}
+                    </div>
                 </div>
-                <div class="agenda-block__legend">
-                    <span class="agenda-block__legend-item">
-                        <span class="agenda-block__legend-badge live">${this.config.labels.liveLabel}</span>
-                    </span>
-                    <span class="agenda-block__legend-item">
-                        <span class="agenda-block__legend-badge featured">${this.config.labels.featuredLabel}</span>
-                    </span>
-                    <span class="agenda-block__legend-item">
-                        <span class="agenda-block__legend-badge on-demand">${this.config.labels.onDemandLabel}</span>
-                    </span>
+                <div class="agenda-block__pagination">
+                    ${this.renderPagination()}
                 </div>
             </div>
             ${this.renderTracksColumnWithGrid()}
@@ -507,9 +503,6 @@ class VanillaAgendaBlock {
                     </div>
                     <div class="agenda-block__grid-container">
                         ${this.renderGrid()}
-                    </div>
-                    <div class="agenda-block__pagination">
-                        ${this.renderPagination()}
                     </div>
                 </div>
             </div>
