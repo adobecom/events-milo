@@ -519,7 +519,7 @@
 }
 
 .agenda-block__track-empty {
-    /* Styles applied inline */
+    border-radius: 4px;
 }
 
 
