@@ -837,7 +837,7 @@ class VanillaAgendaBlock {
         const globalNavHeight = this.getSubNavHeight();
 
         // Set CSS variable for sticky top position
-        header.style.setProperty('--global-nav-height', `${globalNavHeight}px`);
+        header.style.setProperty('top', `${globalNavHeight}px`);
 
         // Use IntersectionObserver to detect when header scrolls out of view
         const observer = new IntersectionObserver(([entry]) => {
