@@ -517,14 +517,18 @@
 }
 
 .agenda-block__track-empty {
-    grid-column: 1 / -1;
     min-height: 140px;
-    background-image: repeating-linear-gradient(
-        45deg,
-        #fafafa 0,
-        #fafafa 10px,
-        #f0f0f0 10px,
-        #f0f0f0 20px
+    background-color: #f8f8f8;
+    border: 1px solid #d5d5d5;
+    background-image: linear-gradient(
+        135deg,
+        #d5d5d5 4.5%,
+        rgba(0, 0, 0, 0) 4.5%,
+        rgba(0, 0, 0, 0) 50%,
+        #d5d5d5 50%,
+        #d5d5d5 54.55%,
+        rgba(0, 0, 0, 0) 54.55%,
+        rgba(0, 0, 0, 0) 100%
     );
 }
 

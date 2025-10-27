@@ -592,14 +592,14 @@ class VanillaAgendaBlock {
      * Render sessions for a track
      */
     renderTrackSessions(sessions, currentDay) {
-        if (sessions.length === 0) {
-            return '<div class="agenda-block__track-empty"></div>';
-        }
-
         const dayStartTime = new Date(currentDay.date + 'T08:00:00').getTime();
         const visibleStart = dayStartTime + (this.state.timeCursor * TIME_SLOT_DURATION * MINUTE_MS);
-
-        return sessions.map(session => {
+        
+        // Initialize all cells as empty
+        const cells = Array(VISIBLE_TIME_SLOTS).fill(null);
+        
+        // Fill in session cells
+        sessions.forEach(session => {
             const startTime = new Date(session.sessionStartTime).getTime();
             const endTime = new Date(session.sessionEndTime).getTime();
             const duration = endTime - startTime;
@@ -608,32 +608,39 @@ class VanillaAgendaBlock {
             const startOffset = (startTime - visibleStart) / (TIME_SLOT_DURATION * MINUTE_MS);
             const durationSlots = Math.ceil(duration / (TIME_SLOT_DURATION * MINUTE_MS));
 
-            if (startOffset < 0 || startOffset >= VISIBLE_TIME_SLOTS) {
-                return ''; // Session not in visible range
-            }
-
-            const track = this.state.tracks.find(t => t.tagId === session.sessionTrack.tagId);
-
-            return `
-                <a 
-                    href="${session.cardUrl}"
-                    class="agenda-block__session ${session.isFeatured ? 'featured' : ''} ${session.isLive ? 'live' : ''}"
-                    style="
-                        grid-column: ${Math.floor(startOffset) + 1} / span ${durationSlots};
-                        ${session.isFeatured ? `border-left-color: ${track.color};` : ''}
-                    ">
-                    <div class="agenda-block__session-content">
-                        <div class="agenda-block__session-title">${session.sessionTitle}</div>
-                        <div class="agenda-block__session-time">
-                            ${formatTime(startTime)} - ${formatTime(endTime)}
+            if (startOffset >= 0 && startOffset < VISIBLE_TIME_SLOTS) {
+                const track = this.state.tracks.find(t => t.tagId === session.sessionTrack.tagId);
+                const gridStart = Math.floor(startOffset) + 1;
+                
+                cells[Math.floor(startOffset)] = `
+                    <a 
+                        href="${session.cardUrl}"
+                        class="agenda-block__session ${session.isFeatured ? 'featured' : ''} ${session.isLive ? 'live' : ''}"
+                        style="
+                            grid-column: ${gridStart} / span ${durationSlots};
+                            ${session.isFeatured ? `border-left-color: ${track.color};` : ''}
+                        ">
+                        <div class="agenda-block__session-content">
+                            <div class="agenda-block__session-title">${session.sessionTitle}</div>
+                            <div class="agenda-block__session-time">
+                                ${formatTime(startTime)} - ${formatTime(endTime)}
+                            </div>
                         </div>
-                    </div>
-                    <div class="agenda-block__session-badges">
-                        ${session.isLive ? `<span class="agenda-block__session-badge live">${this.config.labels.liveLabel}</span>` : ''}
-                        ${session.isOnDemand ? `<span class="agenda-block__session-badge on-demand">${this.config.labels.onDemandLabel}</span>` : ''}
-                    </div>
-                </a>
-            `;
+                        <div class="agenda-block__session-badges">
+                            ${session.isLive ? `<span class="agenda-block__session-badge live">${this.config.labels.liveLabel}</span>` : ''}
+                            ${session.isOnDemand ? `<span class="agenda-block__session-badge on-demand">${this.config.labels.onDemandLabel}</span>` : ''}
+                        </div>
+                    </a>
+                `;
+            }
+        });
+        
+        // Fill remaining cells with empty pattern
+        return cells.map((cell, index) => {
+            if (cell !== null) {
+                return cell;
+            }
+            return `<div class="agenda-block__track-empty" style="grid-column: ${index + 1};"></div>`;
         }).join('');
     }
 
