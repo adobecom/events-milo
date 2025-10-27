@@ -534,7 +534,6 @@ class VanillaAgendaBlock {
         return `
             <div class="agenda-block__body">
                 <div class="agenda-block__tracks-column">
-                    <div class="agenda-block__track-header-placeholder"></div>
                     ${this.renderTracksColumn()}
                 </div>
                 <div class="agenda-block__grid-wrapper">
