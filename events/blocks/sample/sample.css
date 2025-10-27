@@ -102,18 +102,12 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 1rem 2rem;
-    border-bottom: 1px solid #e0e0e0;
     gap: 1rem;
     background-color: #ffffff;
     transition: box-shadow 0.2s ease;
-}
-
-.agenda-block__header--pinned {
     position: sticky;
-    top: var(--global-nav-height, 64px);
-    z-index: 100;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    z-index: 100;
 }
 
 .agenda-block__header--pinned > :first-child {
