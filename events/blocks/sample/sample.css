@@ -194,10 +194,16 @@
     background-color: #4a4a4a;
     color: #ffffff;
     border-bottom: 1px solid #5a5a5a;
-    min-height: 100px;
+    min-height: 140px;
     display: flex;
     flex-direction: column;
     justify-content: center;
+}
+
+@media (max-width: 768px) {
+    .agenda-block__track-label {
+        min-height: 120px;
+    }
 }
 
 .agenda-block__track-title-in-label {
