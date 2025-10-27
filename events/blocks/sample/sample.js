@@ -834,7 +834,10 @@ class VanillaAgendaBlock {
         const header = this.element.querySelector('.agenda-block__header');
         if (!header) return;
 
-        const subNavHeight = this.getSubNavHeight();
+        const globalNavHeight = this.getSubNavHeight();
+
+        // Set CSS variable for sticky top position
+        header.style.setProperty('--global-nav-height', `${globalNavHeight}px`);
 
         // Use IntersectionObserver to detect when header scrolls out of view
         const observer = new IntersectionObserver(([entry]) => {
@@ -845,7 +848,7 @@ class VanillaAgendaBlock {
             }
         }, {
             threshold: [1],
-            rootMargin: `-${subNavHeight}px 0px 0px 0px`
+            rootMargin: `-${globalNavHeight}px 0px 0px 0px`
         });
 
         observer.observe(header);
