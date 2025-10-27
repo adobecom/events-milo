@@ -525,7 +525,7 @@ class VanillaAgendaBlock {
     renderTimeHeader() {
         const timeSlots = this.getVisibleTimeSlots();
         return timeSlots.map(time => `
-            <div class="agenda-block__time-cell">${this.formatTime(time)}</div>
+            <div class="agenda-block__time-cell">${formatTime(time)}</div>
         `).join('');
     }
 
