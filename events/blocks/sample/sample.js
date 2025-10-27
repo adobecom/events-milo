@@ -238,6 +238,14 @@ const AGENDA_CONFIG = {
         { id: 'track5', tagId: 'track5', title: 'Emerging Tech', description: 'AI, AR, and future innovations', color: '#E63946' }
     ],
     
+    // Place/Timezone Options
+    places: [
+        { id: 'americas', name: 'Americas', timezone: 'PST' },
+        { id: 'emea', name: 'Europe, Middle East, and Africa', timezone: 'CET' },
+        { id: 'apac', name: 'Asia Pacific', timezone: 'JST' }
+    ],
+    defaultPlace: 'americas',
+    
     // Labels (from AEM dialog)
     labels: {
         liveLabel: 'LIVE',
@@ -245,7 +253,9 @@ const AGENDA_CONFIG = {
         featuredLabel: 'FEATURED',
         timeZoneLabel: 'Times in',
         loadingText: 'Loading agenda...',
-        noSessionsText: 'No sessions available for this day'
+        noSessionsText: 'No sessions available for this day',
+        prevAriaLabel: 'Previous',
+        nextAriaLabel: 'Next'
     },
     
     // Styling (from AEM dialog)
@@ -374,7 +384,9 @@ class VanillaAgendaBlock {
             currentDay: 0,
             timeCursor: 0, // Current time offset in slots
             isMobile: window.innerWidth < 768,
-            isLoading: true
+            isLoading: true,
+            currentPlace: this.config.defaultPlace,
+            isDropdownOpen: false
         };
         
         this.init();
@@ -470,14 +482,33 @@ class VanillaAgendaBlock {
             <div class="agenda-block__header">
                 <div class="agenda-block__watch-nav">
                     <span class="agenda-block__watch-label">Watch:</span>
-                    <div class="agenda-block__day-selector">
-                        ${this.state.days.map((day, index) => `
+                    <div class="agenda-block__place-selector">
+                        ${this.config.places.map(place => `
                             <button 
-                                class="agenda-block__day-tab ${index === this.state.currentDay ? 'active' : ''}"
-                                data-day-index="${index}">
-                                ${day.label}
+                                class="agenda-block__place-tab ${place.id === this.state.currentPlace ? 'active' : ''}"
+                                data-place-id="${place.id}">
+                                ${place.name}
                             </button>
                         `).join('')}
+                    </div>
+                    <div class="agenda-block__day-dropdown-container">
+                        <button 
+                            class="agenda-block__day-dropdown-toggle ${this.state.isDropdownOpen ? 'open' : ''}"
+                            data-dropdown-toggle="day-dropdown"
+                            aria-expanded="${this.state.isDropdownOpen}">
+                            <span>${this.state.days[this.state.currentDay]?.label || 'Select day'}</span>
+                            <span class="agenda-block__day-dropdown-chevron">▼</span>
+                        </button>
+                        <div class="agenda-block__day-dropdown ${this.state.isDropdownOpen ? 'open' : ''}" id="day-dropdown">
+                            ${this.state.days.map((day, index) => `
+                                <button 
+                                    class="agenda-block__day-dropdown-item ${index === this.state.currentDay ? 'active' : ''}"
+                                    data-day-index="${index}">
+                                    <span>${day.label}</span>
+                                    ${index === this.state.currentDay ? '<span class="agenda-block__day-checkmark">✓</span>' : ''}
+                                </button>
+                            `).join('')}
+                        </div>
                     </div>
                 </div>
                 <div class="agenda-block__pagination">
@@ -673,12 +704,42 @@ class VanillaAgendaBlock {
      * Attach event listeners
      */
     attachEventListeners() {
-        // Day selector
-        this.element.querySelectorAll('.agenda-block__day-btn').forEach(btn => {
+        // Place selector
+        this.element.querySelectorAll('.agenda-block__place-tab').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const placeId = e.currentTarget.dataset.placeId;
+                this.changePlace(placeId);
+            });
+        });
+
+        // Day dropdown toggle
+        const dropdownToggle = this.element.querySelector('.agenda-block__day-dropdown-toggle');
+        if (dropdownToggle) {
+            dropdownToggle.addEventListener('click', () => {
+                this.toggleDropdown();
+            });
+        }
+
+        // Day dropdown items
+        this.element.querySelectorAll('.agenda-block__day-dropdown-item').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 const dayIndex = parseInt(e.currentTarget.dataset.dayIndex, 10);
                 this.changeDay(dayIndex);
+                this.state.isDropdownOpen = false;
+                this.render();
+                this.attachEventListeners();
             });
+        });
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!this.element.contains(e.target)) {
+                if (this.state.isDropdownOpen) {
+                    this.state.isDropdownOpen = false;
+                    this.render();
+                    this.attachEventListeners();
+                }
+            }
         });
 
         // Pagination
@@ -700,6 +761,25 @@ class VanillaAgendaBlock {
         }, 250);
         
         window.addEventListener('resize', resizeHandler);
+    }
+
+    /**
+     * Toggle dropdown
+     */
+    toggleDropdown() {
+        this.state.isDropdownOpen = !this.state.isDropdownOpen;
+        this.render();
+        this.attachEventListeners();
+    }
+
+    /**
+     * Change current place
+     */
+    changePlace(placeId) {
+        this.state.currentPlace = placeId;
+        // In a real implementation, you would convert times based on timezone here
+        this.render();
+        this.attachEventListeners();
     }
 
     /**
