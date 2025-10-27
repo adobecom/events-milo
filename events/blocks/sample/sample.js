@@ -640,7 +640,7 @@ class VanillaAgendaBlock {
             if (cell !== null) {
                 return cell;
             }
-            return `<div class="agenda-block__track-empty" style="grid-area: 1 / ${index + 1} / 2 / ${index + 2}; background-color: rgb(248, 248, 248); border-color: rgb(213, 213, 213); background-image: linear-gradient(135deg, rgb(213, 213, 213) 4.5%, rgba(0, 0, 0, 0) 4.5%, rgba(0, 0, 0, 0) 50%, rgb(213, 213, 213) 50%, rgb(213, 213, 213) 54.55%, rgba(0, 0, 0, 0) 54.55%, rgba(0, 0, 0, 0) 100%);"></div>`;
+            return `<div class="agenda-block__track-empty" style="grid-area: 1 / ${index + 1} / 2 / ${index + 2}; background-color: rgb(248, 248, 248); border-color: rgb(213, 213, 213); background-image: linear-gradient(135deg, rgb(213, 213, 213) 4.5%, rgba(0, 0, 0, 0) 4.5%, rgba(0, 0, 0, 0) 50%, rgb(213, 213, 213) 50%, rgb(213, 213, 213) 54.55%, rgba(0, 0, 0, 0) 54.55%, rgba(0, 0, 0, 0) 100%); background-size: 15.56px 15.56px;"></div>`;
         }).join('');
     }
 
