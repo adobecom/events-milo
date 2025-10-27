@@ -455,22 +455,6 @@ class VanillaAgendaBlock {
         const html = `
             <div class="agenda-block__container">
                 ${this.renderHeader()}
-                <div class="agenda-block__body">
-                    <div class="agenda-block__tracks-column">
-                        ${this.renderTracksColumn()}
-                    </div>
-                    <div class="agenda-block__grid-wrapper">
-                        <div class="agenda-block__time-header">
-                            ${this.renderTimeHeader()}
-                        </div>
-                        <div class="agenda-block__grid-container">
-                            ${this.renderGrid()}
-                        </div>
-                        <div class="agenda-block__pagination">
-                            ${this.renderPagination()}
-                        </div>
-                    </div>
-                </div>
             </div>
         `;
         
@@ -502,6 +486,31 @@ class VanillaAgendaBlock {
                     <span class="agenda-block__legend-item">
                         <span class="agenda-block__legend-badge on-demand">${this.config.labels.onDemandLabel}</span>
                     </span>
+                </div>
+            </div>
+            ${this.renderTracksColumnWithGrid()}
+        `;
+    }
+
+    /**
+     * Render combined tracks column with grid wrapper
+     */
+    renderTracksColumnWithGrid() {
+        return `
+            <div class="agenda-block__body">
+                <div class="agenda-block__tracks-column">
+                    ${this.renderTracksColumn()}
+                </div>
+                <div class="agenda-block__grid-wrapper">
+                    <div class="agenda-block__time-header">
+                        ${this.renderTimeHeader()}
+                    </div>
+                    <div class="agenda-block__grid-container">
+                        ${this.renderGrid()}
+                    </div>
+                    <div class="agenda-block__pagination">
+                        ${this.renderPagination()}
+                    </div>
                 </div>
             </div>
         `;

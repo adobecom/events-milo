@@ -110,9 +110,9 @@
     flex-wrap: wrap;
 }
 
-.agenda-block__day-button {
+.agenda-block__day-btn {
     padding: 0.625rem 1.25rem;
-    background-color: #f5f5f5;
+    background-color: #ffffff;
     border: 1px solid #e0e0e0;
     border-radius: 4px;
     font-size: 0.875rem;
@@ -122,34 +122,123 @@
     transition: all 0.2s ease;
 }
 
-.agenda-block__day-button:hover {
-    background-color: #e8e8e8;
-    border-color: #d0d0d0;
+.agenda-block__day-btn:hover {
+    background-color: #f5f5f5;
+    border-color: #1473e6;
 }
 
-.agenda-block__day-button:focus {
+.agenda-block__day-btn:focus {
     outline: 2px solid #1473e6;
     outline-offset: 2px;
 }
 
-.agenda-block__day-button.active {
+.agenda-block__day-btn.active {
     background-color: #1473e6;
     border-color: #1473e6;
     color: #ffffff;
 }
 
-.agenda-block__day-button.active:hover {
+.agenda-block__day-btn.active:hover {
     background-color: #0d66d0;
 }
 
-.agenda-block__day-button:disabled {
+.agenda-block__day-btn:disabled {
     opacity: 0.5;
     cursor: not-allowed;
 }
 
+.agenda-block__legend {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+}
+
+.agenda-block__legend-item {
+    display: inline-flex;
+    align-items: center;
+}
+
+.agenda-block__legend-badge {
+    display: inline-block;
+    padding: 0.25rem 0.5rem;
+    font-size: 0.625rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    border-radius: 3px;
+}
+
+.agenda-block__legend-badge.live {
+    background-color: #ff6b00;
+    color: #ffffff;
+}
+
+.agenda-block__legend-badge.featured {
+    background-color: #1473e6;
+    color: #ffffff;
+}
+
+.agenda-block__legend-badge.on-demand {
+    background-color: #00A38F;
+    color: #ffffff;
+}
+
+.agenda-block__body {
+    display: grid;
+    grid-template-columns: 200px 1fr;
+    gap: 0.5rem;
+    margin-top: 1rem;
+}
+
+@media (max-width: 1024px) {
+    .agenda-block__body {
+        grid-template-columns: 150px 1fr;
+    }
+}
+
+@media (max-width: 768px) {
+    .agenda-block__body {
+        grid-template-columns: 100px 1fr;
+    }
+}
+
+.agenda-block__tracks-column {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.agenda-block__grid-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.agenda-block__time-header {
+    display: grid;
+    grid-template-columns: repeat(16, 1fr);
+    gap: 0.5rem;
+    padding: 0.5rem;
+    background-color: #f5f5f5;
+    border-radius: 4px;
+}
+
+.agenda-block__time-cell {
+    text-align: center;
+    font-size: 0.75rem;
+    color: #666;
+    font-weight: 500;
+    grid-column: span 4;
+}
+
+.agenda-block__grid-container {
+    position: relative;
+}
+
 .agenda-block__pagination {
     display: flex;
+    justify-content: center;
     gap: 0.5rem;
+    padding: 0.5rem 0;
 }
 
 .agenda-block__pagination-btn {
@@ -160,14 +249,14 @@
     height: 40px;
     background-color: #ffffff;
     border: 1px solid #e0e0e0;
-    border-radius: 4px;
+    border-radius: 50%;
     cursor: pointer;
     transition: all 0.2s ease;
 }
 
 .agenda-block__pagination-btn svg {
-    width: 24px;
-    height: 24px;
+    width: 20px;
+    height: 20px;
     fill: #333;
 }
 
@@ -279,19 +368,33 @@
     }
 }
 
-.agenda-block__track-sessions {
-    position: relative;
+.agenda-block__track-row {
     display: grid;
     grid-template-columns: repeat(16, 1fr);
     gap: 0.5rem;
     min-height: 140px;
+    position: relative;
 }
 
 @media (max-width: 768px) {
-    .agenda-block__track-sessions {
+    .agenda-block__track-row {
         min-height: 120px;
     }
 }
+
+.agenda-block__track-empty {
+    grid-column: 1 / -1;
+    min-height: 140px;
+    background-image: repeating-linear-gradient(
+        45deg,
+        #fafafa 0,
+        #fafafa 10px,
+        #f0f0f0 10px,
+        #f0f0f0 20px
+    );
+}
+
+
 
 .agenda-block__session {
     position: relative;
@@ -306,6 +409,8 @@
     color: inherit;
     transition: all 0.2s ease;
     overflow: hidden;
+    min-height: 120px;
+    margin-right: 0.5rem;
 }
 
 .agenda-block__session:hover {
@@ -338,6 +443,19 @@
 
 .agenda-block__session-content {
     flex: 1;
+}
+
+.agenda-block__session-time {
+    font-size: 0.75rem;
+    color: #666;
+    margin-top: 0.25rem;
+}
+
+.agenda-block__session-badges {
+    display: flex;
+    gap: 0.25rem;
+    margin-top: 0.5rem;
+    flex-wrap: wrap;
 }
 
 .agenda-block__session-title {
