@@ -134,6 +134,19 @@
     display: flex;
     align-items: center;
     gap: 0.75rem;
+    max-width: 200px;
+}
+
+@media (max-width: 1024px) {
+    .agenda-block__watch-nav-row {
+        max-width: 150px;
+    }
+}
+
+@media (max-width: 768px) {
+    .agenda-block__watch-nav-row {
+        max-width: 100px;
+    }
 }
 
 .agenda-block__watch-label {
@@ -188,6 +201,19 @@
 
 .agenda-block__date-row {
     align-items: flex-start;
+    max-width: 200px;
+}
+
+@media (max-width: 1024px) {
+    .agenda-block__date-row {
+        max-width: 150px;
+    }
+}
+
+@media (max-width: 768px) {
+    .agenda-block__date-row {
+        max-width: 100px;
+    }
 }
 
 .agenda-block__day-dropdown-container {
@@ -354,7 +380,7 @@
 .agenda-block__time-header {
     display: grid;
     grid-template-columns: repeat(5, 1fr);
-    gap: 0;
+    gap: 6px;
     flex: 1;
     margin-left: 1rem;
 }
