@@ -276,7 +276,7 @@ const AGENDA_CONFIG = {
 const MINUTE_MS = 60 * 1000;
 const HOUR_MS = 60 * MINUTE_MS;
 const TIME_SLOT_DURATION = 15; // 15 minutes per time slot
-const VISIBLE_TIME_SLOTS = 16; // Show 4 hours (16 × 15min slots)
+const VISIBLE_TIME_SLOTS = 5; // Show 5 time slots
 
 // ============================================================================
 // HELPER FUNCTIONS (replacing Dexter utilities)
@@ -295,11 +295,9 @@ function formatDate(date) {
  */
 function formatTime(timestamp) {
     const date = new Date(timestamp);
-    return date.toLocaleTimeString('en-US', { 
-        hour: 'numeric', 
-        minute: '2-digit',
-        hour12: true 
-    });
+    const hours = date.getHours().toString().padStart(2, '0');
+    const minutes = date.getMinutes().toString().padStart(2, '0');
+    return `${hours}:${minutes}`;
 }
 
 /**
@@ -496,7 +494,7 @@ class VanillaAgendaBlock {
                             ${this.renderPagination()}
                         </div>
                     </div>
-                    <div class="agenda-block__watch-nav-row">
+                    <div class="agenda-block__watch-nav-row agenda-block__date-row">
                         <div class="agenda-block__day-dropdown-container">
                             <button 
                                 class="agenda-block__day-dropdown-toggle ${this.state.isDropdownOpen ? 'open' : ''}"
@@ -515,9 +513,9 @@ class VanillaAgendaBlock {
                                     </button>
                                 `).join('')}
                             </div>
-                        </div>
-                        <div class="agenda-block__timezone-label">
-                            Date and times in IST
+                            <div class="agenda-block__timezone-label">
+                                Date and times in IST
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -808,7 +806,7 @@ class VanillaAgendaBlock {
      * Paginate time slots
      */
     paginate(direction) {
-        const step = 4; // Move by 1 hour (4 slots)
+        const step = VISIBLE_TIME_SLOTS; // Move by visible slots
         const maxOffset = this.getMaxTimeOffset();
 
         if (direction === 'next' && this.state.timeCursor < maxOffset) {
