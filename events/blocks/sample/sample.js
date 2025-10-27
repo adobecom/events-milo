@@ -517,6 +517,9 @@ class VanillaAgendaBlock {
                                 Date and times in IST
                             </div>
                         </div>
+                        <div class="agenda-block__time-header">
+                            ${this.renderTimeHeader()}
+                        </div>
                     </div>
                 </div>
             </div>
@@ -531,12 +534,10 @@ class VanillaAgendaBlock {
         return `
             <div class="agenda-block__body">
                 <div class="agenda-block__tracks-column">
+                    <div class="agenda-block__track-header-placeholder"></div>
                     ${this.renderTracksColumn()}
                 </div>
                 <div class="agenda-block__grid-wrapper">
-                    <div class="agenda-block__time-header">
-                        ${this.renderTimeHeader()}
-                    </div>
                     <div class="agenda-block__grid-container">
                         ${this.renderGrid()}
                     </div>

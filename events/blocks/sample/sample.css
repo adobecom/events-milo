@@ -189,6 +189,10 @@
     gap: 0.25rem;
 }
 
+.agenda-block__track-header-placeholder {
+    height: 60px;
+}
+
 .agenda-block__day-dropdown-toggle {
     display: flex;
     align-items: center;
@@ -307,8 +311,11 @@
     display: grid;
     grid-template-columns: repeat(5, 1fr);
     gap: 0;
-    padding: 0.5rem 0;
-    background-color: #fafafa;
+    flex: 1;
+    margin-left: 1rem;
+}
+
+.agenda-block__date-row .agenda-block__time-header {
     border-bottom: 2px solid #1473e6;
 }
 
