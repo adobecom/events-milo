@@ -481,38 +481,45 @@ class VanillaAgendaBlock {
             <div class="agenda-block__gradient-bar"></div>
             <div class="agenda-block__header">
                 <div class="agenda-block__watch-nav">
-                    <span class="agenda-block__watch-label">Watch:</span>
-                    <div class="agenda-block__place-selector">
-                        ${this.config.places.map(place => `
-                            <button 
-                                class="agenda-block__place-tab ${place.id === this.state.currentPlace ? 'active' : ''}"
-                                data-place-id="${place.id}">
-                                ${place.name}
-                            </button>
-                        `).join('')}
-                    </div>
-                    <div class="agenda-block__day-dropdown-container">
-                        <button 
-                            class="agenda-block__day-dropdown-toggle ${this.state.isDropdownOpen ? 'open' : ''}"
-                            data-dropdown-toggle="day-dropdown"
-                            aria-expanded="${this.state.isDropdownOpen}">
-                            <span>${this.state.days[this.state.currentDay]?.label || 'Select day'}</span>
-                            <span class="agenda-block__day-dropdown-chevron">▼</span>
-                        </button>
-                        <div class="agenda-block__day-dropdown ${this.state.isDropdownOpen ? 'open' : ''}" id="day-dropdown">
-                            ${this.state.days.map((day, index) => `
+                    <div class="agenda-block__watch-nav-row">
+                        <span class="agenda-block__watch-label">Watch:</span>
+                        <div class="agenda-block__place-selector">
+                            ${this.config.places.map(place => `
                                 <button 
-                                    class="agenda-block__day-dropdown-item ${index === this.state.currentDay ? 'active' : ''}"
-                                    data-day-index="${index}">
-                                    <span>${day.label}</span>
-                                    ${index === this.state.currentDay ? '<span class="agenda-block__day-checkmark">✓</span>' : ''}
+                                    class="agenda-block__place-tab ${place.id === this.state.currentPlace ? 'active' : ''}"
+                                    data-place-id="${place.id}">
+                                    ${place.name}
                                 </button>
                             `).join('')}
                         </div>
+                        <div class="agenda-block__pagination">
+                            ${this.renderPagination()}
+                        </div>
                     </div>
-                </div>
-                <div class="agenda-block__pagination">
-                    ${this.renderPagination()}
+                    <div class="agenda-block__watch-nav-row">
+                        <div class="agenda-block__day-dropdown-container">
+                            <button 
+                                class="agenda-block__day-dropdown-toggle ${this.state.isDropdownOpen ? 'open' : ''}"
+                                data-dropdown-toggle="day-dropdown"
+                                aria-expanded="${this.state.isDropdownOpen}">
+                                <span>${this.state.days[this.state.currentDay]?.label || 'Select day'}</span>
+                                <span class="agenda-block__day-dropdown-chevron">▼</span>
+                            </button>
+                            <div class="agenda-block__day-dropdown ${this.state.isDropdownOpen ? 'open' : ''}" id="day-dropdown">
+                                ${this.state.days.map((day, index) => `
+                                    <button 
+                                        class="agenda-block__day-dropdown-item ${index === this.state.currentDay ? 'active' : ''}"
+                                        data-day-index="${index}">
+                                        <span>${day.label}</span>
+                                        ${index === this.state.currentDay ? '<span class="agenda-block__day-checkmark">✓</span>' : ''}
+                                    </button>
+                                `).join('')}
+                            </div>
+                        </div>
+                        <div class="agenda-block__timezone-label">
+                            Date and times in IST
+                        </div>
+                    </div>
                 </div>
             </div>
             ${this.renderTracksColumnWithGrid()}

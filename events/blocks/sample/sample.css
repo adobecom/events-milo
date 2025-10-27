@@ -117,6 +117,13 @@
 
 .agenda-block__watch-nav {
     display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    width: 100%;
+}
+
+.agenda-block__watch-nav-row {
+    display: flex;
     align-items: center;
     gap: 0.75rem;
 }
@@ -125,6 +132,12 @@
     font-size: 0.875rem;
     font-weight: 500;
     color: #333;
+}
+
+.agenda-block__timezone-label {
+    margin-left: 1rem;
+    font-size: 0.75rem;
+    color: #666;
 }
 
 .agenda-block__place-selector {
@@ -167,7 +180,6 @@
 
 .agenda-block__day-dropdown-container {
     position: relative;
-    margin-left: 1.5rem;
 }
 
 .agenda-block__day-dropdown-toggle {
