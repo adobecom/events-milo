@@ -552,8 +552,8 @@ class VanillaAgendaBlock {
     renderTracksColumn() {
         return this.state.tracks.map(track => `
             <div class="agenda-block__track-label" style="border-left: 4px solid ${track.color}">
-                <div class="agenda-block__track-title">${track.title}</div>
-                ${track.description ? `<div class="agenda-block__track-description">${track.description}</div>` : ''}
+                <div class="agenda-block__track-title-in-label">${track.title}</div>
+                ${track.description ? `<div class="agenda-block__track-description-in-label">${track.description}</div>` : ''}
             </div>
         `).join('');
     }
