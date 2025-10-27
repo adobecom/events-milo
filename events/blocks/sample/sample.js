@@ -1,369 +1,434 @@
 /**
- * Agenda Block - Vanilla JS Implementation
- * A grid-based event agenda/schedule display component
+ * Standalone Vanilla JS Agenda Block
+ * Behaves like Digital Agenda but with NO dependencies (no AEM, no Dexter, no React)
+ * Can run anywhere - just include this JS file!
  */
 
-// TODO: This is a temporary implementation of the agenda block. It will be replaced with a more robust implementation in the future.
+// ============================================================================
+// MOCK CHIMERA API RESPONSE - Matches real Chimera API structure
+// Only returns 'cards' array, just like the real API
+// ============================================================================
+const MOCK_CHIMERA_API_RESPONSE = {
+    cards: [
+        {
+            sessionId: 's1',
+            sessionTitle: 'Opening Keynote: The Future of Creativity',
+            sessionStartTime: '2024-10-21T09:00:00.000Z',
+            sessionEndTime: '2024-10-21T10:00:00.000Z',
+            sessionDuration: '60',
+            sessionTrack: { tagId: 'track1', title: 'Keynote & Featured' },
+            cardUrl: '#session-1',
+            tags: ['keynote', 'innovation', 'ai'],
+            isFeatured: true
+        },
+        {
+            sessionId: 's2',
+            sessionTitle: 'Deep Dive: Photoshop for Pros',
+            sessionStartTime: '2024-10-21T10:15:00.000Z',
+            sessionEndTime: '2024-10-21T11:15:00.000Z',
+            sessionDuration: '60',
+            sessionTrack: { tagId: 'track2', title: 'Creative Cloud' },
+            cardUrl: '#session-2',
+            tags: ['photoshop', 'design'],
+            isFeatured: false
+        },
+        {
+            sessionId: 's3',
+            sessionTitle: 'Acrobat & Sign: Document Workflows',
+            sessionStartTime: '2024-10-21T11:30:00.000Z',
+            sessionEndTime: '2024-10-21T12:30:00.000Z',
+            sessionDuration: '60',
+            sessionTrack: { tagId: 'track3', title: 'Document Cloud' },
+            cardUrl: '#session-3',
+            tags: ['acrobat', 'sign'],
+            isFeatured: false
+        },
+        {
+            sessionId: 's4',
+            sessionTitle: 'Personalizing Customer Journeys',
+            sessionStartTime: '2024-10-21T13:00:00.000Z',
+            sessionEndTime: '2024-10-21T14:00:00.000Z',
+            sessionDuration: '60',
+            sessionTrack: { tagId: 'track4', title: 'Experience Cloud' },
+            cardUrl: '#session-4',
+            tags: ['experience', 'personalization'],
+            isFeatured: true
+        },
+        {
+            sessionId: 's5',
+            sessionTitle: 'AI in Design: Future Forward',
+            sessionStartTime: '2024-10-21T14:15:00.000Z',
+            sessionEndTime: '2024-10-21T15:15:00.000Z',
+            sessionDuration: '60',
+            sessionTrack: { tagId: 'track5', title: 'Emerging Tech' },
+            cardUrl: '#session-5',
+            tags: ['ai', 'design'],
+            isFeatured: false
+        },
+        {
+            sessionId: 's6',
+            sessionTitle: 'Illustrator for Web Design',
+            sessionStartTime: '2024-10-21T11:30:00.000Z',
+            sessionEndTime: '2024-10-21T12:30:00.000Z',
+            sessionDuration: '60',
+            sessionTrack: { tagId: 'track2', title: 'Creative Cloud' },
+            cardUrl: '#session-6',
+            tags: ['illustrator', 'web'],
+            isFeatured: false
+        },
+        {
+            sessionId: 's7',
+            sessionTitle: 'Advanced PDF Security',
+            sessionStartTime: '2024-10-21T13:00:00.000Z',
+            sessionEndTime: '2024-10-21T14:00:00.000Z',
+            sessionDuration: '60',
+            sessionTrack: { tagId: 'track3', title: 'Document Cloud' },
+            cardUrl: '#session-7',
+            tags: ['pdf', 'security'],
+            isFeatured: false
+        },
+        {
+            sessionId: 's8',
+            sessionTitle: 'Data-Driven Marketing with Analytics',
+            sessionStartTime: '2024-10-21T14:15:00.000Z',
+            sessionEndTime: '2024-10-21T15:15:00.000Z',
+            sessionDuration: '60',
+            sessionTrack: { tagId: 'track4', title: 'Experience Cloud' },
+            cardUrl: '#session-8',
+            tags: ['analytics', 'marketing'],
+            isFeatured: false
+        },
+        {
+            sessionId: 's9',
+            sessionTitle: 'VR/AR Content Creation',
+            sessionStartTime: '2024-10-21T15:30:00.000Z',
+            sessionEndTime: '2024-10-21T16:30:00.000Z',
+            sessionDuration: '60',
+            sessionTrack: { tagId: 'track5', title: 'Emerging Tech' },
+            cardUrl: '#session-9',
+            tags: ['vr', 'ar'],
+            isFeatured: false
+        },
+        // Day 2 Sessions
+        {
+            sessionId: 's10',
+            sessionTitle: 'Keynote: Innovation in Action',
+            sessionStartTime: '2024-10-22T09:00:00.000Z',
+            sessionEndTime: '2024-10-22T10:00:00.000Z',
+            sessionDuration: '60',
+            sessionTrack: { tagId: 'track1', title: 'Keynote & Featured' },
+            cardUrl: '#session-10',
+            tags: ['keynote', 'innovation'],
+            isFeatured: true
+        },
+        {
+            sessionId: 's11',
+            sessionTitle: 'Premiere Pro: Advanced Editing',
+            sessionStartTime: '2024-10-22T10:15:00.000Z',
+            sessionEndTime: '2024-10-22T11:15:00.000Z',
+            sessionDuration: '60',
+            sessionTrack: { tagId: 'track2', title: 'Creative Cloud' },
+            cardUrl: '#session-11',
+            tags: ['premiere', 'video'],
+            isFeatured: false
+        },
+        {
+            sessionId: 's12',
+            sessionTitle: 'Adobe Scan & Fill & Sign',
+            sessionStartTime: '2024-10-22T11:30:00.000Z',
+            sessionEndTime: '2024-10-22T12:30:00.000Z',
+            sessionDuration: '60',
+            sessionTrack: { tagId: 'track3', title: 'Document Cloud' },
+            cardUrl: '#session-12',
+            tags: ['mobile', 'productivity'],
+            isFeatured: false
+        },
+        {
+            sessionId: 's13',
+            sessionTitle: 'Journey Orchestration with Adobe Journey Optimizer',
+            sessionStartTime: '2024-10-22T13:00:00.000Z',
+            sessionEndTime: '2024-10-22T14:00:00.000Z',
+            sessionDuration: '60',
+            sessionTrack: { tagId: 'track4', title: 'Experience Cloud' },
+            cardUrl: '#session-13',
+            tags: ['journey', 'cxm'],
+            isFeatured: false
+        },
+        {
+            sessionId: 's14',
+            sessionTitle: 'Metaverse & Digital Experiences',
+            sessionStartTime: '2024-10-22T14:15:00.000Z',
+            sessionEndTime: '2024-10-22T15:15:00.000Z',
+            sessionDuration: '60',
+            sessionTrack: { tagId: 'track5', title: 'Emerging Tech' },
+            cardUrl: '#session-14',
+            tags: ['metaverse', 'web3'],
+            isFeatured: false
+        },
+        // Day 3 Sessions
+        {
+            sessionId: 's15',
+            sessionTitle: 'Closing Keynote: The Creative Revolution',
+            sessionStartTime: '2024-10-23T09:00:00.000Z',
+            sessionEndTime: '2024-10-23T10:00:00.000Z',
+            sessionDuration: '60',
+            sessionTrack: { tagId: 'track1', title: 'Keynote & Featured' },
+            cardUrl: '#session-15',
+            tags: ['keynote', 'vision'],
+            isFeatured: true
+        },
+        {
+            sessionId: 's16',
+            sessionTitle: 'Lightroom: Photo Editing Workflow',
+            sessionStartTime: '2024-10-23T10:15:00.000Z',
+            sessionEndTime: '2024-10-23T11:15:00.000Z',
+            sessionDuration: '60',
+            sessionTrack: { tagId: 'track2', title: 'Creative Cloud' },
+            cardUrl: '#session-16',
+            tags: ['lightroom', 'photography'],
+            isFeatured: false
+        },
+        {
+            sessionId: 's17',
+            sessionTitle: 'Advanced Adobe Sign Workflows',
+            sessionStartTime: '2024-10-23T11:30:00.000Z',
+            sessionEndTime: '2024-10-23T12:30:00.000Z',
+            sessionDuration: '60',
+            sessionTrack: { tagId: 'track3', title: 'Document Cloud' },
+            cardUrl: '#session-17',
+            tags: ['sign', 'automation'],
+            isFeatured: false
+        },
+        {
+            sessionId: 's18',
+            sessionTitle: 'Content Supply Chain Optimization',
+            sessionStartTime: '2024-10-23T13:00:00.000Z',
+            sessionEndTime: '2024-10-23T14:00:00.000Z',
+            sessionDuration: '60',
+            sessionTrack: { tagId: 'track4', title: 'Experience Cloud' },
+            cardUrl: '#session-18',
+            tags: ['content', 'marketing'],
+            isFeatured: false
+        },
+        {
+            sessionId: 's19',
+            sessionTitle: 'Ethical AI in Creative Tools',
+            sessionStartTime: '2024-10-23T14:15:00.000Z',
+            sessionEndTime: '2024-10-23T15:15:00.000Z',
+            sessionDuration: '60',
+            sessionTrack: { tagId: 'track5', title: 'Emerging Tech' },
+            cardUrl: '#session-19',
+            tags: ['ai', 'ethics'],
+            isFeatured: false
+        }
+    ]
+};
+
+// ============================================================================
+// HARDCODED CONFIG - Simulates AEM Dialog values
+// In real Digital Agenda, these come from AEM component dialog
+// ============================================================================
+const AGENDA_CONFIG = {
+    // Tracks Configuration (from AEM dialog "Tracks Collection Tags")
+    tracks: [
+        { id: 'track1', tagId: 'track1', title: 'Keynote & Featured', description: 'Main stage presentations', color: '#FF6B00' },
+        { id: 'track2', tagId: 'track2', title: 'Creative Cloud', description: 'Design and creativity sessions', color: '#1473E6' },
+        { id: 'track3', tagId: 'track3', title: 'Document Cloud', description: 'PDF and e-signature solutions', color: '#00A38F' },
+        { id: 'track4', tagId: 'track4', title: 'Experience Cloud', description: 'Customer experience management', color: '#9D22C1' },
+        { id: 'track5', tagId: 'track5', title: 'Emerging Tech', description: 'AI, AR, and future innovations', color: '#E63946' }
+    ],
+    
+    // Labels (from AEM dialog)
+    labels: {
+        liveLabel: 'LIVE',
+        onDemandLabel: 'ON DEMAND',
+        featuredLabel: 'FEATURED',
+        timeZoneLabel: 'Times in',
+        loadingText: 'Loading agenda...',
+        noSessionsText: 'No sessions available for this day'
+    },
+    
+    // Styling (from AEM dialog)
+    styles: {
+        primaryBackgroundColor: '#F5F5F5',
+        cellBorderColor: '#E0E0E0',
+        cornerRadius: 4
+    },
+    
+    // API Configuration
+    api: {
+        chimeraEndpoint: 'https://chimera-api.adobe.io/collection', // Placeholder
+        useMockData: true // Set to false when using real API
+    }
+};
+
+// Constants
 const MINUTE_MS = 60 * 1000;
 const HOUR_MS = 60 * MINUTE_MS;
-const TIME_SLOT_MINUTES = 15; // Each column represents 15 minutes
-const VISIBLE_HOURS = 4; // Show 4 hours at a time
-const MOBILE_BREAKPOINT = 768;
+const TIME_SLOT_DURATION = 15; // 15 minutes per time slot
+const VISIBLE_TIME_SLOTS = 16; // Show 4 hours (16 × 15min slots)
+
+// ============================================================================
+// HELPER FUNCTIONS (replacing Dexter utilities)
+// ============================================================================
 
 /**
- * Main AgendaBlock class
+ * Format date to readable string
  */
-class AgendaBlock {
+function formatDate(date) {
+    const options = { weekday: 'short', month: 'short', day: 'numeric' };
+    return date.toLocaleDateString('en-US', options);
+}
+
+/**
+ * Format time to readable string
+ */
+function formatTime(timestamp) {
+    const date = new Date(timestamp);
+    return date.toLocaleTimeString('en-US', { 
+        hour: 'numeric', 
+        minute: '2-digit',
+        hour12: true 
+    });
+}
+
+/**
+ * Get day key from timestamp
+ */
+function getDayKey(timestamp) {
+    const date = new Date(timestamp);
+    return date.toISOString().split('T')[0];
+}
+
+/**
+ * Check if session is currently live
+ */
+function isSessionLive(session) {
+    const now = Date.now();
+    const start = new Date(session.sessionStartTime).getTime();
+    const end = new Date(session.sessionEndTime).getTime();
+    return now >= start && now <= end;
+}
+
+/**
+ * Check if session is on demand (past session)
+ */
+function isSessionOnDemand(session) {
+    const now = Date.now();
+    const end = new Date(session.sessionEndTime).getTime();
+    return now > end;
+}
+
+/**
+ * Extract unique days from sessions (like Digital Agenda does)
+ */
+function extractDaysFromSessions(sessions) {
+    const daysMap = new Map();
+    
+    sessions.forEach(session => {
+        const startTime = new Date(session.sessionStartTime).getTime();
+        const dayKey = getDayKey(startTime);
+        
+        if (!daysMap.has(dayKey)) {
+            const date = new Date(startTime);
+            daysMap.set(dayKey, {
+                id: dayKey,
+                date: dayKey,
+                label: formatDate(date),
+                startTime: new Date(dayKey + 'T00:00:00').getTime()
+            });
+        }
+    });
+    
+    return Array.from(daysMap.values()).sort((a, b) => a.startTime - b.startTime);
+}
+
+/**
+ * Debounce function for resize events
+ */
+function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+        const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    };
+}
+
+// ============================================================================
+// MAIN AGENDA BLOCK CLASS
+// ============================================================================
+
+class VanillaAgendaBlock {
     constructor(element) {
         this.element = element;
-        this.config = this.getConfig();
+        this.config = AGENDA_CONFIG;
+        
         this.state = {
             sessions: [],
-            tracks: [],
+            tracks: this.config.tracks,
             days: [],
             currentDay: 0,
-            timeOffset: 0, // Offset in time slots
-            isLoading: true,
-            error: null,
-            isMobile: window.innerWidth < MOBILE_BREAKPOINT,
+            timeCursor: 0, // Current time offset in slots
+            isMobile: window.innerWidth < 768,
+            isLoading: true
         };
         
         this.init();
     }
 
     /**
-     * Get configuration from data attributes
-     */
-    getConfig() {
-        const dataset = this.element.dataset;
-        return {
-            chimeraEndpoint: dataset.chimeraEndpoint || '',
-            collectionTags: this.parseJSON(dataset.collectionTags, []),
-            tracksCollectionTags: this.parseJSON(dataset.tracksCollectionTags, []),
-            country: dataset.collectionCountry || 'us',
-            language: dataset.collectionLanguage || 'en',
-            fallbackPath: dataset.fallbackPath || '',
-            forceFallback: dataset.forceFallback === 'true',
-            timeZoneLabel: dataset.timeZoneLabel || 'Times in',
-            liveBadgeLabel: dataset.liveBadgeLabel || 'Live',
-            onDemandBadgeLabel: dataset.onDemandBadgeLabel || 'On Demand',
-            featuredSessionsColor: dataset.featuredSessionsColor || '#FF6B00',
-            featuredLabel: dataset.featuredLabel || 'Featured',
-            durationLabel: dataset.durationLabel || 'Duration',
-            prevAriaLabel: dataset.prevAriaLabel || 'Previous time slots',
-            nextAriaLabel: dataset.nextAriaLabel || 'Next time slots',
-            loadingText: dataset.loadingText || 'Loading sessions...',
-            noSessionsText: dataset.noSessionsText || 'No sessions available',
-            primaryBgColor: dataset.primaryBgColor || '#F5F5F5',
-            cellBorderColor: dataset.cellBorderColor || '#E0E0E0',
-            cornerRadius: dataset.cornerRadius || '4',
-            analyticsSessionClick: dataset.analyticsSessionClick || 'Session Click',
-            analyticsDaySelector: dataset.analyticsDaySelector || 'Day Selected',
-            analyticsPagination: dataset.analyticsPagination || 'Agenda Pagination',
-        };
-    }
-
-    /**
-     * Parse JSON string safely
-     */
-    parseJSON(str, defaultValue = null) {
-        try {
-            return JSON.parse(str);
-        } catch (e) {
-            return defaultValue;
-        }
-    }
-
-    /**
-     * Initialize the component
+     * Initialize the agenda block
      */
     async init() {
-        this.render();
-        await this.fetchSessions();
-        this.processSessions();
+        this.renderLoading();
+        await this.fetchAndProcessData();
         this.render();
         this.attachEventListeners();
-        this.startLiveUpdateInterval();
+        this.startLiveUpdates();
     }
 
     /**
-     * Render author mode placeholder
+     * Fetch data from API and process it (like Digital Agenda does)
      */
-    renderAuthorMode() {
-        this.element.innerHTML = `
-            <div class="agenda-block__author-placeholder">
-                <h3>Agenda Block (Vanilla JS)</h3>
-                <p>Configure data source in the dialog</p>
-            </div>
-        `;
-    }
-
-    /**
-     * Fetch sessions from mock API
-     */
-    async fetchSessions() {
+    async fetchAndProcessData() {
         try {
-            this.state.isLoading = true;
-            this.render();
-
-            // Simulate API delay
-            await new Promise(resolve => setTimeout(resolve, 500));
-
-            // Mock data for testing
-            const mockResponse = {
-                cards: [
-                    {
-                        search: {
-                            sessionStartTime: Date.now() + (3 * 60 * 60 * 1000), // 3 hours from now
-                            sessionEndTime: Date.now() + (4 * 60 * 60 * 1000),   // 4 hours from now
-                        },
-                        contentArea: {
-                            title: 'Mock Session 1',
-                            description: 'This is a mock session for testing purposes',
-                        },
-                        overlayLink: '#',
-                        tags: ['track-1'],
-                        featured: false,
-                    },
-                    {
-                        search: {
-                            sessionStartTime: Date.now() + (5 * 60 * 60 * 1000), // 5 hours from now
-                            sessionEndTime: Date.now() + (6 * 60 * 60 * 1000),   // 6 hours from now
-                        },
-                        contentArea: {
-                            title: 'Mock Session 2',
-                            description: 'Another mock session for testing',
-                        },
-                        overlayLink: '#',
-                        tags: ['track-2'],
-                        featured: true,
-                    },
-                ]
-            };
+            // Simulate API call
+            const response = await this.fetchSessions();
             
-            if (mockResponse.cards) {
-                this.state.sessions = mockResponse.cards.filter(card => {
-                    return card.search && card.contentArea;
-                });
-            }
-
+            // Process sessions (add live/onDemand flags)
+            this.state.sessions = response.cards.map(session => ({
+                ...session,
+                isLive: isSessionLive(session),
+                isOnDemand: isSessionOnDemand(session)
+            }));
+            
+            // Extract days from sessions (not from API!)
+            this.state.days = extractDaysFromSessions(this.state.sessions);
+            
             this.state.isLoading = false;
-            this.state.error = null;
         } catch (error) {
             console.error('Failed to fetch sessions:', error);
             this.state.isLoading = false;
-            this.state.error = 'Failed to load sessions';
-            this.render();
         }
     }
 
     /**
-     * Build Chimera endpoint URL
+     * Fetch sessions from API (or mock)
      */
-    buildEndpoint() {
-        const { chimeraEndpoint, collectionTags, country, language } = this.config;
-        
-        if (!chimeraEndpoint) {
-            throw new Error('Chimera endpoint not configured');
+    async fetchSessions() {
+        if (this.config.api.useMockData) {
+            // Simulate network delay
+            await new Promise(resolve => setTimeout(resolve, 500));
+            return MOCK_CHIMERA_API_RESPONSE;
+        } else {
+            // Real API call
+            const response = await fetch(this.config.api.chimeraEndpoint);
+            return await response.json();
         }
-
-        let url = chimeraEndpoint;
-        
-        // Add collection tags as query parameters
-        if (collectionTags && collectionTags.length > 0) {
-            const tagsParam = collectionTags.join(',');
-            url += url.includes('?') ? '&' : '?';
-            url += `tags=${encodeURIComponent(tagsParam)}`;
-        }
-
-        // Add country and language
-        url += url.includes('?') ? '&' : '?';
-        url += `country=${country}&language=${language}`;
-
-        return url;
-    }
-
-    /**
-     * Process sessions to organize by days and tracks
-     */
-    processSessions() {
-        const { sessions } = this.state;
-        const { tracksCollectionTags } = this.config;
-
-        if (sessions.length === 0) return;
-
-        // Extract unique days
-        const daysMap = new Map();
-        sessions.forEach(session => {
-            const startTime = this.getSessionStartTime(session);
-            if (startTime) {
-                const dayKey = this.getDayKey(startTime);
-                if (!daysMap.has(dayKey)) {
-                    daysMap.set(dayKey, {
-                        key: dayKey,
-                        date: new Date(startTime),
-                        label: this.formatDate(new Date(startTime)),
-                    });
-                }
-            }
-        });
-
-        this.state.days = Array.from(daysMap.values()).sort((a, b) => 
-            a.date.getTime() - b.date.getTime()
-        );
-
-        // Organize sessions by tracks
-        this.state.tracks = tracksCollectionTags.map((track, index) => ({
-            id: track.id || `track-${index}`,
-            title: track.title || `Track ${index + 1}`,
-            description: track.description || '',
-            sessions: this.getSessionsForTrack(track),
-        }));
-    }
-
-    /**
-     * Get sessions for a specific track
-     */
-    getSessionsForTrack(track) {
-        const trackTags = track.tags || [];
-        return this.state.sessions.filter(session => {
-            const sessionTags = session.tags || [];
-            return trackTags.some(tag => sessionTags.includes(tag));
-        });
-    }
-
-    /**
-     * Get session start time
-     */
-    getSessionStartTime(session) {
-        return session.search?.sessionStartTime || session.cardStartTime;
-    }
-
-    /**
-     * Get session end time
-     */
-    getSessionEndTime(session) {
-        return session.search?.sessionEndTime || session.cardEndTime;
-    }
-
-    /**
-     * Get day key from timestamp
-     */
-    getDayKey(timestamp) {
-        const date = new Date(timestamp);
-        return `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
-    }
-
-    /**
-     * Format date for display
-     */
-    formatDate(date) {
-        const options = { weekday: 'short', month: 'short', day: 'numeric' };
-        return date.toLocaleDateString('en-US', options);
-    }
-
-    /**
-     * Format time for display
-     */
-    formatTime(timestamp) {
-        const date = new Date(timestamp);
-        return date.toLocaleTimeString('en-US', { 
-            hour: 'numeric', 
-            minute: '2-digit',
-            hour12: true 
-        });
-    }
-
-    /**
-     * Calculate duration in minutes
-     */
-    getDuration(session) {
-        const start = this.getSessionStartTime(session);
-        const end = this.getSessionEndTime(session);
-        if (!start || !end) return 60; // Default 1 hour
-        return Math.round((end - start) / MINUTE_MS);
-    }
-
-    /**
-     * Check if session is currently live
-     */
-    isSessionLive(session) {
-        const now = Date.now();
-        const start = this.getSessionStartTime(session);
-        const end = this.getSessionEndTime(session);
-        return start && end && now >= start && now <= end;
-    }
-
-    /**
-     * Check if session is on demand
-     */
-    isSessionOnDemand(session) {
-        const now = Date.now();
-        const end = this.getSessionEndTime(session);
-        return end && now > end;
-    }
-
-    /**
-     * Check if session is featured
-     */
-    isSessionFeatured(session) {
-        return session.isFeatured || session.featured || false;
-    }
-
-    /**
-     * Calculate grid column position
-     */
-    calculateGridColumn(session, dayStartTime) {
-        const startTime = this.getSessionStartTime(session);
-        if (!startTime) return { start: 1, end: 2 };
-
-        const minutesFromDayStart = (startTime - dayStartTime) / MINUTE_MS;
-        const startColumn = Math.floor(minutesFromDayStart / TIME_SLOT_MINUTES) + 1;
-        const duration = this.getDuration(session);
-        const endColumn = startColumn + Math.ceil(duration / TIME_SLOT_MINUTES);
-
-        return { start: startColumn, end: endColumn };
-    }
-
-    /**
-     * Get visible time range
-     */
-    getVisibleTimeRange() {
-        const { currentDay, timeOffset } = this.state;
-        if (!this.state.days[currentDay]) return { start: 0, end: 0 };
-
-        const dayDate = this.state.days[currentDay].date;
-        const dayStart = new Date(dayDate);
-        dayStart.setHours(8, 0, 0, 0); // Default start at 8 AM
-
-        const visibleStart = dayStart.getTime() + (timeOffset * TIME_SLOT_MINUTES * MINUTE_MS);
-        const visibleEnd = visibleStart + (VISIBLE_HOURS * HOUR_MS);
-
-        return { start: visibleStart, end: visibleEnd };
-    }
-
-    /**
-     * Render the component
-     */
-    render() {
-        const { isLoading, error } = this.state;
-
-        if (isLoading) {
-            this.renderLoading();
-            return;
-        }
-
-        if (error) {
-            this.renderError();
-            return;
-        }
-
-        if (this.state.sessions.length === 0) {
-            this.renderEmpty();
-            return;
-        }
-
-        this.renderAgenda();
     }
 
     /**
@@ -373,240 +438,266 @@ class AgendaBlock {
         this.element.innerHTML = `
             <div class="agenda-block__loading">
                 <div class="agenda-block__spinner"></div>
-                <p>${this.config.loadingText}</p>
+                <p>${this.config.labels.loadingText}</p>
             </div>
         `;
     }
 
     /**
-     * Render error state
+     * Main render function
      */
-    renderError() {
-        this.element.innerHTML = `
-            <div class="agenda-block__error">
-                <p>${this.state.error}</p>
-            </div>
-        `;
-    }
+    render() {
+        if (this.state.isLoading) {
+            this.renderLoading();
+            return;
+        }
 
-    /**
-     * Render empty state
-     */
-    renderEmpty() {
-        this.element.innerHTML = `
-            <div class="agenda-block__empty">
-                <p>${this.config.noSessionsText}</p>
-            </div>
-        `;
-    }
-
-    /**
-     * Render full agenda
-     */
-    renderAgenda() {
         const html = `
             <div class="agenda-block__container">
                 ${this.renderHeader()}
-                ${this.renderGrid()}
+                <div class="agenda-block__body">
+                    <div class="agenda-block__tracks-column">
+                        ${this.renderTracksColumn()}
+                    </div>
+                    <div class="agenda-block__grid-wrapper">
+                        <div class="agenda-block__time-header">
+                            ${this.renderTimeHeader()}
+                        </div>
+                        <div class="agenda-block__grid-container">
+                            ${this.renderGrid()}
+                        </div>
+                        <div class="agenda-block__pagination">
+                            ${this.renderPagination()}
+                        </div>
+                    </div>
+                </div>
             </div>
         `;
+        
         this.element.innerHTML = html;
     }
 
     /**
-     * Render header with day selector and pagination
+     * Render header with day selector
      */
     renderHeader() {
-        const { days, currentDay } = this.state;
-        
         return `
             <div class="agenda-block__header">
                 <div class="agenda-block__day-selector">
-                    ${days.map((day, index) => `
+                    ${this.state.days.map((day, index) => `
                         <button 
-                            class="agenda-block__day-button ${index === currentDay ? 'active' : ''}"
-                            data-day-index="${index}"
-                            data-analytics="${this.config.analyticsDaySelector}">
+                            class="agenda-block__day-btn ${index === this.state.currentDay ? 'active' : ''}"
+                            data-day-index="${index}">
                             ${day.label}
                         </button>
                     `).join('')}
                 </div>
-                <div class="agenda-block__pagination">
-                    <button 
-                        class="agenda-block__pagination-btn agenda-block__pagination-btn--prev"
-                        data-direction="prev"
-                        aria-label="${this.config.prevAriaLabel}"
-                        ${this.state.timeOffset <= 0 ? 'disabled' : ''}>
-                        <svg width="24" height="24" viewBox="0 0 24 24">
-                            <path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/>
-                        </svg>
-                    </button>
-                    <button 
-                        class="agenda-block__pagination-btn agenda-block__pagination-btn--next"
-                        data-direction="next"
-                        aria-label="${this.config.nextAriaLabel}">
-                        <svg width="24" height="24" viewBox="0 0 24 24">
-                            <path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/>
-                        </svg>
-                    </button>
+                <div class="agenda-block__legend">
+                    <span class="agenda-block__legend-item">
+                        <span class="agenda-block__legend-badge live">${this.config.labels.liveLabel}</span>
+                    </span>
+                    <span class="agenda-block__legend-item">
+                        <span class="agenda-block__legend-badge featured">${this.config.labels.featuredLabel}</span>
+                    </span>
+                    <span class="agenda-block__legend-item">
+                        <span class="agenda-block__legend-badge on-demand">${this.config.labels.onDemandLabel}</span>
+                    </span>
                 </div>
             </div>
         `;
     }
 
     /**
-     * Render agenda grid
+     * Render tracks column
+     */
+    renderTracksColumn() {
+        return this.state.tracks.map(track => `
+            <div class="agenda-block__track-label" style="border-left: 4px solid ${track.color}">
+                <div class="agenda-block__track-title">${track.title}</div>
+                ${track.description ? `<div class="agenda-block__track-description">${track.description}</div>` : ''}
+            </div>
+        `).join('');
+    }
+
+    /**
+     * Render time header
+     */
+    renderTimeHeader() {
+        const timeSlots = this.getVisibleTimeSlots();
+        return timeSlots.map(time => `
+            <div class="agenda-block__time-cell">${this.formatTime(time)}</div>
+        `).join('');
+    }
+
+    /**
+     * Render main grid with sessions
      */
     renderGrid() {
-        const { tracks, currentDay } = this.state;
-        
-        if (!this.state.days[currentDay]) return '';
-
-        const dayDate = this.state.days[currentDay].date;
-        const dayStart = new Date(dayDate);
-        dayStart.setHours(8, 0, 0, 0);
-
-        const { start: visibleStart, end: visibleEnd } = this.getVisibleTimeRange();
-
-        return `
-            <div class="agenda-block__grid">
-                ${this.renderTimeAxis(dayStart)}
-                ${tracks.map(track => this.renderTrack(track, dayStart, visibleStart, visibleEnd)).join('')}
-            </div>
-        `;
-    }
-
-    /**
-     * Render time axis
-     */
-    renderTimeAxis(dayStart) {
-        const timeSlots = [];
-        const { start: visibleStart, end: visibleEnd } = this.getVisibleTimeRange();
-
-        for (let time = visibleStart; time < visibleEnd; time += HOUR_MS) {
-            timeSlots.push(`
-                <div class="agenda-block__time-slot">
-                    ${this.formatTime(time)}
-                </div>
-            `);
+        const currentDay = this.state.days[this.state.currentDay];
+        if (!currentDay) {
+            return `<div class="agenda-block__empty">${this.config.labels.noSessionsText}</div>`;
         }
 
+        const daySessions = this.getSessionsForCurrentDay();
+        
+        return this.state.tracks.map(track => {
+            const trackSessions = daySessions.filter(s => s.sessionTrack.tagId === track.tagId);
+            return `
+                <div class="agenda-block__track-row">
+                    ${this.renderTrackSessions(trackSessions, currentDay)}
+                </div>
+            `;
+        }).join('');
+    }
+
+    /**
+     * Render sessions for a track
+     */
+    renderTrackSessions(sessions, currentDay) {
+        if (sessions.length === 0) {
+            return '<div class="agenda-block__track-empty"></div>';
+        }
+
+        const dayStartTime = new Date(currentDay.date + 'T08:00:00').getTime();
+        const visibleStart = dayStartTime + (this.state.timeCursor * TIME_SLOT_DURATION * MINUTE_MS);
+
+        return sessions.map(session => {
+            const startTime = new Date(session.sessionStartTime).getTime();
+            const endTime = new Date(session.sessionEndTime).getTime();
+            const duration = endTime - startTime;
+
+            // Calculate grid position
+            const startOffset = (startTime - visibleStart) / (TIME_SLOT_DURATION * MINUTE_MS);
+            const durationSlots = Math.ceil(duration / (TIME_SLOT_DURATION * MINUTE_MS));
+
+            if (startOffset < 0 || startOffset >= VISIBLE_TIME_SLOTS) {
+                return ''; // Session not in visible range
+            }
+
+            const track = this.state.tracks.find(t => t.tagId === session.sessionTrack.tagId);
+
+            return `
+                <a 
+                    href="${session.cardUrl}"
+                    class="agenda-block__session ${session.isFeatured ? 'featured' : ''} ${session.isLive ? 'live' : ''}"
+                    style="
+                        grid-column: ${Math.floor(startOffset) + 1} / span ${durationSlots};
+                        ${session.isFeatured ? `border-left-color: ${track.color};` : ''}
+                    ">
+                    <div class="agenda-block__session-content">
+                        <div class="agenda-block__session-title">${session.sessionTitle}</div>
+                        <div class="agenda-block__session-time">
+                            ${formatTime(startTime)} - ${formatTime(endTime)}
+                        </div>
+                    </div>
+                    <div class="agenda-block__session-badges">
+                        ${session.isLive ? `<span class="agenda-block__session-badge live">${this.config.labels.liveLabel}</span>` : ''}
+                        ${session.isOnDemand ? `<span class="agenda-block__session-badge on-demand">${this.config.labels.onDemandLabel}</span>` : ''}
+                    </div>
+                </a>
+            `;
+        }).join('');
+    }
+
+    /**
+     * Render pagination controls
+     */
+    renderPagination() {
+        const maxOffset = this.getMaxTimeOffset();
         return `
-            <div class="agenda-block__time-axis">
-                <div class="agenda-block__track-header"></div>
-                ${timeSlots.join('')}
-            </div>
+            <button 
+                class="agenda-block__pagination-btn prev" 
+                data-direction="prev"
+                ${this.state.timeCursor <= 0 ? 'disabled' : ''}
+                aria-label="${this.config.labels.prevAriaLabel || 'Previous'}">
+                ‹
+            </button>
+            <button 
+                class="agenda-block__pagination-btn next" 
+                data-direction="next"
+                ${this.state.timeCursor >= maxOffset ? 'disabled' : ''}
+                aria-label="${this.config.labels.nextAriaLabel || 'Next'}">
+                ›
+            </button>
         `;
     }
 
     /**
-     * Render track row
+     * Get sessions for current day
      */
-    renderTrack(track, dayStart, visibleStart, visibleEnd) {
-        const currentDayKey = this.getDayKey(dayStart.getTime());
-        
-        // Filter sessions for current day and visible time range
-        const visibleSessions = track.sessions.filter(session => {
-            const sessionStart = this.getSessionStartTime(session);
-            const sessionDayKey = this.getDayKey(sessionStart);
-            
-            return sessionDayKey === currentDayKey && 
-                   sessionStart >= visibleStart && 
-                   sessionStart < visibleEnd;
+    getSessionsForCurrentDay() {
+        const currentDay = this.state.days[this.state.currentDay];
+        if (!currentDay) return [];
+
+        return this.state.sessions.filter(session => {
+            const sessionDayKey = getDayKey(new Date(session.sessionStartTime).getTime());
+            return sessionDayKey === currentDay.id;
         });
-
-        return `
-            <div class="agenda-block__track">
-                <div class="agenda-block__track-header">
-                    <h3 class="agenda-block__track-title">${track.title}</h3>
-                    ${track.description ? `<p class="agenda-block__track-description">${track.description}</p>` : ''}
-                </div>
-                <div class="agenda-block__track-sessions">
-                    ${visibleSessions.map(session => this.renderSession(session, dayStart.getTime())).join('')}
-                </div>
-            </div>
-        `;
     }
 
     /**
-     * Render session tile
+     * Get visible time slots
      */
-    renderSession(session, dayStartTime) {
-        const title = session.contentArea?.title || 'Untitled Session';
-        const description = session.contentArea?.description || '';
-        const url = session.overlayLink || session.cardUrl || '#';
-        const duration = this.getDuration(session);
-        const isLive = this.isSessionLive(session);
-        const isOnDemand = this.isSessionOnDemand(session);
-        const isFeatured = this.isSessionFeatured(session);
+    getVisibleTimeSlots() {
+        const currentDay = this.state.days[this.state.currentDay];
+        if (!currentDay) return [];
 
-        const gridColumn = this.calculateGridColumn(session, dayStartTime);
-        const columnSpan = gridColumn.end - gridColumn.start;
+        const dayStartTime = new Date(currentDay.date + 'T08:00:00').getTime();
+        const startTime = dayStartTime + (this.state.timeCursor * TIME_SLOT_DURATION * MINUTE_MS);
 
-        const styles = [
-            `grid-column: ${gridColumn.start - this.state.timeOffset * 4} / span ${columnSpan}`,
-            this.config.cellBorderColor ? `border-color: ${this.config.cellBorderColor}` : '',
-            this.config.cornerRadius ? `border-radius: ${this.config.cornerRadius}px` : '',
-        ].filter(Boolean).join('; ');
-
-        return `
-            <a 
-                href="${url}" 
-                class="agenda-block__session ${isFeatured ? 'featured' : ''} ${isLive ? 'live' : ''}"
-                style="${styles}"
-                data-analytics="${this.config.analyticsSessionClick}">
-                ${isFeatured ? `<span class="agenda-block__session-featured-indicator" style="background-color: ${this.config.featuredSessionsColor}"></span>` : ''}
-                <div class="agenda-block__session-content">
-                    <h4 class="agenda-block__session-title">${title}</h4>
-                    ${description && columnSpan > 2 ? `<p class="agenda-block__session-description">${description}</p>` : ''}
-                </div>
-                <div class="agenda-block__session-footer">
-                    <span class="agenda-block__session-duration">${this.formatDuration(duration)}</span>
-                    ${isLive ? `<span class="agenda-block__session-badge live">${this.config.liveBadgeLabel}</span>` : ''}
-                    ${isOnDemand ? `<span class="agenda-block__session-badge on-demand">${this.config.onDemandBadgeLabel}</span>` : ''}
-                </div>
-            </a>
-        `;
-    }
-
-    /**
-     * Format duration
-     */
-    formatDuration(minutes) {
-        const hours = Math.floor(minutes / 60);
-        const mins = minutes % 60;
-        
-        if (hours > 0 && mins > 0) {
-            return `${hours}h ${mins}m`;
-        } else if (hours > 0) {
-            return `${hours}h`;
-        } else {
-            return `${mins}m`;
+        const slots = [];
+        for (let i = 0; i < VISIBLE_TIME_SLOTS; i++) {
+            slots.push(startTime + (i * TIME_SLOT_DURATION * MINUTE_MS));
         }
+        return slots;
+    }
+
+    /**
+     * Get max time offset for pagination
+     */
+    getMaxTimeOffset() {
+        const daySessions = this.getSessionsForCurrentDay();
+        if (daySessions.length === 0) return 0;
+
+        const currentDay = this.state.days[this.state.currentDay];
+        const dayStartTime = new Date(currentDay.date + 'T08:00:00').getTime();
+        const dayEndTime = new Date(currentDay.date + 'T20:00:00').getTime();
+
+        const totalSlots = (dayEndTime - dayStartTime) / (TIME_SLOT_DURATION * MINUTE_MS);
+        return Math.max(0, totalSlots - VISIBLE_TIME_SLOTS);
     }
 
     /**
      * Attach event listeners
      */
     attachEventListeners() {
-        // Day selector buttons
-        this.element.querySelectorAll('.agenda-block__day-button').forEach(button => {
-            button.addEventListener('click', (e) => {
+        // Day selector
+        this.element.querySelectorAll('.agenda-block__day-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
                 const dayIndex = parseInt(e.currentTarget.dataset.dayIndex, 10);
                 this.changeDay(dayIndex);
             });
         });
 
-        // Pagination buttons
-        this.element.querySelectorAll('.agenda-block__pagination-btn').forEach(button => {
-            button.addEventListener('click', (e) => {
+        // Pagination
+        this.element.querySelectorAll('.agenda-block__pagination-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
                 const direction = e.currentTarget.dataset.direction;
                 this.paginate(direction);
             });
         });
 
         // Window resize
-        window.addEventListener('resize', this.handleResize.bind(this));
+        const resizeHandler = debounce(() => {
+            const wasMobile = this.state.isMobile;
+            this.state.isMobile = window.innerWidth < 768;
+            if (wasMobile !== this.state.isMobile) {
+                this.render();
+                this.attachEventListeners();
+            }
+        }, 250);
+        
+        window.addEventListener('resize', resizeHandler);
     }
 
     /**
@@ -615,7 +706,7 @@ class AgendaBlock {
     changeDay(dayIndex) {
         if (dayIndex >= 0 && dayIndex < this.state.days.length) {
             this.state.currentDay = dayIndex;
-            this.state.timeOffset = 0; // Reset time offset
+            this.state.timeCursor = 0; // Reset time position
             this.render();
             this.attachEventListeners();
         }
@@ -625,12 +716,13 @@ class AgendaBlock {
      * Paginate time slots
      */
     paginate(direction) {
-        const step = 4; // Move by 4 time slots (1 hour)
-        
-        if (direction === 'next') {
-            this.state.timeOffset += step;
-        } else if (direction === 'prev' && this.state.timeOffset > 0) {
-            this.state.timeOffset = Math.max(0, this.state.timeOffset - step);
+        const step = 4; // Move by 1 hour (4 slots)
+        const maxOffset = this.getMaxTimeOffset();
+
+        if (direction === 'next' && this.state.timeCursor < maxOffset) {
+            this.state.timeCursor = Math.min(this.state.timeCursor + step, maxOffset);
+        } else if (direction === 'prev' && this.state.timeCursor > 0) {
+            this.state.timeCursor = Math.max(this.state.timeCursor - step, 0);
         }
 
         this.render();
@@ -638,44 +730,27 @@ class AgendaBlock {
     }
 
     /**
-     * Handle window resize
+     * Start live updates interval
      */
-    handleResize() {
-        const wasMobile = this.state.isMobile;
-        this.state.isMobile = window.innerWidth < MOBILE_BREAKPOINT;
-        
-        if (wasMobile !== this.state.isMobile) {
-            this.render();
-            this.attachEventListeners();
-        }
-    }
-
-    /**
-     * Start interval to update live sessions
-     */
-    startLiveUpdateInterval() {
-        // Update every 30 seconds to check for live sessions
-        this.liveUpdateInterval = setInterval(() => {
+    startLiveUpdates() {
+        // Update every 30 seconds to refresh live status
+        setInterval(() => {
+            this.state.sessions = this.state.sessions.map(session => ({
+                ...session,
+                isLive: isSessionLive(session),
+                isOnDemand: isSessionOnDemand(session)
+            }));
             this.render();
             this.attachEventListeners();
         }, 30000);
     }
-
-    /**
-     * Destroy the component
-     */
-    destroy() {
-        if (this.liveUpdateInterval) {
-            clearInterval(this.liveUpdateInterval);
-        }
-        window.removeEventListener('resize', this.handleResize.bind(this));
-    }
 }
 
-/**
- * Initialize agenda block
- */
+// ============================================================================
+// INIT FUNCTION FOR BLOCK LOADER
+// ============================================================================
+
 export default function init(el) {
-    return new AgendaBlock(el);
+    return new VanillaAgendaBlock(el);
 }
 
