@@ -368,6 +368,7 @@
 .agenda-block__pagination {
     display: flex;
     gap: 0.5rem;
+    margin-left: auto;
 }
 
 .agenda-block__pagination-btn {
