@@ -335,9 +335,14 @@
 .agenda-block__tracks-column {
     display: flex;
     flex-direction: column;
-    gap: 0;
+    gap: 6px;
     background-color: #f5f5f5;
     border-right: 1px solid #e0e0e0;
+    padding: 6px 0;
+}
+
+.agenda-block__tracks-column > .agenda-block__track-label:first-child {
+    margin-top: 0;
 }
 
 .agenda-block__grid-wrapper {
