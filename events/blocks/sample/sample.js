@@ -857,12 +857,12 @@ class VanillaAgendaBlock {
     getSubNavHeight() {
         let top = 0;
         
-        const stickyHeader = document.querySelector('.feds-header-wrapper--sticky');
-        const subNav = document.getElementById('AdobeSecondaryNav');
+        const stickyHeader = document.querySelector('.global-navigation');
+        // const subNav = document.getElementById('AdobeSecondaryNav');
         
-        if (subNav) {
-            top += subNav.offsetHeight;
-        }
+        // if (subNav) {
+        //     top += subNav.offsetHeight;
+        // }
         
         if (stickyHeader && !stickyHeader.classList.contains('feds-header-wrapper--retracted')) {
             top += stickyHeader.offsetHeight;
