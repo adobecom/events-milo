@@ -722,7 +722,8 @@ class VanillaAgendaBlock {
         // Day dropdown toggle
         const dropdownToggle = this.element.querySelector('.agenda-block__day-dropdown-toggle');
         if (dropdownToggle) {
-            dropdownToggle.addEventListener('click', () => {
+            dropdownToggle.addEventListener('click', (e) => {
+                e.stopPropagation();
                 this.toggleDropdown();
             });
         }
@@ -730,6 +731,7 @@ class VanillaAgendaBlock {
         // Day dropdown items
         this.element.querySelectorAll('.agenda-block__day-dropdown-item').forEach(btn => {
             btn.addEventListener('click', (e) => {
+                e.stopPropagation();
                 const dayIndex = parseInt(e.currentTarget.dataset.dayIndex, 10);
                 this.changeDay(dayIndex);
                 this.state.isDropdownOpen = false;
@@ -739,15 +741,16 @@ class VanillaAgendaBlock {
         });
 
         // Close dropdown when clicking outside
-        document.addEventListener('click', (e) => {
-            if (!this.element.contains(e.target)) {
-                if (this.state.isDropdownOpen) {
+        if (!this._outsideClickHandler) {
+            this._outsideClickHandler = (e) => {
+                if (!this.element.contains(e.target) && this.state.isDropdownOpen) {
                     this.state.isDropdownOpen = false;
                     this.render();
                     this.attachEventListeners();
                 }
-            }
-        });
+            };
+            document.addEventListener('click', this._outsideClickHandler);
+        }
 
         // Pagination
         this.element.querySelectorAll('.agenda-block__pagination-btn').forEach(btn => {
