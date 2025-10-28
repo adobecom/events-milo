@@ -33,7 +33,7 @@ export function getEventServiceEnv() {
 
   // if (host.endsWith('adobe.com')) return 'prod';
   // fallback to dev
-  return 'prod';
+  return 'stage';
 }
 
 export function createTag(tag, attributes, html, options = {}) {
