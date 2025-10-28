@@ -394,16 +394,14 @@
     flex: 1;
 }
 
-.agenda-block__date-row .agenda-block__time-header {
-    border-bottom: 2px solid #1473e6;
-}
-
 .agenda-block__time-cell {
     text-align: center;
     font-size: 0.875rem;
     color: #333;
     font-weight: 500;
     background-color: #ffffff;
+    border-bottom-color: rgb(75, 97, 142);
+    border-width: 2px solid;
 }
 
 .agenda-block__grid-container {
