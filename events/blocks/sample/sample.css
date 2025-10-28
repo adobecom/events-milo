@@ -403,13 +403,7 @@
     font-size: 0.875rem;
     color: #333;
     font-weight: 500;
-    padding: 0.75rem 0.5rem;
     background-color: #ffffff;
-}
-
-
-.agenda-block__date-row .agenda-block__time-cell {
-    padding-bottom: 0.5rem;
 }
 
 .agenda-block__grid-container {
