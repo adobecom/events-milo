@@ -380,9 +380,13 @@
     grid-template-columns: repeat(5, 297px);
     gap: 6px;
     flex: 1;
+    height: 100%;
 }
 
 .agenda-block__time-cell {
+    display: flex;
+    align-items: center;
+    justify-content: center;
     text-align: center;
     font-size: 0.875rem;
     color: #333;
