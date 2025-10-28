@@ -377,7 +377,7 @@
 
 .agenda-block__time-header {
     display: grid;
-    grid-template-columns: repeat(5, 297px);
+    grid-template-columns: repeat(5, 1fr);
     gap: 6px;
     flex: 1;
     height: 100%;
