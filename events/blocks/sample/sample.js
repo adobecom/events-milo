@@ -496,29 +496,29 @@ class VanillaAgendaBlock {
                         </div>
                     </div>
                     <div class="agenda-block__watch-nav-row agenda-block__date-row">
-                        <div class="agenda-block__day-dropdown-container">
-                            <button 
-                                class="agenda-block__day-dropdown-toggle ${this.state.isDropdownOpen ? 'open' : ''}"
-                                data-dropdown-toggle="day-dropdown"
-                                aria-expanded="${this.state.isDropdownOpen}">
-                                <span>${this.state.days[this.state.currentDay]?.label || 'Select day'}</span>
-                                <span class="agenda-block__day-dropdown-chevron">▼</span>
-                            </button>
-                            <div class="agenda-block__day-dropdown ${this.state.isDropdownOpen ? 'open' : ''}" id="day-dropdown">
-                                ${this.state.days.map((day, index) => `
-                                    <button 
-                                        class="agenda-block__day-dropdown-item ${index === this.state.currentDay ? 'active' : ''}"
-                                        data-day-index="${index}">
-                                        <span>${day.label}</span>
-                                        ${index === this.state.currentDay ? '<span class="agenda-block__day-checkmark">✓</span>' : ''}
-                                    </button>
-                                `).join('')}
-                            </div>
-                            <div class="agenda-block__timezone-label">
-                                Date and times in IST
-                            </div>
-                        </div>
                         <div class="agenda-block__time-header">
+                            <div class="agenda-block__day-dropdown-container">
+                                <button 
+                                    class="agenda-block__day-dropdown-toggle ${this.state.isDropdownOpen ? 'open' : ''}"
+                                    data-dropdown-toggle="day-dropdown"
+                                    aria-expanded="${this.state.isDropdownOpen}">
+                                    <span>${this.state.days[this.state.currentDay]?.label || 'Select day'}</span>
+                                    <span class="agenda-block__day-dropdown-chevron">▼</span>
+                                </button>
+                                <div class="agenda-block__day-dropdown ${this.state.isDropdownOpen ? 'open' : ''}" id="day-dropdown">
+                                    ${this.state.days.map((day, index) => `
+                                        <button 
+                                            class="agenda-block__day-dropdown-item ${index === this.state.currentDay ? 'active' : ''}"
+                                            data-day-index="${index}">
+                                            <span>${day.label}</span>
+                                            ${index === this.state.currentDay ? '<span class="agenda-block__day-checkmark">✓</span>' : ''}
+                                        </button>
+                                    `).join('')}
+                                </div>
+                                <div class="agenda-block__timezone-label">
+                                    Date and times in IST
+                                </div>
+                            </div>
                             ${this.renderTimeHeader()}
                         </div>
                     </div>

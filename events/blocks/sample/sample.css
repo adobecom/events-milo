@@ -196,21 +196,6 @@
 
 .agenda-block__date-row {
     align-items: flex-start;
-    display: grid;
-    grid-template-columns: 200px 1fr;
-    gap: 6px;
-}
-
-@media (max-width: 1024px) {
-    .agenda-block__date-row {
-        grid-template-columns: 150px 1fr;
-    }
-}
-
-@media (max-width: 768px) {
-    .agenda-block__date-row {
-        grid-template-columns: 100px 1fr;
-    }
 }
 
 .agenda-block__day-dropdown-container {
@@ -377,7 +362,7 @@
 
 .agenda-block__time-header {
     display: grid;
-    grid-template-columns: repeat(5, 1fr);
+    grid-template-columns: repeat(6, 1fr);
     gap: 6px;
     flex: 1;
     height: 100%;
