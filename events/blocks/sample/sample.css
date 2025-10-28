@@ -400,8 +400,7 @@
     color: #333;
     font-weight: 500;
     background-color: #ffffff;
-    border-bottom-color: rgb(75, 97, 142);
-    border-width: 2px solid;
+    border-bottom: 2px solid rgb(75, 97, 142);
 }
 
 .agenda-block__grid-container {
