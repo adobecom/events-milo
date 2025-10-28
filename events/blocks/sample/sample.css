@@ -399,6 +399,7 @@
     position: relative;
     display: grid;
     gap: 6px;
+    padding: 6px 6px 0;
 }
 
 .agenda-block__pagination {
@@ -537,7 +538,6 @@
     grid-template-rows: repeat(1, 140px);
     gap: 6px;
     position: relative;
-    border-top: 1px solid #e0e0e0;
     background-color: transparent;
     border-radius: 4px;
 }
