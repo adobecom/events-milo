@@ -841,13 +841,9 @@ class VanillaAgendaBlock {
         console.log('globalNavHeight', globalNavHeight);
         // Use IntersectionObserver to detect when header scrolls out of view
         const observer = new IntersectionObserver(([entry]) => {
-            if (entry.intersectionRatio < 1) {
-                header.classList.add('agenda-block__header--pinned');
-            } else {
-                header.classList.remove('agenda-block__header--pinned');
-            }
+            entry.target.classList.toggle('agenda-block__header--pinned', entry.intersectionRatio < 1);
         }, {
-            threshold: [0],
+            threshold: [1],
             rootMargin: `-${globalNavHeight}px 0px 0px 0px`
         });
 
