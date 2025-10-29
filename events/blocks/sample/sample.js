@@ -660,14 +660,14 @@ class VanillaAgendaBlock {
                 data-direction="prev"
                 ${this.state.timeCursor <= 0 ? 'disabled' : ''}
                 aria-label="${this.config.labels.prevAriaLabel || 'Previous'}">
-                ‹
+                <svg class="chevron" viewBox="0 0 13 18" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg"><path id="Path_183918" data-name="Path 183918" d="M5.951,12.452a1.655,1.655,0,0,1,.487-1.173l6.644-6.642a1.665,1.665,0,1,1,2.39,2.307l-.041.041L9.962,12.452l5.47,5.468a1.665,1.665,0,0,1-2.308,2.389l-.041-.041L6.439,13.626a1.655,1.655,0,0,1-.488-1.174Z" transform="translate(-5.951 -4.045)" fill="#747474"></path></svg>
             </button>
             <button 
                 class="agenda-block__pagination-btn next" 
                 data-direction="next"
                 ${this.state.timeCursor >= maxOffset ? 'disabled' : ''}
                 aria-label="${this.config.labels.nextAriaLabel || 'Next'}">
-                ›
+                <svg class="chevron" viewBox="0 0 13 18" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg"><path id="Path_183691" data-name="Path 183691" d="M16.02,12.294a1.655,1.655,0,0,1-.487,1.173L8.889,20.108A1.665,1.665,0,1,1,6.5,17.8l.041-.041,5.469-5.467L6.539,6.825A1.665,1.665,0,0,1,8.847,4.436l.041.041,6.644,6.642a1.655,1.655,0,0,1,.488,1.174Z" transform="translate(-4 -4.045)" fill="#747474"></path></svg>
             </button>
         `;
     }
