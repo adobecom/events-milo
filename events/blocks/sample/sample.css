@@ -180,8 +180,8 @@
     border: none;
     border-bottom: 2px solid transparent;
     font-size: 0.875rem;
-    font-weight: 400;
-    color: #666;
+    font-weight: 700;
+    color: #000;
     cursor: pointer;
     transition: all 0.2s ease;
     white-space: nowrap;
@@ -199,7 +199,7 @@
 .agenda-block__place-tab.active {
     color: #1473e6;
     border-bottom-color: #1473e6;
-    font-weight: 600;
+    font-weight: 700;
 }
 
 .agenda-block__place-tab:disabled {
