@@ -455,7 +455,7 @@
     fill: #000;
 }
 
-.agenda-block__pagination-btn:active:not(:disabled) svg path {
+.agenda-block__pagination-btn:not(:disabled) svg path {
     fill: #1473e6;
 }
 
