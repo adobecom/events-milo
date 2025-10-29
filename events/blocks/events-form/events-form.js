@@ -58,6 +58,44 @@ function openSharePopup(shareType, url) {
   window.open(shareUrl, '_blank', 'width=600,height=400,scrollbars=yes,resizable=yes');
 }
 
+// Copy link to clipboard and show toast
+function copyLinkToClipboard(url) {
+  navigator.clipboard.writeText(url).then(() => {
+    showToast('Link copied to clipboard!');
+  }).catch((err) => {
+    console.error('Failed to copy link:', err);
+    showToast('Failed to copy link', true);
+  });
+}
+
+// Show toast notification
+function showToast(message, isError = false) {
+  // Remove existing toast if any
+  const existingToast = document.querySelector('.share-toast');
+  if (existingToast) {
+    existingToast.remove();
+  }
+
+  const toast = createTag('div', { 
+    class: `share-toast ${isError ? 'error' : ''}` 
+  }, message);
+  
+  document.body.appendChild(toast);
+  
+  // Trigger animation
+  setTimeout(() => {
+    toast.classList.add('show');
+  }, 10);
+  
+  // Remove toast after 3 seconds
+  setTimeout(() => {
+    toast.classList.remove('show');
+    setTimeout(() => {
+      toast.remove();
+    }, 300);
+  }, 3000);
+}
+
 function snakeToCamel(str) {
   return str
     .split('_')
@@ -638,7 +676,31 @@ function decorateSuccessScreen(screen) {
       e.preventDefault();
       openSharePopup(ShareType.LinkedIn, url);
     });
-    socialMediaSharingButtons.append(facebookButton, xButton, linkedinButton);
+
+    // Copy Link button with icon
+    const copyLinkButton = createTag('a', { 
+      href: '#', 
+      class: 'copy-link-btn',
+      'aria-label': 'Copy link'
+    });
+    copyLinkButton.innerHTML = `
+      <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="20" cy="20" r="20" fill="#1473E6"/>
+        <g transform="translate(10, 10) rotate(45 10 10)">
+          <path d="M8 12.5C8 13.3 7.3 14 6.5 14H3.5C2.7 14 2 13.3 2 12.5V9.5C2 8.7 2.7 8 3.5 8H6.5C7.3 8 8 8.7 8 9.5V12.5Z" stroke="white" stroke-width="1.5" fill="none"/>
+          <path d="M14 6.5C14 5.7 14.7 5 15.5 5H18.5C19.3 5 20 5.7 20 6.5V9.5C20 10.3 19.3 11 18.5 11H15.5C14.7 11 14 10.3 14 9.5V6.5Z" stroke="white" stroke-width="1.5" fill="none"/>
+          <path d="M8 9.5H14" stroke="white" stroke-width="1.5"/>
+        </g>
+      </svg>
+    `;
+
+    // Add click handler for copy link
+    copyLinkButton.addEventListener('click', (e) => {
+      e.preventDefault();
+      copyLinkToClipboard(url);
+    });
+
+    socialMediaSharingButtons.append(facebookButton, xButton, linkedinButton, copyLinkButton);
     const p = ss.querySelector(':scope > p:nth-of-type(2)');
     p.insertAdjacentElement('afterend', socialMediaDivider);
     socialMediaDivider.insertAdjacentElement('afterend', socialMediaSharingButtons);

@@ -607,3 +607,51 @@
 .events-form .social-media-sharing-buttons a:active img.icon {
   transform: scale(1);
 }
+
+/* Copy Link Button */
+.events-form .copy-link-btn svg {
+  width: 40px;
+  height: 40px;
+  display: block;
+}
+
+.events-form .copy-link-btn {
+  background-color: transparent;
+  padding: 0;
+}
+
+.events-form .copy-link-btn:hover {
+  background-color: transparent;
+}
+
+.events-form .copy-link-btn:hover svg circle {
+  fill: #0d66d0;
+}
+
+/* Toast Notification */
+.share-toast {
+  position: fixed;
+  bottom: 2rem;
+  left: 50%;
+  transform: translateX(-50%) translateY(100px);
+  background: #2c2c2c;
+  color: #fff;
+  padding: 1rem 1.5rem;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  font-size: 0.875rem;
+  font-weight: 500;
+  z-index: 9999;
+  opacity: 0;
+  transition: all 0.3s ease;
+  pointer-events: none;
+}
+
+.share-toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+.share-toast.error {
+  background: #d32f2f;
+}
