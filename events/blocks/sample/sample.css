@@ -200,8 +200,7 @@
     position: relative;
     display: flex;
     flex-direction: column;
-    gap: 0.25rem;
-    grid-template-columns: repeat(1, 199px);
+    align-items: center;
 }
 
 .agenda-block__track-label {
@@ -250,6 +249,7 @@
     color: #333;
     cursor: pointer;
     transition: all 0.2s ease;
+    width: fit-content;
 }
 
 .agenda-block__day-dropdown-toggle:hover {
