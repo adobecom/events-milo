@@ -452,10 +452,10 @@
 }
 
 .agenda-block__pagination-btn:hover:not(:disabled) svg path {
-    fill: #1473e6;
+    fill: #000;
 }
 
-.agenda-block__pagination-btn:active svg path {
+.agenda-block__pagination-btn:active:not(:disabled) svg path {
     fill: #1473e6;
 }
 
