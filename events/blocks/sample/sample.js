@@ -477,7 +477,6 @@ class VanillaAgendaBlock {
      */
     renderHeader() {
         return `
-            <div class="agenda-block__gradient-bar"></div>
             <div class="agenda-block__header">
                 <div class="agenda-block__watch-nav">
                     <div class="agenda-block__watch-nav-row">

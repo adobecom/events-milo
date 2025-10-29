@@ -15,17 +15,6 @@
     padding: 0;
 }
 
-.agenda-block__gradient-bar {
-    height: 4px;
-    background: linear-gradient(
-        to right,
-        #8B5CF6 0%,
-        #06B6D4 50%,
-        #0EA5E9 100%
-    );
-    width: 100%;
-}
-
 .agenda-block__loading {
     display: flex;
     flex-direction: column;
