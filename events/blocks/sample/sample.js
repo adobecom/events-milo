@@ -240,6 +240,7 @@ const AGENDA_CONFIG = {
     
     // Place/Timezone Options
     places: [
+        { id: 'live', name: 'Live', timezone: 'PST' },
         { id: 'americas', name: 'Americas', timezone: 'PST' },
         { id: 'emea', name: 'Europe, Middle East, and Africa', timezone: 'CET' },
         { id: 'apac', name: 'Asia Pacific', timezone: 'JST' }
