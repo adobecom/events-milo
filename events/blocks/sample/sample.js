@@ -847,7 +847,7 @@ class VanillaAgendaBlock {
                 header.classList.remove('agenda-block__header--pinned');
             }
         }, {
-            threshold: [1],
+            threshold: [0],
             rootMargin: `-${globalNavHeight}px 0px 0px 0px`
         });
 
