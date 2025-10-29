@@ -191,15 +191,9 @@
     color: #333;
 }
 
-.agenda-block__place-tab:focus {
-    outline: 2px solid #1473e6;
-    outline-offset: 2px;
-}
-
 .agenda-block__place-tab.active {
-    color: #1473e6;
-    border-bottom-color: #1473e6;
-    font-weight: 700;
+    color: #000;
+    border-bottom-color: #000;
 }
 
 .agenda-block__place-tab:disabled {
