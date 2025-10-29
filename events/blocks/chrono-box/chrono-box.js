@@ -1,4 +1,4 @@
-import { readBlockConfig, LIBS, getMetadata } from '../../scripts/utils.js';
+import { LIBS, getMetadata } from '../../scripts/utils.js';
 
 function buildScheduleDoubleLinkedList(entries) {
   if (!entries.length) return null;
@@ -106,21 +106,31 @@ export default async function init(el) {
   const [{ default: loadFragment }, { createTag, getLocale, getConfig }] = await Promise.all([
     import(`${LIBS}/blocks/fragment/fragment.js`),
     import(`${LIBS}/utils/utils.js`),
-    import(`${LIBS}/features/spectrum-web-components/dist/theme.js`),
-    import(`${LIBS}/features/spectrum-web-components/dist/progress-circle.js`),
   ]);
 
-  const blockConfig = readBlockConfig(el);
-  const scheduleId = blockConfig?.['schedule-id'];
-  let staticSchedule;
+  // Parse block config directly from text content to avoid issues with auto-linked content
+  const rows = el.querySelectorAll(':scope > div');
+  let scheduleId = null;
+  let staticSchedule = null;
 
-  if (blockConfig?.schedule) {
-    try {
-      staticSchedule = JSON.parse((blockConfig?.schedule));
-    } catch (e) {
-      window.lana?.log(`Error parsing static schedule: ${JSON.stringify(e)}`);
+  rows.forEach((row) => {
+    const cols = Array.from(row.children);
+    if (cols.length >= 2) {
+      const key = cols[0].textContent.trim().toLowerCase();
+      const value = cols[1].textContent.trim();
+
+      if (key === 'schedule-id') {
+        scheduleId = value;
+      } else if (key === 'schedule') {
+        try {
+          staticSchedule = JSON.parse(value);
+        } catch (e) {
+          window.lana?.log(`Error parsing static schedule: ${JSON.stringify(e)}`);
+        }
+      }
     }
-  }
+  });
+
   const scheduleById = scheduleId ? getSchedule(scheduleId) : null;
   const thisSchedule = staticSchedule || scheduleById;
 
@@ -154,17 +164,13 @@ export default async function init(el) {
       el.style.height = `${el.clientHeight}px`;
 
       // load sp progress circle
-      const spTheme = createTag('sp-theme', { color: 'light', scale: 'medium', class: 'loading-screen' });
-      createTag('sp-progress-circle', { size: 'l', indeterminate: true }, '', { parent: spTheme });
       el.innerHTML = '';
       el.classList.add('loading');
-      el.append(spTheme);
 
       const a = createTag('a', { href: `${prefix}${pathToFragment}` }, '', { parent: el });
 
       loadFragment(a).then(() => {
         // set el height to current height
-        spTheme.remove();
         el.removeAttribute('style');
         el.classList.remove('loading');
       }).catch((error) => {
@@ -172,7 +178,6 @@ export default async function init(el) {
         window.lana?.log(`Error loading fragment ${pathToFragment}: ${JSON.stringify(error)}`);
 
         // Remove loading state
-        spTheme.remove();
         el.removeAttribute('style');
         el.classList.remove('loading');
 
