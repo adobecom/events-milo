@@ -113,8 +113,11 @@
 .agenda-block__watch-nav {
     display: flex;
     flex-direction: column;
-    gap: 0.75rem;
     width: 100%;
+}
+
+.agenda-block__watch-nav > :first-child {
+    height: 68px;
 }
 
 .agenda-block__watch-nav-row {
@@ -136,7 +139,8 @@
 .agenda-block__watch-label {
     font-size: 0.875rem;
     font-weight: 500;
-    color: #333;
+    color: #000;
+    margin-right: 14px;
 }
 
 .agenda-block__timezone-label {
@@ -163,12 +167,15 @@
 }
 
 .agenda-block__place-item {
-    margin: 0;
-    padding: 0;
+    padding: 5px;
+    margin: 0 7px;
+    border: 0;
+    min-height: auto;
+    font-weight: 700;
 }
 
 .agenda-block__place-tab {
-    padding: 0.5rem 1rem;
+    padding: 6px 0 4px;
     background-color: transparent;
     border: none;
     border-bottom: 2px solid transparent;
