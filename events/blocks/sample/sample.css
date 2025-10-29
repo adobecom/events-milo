@@ -102,7 +102,6 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    gap: 1rem;
     background-color: #ffffff;
     transition: box-shadow 0.2s ease;
     position: sticky;
@@ -110,9 +109,8 @@
     z-index: 100;
 }
 
-.agenda-block__header--pinned > :first-child {
-    grid-row-gap: 0;
-    grid-column-gap: 0;
+.agenda-block__header.agenda-block__header--pinned .agenda-block__time-header {
+    gap: 0;
 }
 
 @media (max-width: 768px) {
