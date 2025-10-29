@@ -480,7 +480,7 @@ class VanillaAgendaBlock {
         return `
             <div class="agenda-block__header">
                 <div class="agenda-block__watch-nav">
-                    <div class="agenda-block__watch-nav-row">
+                    <div class="agenda-block__watch-nav-row agenda-block__geo-row">
                         <span class="agenda-block__watch-label">Watch:</span>
                         <div class="agenda-block__place-selector">
                             <ul class="agenda-block__place-list">
