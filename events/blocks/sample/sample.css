@@ -148,6 +148,21 @@
     gap: 0;
 }
 
+/* New list-based structure for place selector */
+.agenda-block__place-list {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.agenda-block__place-item {
+    margin: 0;
+    padding: 0;
+}
+
 .agenda-block__place-tab {
     padding: 0.5rem 1rem;
     background-color: transparent;

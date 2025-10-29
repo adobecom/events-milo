@@ -482,13 +482,17 @@ class VanillaAgendaBlock {
                     <div class="agenda-block__watch-nav-row">
                         <span class="agenda-block__watch-label">Watch:</span>
                         <div class="agenda-block__place-selector">
-                            ${this.config.places.map(place => `
-                                <button 
-                                    class="agenda-block__place-tab ${place.id === this.state.currentPlace ? 'active' : ''}"
-                                    data-place-id="${place.id}">
-                                    ${place.name}
-                                </button>
-                            `).join('')}
+                            <ul class="agenda-block__place-list">
+                                ${this.config.places.map(place => `
+                                    <li class="agenda-block__place-item">
+                                        <button 
+                                            class="agenda-block__place-tab ${place.id === this.state.currentPlace ? 'active' : ''}"
+                                            data-place-id="${place.id}">
+                                            ${place.name}
+                                        </button>
+                                    </li>
+                                `).join('')}
+                            </ul>
                         </div>
                         <div class="agenda-block__pagination">
                             ${this.renderPagination()}
