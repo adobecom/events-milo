@@ -769,14 +769,23 @@ class VanillaAgendaBlock {
             const startTime = new Date(session.sessionStartTime).getTime();
             const endTime = new Date(session.sessionEndTime).getTime();
             
+            // Determine duration display format
+            const durationText = session.sessionDuration >= 60 
+                ? `${Math.floor(session.sessionDuration / 60)} hr ` 
+                : `${session.sessionDuration} min`;
+            
+            // Generate daa-lh attribute like React (for analytics)
+            const trackDisplayIndex = (this.state.tracks.findIndex(t => t.tagId === session.sessionTrack.tagId) + 1);
+            const daaLh = `Logged Out|No Filter|${session.sessionTrack.title}-${trackDisplayIndex}|${session.isFeatured ? 'Featured' : 'Not Featured'}|${session.sessionId}|${session.isOnDemand ? 'On Demand' : session.isLive ? 'Live' : 'Upcoming'}|${session.sessionTitle}`;
+            
             html += `
                 <div class="agenda_tile_wrapper agenda_tile_wrapper--col-width-${endColumn - startColumn}" style="grid-area: ${rowNumber} / ${startColumn} / ${rowNumber + 1} / ${endColumn};">
-                    <article class="agenda_tile" style="border-color: rgb(213, 213, 213);">
-                        <a href="${session.cardUrl}" class="title">
+                    <article class="agenda_tile" daa-lh="${daaLh}" style="border-color: rgb(213, 213, 213);">
+                        <a href="${session.cardUrl}" class="title" daa-ll="${session.isOnDemand ? 'On Demand Session Title Click' : 'Session Title Click'}|${session.sessionTitle}">
                             ${session.sessionTitle}
                         </a>
                         <footer>
-                            <p class="duration">${session.sessionDuration} min</p>
+                            <p class="duration">${durationText}</p>
                         </footer>
                     </article>
                 </div>
@@ -790,7 +799,7 @@ class VanillaAgendaBlock {
                 const cellKey = `${row}-${col}`;
                 if (!occupiedCells.has(cellKey)) {
                     html += `
-                        <article class="agenda_tile empty" style="grid-area: ${row} / ${col} / ${row + 1} / ${col + 1}; border-color: rgb(213, 213, 213); background-image: linear-gradient(135deg, rgb(213, 213, 213) 4.5%, rgba(0, 0, 0, 0) 4.5%, rgba(0, 0, 0, 0) 50%, rgb(213, 213, 213) 50%, rgb(213, 213, 213) 54.55%, rgba(0, 0, 0, 0) 54.55%, rgba(0, 0, 0, 0) 100%);"></article>
+                        <article class="agenda_tile empty" daa-ll="Session title" style="grid-area: ${row} / ${col} / ${row + 1} / ${col + 1}; border-color: rgb(213, 213, 213); background-image: linear-gradient(135deg, rgb(213, 213, 213) 4.5%, rgba(0, 0, 0, 0) 4.5%, rgba(0, 0, 0, 0) 50%, rgb(213, 213, 213) 50%, rgb(213, 213, 213) 54.55%, rgba(0, 0, 0, 0) 54.55%, rgba(0, 0, 0, 0) 100%);"></article>
                     `;
                 }
             }
