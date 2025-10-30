@@ -343,15 +343,15 @@ function isSessionOnDemand(session) {
  * Extract unique days from sessions (like Digital Agenda does)
  */
 function extractDaysFromSessions(sessions) {
-    const daysMap = new Map();
+        const daysMap = new Map();
     
-    sessions.forEach(session => {
+        sessions.forEach(session => {
         const startTime = new Date(session.sessionStartTime).getTime();
         const dayKey = getDayKey(startTime);
         
-        if (!daysMap.has(dayKey)) {
+                if (!daysMap.has(dayKey)) {
             const date = new Date(startTime);
-            daysMap.set(dayKey, {
+                    daysMap.set(dayKey, {
                 id: dayKey,
                 date: dayKey,
                 label: formatDate(date),
@@ -545,8 +545,9 @@ class VanillaAgendaBlock {
         }
 
         const html = `
-            ${this.renderHeader()}
-            ${this.renderTable()}
+            <div class="agenda-block__container">
+                ${this.renderHeader()}
+            </div>
         `;
         
         this.element.innerHTML = html;
@@ -557,158 +558,75 @@ class VanillaAgendaBlock {
      */
     renderHeader() {
         return `
-            <div class="agenda_container">
-                <div class="agenda_navigation agenda_navigation--pinned" style="top: 59px;">
-                    <div class="agenda_head">
-                        <div class="agenda_row">
-                            <div class="agenda_scrollHeader dark" style="background-color: rgb(255, 255, 255);">
-                                <div class="agenda_scrollHeader_label">
-                                    <span>Watch:</span>
-                                </div>
-                                <ul class="spectrum-Menu is-selectable agenda_scrollHeader_regions" role="listbox">
-                                    ${this.config.places.map(place => `
-                                        <li class="spectrum-Menu-item">
-                                            <span class="spectrum-Menu-itemLabel">
-                                                <span class="agenda_scrollHeader_region">${place.name}</span>
-                                            </span>
-                                        </li>
+            <div class="agenda-block__header">
+                <div class="agenda-block__watch-nav">
+                    <div class="agenda-block__watch-nav-row agenda-block__geo-row">
+                        <span class="agenda-block__watch-label">Watch:</span>
+                        <div class="agenda-block__place-selector">
+                            <ul class="agenda-block__place-list">
+                                ${this.config.places.map(place => `
+                                    <li class="agenda-block__place-item">
+                        <button 
+                                            class="agenda-block__place-tab ${place.id === this.state.currentPlace ? 'active' : ''}"
+                                            data-place-id="${place.id}">
+                                            ${place.name}
+                        </button>
+                                    </li>
+                    `).join('')}
+                            </ul>
+                </div>
+                <div class="agenda-block__pagination">
+                            ${this.renderPagination()}
+                        </div>
+                    </div>
+                    <div class="agenda-block__watch-nav-row agenda-block__date-row">
+                        <div class="agenda-block__time-header">
+                            <div class="agenda-block__day-dropdown-container">
+                    <button 
+                                    class="agenda-block__day-dropdown-toggle ${this.state.isDropdownOpen ? 'open' : ''}"
+                                    data-dropdown-toggle="day-dropdown"
+                                    aria-expanded="${this.state.isDropdownOpen}">
+                                    <span>${this.state.days[this.state.currentDay]?.label || 'Select day'}</span>
+                                    <span class="agenda-block__day-dropdown-chevron">▼</span>
+                    </button>
+                                <div class="agenda-block__day-dropdown ${this.state.isDropdownOpen ? 'open' : ''}" id="day-dropdown">
+                                    ${this.state.days.map((day, index) => `
+                    <button 
+                                            class="agenda-block__day-dropdown-item ${index === this.state.currentDay ? 'active' : ''}"
+                                            data-day-index="${index}">
+                                            <span>${day.label}</span>
+                                            ${index === this.state.currentDay ? '<span class="agenda-block__day-checkmark">✓</span>' : ''}
+                    </button>
                                     `).join('')}
-                                </ul>
+                </div>
+                                <div class="agenda-block__timezone-label">
+                                    Date and times in IST
+            </div>
                             </div>
-                            <div class="agenda_pagination-wrapper">
-                                ${this.renderPagination()}
-                            </div>
+                            ${this.renderTimeHeader()}
                         </div>
                     </div>
                 </div>
             </div>
+            ${this.renderTracksColumnWithGrid()}
         `;
     }
 
     /**
-     * Render table structure matching React
+     * Render combined tracks column with grid wrapper
      */
-    renderTable() {
-        const currentDay = this.state.days[this.state.currentDay];
-        if (!currentDay) {
-            return `<div class="agenda-block__empty">${this.config.labels.noSessionsText}</div>`;
-        }
-
+    renderTracksColumnWithGrid() {
         return `
-            <table class="agenda">
-                <thead class="agenda_head" style="top: 127px;">
-                    ${this.renderTableHeader()}
-                </thead>
-                <tbody class="agenda_body">
-                    ${this.renderTableBody()}
-                </tbody>
-            </table>
-        `;
-    }
-
-    /**
-     * Render table header row
-     */
-    renderTableHeader() {
-        return `
-            <tr class="agenda_row">
-                <td class="daySelector false" daa-ll="Date Dropdown" style="background-color: rgb(248, 248, 248);">
-                    ${this.renderDaySelector()}
-                </td>
-                ${this.renderTimeHeaderCells()}
-            </tr>
-        `;
-    }
-
-    /**
-     * Render day selector
-     */
-    renderDaySelector() {
-        const currentDay = this.state.days[this.state.currentDay];
-        return `
-            <div class="spectrum-Dropdown">
-                <button type="button" class="spectrum-FieldButton spectrum-Dropdown-trigger" aria-haspopup="listbox">
-                    <span class="spectrum-Dropdown-label">${currentDay?.label || 'Select day'}</span>
-                    <svg class="spectrum-UIIcon-ChevronDownMedium spectrum-Icon spectrum-Dropdown-icon">
-                        <path class="spectrum-UIIcon--medium"></path>
-                        <path class="spectrum-UIIcon--large"></path>
-                    </svg>
-                </button>
-            </div>
-            <div class="daySelector_label">Date and times in IST</div>
-        `;
-    }
-
-    /**
-     * Render time header cells
-     */
-    renderTimeHeaderCells() {
-        const timeSlots = this.getVisibleTimeSlots();
-        const now = this.state.currentTime || Date.now();
-        const uses24Hour = localeUses24HourTime();
-        
-        return timeSlots.map((time, index) => {
-            const nextTime = timeSlots[index + 1];
-            const timeDate = new Date(time);
-            
-            const isLive = nextTime ? now >= time && now < nextTime : now >= time;
-            const showIcon = uses24Hour && timeDate.getHours() % 12 === 0 && timeDate.getMinutes() === 0;
-            const isDaytime = timeDate.getHours() > 11;
-            
-            const showSun = showIcon && isDaytime;
-            const showMoon = showIcon && !isDaytime;
-            
-            return `
-                <th class="time_column" style="background-color: rgb(248, 248, 248); border-bottom-color: rgb(75, 97, 142);">
-                    <div class="time_column_daytime">
-                        ${renderDayNightIcon(showSun, showMoon)}
-                        <div class="time_column-time">${formatTime(time)}</div>
-                    </div>
-                </th>
-            `;
-        }).join('');
-    }
-
-    /**
-     * Render table body with track rows
-     */
-    renderTableBody() {
-        const currentDay = this.state.days[this.state.currentDay];
-        if (!currentDay) {
-            return '';
-        }
-
-        const daySessions = this.getSessionsForCurrentDay();
-        
-        return this.state.tracks.map((track, index) => {
-            const trackSessions = daySessions.filter(s => s.sessionTrack.tagId === track.tagId);
-            const rowIndex = index + 2; // Start from 2 (after header row which is 1)
-            
-            return `
-                <tr class="agenda_row">
-                    <th class="agenda_row-track dark" style="grid-row: ${rowIndex} / ${rowIndex + 1};">
-                        ${this.renderTrackLabel(track)}
-                    </th>
-                    <td class="agenda_row-grid" style="grid-row: ${rowIndex} / ${rowIndex + 1};">
-                        ${this.renderTrackSessions(trackSessions, currentDay)}
-                    </td>
-                </tr>
-            `;
-        }).join('');
-    }
-
-    /**
-     * Render track label (th content)
-     */
-    renderTrackLabel(track) {
-        return `
-            <article class="tracks">
-                <div class="tracks_title">
-                    <div class="tracks_title-content">
-                        <span class="tracks_title-label">${track.title}</span>
+            <div class="agenda-block__body">
+                <div class="agenda-block__tracks-column">
+                    ${this.renderTracksColumn()}
+                </div>
+                <div class="agenda-block__grid-wrapper">
+                    <div class="agenda-block__grid-container">
+                        ${this.renderGrid()}
                     </div>
                 </div>
-            </article>
+            </div>
         `;
     }
 
@@ -747,14 +665,14 @@ class VanillaAgendaBlock {
             
             const showSun = showIcon && isDaytime;
             const showMoon = showIcon && !isDaytime;
-            
-            return `
+
+        return `
                 <div class="agenda-block__time-cell ${isLive ? 'time-cell-live' : ''}">
                     ${isLive ? getLiveIndicator() : ''}
                     ${renderDayNightIcon(showSun, showMoon)}
                     <span class="time-value">${formatTime(time)}</span>
-                </div>
-            `;
+            </div>
+        `;
         }).join('');
     }
 
@@ -772,11 +690,11 @@ class VanillaAgendaBlock {
         return this.state.tracks.map(track => {
             const trackSessions = daySessions.filter(s => s.sessionTrack.tagId === track.tagId);
             // Each track gets its own grid section for proper separation
-            return `
+        return `
                 <div class="agenda-block__track-row">
                     ${this.renderTrackSessions(trackSessions, currentDay)}
-                </div>
-            `;
+            </div>
+        `;
         }).join('');
     }
 
@@ -870,7 +788,7 @@ class VanillaAgendaBlock {
                             <p class="duration">${durationText}</p>
                         </footer>
                     </article>
-                </div>
+            </div>
             `;
         });
         
