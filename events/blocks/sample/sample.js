@@ -689,6 +689,7 @@ class VanillaAgendaBlock {
         
         return this.state.tracks.map(track => {
             const trackSessions = daySessions.filter(s => s.sessionTrack.tagId === track.tagId);
+            // Each track gets its own grid section for proper separation
             return `
                 <div class="agenda-block__track-row">
                     ${this.renderTrackSessions(trackSessions, currentDay)}
@@ -792,26 +793,29 @@ class VanillaAgendaBlock {
         });
         
         // Add empty cells with diagonal pattern for all remaining positions
+        // Generate empty cells for each row
         for (let row = 1; row <= numberOfRows; row++) {
             for (let col = 1; col <= VISIBLE_TIME_SLOTS; col++) {
-                if (!occupiedCells.has(`${row}-${col}`)) {
+                const cellKey = `${row}-${col}`;
+                if (!occupiedCells.has(cellKey)) {
                     html += `
-                        <div class="agenda-block__track-empty" style="
+                        <article class="agenda-block__track-empty" style="
                             grid-column: ${col} / ${col + 1};
                             grid-row: ${row} / ${row + 1};
                             background-color: rgb(248, 248, 248);
-                            border-color: rgb(213, 213, 213);
+                            border: 1px solid rgb(213, 213, 213);
                             background-image: linear-gradient(135deg, rgb(213, 213, 213) 4.5%, rgba(0, 0, 0, 0) 4.5%, rgba(0, 0, 0, 0) 50%, rgb(213, 213, 213) 50%, rgb(213, 213, 213) 54.55%, rgba(0, 0, 0, 0) 54.55%, rgba(0, 0, 0, 0) 100%);
                             background-size: 15.56px 15.56px;
-                        "></div>
+                            border-radius: 4px;
+                        "></article>
                     `;
                 }
             }
         }
         
-        // Render track row with grid-template-rows
+        // Render track row - grid-auto-rows in CSS handles the row height
         return `
-            <section class="agenda-grid" style="grid-template-rows: repeat(${numberOfRows}, 140px);">
+            <section class="agenda-grid">
                 ${html}
             </section>
         `;
