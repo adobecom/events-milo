@@ -702,7 +702,7 @@ class VanillaAgendaBlock {
      * Render sessions for a track with proper grid splitting
      */
     renderTrackSessions(sessions, currentDay) {
-        const dayStartTime = new Date(currentDay.date + 'T08:00:00').getTime();
+        const dayStartTime = new Date(currentDay.date + 'T08:00:00Z').getTime();
         const visibleStart = dayStartTime + (this.state.timeCursor * TIME_SLOT_DURATION * MINUTE_MS);
         
         // Calculate grid layout for sessions with rowNumber
@@ -847,7 +847,7 @@ class VanillaAgendaBlock {
         const currentDay = this.state.days[this.state.currentDay];
         if (!currentDay) return [];
 
-        const dayStartTime = new Date(currentDay.date + 'T08:00:00').getTime();
+        const dayStartTime = new Date(currentDay.date + 'T08:00:00Z').getTime();
         const startTime = dayStartTime + (this.state.timeCursor * TIME_SLOT_DURATION * MINUTE_MS);
 
         const slots = [];
@@ -865,8 +865,8 @@ class VanillaAgendaBlock {
         if (daySessions.length === 0) return 0;
 
         const currentDay = this.state.days[this.state.currentDay];
-        const dayStartTime = new Date(currentDay.date + 'T08:00:00').getTime();
-        const dayEndTime = new Date(currentDay.date + 'T20:00:00').getTime();
+        const dayStartTime = new Date(currentDay.date + 'T08:00:00Z').getTime();
+        const dayEndTime = new Date(currentDay.date + 'T20:00:00Z').getTime();
 
         const totalSlots = (dayEndTime - dayStartTime) / (TIME_SLOT_DURATION * MINUTE_MS);
         return Math.max(0, totalSlots - VISIBLE_TIME_SLOTS);

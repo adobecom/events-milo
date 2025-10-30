@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sample Block Test</title>
+    <link rel="stylesheet" href="events/blocks/sample/sample.css">
+</head>
+<body>
+    <div class="agenda-block">
+        <div class="agenda-block__header"></div>
+        <div class="agenda-block__body">
+            <div class="agenda-block__tracks-column"></div>
+            <div class="agenda-block__grid-wrapper">
+                <div class="agenda-block__grid-container"></div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import init from './events/blocks/sample/sample.js';
+        const element = document.querySelector('.agenda-block');
+        if (element) {
+            init(element);
+        }
+    </script>
+</body>
+</html>
+
