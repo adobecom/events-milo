@@ -35,6 +35,7 @@ const [{
   getSusiOptions,
   getMetadata,
   setMetadata,
+  processAutoBlockLinks,
   EVENT_BLOCKS,
 }] = await Promise.all([
   import(`${LIBS}/utils/utils.js`),
@@ -60,6 +61,7 @@ export default function decorateArea(area = document) {
     eagerLoad(marquee, 'div:last-child > div:last-child img');
   }());
 
+  processAutoBlockLinks(area);
   if (!getMetadata('event-id')) return;
   decorateEvent(area);
 }
@@ -279,6 +281,6 @@ if (EVENT_CONFIG.cmsType === 'SP') {
   await loadLana({ clientId: 'events-milo' });
   await loadArea().then(async () => {
     const { eventsDelayedActions } = await import(`${EVENT_LIBS}/libs.js`);
-    if (getMetadata('event-id')) eventsDelayedActions();
+    eventsDelayedActions();
   });
 }());
