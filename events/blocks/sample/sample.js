@@ -88,6 +88,17 @@ const MOCK_CHIMERA_API_RESPONSE = {
             isFeatured: false
         },
         {
+            sessionId: 's20',
+            sessionTitle: 'Overlapping Session Test',
+            sessionStartTime: '2024-10-21T13:15:00.000Z',
+            sessionEndTime: '2024-10-21T14:15:00.000Z',
+            sessionDuration: '60',
+            sessionTrack: { tagId: 'track3', title: 'Document Cloud' },
+            cardUrl: '#session-20',
+            tags: ['test', 'overlap'],
+            isFeatured: false
+        },
+        {
             sessionId: 's8',
             sessionTitle: 'Data-Driven Marketing with Analytics',
             sessionStartTime: '2024-10-21T14:15:00.000Z',
@@ -367,6 +378,71 @@ function debounce(func, wait) {
     };
 }
 
+/**
+ * Render day/night icon (sun or moon)
+ */
+function renderDayNightIcon(showSun, showMoon) {
+    if (showSun) {
+        return `
+            <div class="daytime_icon">
+                <svg viewBox="0 0 14.5 14.5" xmlns="http://www.w3.org/2000/svg">
+                    <title>Sun Icon</title>
+                    <g transform="translate(-562 -997)">
+                        <circle cx="569.2" cy="1004.2" r="3.2" fill="currentColor"/>
+                        <path d="M569.2,998.4a0.641,0.641,0,0,1,0,1.283" fill="currentColor"/>
+                        <path d="M569.2,1011.315a0.641,0.641,0,0,1,0-1.283" fill="currentColor"/>
+                        <path d="M576.738,1001.527a0.641,0.641,0,0,1-.907.907" fill="currentColor"/>
+                        <path d="M561.062,1008.066a0.641,0.641,0,0,1,.907-.907" fill="currentColor"/>
+                        <path d="M576.738,1008.066a0.641,0.641,0,0,1-.907-.907" fill="currentColor"/>
+                        <path d="M561.062,1001.527a0.641,0.641,0,0,1,.907.907" fill="currentColor"/>
+                        <path d="M575.195,1004.2a0.641,0.641,0,0,1,1.283,0" fill="currentColor"/>
+                        <path d="M562.205,1004.2a0.641,0.641,0,0,1-1.283,0" fill="currentColor"/>
+                    </g>
+                </svg>
+            </div>
+        `;
+    }
+    if (showMoon) {
+        return `
+            <div class="daytime_icon">
+                <svg viewBox="0 0 8.1 11" xmlns="http://www.w3.org/2000/svg">
+                    <title>Moon Icon</title>
+                    <path d="M0,8.838C0.98,10.567,3.022,11.731,5.243,11.185c0.963-0.237,1.846-0.72,2.569-1.406c-0.495,0.046-1,0.014-1.493-0.096c-1.568-0.351-2.936-1.326-3.664-2.72C2.118,5.75,2.044,4.354,2.432,3.048C1.37,3.826,0.622,5.12,0.545,6.565C0.523,7.116,0.569,7.673,0.686,8.212C0.674,8.365,0.652,8.516,0.622,8.665C0.458,8.539,0.307,8.395,0.172,8.235C0.114,8.435,0.057,8.636,0,8.838z" fill="currentColor"/>
+                </svg>
+            </div>
+        `;
+    }
+    return '';
+}
+
+/**
+ * Check if locale uses 24-hour format
+ */
+function localeUses24HourTime() {
+    try {
+        const formatter = new Intl.DateTimeFormat(navigator.language, { hour: 'numeric' });
+        const parts = formatter.formatToParts(new Date(2020, 0, 1, 13));
+        const hourPart = parts.find(part => part.type === 'hour');
+        return hourPart && hourPart.value.length === 2;
+    } catch (e) {
+        return false;
+    }
+}
+
+/**
+ * Get live indicator class
+ */
+function getLiveIndicator() {
+    return `
+        <span class="agenda-block__live-indicator">
+            <svg class="live-circle" width="8" height="8" viewBox="0 0 8 8" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="4" cy="4" r="4" fill="currentColor"/>
+            </svg>
+            <span class="live-label">LIVE</span>
+        </span>
+    `;
+}
+
 // ============================================================================
 // MAIN AGENDA BLOCK CLASS
 // ============================================================================
@@ -385,8 +461,12 @@ class VanillaAgendaBlock {
             isMobile: window.innerWidth < 768,
             isLoading: true,
             currentPlace: this.config.defaultPlace,
-            isDropdownOpen: false
+            isDropdownOpen: false,
+            currentTime: Date.now()
         };
+        
+        // Live update interval
+        this.updateInterval = null;
         
         this.init();
     }
@@ -400,7 +480,7 @@ class VanillaAgendaBlock {
         this.render();
         this.attachEventListeners();
         this.setupStickyHeader();
-        // this.startLiveUpdates(); // Commented out to prevent auto-refresh
+        this.startLiveUpdates();
     }
 
     /**
@@ -563,13 +643,37 @@ class VanillaAgendaBlock {
     }
 
     /**
-     * Render time header
+     * Render time header with icons and live indicators
      */
     renderTimeHeader() {
         const timeSlots = this.getVisibleTimeSlots();
-        return timeSlots.map(time => `
-            <div class="agenda-block__time-cell">${formatTime(time)}</div>
-        `).join('');
+        const now = this.state.currentTime || Date.now();
+        const uses24Hour = localeUses24HourTime();
+        
+        return timeSlots.map((time, index) => {
+            const nextTime = timeSlots[index + 1];
+            const timeDate = new Date(time);
+            
+            // Check if this slot is currently live
+            const isLive = nextTime 
+                ? now >= time && now < nextTime 
+                : now >= time;
+            
+            // Show icon at noon/midnight for 24-hour format
+            const showIcon = uses24Hour && timeDate.getHours() % 12 === 0 && timeDate.getMinutes() === 0;
+            const isDaytime = timeDate.getHours() > 11;
+            
+            const showSun = showIcon && isDaytime;
+            const showMoon = showIcon && !isDaytime;
+            
+            return `
+                <div class="agenda-block__time-cell ${isLive ? 'time-cell-live' : ''}">
+                    ${isLive ? getLiveIndicator() : ''}
+                    ${renderDayNightIcon(showSun, showMoon)}
+                    <span class="time-value">${formatTime(time)}</span>
+                </div>
+            `;
+        }).join('');
     }
 
     /**
@@ -594,16 +698,16 @@ class VanillaAgendaBlock {
     }
 
     /**
-     * Render sessions for a track
+     * Render sessions for a track with proper grid splitting
      */
     renderTrackSessions(sessions, currentDay) {
         const dayStartTime = new Date(currentDay.date + 'T08:00:00').getTime();
         const visibleStart = dayStartTime + (this.state.timeCursor * TIME_SLOT_DURATION * MINUTE_MS);
         
-        // Initialize all cells as empty
-        const cells = Array(VISIBLE_TIME_SLOTS).fill(null);
+        // Calculate grid layout for sessions with rowNumber
+        const sessionTiles = [];
+        const occupiedCells = new Set();
         
-        // Fill in session cells
         sessions.forEach(session => {
             const startTime = new Date(session.sessionStartTime).getTime();
             const endTime = new Date(session.sessionEndTime).getTime();
@@ -615,38 +719,102 @@ class VanillaAgendaBlock {
 
             if (startOffset >= 0 && startOffset < VISIBLE_TIME_SLOTS) {
                 const track = this.state.tracks.find(t => t.tagId === session.sessionTrack.tagId);
-                const gridStart = Math.floor(startOffset) + 1;
+                const startColumn = Math.floor(startOffset) + 1;
+                const endColumn = Math.min(startColumn + durationSlots, VISIBLE_TIME_SLOTS + 1);
                 
-                cells[Math.floor(startOffset)] = `
-                    <a 
-                        href="${session.cardUrl}"
-                        class="agenda-block__session ${session.isFeatured ? 'featured' : ''} ${session.isLive ? 'live' : ''}"
-                        style="
-                            grid-column: ${gridStart} / span ${durationSlots};
-                            ${session.isFeatured ? `border-left-color: ${track.color};` : ''}
-                        ">
-                        <div class="agenda-block__session-content">
-                            <div class="agenda-block__session-title">${session.sessionTitle}</div>
-                            <div class="agenda-block__session-time">
-                                ${formatTime(startTime)} - ${formatTime(endTime)}
-                            </div>
-                        </div>
-                        <div class="agenda-block__session-badges">
-                            ${session.isLive ? `<span class="agenda-block__session-badge live">${this.config.labels.liveLabel}</span>` : ''}
-                            ${session.isOnDemand ? `<span class="agenda-block__session-badge on-demand">${this.config.labels.onDemandLabel}</span>` : ''}
-                        </div>
-                    </a>
-                `;
+                // Find available row for this session
+                let rowNumber = 1;
+                let foundRow = false;
+                
+                while (!foundRow && rowNumber <= 10) { // Max 10 rows
+                    foundRow = true;
+                    for (let col = startColumn; col < endColumn; col++) {
+                        if (occupiedCells.has(`${rowNumber}-${col}`)) {
+                            foundRow = false;
+                            rowNumber++;
+                            break;
+                        }
+                    }
+                }
+                
+                // Mark cells as occupied
+                for (let col = startColumn; col < endColumn; col++) {
+                    occupiedCells.add(`${rowNumber}-${col}`);
+                }
+                
+                const shouldDisplayDuration = (endColumn - startColumn) > 2;
+                
+                sessionTiles.push({
+                    session,
+                    startColumn,
+                    endColumn,
+                    rowNumber,
+                    track,
+                    shouldDisplayDuration
+                });
             }
         });
         
-        // Fill remaining cells with empty pattern
-        return cells.map((cell, index) => {
-            if (cell !== null) {
-                return cell;
+        // Calculate number of rows needed
+        const numberOfRows = sessionTiles.length > 0 
+            ? Math.max(...sessionTiles.map(t => t.rowNumber)) 
+            : 1;
+        
+        // Build HTML
+        let html = '';
+        
+        sessionTiles.forEach(tile => {
+            const { session, startColumn, endColumn, rowNumber, track, shouldDisplayDuration } = tile;
+            const startTime = new Date(session.sessionStartTime).getTime();
+            const endTime = new Date(session.sessionEndTime).getTime();
+            
+            html += `
+                <a 
+                    href="${session.cardUrl}"
+                    class="agenda-block__session ${session.isFeatured ? 'featured' : ''} ${session.isLive ? 'live' : ''} ${session.isOnDemand ? 'on-demand' : ''}"
+                    style="
+                        grid-column: ${startColumn} / ${endColumn};
+                        grid-row: ${rowNumber} / ${rowNumber + 1};
+                        ${session.isFeatured ? `border-left-color: ${track.color};` : ''}
+                    ">
+                    <div class="agenda-block__session-content">
+                        <div class="agenda-block__session-title">${session.sessionTitle}</div>
+                        <div class="agenda-block__session-time">
+                            ${formatTime(startTime)} - ${formatTime(endTime)}
+                        </div>
+                    </div>
+                    <div class="agenda-block__session-badges">
+                        ${session.isLive ? `<span class="agenda-block__session-badge live">${this.config.labels.liveLabel}</span>` : ''}
+                        ${session.isOnDemand ? `<span class="agenda-block__session-badge on-demand">${this.config.labels.onDemandLabel}</span>` : ''}
+                    </div>
+                </a>
+            `;
+        });
+        
+        // Add empty cells with diagonal pattern for all remaining positions
+        for (let row = 1; row <= numberOfRows; row++) {
+            for (let col = 1; col <= VISIBLE_TIME_SLOTS; col++) {
+                if (!occupiedCells.has(`${row}-${col}`)) {
+                    html += `
+                        <div class="agenda-block__track-empty" style="
+                            grid-column: ${col} / ${col + 1};
+                            grid-row: ${row} / ${row + 1};
+                            background-color: rgb(248, 248, 248);
+                            border-color: rgb(213, 213, 213);
+                            background-image: linear-gradient(135deg, rgb(213, 213, 213) 4.5%, rgba(0, 0, 0, 0) 4.5%, rgba(0, 0, 0, 0) 50%, rgb(213, 213, 213) 50%, rgb(213, 213, 213) 54.55%, rgba(0, 0, 0, 0) 54.55%, rgba(0, 0, 0, 0) 100%);
+                            background-size: 15.56px 15.56px;
+                        "></div>
+                    `;
+                }
             }
-            return `<div class="agenda-block__track-empty" style="grid-area: 1 / ${index + 1} / 2 / ${index + 2}; background-color: rgb(248, 248, 248); border-color: rgb(213, 213, 213); background-image: linear-gradient(135deg, rgb(213, 213, 213) 4.5%, rgba(0, 0, 0, 0) 4.5%, rgba(0, 0, 0, 0) 50%, rgb(213, 213, 213) 50%, rgb(213, 213, 213) 54.55%, rgba(0, 0, 0, 0) 54.55%, rgba(0, 0, 0, 0) 100%); background-size: 15.56px 15.56px;"></div>`;
-        }).join('');
+        }
+        
+        // Render track row with grid-template-rows
+        return `
+            <section class="agenda-grid" style="grid-template-rows: repeat(${numberOfRows}, 140px);">
+                ${html}
+            </section>
+        `;
     }
 
     /**
@@ -878,21 +1046,36 @@ class VanillaAgendaBlock {
      * Start live updates interval
      */
     startLiveUpdates() {
-        // Update every 30 seconds to refresh live status
-        // Note: Removed auto-refresh to prevent UI flickering
-        // Uncomment if needed for production
-        /*
-        setInterval(() => {
+        // Update current time every 5 seconds
+        this.updateInterval = setInterval(() => {
+            this.state.currentTime = Date.now();
+            
+            // Update session live/on-demand status
             this.state.sessions = this.state.sessions.map(session => ({
                 ...session,
                 isLive: isSessionLive(session),
                 isOnDemand: isSessionOnDemand(session)
             }));
-            this.render();
-            this.attachEventListeners();
-            this.setupStickyHeader();
-        }, 30000);
-        */
+            
+            // Re-render only the time header to avoid full page refresh
+            const timeHeader = this.element.querySelector('.agenda-block__time-header');
+            if (timeHeader) {
+                const newTimeHeader = document.createElement('div');
+                newTimeHeader.className = 'agenda-block__time-header';
+                newTimeHeader.innerHTML = this.renderTimeHeader();
+                timeHeader.parentNode.replaceChild(newTimeHeader, timeHeader);
+            }
+        }, 5000); // Update every 5 seconds
+    }
+    
+    /**
+     * Clean up intervals
+     */
+    destroy() {
+        if (this.updateInterval) {
+            clearInterval(this.updateInterval);
+            this.updateInterval = null;
+        }
     }
 }
 
