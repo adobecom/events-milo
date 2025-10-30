@@ -770,25 +770,16 @@ class VanillaAgendaBlock {
             const endTime = new Date(session.sessionEndTime).getTime();
             
             html += `
-                <a 
-                    href="${session.cardUrl}"
-                    class="agenda-block__session ${session.isFeatured ? 'featured' : ''} ${session.isLive ? 'live' : ''} ${session.isOnDemand ? 'on-demand' : ''}"
-                    style="
-                        grid-column: ${startColumn} / ${endColumn};
-                        grid-row: ${rowNumber} / ${rowNumber + 1};
-                        ${session.isFeatured ? `border-left-color: ${track.color};` : ''}
-                    ">
-                    <div class="agenda-block__session-content">
-                        <div class="agenda-block__session-title">${session.sessionTitle}</div>
-                        <div class="agenda-block__session-time">
-                            ${formatTime(startTime)} - ${formatTime(endTime)}
-                        </div>
-                    </div>
-                    <div class="agenda-block__session-badges">
-                        ${session.isLive ? `<span class="agenda-block__session-badge live">${this.config.labels.liveLabel}</span>` : ''}
-                        ${session.isOnDemand ? `<span class="agenda-block__session-badge on-demand">${this.config.labels.onDemandLabel}</span>` : ''}
-                    </div>
-                </a>
+                <div class="agenda_tile_wrapper agenda_tile_wrapper--col-width-${endColumn - startColumn}" style="grid-area: ${rowNumber} / ${startColumn} / ${rowNumber + 1} / ${endColumn};">
+                    <article class="agenda_tile" style="border-color: rgb(213, 213, 213);">
+                        <a href="${session.cardUrl}" class="title">
+                            ${session.sessionTitle}
+                        </a>
+                        <footer>
+                            <p class="duration">${session.sessionDuration} min</p>
+                        </footer>
+                    </article>
+                </div>
             `;
         });
         
@@ -799,23 +790,15 @@ class VanillaAgendaBlock {
                 const cellKey = `${row}-${col}`;
                 if (!occupiedCells.has(cellKey)) {
                     html += `
-                        <article class="agenda-block__track-empty" style="
-                            grid-column: ${col} / ${col + 1};
-                            grid-row: ${row} / ${row + 1};
-                            background-color: rgb(248, 248, 248);
-                            border: 1px solid rgb(213, 213, 213);
-                            background-image: linear-gradient(135deg, rgb(213, 213, 213) 4.5%, rgba(0, 0, 0, 0) 4.5%, rgba(0, 0, 0, 0) 50%, rgb(213, 213, 213) 50%, rgb(213, 213, 213) 54.55%, rgba(0, 0, 0, 0) 54.55%, rgba(0, 0, 0, 0) 100%);
-                            background-size: 15.56px 15.56px;
-                            border-radius: 4px;
-                        "></article>
+                        <article class="agenda_tile empty" style="grid-area: ${row} / ${col} / ${row + 1} / ${col + 1}; border-color: rgb(213, 213, 213); background-image: linear-gradient(135deg, rgb(213, 213, 213) 4.5%, rgba(0, 0, 0, 0) 4.5%, rgba(0, 0, 0, 0) 50%, rgb(213, 213, 213) 50%, rgb(213, 213, 213) 54.55%, rgba(0, 0, 0, 0) 54.55%, rgba(0, 0, 0, 0) 100%);"></article>
                     `;
                 }
             }
         }
         
-        // Render track row - grid-auto-rows in CSS handles the row height
+        // Render track row with inline grid-template-rows to match React structure
         return `
-            <section class="agenda-grid">
+            <section class="agenda_grid" style="grid-template-rows: repeat(${numberOfRows}, 140px); background-color: rgb(248, 248, 248);">
                 ${html}
             </section>
         `;
