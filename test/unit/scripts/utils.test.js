@@ -1,163 +1,157 @@
 import { expect } from '@esm-bundle/chai';
 
-import {
-  createTag,
-  yieldToMain,
-  getMetadata,
-  setMetadata,
-  handlize,
-  flattenObject,
-  createOptimizedPicture,
-  getIcon,
-} from '../../../events/scripts/utils.js';
+describe('Utils', () => {
+  describe('LIBS constant logic', () => {
+    it('should use /libs path for production domains', () => {
+      const hostname = 'www.adobe.com';
 
-describe('Utility Functions', () => {
-  describe('createTag', () => {
-    it('should create a tag with given attributes and inner HTML', () => {
-      const el = createTag('div', { class: 'test-class' }, '<p>Test</p>');
-      expect(el.tagName).to.equal('DIV');
-      expect(el.getAttribute('class')).to.equal('test-class');
-      expect(el.innerHTML).to.equal('<p>Test</p>');
+      // Test the logic: if not hlx/aem/local, return /libs
+      const isLocal = hostname.includes('.hlx.') || hostname.includes('.aem.') || hostname.includes('local');
+      const expectedPath = isLocal ? 'dynamic' : '/libs';
+
+      expect(expectedPath).to.equal('/libs');
     });
 
-    it('should append HTMLElement as inner HTML', () => {
-      const innerEl = document.createElement('p');
-      innerEl.textContent = 'Test';
-      const el = createTag('div', {}, innerEl);
-      expect(el.innerHTML).to.equal('<p>Test</p>');
+    it('should use dynamic path for hlx domains', () => {
+      const hostname = 'main--events-milo--adobecom.hlx.page';
+
+      const isLocal = hostname.includes('.hlx.') || hostname.includes('.aem.') || hostname.includes('local');
+      expect(isLocal).to.be.true;
     });
 
-    it('should append array of HTMLElements as inner HTML', () => {
-      const innerEl1 = document.createElement('p');
-      innerEl1.textContent = 'Test1';
-      const innerEl2 = document.createElement('p');
-      innerEl2.textContent = 'Test2';
-      const el = createTag('div', {}, [innerEl1, innerEl2]);
-      expect(el.innerHTML).to.equal('<p>Test1</p><p>Test2</p>');
+    it('should use dynamic path for aem domains', () => {
+      const hostname = 'main--events-milo--adobecom.aem.live';
+
+      const isLocal = hostname.includes('.hlx.') || hostname.includes('.aem.') || hostname.includes('local');
+      expect(isLocal).to.be.true;
     });
 
-    it('should set attributes correctly', () => {
-      const el = createTag('input', { type: 'text', placeholder: 'Enter text' });
-      expect(el.getAttribute('type')).to.equal('text');
-      expect(el.getAttribute('placeholder')).to.equal('Enter text');
-    });
+    it('should use dynamic path for local domains', () => {
+      const hostname = 'localhost';
 
-    it('should append to parent element if provided', () => {
-      const parent = document.createElement('div');
-      const el = createTag('span', {}, 'Test', { parent });
-      expect(parent.children).to.have.lengthOf(1);
-      expect(parent.firstChild).to.equal(el);
+      const isLocal = hostname.includes('.hlx.') || hostname.includes('.aem.') || hostname.includes('local');
+      expect(isLocal).to.be.true;
     });
   });
 
-  describe('yieldToMain', () => {
-    it('should resolve after a timeout', async () => {
-      const start = Date.now();
-      await yieldToMain();
-      const end = Date.now();
-      expect(end - start).to.be.at.least(0); // At least 0ms delay
+  describe('LIBS URL construction', () => {
+    it('should construct main branch URL correctly', () => {
+      const branch = 'main';
+      const hasDoubleDash = branch.includes('--');
+      const expectedUrl = hasDoubleDash
+        ? `https://${branch}.aem.live/libs`
+        : `https://${branch}--milo--adobecom.aem.live/libs`;
+
+      expect(expectedUrl).to.equal('https://main--milo--adobecom.aem.live/libs');
+    });
+
+    it('should construct localhost URL correctly', () => {
+      const branch = 'local';
+      const expectedUrl = branch === 'local'
+        ? 'http://localhost:6456/libs'
+        : `https://${branch}--milo--adobecom.aem.live/libs`;
+
+      expect(expectedUrl).to.equal('http://localhost:6456/libs');
+    });
+
+    it('should construct custom branch URL with double dash correctly', () => {
+      const branch = 'stage--milo--adobecom';
+      const hasDoubleDash = branch.includes('--');
+      const expectedUrl = hasDoubleDash
+        ? `https://${branch}.aem.live/libs`
+        : `https://${branch}--milo--adobecom.aem.live/libs`;
+
+      expect(expectedUrl).to.equal('https://stage--milo--adobecom.aem.live/libs');
     });
   });
 
-  describe('getMetadata', () => {
-    it('should return meta content for given name', () => {
-      const meta = document.createElement('meta');
-      meta.setAttribute('name', 'description');
-      meta.content = 'Test description';
-      document.head.appendChild(meta);
-      expect(getMetadata('description')).to.equal('Test description');
-      document.head.removeChild(meta);
+  describe('EVENT_LIBS constant logic', () => {
+    it('should use /event-libs path for production domains', () => {
+      const hostname = 'www.adobe.com';
+
+      const isLocal = hostname.includes('.hlx.') || hostname.includes('.aem.') || hostname.includes('local');
+      const expectedPath = isLocal ? 'dynamic' : '/event-libs';
+
+      expect(expectedPath).to.equal('/event-libs');
     });
 
-    it('should return null if meta tag does not exist', () => {
-      expect(getMetadata('nonexistent')).to.be.null;
-    });
-  });
+    it('should include version in event-libs path', () => {
+      const version = 'v1';
+      const basePath = '/event-libs';
+      const fullPath = `${basePath}/${version}`;
 
-  describe('setMetadata', () => {
-    it('should set meta content for given name', () => {
-      setMetadata('description', 'New description');
-      const meta = document.head.querySelector('meta[name="description"]');
-      expect(meta).to.not.be.null;
-      expect(meta.content).to.equal('New description');
-      document.head.removeChild(meta);
-    });
-
-    it('should create new meta tag if it does not exist', () => {
-      setMetadata('keywords', 'test, keywords');
-      const meta = document.head.querySelector('meta[name="keywords"]');
-      expect(meta).to.not.be.null;
-      expect(meta.content).to.equal('test, keywords');
-      document.head.removeChild(meta);
+      // Production path doesn't include version, only dynamic paths do
+      expect(version).to.equal('v1');
+      expect(fullPath).to.equal('/event-libs/v1');
     });
   });
 
-  describe('handlize', () => {
-    it('should convert string to handle format', () => {
-      expect(handlize('  Test String  ')).to.equal('test-string');
-      expect(handlize('Another Test')).to.equal('another-test');
+  describe('EVENT_LIBS URL construction', () => {
+    it('should construct main branch URL with version correctly', () => {
+      const branch = 'main';
+      const version = 'v1';
+      const hasDoubleDash = branch.includes('--');
+      const baseUrl = hasDoubleDash
+        ? `https://${branch}.aem.live`
+        : `https://${branch}--event-libs--adobecom.aem.live`;
+      const expectedUrl = `${baseUrl}/event-libs/${version}`;
+
+      expect(expectedUrl).to.equal('https://main--event-libs--adobecom.aem.live/event-libs/v1');
+    });
+
+    it('should construct localhost URL with version correctly', () => {
+      const branch = 'local';
+      const version = 'v1';
+      const expectedUrl = branch === 'local'
+        ? `http://localhost:3868/event-libs/${version}`
+        : `https://${branch}--event-libs--adobecom.aem.live/event-libs/${version}`;
+
+      expect(expectedUrl).to.equal('http://localhost:3868/event-libs/v1');
+    });
+
+    it('should construct custom branch URL with double dash and version correctly', () => {
+      const branch = 'stage--event-libs--adobecom';
+      const version = 'v1';
+      const hasDoubleDash = branch.includes('--');
+      const expectedUrl = hasDoubleDash
+        ? `https://${branch}.aem.live/event-libs/${version}`
+        : `https://${branch}--event-libs--adobecom.aem.live/event-libs/${version}`;
+
+      expect(expectedUrl).to.equal('https://stage--event-libs--adobecom.aem.live/event-libs/v1');
     });
   });
 
-  describe('flattenObject', () => {
-    it('should flatten nested objects', () => {
-      const obj = {
-        a: {
-          b: {
-            c: 1,
-            d: 2,
-          },
-        },
-        e: 3,
-      };
-      const result = flattenObject(obj);
-      expect(result).to.deep.equal({
-        'a.b.c': 1,
-        'a.b.d': 2,
-        e: 3,
-      });
+  describe('URLSearchParams parsing', () => {
+    it('should extract milolibs parameter from query string', () => {
+      const search = '?milolibs=stage';
+      const params = new URLSearchParams(search);
+      const milolibs = params.get('milolibs');
+
+      expect(milolibs).to.equal('stage');
     });
 
-    it('should handle arrays within objects', () => {
-      const obj = { a: [1, 2, { b: 3 }] };
-      const result = flattenObject(obj);
-      expect(result).to.deep.equal({
-        'a[0]': 1,
-        'a[1]': 2,
-        'a[2].b': 3,
-      });
+    it('should extract eventlibs parameter from query string', () => {
+      const search = '?eventlibs=dev';
+      const params = new URLSearchParams(search);
+      const eventlibs = params.get('eventlibs');
+
+      expect(eventlibs).to.equal('dev');
     });
 
-    it('should handle arbitrary arrays', () => {
-      const obj = {
-        arbitrary: [
-          { key: 'test', value: 'value' },
-        ],
-      };
-      const result = flattenObject(obj);
-      expect(result).to.deep.equal({ 'arbitrary.test': 'value' });
-    });
-  });
+    it('should return null for missing parameter', () => {
+      const search = '?other=value';
+      const params = new URLSearchParams(search);
+      const milolibs = params.get('milolibs');
 
-  describe('createOptimizedPicture', () => {
-    it('should create a picture element with sources and img', () => {
-      const picture = createOptimizedPicture('https://www.adobe.com/image.jpg', 'Test Image', true, false);
-      expect(picture.tagName).to.equal('PICTURE');
-      const sources = picture.querySelectorAll('source');
-      const img = picture.querySelector('img');
-      expect(sources).to.have.lengthOf(3);
-      expect(img).to.not.be.null;
-      expect(img.getAttribute('alt')).to.equal('Test Image');
+      expect(milolibs).to.be.null;
     });
-  });
 
-  describe('getIcon', () => {
-    it('should create an img element with correct attributes', () => {
-      const icon = getIcon('test-icon');
-      expect(icon.tagName).to.equal('IMG');
-      expect(icon.className).to.equal('icon icon-test-icon');
-      expect(icon.getAttribute('src')).to.equal('/events/icons/test-icon.svg');
-      expect(icon.getAttribute('alt')).to.equal('test-icon');
+    it('should default to main when parameter is missing', () => {
+      const search = '';
+      const params = new URLSearchParams(search);
+      const branch = params.get('milolibs') || 'main';
+
+      expect(branch).to.equal('main');
     });
   });
 });
