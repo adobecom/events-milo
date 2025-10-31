@@ -634,12 +634,67 @@ class VanillaAgendaBlock {
      * Render tracks column
      */
     renderTracksColumn() {
-        return this.state.tracks.map(track => `
-            <div class="agenda-block__track-label" style="border-left: 4px solid ${track.color}">
-                <div class="agenda-block__track-title-in-label">${track.title}</div>
-                ${track.description ? `<div class="agenda-block__track-description-in-label">${track.description}</div>` : ''}
-            </div>
-        `).join('');
+        const currentDay = this.state.days[this.state.currentDay];
+        const daySessions = this.getSessionsForCurrentDay();
+        
+        return this.state.tracks.map((track, index) => {
+            const trackSessions = daySessions.filter(s => s.sessionTrack.tagId === track.tagId);
+            const numberOfRows = this.calculateNumberOfRowsForTrack(trackSessions, currentDay);
+            
+            return `
+                <div class="agenda-block__track-label" style="border-left: 4px solid ${track.color}; height: ${numberOfRows * 140 + (numberOfRows - 1) * 6}px;">
+                    <div class="agenda-block__track-title-in-label">${track.title}</div>
+                    ${track.description ? `<div class="agenda-block__track-description-in-label">${track.description}</div>` : ''}
+                </div>
+            `;
+        }).join('');
+    }
+
+    /**
+     * Calculate number of rows needed for a track
+     */
+    calculateNumberOfRowsForTrack(sessions, currentDay) {
+        const dayStartTime = new Date(currentDay.date + 'T08:00:00Z').getTime();
+        const visibleStart = dayStartTime + (this.state.timeCursor * TIME_SLOT_DURATION * MINUTE_MS);
+        
+        const sessionTiles = [];
+        const occupiedCells = new Set();
+        
+        sessions.forEach(session => {
+            const startTime = new Date(session.sessionStartTime).getTime();
+            const endTime = new Date(session.sessionEndTime).getTime();
+            const duration = endTime - startTime;
+            
+            const startOffset = (startTime - visibleStart) / (TIME_SLOT_DURATION * MINUTE_MS);
+            const durationSlots = Math.ceil(duration / (TIME_SLOT_DURATION * MINUTE_MS));
+            
+            if (startOffset >= 0 && startOffset < VISIBLE_TIME_SLOTS) {
+                const startColumn = Math.floor(startOffset) + 1;
+                const endColumn = Math.min(startColumn + durationSlots, VISIBLE_TIME_SLOTS + 1);
+                
+                let rowNumber = 1;
+                let foundRow = false;
+                
+                while (!foundRow && rowNumber <= 10) {
+                    foundRow = true;
+                    for (let col = startColumn; col < endColumn; col++) {
+                        if (occupiedCells.has(`${rowNumber}-${col}`)) {
+                            foundRow = false;
+                            rowNumber++;
+                            break;
+                        }
+                    }
+                }
+                
+                for (let col = startColumn; col < endColumn; col++) {
+                    occupiedCells.add(`${rowNumber}-${col}`);
+                }
+                
+                sessionTiles.push({ rowNumber });
+            }
+        });
+        
+        return sessionTiles.length > 0 ? Math.max(...sessionTiles.map(t => t.rowNumber)) : 1;
     }
 
     /**

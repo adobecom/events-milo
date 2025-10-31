@@ -220,16 +220,9 @@
     color: #ffffff;
     border-bottom: 1px solid #5a5a5a;
     border-right: 1px solid #e0e0e0;
-    height: 140px;
     display: flex;
     flex-direction: column;
     box-sizing: border-box;
-}
-
-@media (max-width: 768px) {
-    .agenda-block__track-label {
-        height: 120px;
-    }
 }
 
 .agenda-block__track-title-in-label {
