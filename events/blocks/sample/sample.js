@@ -651,9 +651,10 @@ class VanillaAgendaBlock {
     }
 
     /**
-     * Calculate number of rows needed for a track
+     * Calculate grid positions for sessions (shared logic)
+     * Returns { sessionTiles, numberOfRows, occupiedCells }
      */
-    calculateNumberOfRowsForTrack(sessions, currentDay) {
+    calculateSessionGridPositions(sessions, currentDay) {
         const dayStartTime = new Date(currentDay.date + 'T08:00:00Z').getTime();
         const visibleStart = dayStartTime + (this.state.timeCursor * TIME_SLOT_DURATION * MINUTE_MS);
         
@@ -669,9 +670,11 @@ class VanillaAgendaBlock {
             const durationSlots = Math.ceil(duration / (TIME_SLOT_DURATION * MINUTE_MS));
             
             if (startOffset >= 0 && startOffset < VISIBLE_TIME_SLOTS) {
+                const track = this.state.tracks.find(t => t.tagId === session.sessionTrack.tagId);
                 const startColumn = Math.floor(startOffset) + 1;
                 const endColumn = Math.min(startColumn + durationSlots, VISIBLE_TIME_SLOTS + 1);
                 
+                // Find available row for this session
                 let rowNumber = 1;
                 let foundRow = false;
                 
@@ -686,15 +689,35 @@ class VanillaAgendaBlock {
                     }
                 }
                 
+                // Mark cells as occupied
                 for (let col = startColumn; col < endColumn; col++) {
                     occupiedCells.add(`${rowNumber}-${col}`);
                 }
                 
-                sessionTiles.push({ rowNumber });
+                sessionTiles.push({
+                    session,
+                    startColumn,
+                    endColumn,
+                    rowNumber,
+                    track,
+                    shouldDisplayDuration: (endColumn - startColumn) > 2
+                });
             }
         });
         
-        return sessionTiles.length > 0 ? Math.max(...sessionTiles.map(t => t.rowNumber)) : 1;
+        const numberOfRows = sessionTiles.length > 0 
+            ? Math.max(...sessionTiles.map(t => t.rowNumber)) 
+            : 1;
+        
+        return { sessionTiles, numberOfRows, occupiedCells };
+    }
+
+    /**
+     * Calculate number of rows needed for a track
+     */
+    calculateNumberOfRowsForTrack(sessions, currentDay) {
+        const { numberOfRows } = this.calculateSessionGridPositions(sessions, currentDay);
+        return numberOfRows;
     }
 
     /**
@@ -757,64 +780,8 @@ class VanillaAgendaBlock {
      * Render sessions for a track with proper grid splitting
      */
     renderTrackSessions(sessions, currentDay) {
-        const dayStartTime = new Date(currentDay.date + 'T08:00:00Z').getTime();
-        const visibleStart = dayStartTime + (this.state.timeCursor * TIME_SLOT_DURATION * MINUTE_MS);
-        
-        // Calculate grid layout for sessions with rowNumber
-        const sessionTiles = [];
-        const occupiedCells = new Set();
-        
-        sessions.forEach(session => {
-            const startTime = new Date(session.sessionStartTime).getTime();
-            const endTime = new Date(session.sessionEndTime).getTime();
-            const duration = endTime - startTime;
-
-            // Calculate grid position
-            const startOffset = (startTime - visibleStart) / (TIME_SLOT_DURATION * MINUTE_MS);
-            const durationSlots = Math.ceil(duration / (TIME_SLOT_DURATION * MINUTE_MS));
-
-            if (startOffset >= 0 && startOffset < VISIBLE_TIME_SLOTS) {
-                const track = this.state.tracks.find(t => t.tagId === session.sessionTrack.tagId);
-                const startColumn = Math.floor(startOffset) + 1;
-                const endColumn = Math.min(startColumn + durationSlots, VISIBLE_TIME_SLOTS + 1);
-                
-                // Find available row for this session
-                let rowNumber = 1;
-                let foundRow = false;
-                
-                while (!foundRow && rowNumber <= 10) { // Max 10 rows
-                    foundRow = true;
-                    for (let col = startColumn; col < endColumn; col++) {
-                        if (occupiedCells.has(`${rowNumber}-${col}`)) {
-                            foundRow = false;
-                            rowNumber++;
-                            break;
-                        }
-                    }
-                }
-                
-                // Mark cells as occupied
-                for (let col = startColumn; col < endColumn; col++) {
-                    occupiedCells.add(`${rowNumber}-${col}`);
-                }
-                
-                const shouldDisplayDuration = (endColumn - startColumn) > 2;
-                
-                sessionTiles.push({
-                    session,
-                    startColumn,
-                    endColumn,
-                    rowNumber,
-                    track,
-                    shouldDisplayDuration
-                });
-            }
-        });
-        
-        // Calculate number of rows needed
-        const numberOfRows = sessionTiles.length > 0 
-            ? Math.max(...sessionTiles.map(t => t.rowNumber)) 
-            : 1;
+        // Get grid positions from shared logic
+        const { sessionTiles, numberOfRows, occupiedCells } = this.calculateSessionGridPositions(sessions, currentDay);
         
         // Build HTML
         let html = '';
