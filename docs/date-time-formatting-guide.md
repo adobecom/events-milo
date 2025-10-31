@@ -20,7 +20,7 @@ Simply use the placeholder in your content:
 ```
 
 **Output Examples:**
-- Same-day event: `"January 15, 2025 at 2:30 PM PST"`
+- Same-day event: `"January 15, 2025 2:30 PM - 3:30 PM PST"`
 - Multi-day event: `"January 15, 2025 at 2:30 PM PST - January 16, 2025 at 2:30 PM PST"`
 
 ### Custom Template Usage
@@ -46,6 +46,8 @@ Event: Jan 15 | 2:30 PM - 3:30 PM PST
 
 | Token | Description | Example Output |
 |-------|-------------|----------------|
+| `{YYYY}` | Full year | `2025`, `2026` |
+| `{YY}` | Short year (2 digits) | `25`, `26` |
 | `{LLL}` | Short month name | `Jan`, `Oct`, `Dec` |
 | `{dd}` | Day of month (padded) | `01`, `15`, `31` |
 | `{ddd}` | Short day of week | `Mon`, `Tue`, `Wed` |
@@ -88,6 +90,18 @@ Output: Fri, Oct 20 from 13:00 - 14:45 PDT
 ```
 Template: {dd}/{LLL} {timeRange}
 Output: 20/Oct 13:00 - 14:45
+```
+
+### With Year (Full)
+```
+Template: {ddd}, {LLL} {dd}, {YYYY} | {timeRange} {timeZone}
+Output: Fri, Oct 20, 2025 | 13:00 - 14:45 PDT
+```
+
+### With Year (Short)
+```
+Template: {LLL} {dd}, {YY} | {timeRange} {timeZone}
+Output: Oct 20, 25 | 13:00 - 14:45 PDT
 ```
 
 ## Localization Support
@@ -175,6 +189,13 @@ Example: Wed, Oct 20
 Template: {dd}/{LLL} {timeRange}
 Usage: Compact displays, mobile interfaces
 Example: 20/Oct 14:00 - 15:30
+```
+
+### Annual Events
+```
+Template: {LLL} {dd}, {YYYY} | {timeRange} {timeZone}
+Usage: Events where the year is important to display
+Example: Oct 20, 2025 | 2:00 PM - 3:00 PM PDT
 ```
 
 ## Troubleshooting

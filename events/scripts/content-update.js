@@ -762,11 +762,97 @@ function getDayOfTheWeek(timestamp, locale) {
 }
 
 /**
+ * Gets the full year
+ * @param {number} timestamp - UTC timestamp in milliseconds
+ * @param {string} locale - Locale string
+ * @returns {string} Full year (e.g., '2025')
+ */
+function getFullYear(timestamp, locale) {
+  return new Date(timestamp).toLocaleDateString(locale, { year: 'numeric' });
+}
+
+/**
+ * Gets the short year (last two digits)
+ * @param {number} timestamp - UTC timestamp in milliseconds
+ * @param {string} locale - Locale string
+ * @returns {string} Short year (e.g., '25')
+ */
+function getShortYear(timestamp, locale) {
+  return new Date(timestamp).toLocaleDateString(locale, { year: '2-digit' });
+}
+
+/**
+ * Gets the date portion of a timestamp (without time)
+ * @param {string|number} timestamp - UTC timestamp in milliseconds
+ * @param {string} locale - Locale string
+ * @returns {string} Formatted date string
+ */
+function getDateOnly(timestamp, locale) {
+  const timestampNum = typeof timestamp === 'string' ? parseInt(timestamp, 10) : timestamp;
+  if (Number.isNaN(timestampNum)) return '';
+
+  try {
+    const date = new Date(timestampNum);
+    if (Number.isNaN(date.getTime())) return '';
+
+    const options = {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    };
+
+    return date.toLocaleDateString(locale, options);
+  } catch (error) {
+    window.lana?.log(`Error getting date only: ${JSON.stringify(error)}`);
+    return '';
+  }
+}
+
+/**
+ * Gets the time portion of a timestamp with timezone (without date)
+ * @param {string|number} timestamp - UTC timestamp in milliseconds
+ * @param {string} locale - Locale string
+ * @param {boolean} includeTimeZone - Whether to include timezone abbreviation
+ * @returns {string} Formatted time string
+ */
+function getTimeOnly(timestamp, locale, includeTimeZone = false) {
+  const timestampNum = typeof timestamp === 'string' ? parseInt(timestamp, 10) : timestamp;
+  if (Number.isNaN(timestampNum)) return '';
+
+  try {
+    const date = new Date(timestampNum);
+    if (Number.isNaN(date.getTime())) return '';
+
+    const options = {
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true,
+    };
+
+    if (includeTimeZone) {
+      options.timeZoneName = 'short';
+    }
+
+    return date.toLocaleTimeString(locale, options);
+  } catch (error) {
+    window.lana?.log(`Error getting time only: ${JSON.stringify(error)}`);
+    return '';
+  }
+}
+
+/**
  * Creates a formatted date string using a template
  * @param {number} startTimestamp - Start timestamp in milliseconds
  * @param {number} endTimestamp - End timestamp in milliseconds
  * @param {string} locale - Locale string
- * @param {string} template - Format template with tokens
+ * @param {string} template - Format template with tokens:
+ *   {YYYY} - Full year (e.g., '2025')
+ *   {YY} - Short year (e.g., '25')
+ *   {LLL} - Short month name (e.g., 'Oct')
+ *   {dd} - Day of month, padded (e.g., '20')
+ *   {ddd} - Short day of week (e.g., 'Fri')
+ *   {timeRange} - Time interval (e.g., '13:00 - 14:45')
+ *   {timeZone} - Timezone abbreviation (e.g., 'PST')
  * @returns {string} Formatted date string
  */
 export function createTemplatedDateRange(startTimestamp, endTimestamp, locale, template) {
@@ -779,6 +865,8 @@ export function createTemplatedDateRange(startTimestamp, endTimestamp, locale, t
 
   try {
     return template
+      .replace('{YYYY}', getFullYear(startNum, locale))
+      .replace('{YY}', getShortYear(startNum, locale))
       .replace('{LLL}', getMonth(startNum, locale))
       .replace('{dd}', getDay(startNum, locale))
       .replace('{ddd}', getDayOfTheWeek(startNum, locale))
@@ -805,12 +893,18 @@ export function createSmartDateRange(startTimestamp, endTimestamp, locale) {
 
   if (!startDateTime || !endDateTime) return '';
 
-  // If same day, return just the start date time
+  // If same day, return date with time range: "January 15, 2025 2:30 PM - 3:30 PM PST"
   if (areTimestampsOnSameDay(startTimestamp, endTimestamp)) {
-    return startDateTime;
+    const date = getDateOnly(startTimestamp, locale);
+    const startTime = getTimeOnly(startTimestamp, locale, false);
+    const endTime = getTimeOnly(endTimestamp, locale, true);
+
+    if (!date || !startTime || !endTime) return startDateTime;
+
+    return `${date} ${startTime} - ${endTime}`;
   }
 
-  // If different days, return range format
+  // If different days, return full range format
   return `${startDateTime} - ${endDateTime}`;
 }
 

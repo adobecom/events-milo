@@ -303,15 +303,16 @@ describe('Date Range Utilities', () => {
   });
 
   describe('createSmartDateRange', () => {
-    it('should return single date for same-day events', () => {
+    it('should return date with time range for same-day events', () => {
       const startTimestamp = '1759251599990';
       const endTimestamp = '1759255199990';
       
       const result = createSmartDateRange(startTimestamp, endTimestamp, 'en-US');
       
       expect(result).to.be.a('string');
-      expect(result).to.not.include(' - '); // Should not contain range separator
+      expect(result).to.include(' - '); // Should contain time range separator
       expect(result).to.match(/\d{4}/); // Should contain a year
+      expect(result).to.match(/\d{1,2}:\d{2} [AP]M - \d{1,2}:\d{2} [AP]M/); // Should contain time range
     });
 
     it('should return date range for multi-day events', () => {
@@ -415,6 +416,43 @@ describe('Date Range Utilities', () => {
       expect(result).to.be.a('string');
       expect(result).to.match(/\w{3} \d{2}/); // Should match pattern like "Jan 15"
     });
+
+    it('should format date with full year token {YYYY}', () => {
+      const startTimestamp = '1759251599990'; // Jan 15, 2025
+      const endTimestamp = '1759255199990';
+      const template = '{LLL} {dd}, {YYYY}';
+      
+      const result = createTemplatedDateRange(startTimestamp, endTimestamp, 'en-US', template);
+      
+      expect(result).to.be.a('string');
+      expect(result).to.match(/\w{3} \d{2}, \d{4}/); // Should match "Jan 15, 2025"
+      expect(result).to.include('2025'); // Should contain full year
+    });
+
+    it('should format date with short year token {YY}', () => {
+      const startTimestamp = '1759251599990'; // Jan 15, 2025
+      const endTimestamp = '1759255199990';
+      const template = '{LLL} {dd}, {YY}';
+      
+      const result = createTemplatedDateRange(startTimestamp, endTimestamp, 'en-US', template);
+      
+      expect(result).to.be.a('string');
+      expect(result).to.match(/\w{3} \d{2}, \d{2}/); // Should match "Jan 15, 25"
+      expect(result).to.include('25'); // Should contain short year
+    });
+
+    it('should handle all tokens including year tokens', () => {
+      const startTimestamp = '1759251599990';
+      const endTimestamp = '1759255199990';
+      const template = '{ddd}, {LLL} {dd}, {YYYY} | {timeRange} {timeZone}';
+      
+      const result = createTemplatedDateRange(startTimestamp, endTimestamp, 'en-US', template);
+      
+      expect(result).to.be.a('string');
+      expect(result).to.include('2025'); // Should contain full year
+      expect(result).to.include('|'); // Should contain separator
+      expect(result).to.match(/\d{1,2}:\d{2} [AP]M - \d{1,2}:\d{2} [AP]M/); // Should contain time range
+    });
   });
 });
 
@@ -491,7 +529,8 @@ describe('Metadata Massaging', () => {
     // Verify smart date range was created
     expect(result).to.have.property('user-event-date-time-range');
     expect(result['user-event-date-time-range']).to.be.a('string');
-    expect(result['user-event-date-time-range']).to.not.include(' - '); // Same day, no range separator
+    expect(result['user-event-date-time-range']).to.include(' - '); // Same day, includes time range separator
+    expect(result['user-event-date-time-range']).to.match(/\d{1,2}:\d{2} [AP]M - \d{1,2}:\d{2} [AP]M/); // Should contain time range
   });
 
   it('should massage smart date range for multi-day events', () => {
@@ -542,7 +581,8 @@ describe('Metadata Massaging', () => {
     // Verify smart date range was created (fallback behavior)
     expect(result).to.have.property('user-event-date-time-range');
     expect(result['user-event-date-time-range']).to.be.a('string');
-    expect(result['user-event-date-time-range']).to.not.include(' - '); // Same day, no range separator
+    expect(result['user-event-date-time-range']).to.include(' - '); // Same day, includes time range separator
+    expect(result['user-event-date-time-range']).to.match(/\d{1,2}:\d{2} [AP]M - \d{1,2}:\d{2} [AP]M/); // Should contain time range
   });
 
   it('should use custom locale for formatting', () => {
@@ -659,11 +699,12 @@ describe('autoUpdateContent - Timestamp Integration', () => {
     // Call autoUpdateContent
     autoUpdateContent(container, miloDeps, {});
 
-    // Verify smart date range was used (should not contain range separator for same day)
+    // Verify smart date range was used (should contain time range separator for same day)
     expect(container.textContent).to.not.include('[[');
     expect(container.textContent).to.not.include(']]');
-    expect(container.textContent).to.not.include(' - '); // Same day, no range separator
+    expect(container.textContent).to.include(' - '); // Same day, includes time range separator
     expect(container.textContent).to.match(/\d{4}/); // Should contain a year
+    expect(container.textContent).to.match(/\d{1,2}:\d{2} [AP]M - \d{1,2}:\d{2} [AP]M/); // Should contain time range
   });
 
   it('should massage smart date range in autoUpdateContent for multi-day events', () => {
