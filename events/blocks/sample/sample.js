@@ -1053,13 +1053,15 @@ class VanillaAgendaBlock {
                 isOnDemand: isSessionOnDemand(session)
             }));
             
-            // Re-render only the time header to avoid full page refresh
+            // Re-render only the time cells to avoid replacing dropdown
+            const timeCells = Array.from(this.element.querySelectorAll('.agenda-block__time-cell'));
+            timeCells.forEach((cell) => {
+                cell.parentNode.removeChild(cell);
+            });
+            
             const timeHeader = this.element.querySelector('.agenda-block__time-header');
             if (timeHeader) {
-                const newTimeHeader = document.createElement('div');
-                newTimeHeader.className = 'agenda-block__time-header';
-                newTimeHeader.innerHTML = this.renderTimeHeader();
-                timeHeader.parentNode.replaceChild(newTimeHeader, timeHeader);
+                timeHeader.insertAdjacentHTML('beforeend', this.renderTimeHeader());
             }
         }, 5000); // Update every 5 seconds
     }
