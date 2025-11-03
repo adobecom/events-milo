@@ -919,13 +919,13 @@ class VanillaAgendaBlock {
         return this.state.tracks.map((track, index) => {
             const trackSessions = daySessions.filter(s => s.sessionTrack.tagId === track.tagId);
             const numberOfRows = this.calculateNumberOfRowsForTrack(trackSessions, currentDay);
-            
-            return `
+
+        return `
                 <div class="agenda-block__track-label" style="border-left: 4px solid ${track.color}; height: ${numberOfRows * 140 + (numberOfRows - 1) * 6}px;">
                     <div class="agenda-block__track-title-in-label">${track.title}</div>
                     ${track.description ? `<div class="agenda-block__track-description-in-label">${track.description}</div>` : ''}
-                </div>
-            `;
+            </div>
+        `;
         }).join('');
     }
 
@@ -1316,8 +1316,27 @@ class VanillaAgendaBlock {
 
         if (direction === 'next' && this.state.timeCursor < maxOffset) {
             this.state.timeCursor = Math.min(this.state.timeCursor + step, maxOffset);
+        } else if (direction === 'next' && this.state.timeCursor >= maxOffset) {
+            // If at maxOffset and clicking next, move to next day
+            if (this.state.currentDay < this.state.days.length - 1) {
+                this.state.currentDay++;
+                this.initializeTimeCursor(); // Reset to first session of new day
+            }
         } else if (direction === 'prev' && this.state.timeCursor > minOffset) {
             this.state.timeCursor = Math.max(this.state.timeCursor - step, minOffset);
+        } else if (direction === 'prev' && this.state.timeCursor <= minOffset) {
+            // If at minOffset and clicking prev, move to previous day
+            if (this.state.currentDay > 0) {
+                // Calculate maxOffset before changing day
+                const currentDay = this.state.days[this.state.currentDay];
+                const dayStartTime = new Date(currentDay.date + 'T08:00:00Z').getTime();
+                const dayEndTime = new Date(currentDay.date + 'T20:00:00Z').getTime();
+                const totalSlots = (dayEndTime - dayStartTime) / (TIME_SLOT_DURATION * MINUTE_MS);
+                const prevDayMaxOffset = Math.max(0, totalSlots - VISIBLE_TIME_SLOTS);
+                
+                this.state.currentDay--;
+                this.state.timeCursor = prevDayMaxOffset;
+            }
         }
 
         this.render();
