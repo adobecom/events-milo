@@ -1195,11 +1195,15 @@ class VanillaAgendaBlock {
         const daySessions = this.getSessionsForCurrentDay();
         if (daySessions.length === 0) return 0;
 
+        // Find the latest session end time for this day
+        const latestSessionEndTime = Math.max(
+            ...daySessions.map(session => new Date(session.sessionEndTime).getTime())
+        );
+
         const currentDay = this.state.days[this.state.currentDay];
         const dayStartTime = new Date(currentDay.date + 'T08:00:00Z').getTime();
-        const dayEndTime = new Date(currentDay.date + 'T20:00:00Z').getTime();
 
-        const totalSlots = (dayEndTime - dayStartTime) / (TIME_SLOT_DURATION * MINUTE_MS);
+        const totalSlots = (latestSessionEndTime - dayStartTime) / (TIME_SLOT_DURATION * MINUTE_MS);
         return Math.max(0, totalSlots - VISIBLE_TIME_SLOTS);
     }
 
