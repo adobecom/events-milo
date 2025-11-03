@@ -1118,12 +1118,13 @@ class VanillaAgendaBlock {
      * Render pagination controls
      */
     renderPagination() {
+        const minOffset = this.getMinTimeOffset();
         const maxOffset = this.getMaxTimeOffset();
         return `
             <button 
                 class="agenda-block__pagination-btn prev" 
                 data-direction="prev"
-                ${this.state.timeCursor <= 0 ? 'disabled' : ''}
+                ${this.state.timeCursor <= minOffset ? 'disabled' : ''}
                 aria-label="${this.config.labels.prevAriaLabel || 'Previous'}">
                 <svg class="chevron" viewBox="0 0 13 18" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg"><path id="Path_183918" data-name="Path 183918" d="M5.951,12.452a1.655,1.655,0,0,1,.487-1.173l6.644-6.642a1.665,1.665,0,1,1,2.39,2.307l-.041.041L9.962,12.452l5.47,5.468a1.665,1.665,0,0,1-2.308,2.389l-.041-.041L6.439,13.626a1.655,1.655,0,0,1-.488-1.174Z" transform="translate(-5.951 -4.045)" fill="#747474"></path></svg>
             </button>
@@ -1165,6 +1166,26 @@ class VanillaAgendaBlock {
             slots.push(startTime + (i * TIME_SLOT_DURATION * MINUTE_MS));
         }
         return slots;
+    }
+
+    /**
+     * Get min time offset for pagination (based on first session)
+     */
+    getMinTimeOffset() {
+        const daySessions = this.getSessionsForCurrentDay();
+        if (daySessions.length === 0) return 0;
+
+        // Find the earliest session start time for this day
+        const earliestSessionTime = Math.min(
+            ...daySessions.map(session => new Date(session.sessionStartTime).getTime())
+        );
+
+        const currentDay = this.state.days[this.state.currentDay];
+        const dayStartTime = new Date(currentDay.date + 'T08:00:00Z').getTime();
+        
+        // Calculate offset in slots
+        const earliestSlot = (earliestSessionTime - dayStartTime) / (TIME_SLOT_DURATION * MINUTE_MS);
+        return Math.max(0, Math.floor(earliestSlot));
     }
 
     /**
@@ -1284,12 +1305,13 @@ class VanillaAgendaBlock {
      */
     paginate(direction) {
         const step = VISIBLE_TIME_SLOTS; // Move by visible slots
+        const minOffset = this.getMinTimeOffset();
         const maxOffset = this.getMaxTimeOffset();
 
         if (direction === 'next' && this.state.timeCursor < maxOffset) {
             this.state.timeCursor = Math.min(this.state.timeCursor + step, maxOffset);
-        } else if (direction === 'prev' && this.state.timeCursor > 0) {
-            this.state.timeCursor = Math.max(this.state.timeCursor - step, 0);
+        } else if (direction === 'prev' && this.state.timeCursor > minOffset) {
+            this.state.timeCursor = Math.max(this.state.timeCursor - step, minOffset);
         }
 
         this.render();
