@@ -22,9 +22,10 @@ const EVENT_BLOCKS_OVERRIDE = [
 
 const [{
   loadArea,
-  setConfig,
   loadLana,
   getLocale,
+  setConfig,
+  updateConfig,
   getConfig,
 }, {
   setEventConfig,
@@ -235,7 +236,6 @@ const CONFIG = {
       window.locaton.reload();
     },
   },
-  signInContext: getSusiOptions(),
   externalLibs: [
     {
       base: EVENT_LIBS,
@@ -245,7 +245,8 @@ const CONFIG = {
   ],
 };
 
-const MILO_CONFIG = setConfig({ ...CONFIG });
+let MILO_CONFIG = setConfig({ ...CONFIG });
+MILO_CONFIG = updateConfig({ ...MILO_CONFIG, signInContext: getSusiOptions(MILO_CONFIG) });
 const EVENT_CONFIG = setEventConfig(E_CONFIG, MILO_CONFIG);
 
 replaceDotMedia(document);
