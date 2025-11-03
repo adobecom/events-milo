@@ -568,12 +568,34 @@ function getDayKey(timestamp) {
 }
 
 /**
+ * Get session end time with fallback calculation
+ * Falls back to calculating from sessionStartTime + sessionDuration if sessionEndTime is missing
+ */
+function getSessionEndTime(session) {
+    // If sessionEndTime exists, use it
+    if (session.sessionEndTime) {
+        return session.sessionEndTime;
+    }
+    
+    // Otherwise, calculate from start time + duration
+    if (session.sessionStartTime && session.sessionDuration) {
+        const startTime = new Date(session.sessionStartTime).getTime();
+        const durationMinutes = parseInt(session.sessionDuration, 10);
+        const endTime = startTime + (durationMinutes * MINUTE_MS);
+        return new Date(endTime).toISOString();
+    }
+    
+    // Fallback: return start time if no duration available
+    return session.sessionStartTime || new Date().toISOString();
+}
+
+/**
  * Check if session is currently live
  */
 function isSessionLive(session) {
     const now = Date.now();
     const start = new Date(session.sessionStartTime).getTime();
-    const end = new Date(session.sessionEndTime).getTime();
+    const end = new Date(getSessionEndTime(session)).getTime();
     return now >= start && now <= end;
 }
 
@@ -582,7 +604,7 @@ function isSessionLive(session) {
  */
 function isSessionOnDemand(session) {
     const now = Date.now();
-    const end = new Date(session.sessionEndTime).getTime();
+    const end = new Date(getSessionEndTime(session)).getTime();
     return now > end;
 }
 
@@ -943,7 +965,7 @@ class VanillaAgendaBlock {
         
         sessions.forEach(session => {
             const startTime = new Date(session.sessionStartTime).getTime();
-            const endTime = new Date(session.sessionEndTime).getTime();
+            const endTime = new Date(getSessionEndTime(session)).getTime();
             const duration = endTime - startTime;
             
             const startOffset = (startTime - visibleStart) / (TIME_SLOT_DURATION * MINUTE_MS);
@@ -1075,7 +1097,7 @@ class VanillaAgendaBlock {
         sessionTiles.forEach(tile => {
             const { session, startColumn, endColumn, rowNumber, track, shouldDisplayDuration } = tile;
             const startTime = new Date(session.sessionStartTime).getTime();
-            const endTime = new Date(session.sessionEndTime).getTime();
+            const endTime = new Date(getSessionEndTime(session)).getTime();
             
             // Determine duration display format
             const durationText = session.sessionDuration >= 60 
@@ -1210,13 +1232,19 @@ class VanillaAgendaBlock {
         const daySessions = this.getSessionsForCurrentDay();
         if (daySessions.length === 0) return 0;
 
+        console.log('getMaxTimeOffset - daySessions:', daySessions.length);
+        
+        // Log all session end times
+        daySessions.forEach(session => {
+            console.log(`  - ${session.sessionTitle}: endTime=${getSessionEndTime(session)}`);
+        });
+
         // Find the latest session end time for this day
         const latestSessionEndTime = Math.max(
-            ...daySessions.map(session => new Date(session.sessionEndTime).getTime())
+            ...daySessions.map(session => new Date(getSessionEndTime(session)).getTime())
         );
 
         console.log('getMaxTimeOffset - latestSessionEndTime:', new Date(latestSessionEndTime).toISOString());
-        console.log('getMaxTimeOffset - daySessions:', daySessions.length);
 
         const currentDay = this.state.days[this.state.currentDay];
         const dayStartTime = new Date(currentDay.date + 'T08:00:00Z').getTime();
@@ -1362,7 +1390,7 @@ class VanillaAgendaBlock {
                 let prevDayMaxOffset = 0;
                 if (daySessions.length > 0) {
                     const latestSessionEndTime = Math.max(
-                        ...daySessions.map(session => new Date(session.sessionEndTime).getTime())
+                        ...daySessions.map(session => new Date(getSessionEndTime(session)).getTime())
                     );
                     const dayStartTime = new Date(currentDay.date + 'T08:00:00Z').getTime();
                     const latestSessionEndSlot = (latestSessionEndTime - dayStartTime) / (TIME_SLOT_DURATION * MINUTE_MS);
