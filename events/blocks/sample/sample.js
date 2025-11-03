@@ -782,10 +782,8 @@ class VanillaAgendaBlock {
         // Calculate offset in slots
         const earliestSlot = (earliestSessionTime - dayStartTime) / (TIME_SLOT_DURATION * MINUTE_MS);
         
-        // Set timeCursor to show the session (with a bit of padding, but ensure it's visible)
-        // We want the session to appear in the visible window, ideally not at the very edge
-        // If session is at slot 28, we want to show starting around slot 26-27
-        const padding = 2; // Show 2 slots before the session
+        // Set timeCursor to show the session (no padding, start exactly at first session)
+        const padding = 0; // Start exactly at the first session slot
         this.state.timeCursor = Math.max(0, Math.floor(earliestSlot - padding));
     }
 
