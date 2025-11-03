@@ -688,6 +688,7 @@
     border-radius: 0;
     pointer-events: none;
     background-size: 15.56px 15.56px;
+    box-sizing: border-box;
 }
 
 
