@@ -653,7 +653,7 @@ function renderDayNightIcon(showSun, showMoon) {
             <div class="daytime_icon">
                 <svg viewBox="0 0 8.1 11" xmlns="http://www.w3.org/2000/svg">
                     <title>Moon Icon</title>
-                    <path d="M0,8.838C0.98,10.567,3.022,11.731,5.243,11.185c0.963-0.237,1.846-0.72,2.569-1.406c-0.495,0.046-1,0.014-1.493-0.096c-1.568-0.351-2.936-1.326-3.664-2.72C2.118,5.75,2.044,4.354,2.432,3.048C1.37,3.826,0.622,5.12,0.545,6.565C0.523,7.116,0.569,7.673,0.686,8.212C0.674,8.365,0.652,8.516,0.622,8.665C0.458,8.539,0.307,8.395,0.172,8.235C0.114,8.435,0.057,8.636,0,8.838z" fill="currentColor"/>
+                    <path d="M7.9,1.2C8,1.2,8.1,1,8.1,0.9c0,0,0,0,0,0s0,0,0,0c0-0.1-0.1-0.3-0.2-0.3C7.1,0.2,6.3,0,5.5,0L0,0c0.8,0,1.6-0.2,2.4-0.5c0.1-0.1,0.2-0.2,0.2-0.3c0,0,0,0,0,0s0,0,0,0C8.1,10,8,9.8,7.9,9.8C5.5,8.7,4.5,5.9,5.6,3.5C6.1,2.5,6.9,1.7,7.9,1.2L7.9,1.2z" fill="currentColor"/>
                 </svg>
             </div>
         `;
@@ -1087,9 +1087,9 @@ class VanillaAgendaBlock {
                         <a href="${session.cardUrl}" class="title" daa-ll="${session.isOnDemand ? 'On Demand Session Title Click' : 'Session Title Click'}|${session.sessionTitle}">
                             ${session.sessionTitle}
                         </a>
-                        <footer>
+                        ${shouldDisplayDuration ? `<footer>
                             <p class="duration">${durationText}</p>
-                        </footer>
+                        </footer>` : ''}
                     </article>
             </div>
             `;
