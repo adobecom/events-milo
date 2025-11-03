@@ -1210,11 +1210,11 @@ class VanillaAgendaBlock {
         const dayStartTime = new Date(currentDay.date + 'T08:00:00Z').getTime();
 
         const totalSlots = (latestSessionEndTime - dayStartTime) / (TIME_SLOT_DURATION * MINUTE_MS);
-        // Calculate maxOffset so that the session end slot is visible
-        // If session ends at slot N, we need timeCursor such that timeCursor + VISIBLE_TIME_SLOTS - 1 >= N
-        // So: timeCursor >= N - VISIBLE_TIME_SLOTS + 1
-        // Using Math.ceil to ensure we can reach the session end slot
-        return Math.max(0, Math.ceil(totalSlots - VISIBLE_TIME_SLOTS + 1));
+        // Calculate maxOffset so that we can show until the slot after the session end
+        // If session ends at slot N (which starts at session end time),
+        // we want to allow viewing up to slot N (so it shows as the last visible slot)
+        // This requires maxOffset = N - VISIBLE_TIME_SLOTS + 1 (since N-4 must be the start)
+        return Math.max(0, totalSlots - VISIBLE_TIME_SLOTS + 1);
     }
 
     /**
