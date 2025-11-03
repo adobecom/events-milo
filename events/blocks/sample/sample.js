@@ -947,11 +947,17 @@ class VanillaAgendaBlock {
             
             const startOffset = (startTime - visibleStart) / (TIME_SLOT_DURATION * MINUTE_MS);
             const durationSlots = Math.ceil(duration / (TIME_SLOT_DURATION * MINUTE_MS));
+            const endOffset = startOffset + durationSlots;
             
-            if (startOffset >= 0 && startOffset < VISIBLE_TIME_SLOTS) {
+            // Render session if it overlaps with visible window (starts before/within and ends after/within)
+            if (endOffset > 0 && startOffset < VISIBLE_TIME_SLOTS) {
                 const track = this.state.tracks.find(t => t.tagId === session.sessionTrack.tagId);
-                const startColumn = Math.floor(startOffset) + 1;
-                const endColumn = Math.min(startColumn + durationSlots, VISIBLE_TIME_SLOTS + 1);
+                
+                // Calculate visible portion of the session
+                const visibleStartColumn = Math.max(1, Math.floor(startOffset) + 1);
+                const visibleEndColumn = Math.min(Math.ceil(endOffset), VISIBLE_TIME_SLOTS + 1);
+                const startColumn = visibleStartColumn;
+                const endColumn = visibleEndColumn;
                 
                 // Find available row for this session
                 let rowNumber = 1;
@@ -1204,7 +1210,11 @@ class VanillaAgendaBlock {
         const dayStartTime = new Date(currentDay.date + 'T08:00:00Z').getTime();
 
         const totalSlots = (latestSessionEndTime - dayStartTime) / (TIME_SLOT_DURATION * MINUTE_MS);
-        return Math.max(0, totalSlots - VISIBLE_TIME_SLOTS);
+        // Calculate maxOffset so that the session end slot is visible
+        // If session ends at slot N, we need timeCursor such that timeCursor + VISIBLE_TIME_SLOTS - 1 >= N
+        // So: timeCursor >= N - VISIBLE_TIME_SLOTS + 1
+        // Using Math.ceil to ensure we can reach the session end slot
+        return Math.max(0, Math.ceil(totalSlots - VISIBLE_TIME_SLOTS + 1));
     }
 
     /**
