@@ -747,11 +747,46 @@ class VanillaAgendaBlock {
             // Extract days from sessions (not from API!)
             this.state.days = extractDaysFromSessions(this.state.sessions);
             
+            // Initialize timeCursor to show the first session for the first day
+            if (this.state.days.length > 0) {
+                this.initializeTimeCursor();
+            }
+            
             this.state.isLoading = false;
         } catch (error) {
             // Handle error silently in production
             this.state.isLoading = false;
         }
+    }
+
+    /**
+     * Initialize timeCursor to show the first session for the current day
+     */
+    initializeTimeCursor() {
+        const currentDay = this.state.days[this.state.currentDay];
+        if (!currentDay) return;
+
+        const daySessions = this.getSessionsForCurrentDay();
+        if (daySessions.length === 0) {
+            this.state.timeCursor = 0;
+            return;
+        }
+
+        // Find the earliest session start time for this day
+        const earliestSessionTime = Math.min(
+            ...daySessions.map(session => new Date(session.sessionStartTime).getTime())
+        );
+
+        const dayStartTime = new Date(currentDay.date + 'T08:00:00Z').getTime();
+        
+        // Calculate offset in slots
+        const earliestSlot = (earliestSessionTime - dayStartTime) / (TIME_SLOT_DURATION * MINUTE_MS);
+        
+        // Set timeCursor to show the session (with a bit of padding, but ensure it's visible)
+        // We want the session to appear in the visible window, ideally not at the very edge
+        // If session is at slot 28, we want to show starting around slot 26-27
+        const padding = 2; // Show 2 slots before the session
+        this.state.timeCursor = Math.max(0, Math.floor(earliestSlot - padding));
     }
 
     /**
@@ -1240,7 +1275,7 @@ class VanillaAgendaBlock {
     changeDay(dayIndex) {
         if (dayIndex >= 0 && dayIndex < this.state.days.length) {
             this.state.currentDay = dayIndex;
-            this.state.timeCursor = 0; // Reset time position
+            this.initializeTimeCursor(); // Initialize to show first session for this day
             this.render();
             this.attachEventListeners();
         }
