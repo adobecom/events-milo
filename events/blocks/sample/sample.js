@@ -1215,6 +1215,9 @@ class VanillaAgendaBlock {
             ...daySessions.map(session => new Date(session.sessionEndTime).getTime())
         );
 
+        console.log('getMaxTimeOffset - latestSessionEndTime:', new Date(latestSessionEndTime).toISOString());
+        console.log('getMaxTimeOffset - daySessions:', daySessions.length);
+
         const currentDay = this.state.days[this.state.currentDay];
         const dayStartTime = new Date(currentDay.date + 'T08:00:00Z').getTime();
 
@@ -1224,6 +1227,10 @@ class VanillaAgendaBlock {
         // Use the maximum of target end slot (37 = 22:45 IST) and session end slot
         // This ensures we always show until 22:45 on both days
         const effectiveEndSlot = Math.max(TARGET_END_SLOT, latestSessionEndSlot);
+
+        console.log('getMaxTimeOffset - latestSessionEndSlot:', latestSessionEndSlot);
+        console.log('getMaxTimeOffset - effectiveEndSlot:', effectiveEndSlot);
+        console.log('getMaxTimeOffset - maxOffset:', effectiveEndSlot - VISIBLE_TIME_SLOTS + 1);
 
         return Math.max(0, effectiveEndSlot - VISIBLE_TIME_SLOTS + 1);
     }
