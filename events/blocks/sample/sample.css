@@ -427,8 +427,9 @@
     position: relative;
     display: flex;
     flex-direction: column;
-    gap: 0;
+    gap: 6px;
     width: 100%;
+    padding: 6px 0 6px;
 }
 
 .agenda-block__pagination {
@@ -651,6 +652,7 @@
     display: flex;
     flex-direction: column;
     justify-content: space-between;
+    box-sizing: border-box;
 }
 
 .agenda_tile:hover {
