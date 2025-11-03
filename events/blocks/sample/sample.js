@@ -1201,20 +1201,12 @@ class VanillaAgendaBlock {
         const daySessions = this.getSessionsForCurrentDay();
         if (daySessions.length === 0) return 0;
 
-        // Find the latest session end time for this day
-        const latestSessionEndTime = Math.max(
-            ...daySessions.map(session => new Date(session.sessionEndTime).getTime())
-        );
-
         const currentDay = this.state.days[this.state.currentDay];
         const dayStartTime = new Date(currentDay.date + 'T08:00:00Z').getTime();
+        const dayEndTime = new Date(currentDay.date + 'T20:00:00Z').getTime();
 
-        const totalSlots = (latestSessionEndTime - dayStartTime) / (TIME_SLOT_DURATION * MINUTE_MS);
-        // Calculate maxOffset so that we can show until the slot after the session end
-        // If session ends at slot N (which starts at session end time),
-        // we want to allow viewing up to slot N (so it shows as the last visible slot)
-        // This requires maxOffset = N - VISIBLE_TIME_SLOTS + 1 (since N-4 must be the start)
-        return Math.max(0, totalSlots - VISIBLE_TIME_SLOTS + 1);
+        const totalSlots = (dayEndTime - dayStartTime) / (TIME_SLOT_DURATION * MINUTE_MS);
+        return Math.max(0, totalSlots - VISIBLE_TIME_SLOTS);
     }
 
     /**
