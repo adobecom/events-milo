@@ -535,6 +535,7 @@ const MINUTE_MS = 60 * 1000;
 const HOUR_MS = 60 * MINUTE_MS;
 const TIME_SLOT_DURATION = 15; // 15 minutes per time slot
 const VISIBLE_TIME_SLOTS = 5; // Show 5 time slots
+const TARGET_END_SLOT = 37; // Target slot 37 = 22:45 IST (last visible time)
 
 // ============================================================================
 // HELPER FUNCTIONS (replacing Dexter utilities)
@@ -1201,12 +1202,22 @@ class VanillaAgendaBlock {
         const daySessions = this.getSessionsForCurrentDay();
         if (daySessions.length === 0) return 0;
 
+        // Find the latest session end time for this day
+        const latestSessionEndTime = Math.max(
+            ...daySessions.map(session => new Date(session.sessionEndTime).getTime())
+        );
+
         const currentDay = this.state.days[this.state.currentDay];
         const dayStartTime = new Date(currentDay.date + 'T08:00:00Z').getTime();
-        const dayEndTime = new Date(currentDay.date + 'T20:00:00Z').getTime();
 
-        const totalSlots = (dayEndTime - dayStartTime) / (TIME_SLOT_DURATION * MINUTE_MS);
-        return Math.max(0, totalSlots - VISIBLE_TIME_SLOTS);
+        // Calculate session end slot
+        const latestSessionEndSlot = (latestSessionEndTime - dayStartTime) / (TIME_SLOT_DURATION * MINUTE_MS);
+
+        // Use the maximum of target end slot (37 = 22:45 IST) and session end slot
+        // This ensures we always show until 22:45 on both days
+        const effectiveEndSlot = Math.max(TARGET_END_SLOT, latestSessionEndSlot);
+
+        return Math.max(0, effectiveEndSlot - VISIBLE_TIME_SLOTS + 1);
     }
 
     /**
@@ -1329,10 +1340,20 @@ class VanillaAgendaBlock {
             if (this.state.currentDay > 0) {
                 // Calculate maxOffset before changing day
                 const currentDay = this.state.days[this.state.currentDay];
-                const dayStartTime = new Date(currentDay.date + 'T08:00:00Z').getTime();
-                const dayEndTime = new Date(currentDay.date + 'T20:00:00Z').getTime();
-                const totalSlots = (dayEndTime - dayStartTime) / (TIME_SLOT_DURATION * MINUTE_MS);
-                const prevDayMaxOffset = Math.max(0, totalSlots - VISIBLE_TIME_SLOTS);
+                const daySessions = this.state.sessions.filter(session => {
+                    const sessionDayKey = getDayKey(new Date(session.sessionStartTime).getTime());
+                    return sessionDayKey === currentDay.id;
+                });
+                let prevDayMaxOffset = 0;
+                if (daySessions.length > 0) {
+                    const latestSessionEndTime = Math.max(
+                        ...daySessions.map(session => new Date(session.sessionEndTime).getTime())
+                    );
+                    const dayStartTime = new Date(currentDay.date + 'T08:00:00Z').getTime();
+                    const latestSessionEndSlot = (latestSessionEndTime - dayStartTime) / (TIME_SLOT_DURATION * MINUTE_MS);
+                    const effectiveEndSlot = Math.max(TARGET_END_SLOT, latestSessionEndSlot);
+                    prevDayMaxOffset = Math.max(0, effectiveEndSlot - VISIBLE_TIME_SLOTS + 1);
+                }
                 
                 this.state.currentDay--;
                 this.state.timeCursor = prevDayMaxOffset;
