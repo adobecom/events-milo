@@ -574,6 +574,14 @@ function getDayKey(timestamp) {
 function getSessionEndTime(session) {
     // If sessionEndTime exists, use it
     if (session.sessionEndTime) {
+        // Debug logging for the specific session
+        if (session.sessionTitle && session.sessionTitle.includes('A.COM Test Keynote')) {
+            console.log('getSessionEndTime - using sessionEndTime:', {
+                title: session.sessionTitle,
+                sessionEndTime: session.sessionEndTime,
+                expectedIST: new Date(new Date(session.sessionEndTime).getTime() + (5.5 * 60 * 60 * 1000)).toISOString()
+            });
+        }
         return session.sessionEndTime;
     }
     
@@ -582,7 +590,20 @@ function getSessionEndTime(session) {
         const startTime = new Date(session.sessionStartTime).getTime();
         const durationMinutes = parseInt(session.sessionDuration, 10);
         const endTime = startTime + (durationMinutes * MINUTE_MS);
-        return new Date(endTime).toISOString();
+        const calculatedEnd = new Date(endTime).toISOString();
+        
+        // Debug logging for the specific session
+        if (session.sessionTitle && session.sessionTitle.includes('A.COM Test Keynote')) {
+            console.log('getSessionEndTime - calculated from duration:', {
+                title: session.sessionTitle,
+                startTime: session.sessionStartTime,
+                durationMinutes,
+                calculatedEnd,
+                expectedIST: new Date(endTime + (5.5 * 60 * 60 * 1000)).toISOString()
+            });
+        }
+        
+        return calculatedEnd;
     }
     
     // Fallback: return start time if no duration available
@@ -968,9 +989,33 @@ class VanillaAgendaBlock {
             const endTime = new Date(getSessionEndTime(session)).getTime();
             const duration = endTime - startTime;
             
+            // Debug logging for the specific session
+            if (session.sessionTitle && session.sessionTitle.includes('A.COM Test Keynote')) {
+                console.log('Session calculation:', {
+                    title: session.sessionTitle,
+                    startTime: new Date(startTime).toISOString(),
+                    endTime: new Date(endTime).toISOString(),
+                    durationMs: duration,
+                    durationMinutes: duration / MINUTE_MS,
+                    sessionEndTime: session.sessionEndTime,
+                    sessionDuration: session.sessionDuration
+                });
+            }
+            
             const startOffset = (startTime - visibleStart) / (TIME_SLOT_DURATION * MINUTE_MS);
             const durationSlots = Math.ceil(duration / (TIME_SLOT_DURATION * MINUTE_MS));
             const endOffset = startOffset + durationSlots;
+            
+            // Debug logging for the specific session
+            if (session.sessionTitle && session.sessionTitle.includes('A.COM Test Keynote')) {
+                console.log('Session slot calculation:', {
+                    title: session.sessionTitle,
+                    visibleStart: new Date(visibleStart).toISOString(),
+                    startOffset,
+                    durationSlots,
+                    endOffset
+                });
+            }
             
             // Render session if it overlaps with visible window (starts before/within and ends after/within)
             if (endOffset > 0 && startOffset < VISIBLE_TIME_SLOTS) {
