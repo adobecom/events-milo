@@ -37,6 +37,7 @@ const [{
   getMetadata,
   setMetadata,
   processAutoBlockLinks,
+  getEventServiceEnv,
   EVENT_BLOCKS,
 }] = await Promise.all([
   import(`${LIBS}/utils/utils.js`),
@@ -86,7 +87,8 @@ function renderWithNonProdMetadata() {
 
 async function fetchAndDecorateArea() {
   // Load non-prod data for stage and dev environments
-  let env = getEventConfig().eventServiceEnv.name;
+  let env = getEventServiceEnv().name;
+
   if (env === 'local') env = 'dev';
   const nonProdData = await getNonProdData(env);
   if (!nonProdData) return;
