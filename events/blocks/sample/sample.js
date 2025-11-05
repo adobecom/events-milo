@@ -11611,8 +11611,15 @@ class VanillaAgendaBlock {
             }
             
             const startOffset = (startTime - visibleStart) / (TIME_SLOT_DURATION * MINUTE_MS);
-            const durationSlots = Math.ceil(duration / (TIME_SLOT_DURATION * MINUTE_MS));
-            const endOffset = startOffset + durationSlots;
+            // Calculate end offset from end time
+            // The endOffset should include the full slot that contains the end time
+            // For example, if session ends at 15:00 UTC (20:30 IST), it should display
+            // through the slot 20:15-20:30 IST, so we need to round up and add 1 slot
+            const endOffsetRaw = (endTime - visibleStart) / (TIME_SLOT_DURATION * MINUTE_MS);
+            // Round up to get the slot index, then add 1 to include the full slot
+            // This ensures sessions ending at slot boundaries (like 15:00 UTC) 
+            // properly display the complete last slot
+            const endOffset = Math.ceil(endOffsetRaw) + 1;
             
             // Debug logging for the specific session
             if (session.sessionTitle && session.sessionTitle.includes('A.COM Test Keynote')) {
@@ -11620,7 +11627,7 @@ class VanillaAgendaBlock {
                     title: session.sessionTitle,
                     visibleStart: new Date(visibleStart).toISOString(),
                     startOffset,
-                    durationSlots,
+                    endOffsetRaw,
                     endOffset
                 });
             }
