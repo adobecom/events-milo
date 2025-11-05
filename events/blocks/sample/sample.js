@@ -176,7 +176,14 @@ const AGENDA_CONFIG = {
   
     /* ====== TIME MATH (IST midnight baseline) ====== */
   
-    getDayStartUtcTs(currentDay){ return getIstMidnightUtcTs(currentDay.date); }
+    getDayStartUtcTs(currentDay){
+        if(!currentDay || !currentDay.date){
+          // Happens on first paint or during a fast day switch; safe fallback.
+          return 0;
+        }
+        return getIstMidnightUtcTs(currentDay.date);
+    }
+      
   
     /* When landing on a day (via dropdown), show earliest session. */
     initializeTimeCursorToEarliest(){
@@ -266,8 +273,9 @@ const AGENDA_CONFIG = {
     }
   
     renderTracksColumn(){
-      const currentDay=this.state.days[this.state.currentDay];
-      const daySessions=this.getSessionsForCurrentDay();
+      const currentDay = this.state.days?.[this.state.currentDay] || {};
+      if(!currentDay) return ''; // no rows until days are ready
+      const daySessions = this.getSessionsForCurrentDay();
       return this.state.tracks.map((track,idx)=>{
         const trackSessions = daySessions.filter(s=>s.sessionTrack.tagId===track.tagId);
         const rows = this.calculateNumberOfRowsForTrack(trackSessions,currentDay);
@@ -303,9 +311,9 @@ const AGENDA_CONFIG = {
     }
   
     renderGrid(){
-      const currentDay=this.state.days[this.state.currentDay];
-      if(!currentDay) return `<div class="agenda-block__empty">${this.config.labels.noSessionsText}</div>`;
-      const daySessions=this.getSessionsForCurrentDay();
+        const currentDay = this.state.days?.[this.state.currentDay] || {};
+        if(!currentDay) return `<div class="agenda-block__empty">${this.config.labels.noSessionsText}</div>`;
+        const daySessions = this.getSessionsForCurrentDay();
       return this.state.tracks.map(track=>{
         const trackSessions = daySessions.filter(s=>s.sessionTrack.tagId===track.tagId);
         return `
