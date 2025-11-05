@@ -11145,7 +11145,8 @@ const TIME_SLOT_DURATION = 15; // 15 minutes per time slot
 const VISIBLE_TIME_SLOTS = 5; // Show 5 time slots
 const TARGET_END_SLOT = 37; // Target slot 37 = 22:45 IST (last visible time)
 const LAST_DAY_SLOT = 41; // Last slot of day = 23:45 IST (slot 37 = 22:45, slot 38 = 23:00, slot 39 = 23:15, slot 40 = 23:30, slot 41 = 23:45)
-const PAGINATION_STEP = VISIBLE_TIME_SLOTS - 1; // Move by 4 slots to create 1-slot overlap between pages
+const PAGINATION_STEP = VISIBLE_TIME_SLOTS - 1; // Move by 4 slots to create 1-slot overlap (normal pages)
+// Only the last page before day boundary shows slots 37-41 (22:45-23:45) with overlap
 
 // ============================================================================
 // HELPER FUNCTIONS (replacing Dexter utilities)
@@ -12042,23 +12043,27 @@ class VanillaAgendaBlock {
 
     /**
      * Paginate time slots
-     * Uses 4-slot step to create 1-slot overlap between pages (matching old implementation)
-     * Last page of day shows slots 37-41 (22:45-23:45 IST)
+     * Normal pages: Move by 4 slots (1-slot overlap)
+     * Last page before day boundary: Shows slots 37-41 (22:45-23:45 IST) with overlap from previous page
      */
     paginate(direction) {
-        const step = PAGINATION_STEP; // Move by 4 slots to create 1-slot overlap
+        const step = PAGINATION_STEP; // Move by 4 slots for normal pages (1-slot overlap)
         const minOffset = this.getMinTimeOffset();
-        const maxOffset = this.getMaxTimeOffset();
+        const maxOffset = this.getMaxTimeOffset(); // Last page offset (37 for slots 37-41)
 
         if (direction === 'next' && this.state.timeCursor < maxOffset) {
-            // Calculate next position
+            // Calculate next position with normal step (4 slots)
             const nextPosition = this.state.timeCursor + step;
             
-            // If next position would exceed maxOffset, snap to maxOffset (last page)
-            if (nextPosition >= maxOffset) {
+            // Check if we're approaching the last page
+            // If next position would go past or into the last page slots, snap to last page
+            // Last page is at offset 37 (showing slots 37-41)
+            // We want to show the last page when we would show slots that overlap with it
+            if (nextPosition >= maxOffset || (nextPosition + VISIBLE_TIME_SLOTS - 1) >= LAST_DAY_SLOT) {
+                // Snap to last page (offset 37) to show exactly the last 5 slots (22:45-23:45)
                 this.state.timeCursor = maxOffset;
             } else {
-                // Move forward by 4 slots (creating 1-slot overlap)
+                // Normal pagination: move forward by 4 slots (creating 1-slot overlap)
                 this.state.timeCursor = nextPosition;
             }
         } else if (direction === 'next' && this.state.timeCursor >= maxOffset) {
@@ -12068,8 +12073,19 @@ class VanillaAgendaBlock {
                 this.initializeTimeCursor(); // Reset to first session of new day (starts at 00:00)
             }
         } else if (direction === 'prev' && this.state.timeCursor > minOffset) {
-            // Move backward by 4 slots (creating 1-slot overlap)
-            this.state.timeCursor = Math.max(this.state.timeCursor - step, minOffset);
+            // If we're at the last page (maxOffset = 37), go back to show page 4
+            // Page 4 shows slots 32-36 (22:15-22:45), so offset should be 32
+            // From offset 32, next would be 36, but we want to show last page at 37
+            // So we need to go back from 37 by 5 slots to get to 32 (not 4, to show proper page)
+            if (this.state.timeCursor === maxOffset) {
+                // Go back from last page (offset 37) to previous page (offset 33, which shows 33-37)
+                // But actually, we want to show the page before the overlap, so offset 32 (shows 32-36)
+                const prevPageOffset = maxOffset - VISIBLE_TIME_SLOTS; // 37 - 5 = 32
+                this.state.timeCursor = Math.max(prevPageOffset, minOffset);
+            } else {
+                // Normal pagination: move backward by 4 slots (creating 1-slot overlap)
+                this.state.timeCursor = Math.max(this.state.timeCursor - step, minOffset);
+            }
         } else if (direction === 'prev' && this.state.timeCursor <= minOffset) {
             // If at minOffset and clicking prev, move to previous day's last page
             if (this.state.currentDay > 0) {
