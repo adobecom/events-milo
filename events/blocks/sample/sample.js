@@ -11476,6 +11476,12 @@ class VanillaAgendaBlock {
             this.renderLoading();
             return;
         }
+        
+        // Ensure timeCursor doesn't exceed maxOffset (prevent crossing day boundary)
+        const maxOffset = this.getMaxTimeOffset();
+        if (this.state.timeCursor > maxOffset) {
+            this.state.timeCursor = maxOffset;
+        }
 
         const html = `
             <div class="agenda-block__container">
@@ -11852,6 +11858,7 @@ class VanillaAgendaBlock {
 
     /**
      * Get visible time slots
+     * Ensures slots don't cross day boundary (stops at 23:45 IST = slot 41)
      */
     getVisibleTimeSlots() {
         const currentDay = this.state.days[this.state.currentDay];
@@ -11859,10 +11866,19 @@ class VanillaAgendaBlock {
 
         const dayStartTime = new Date(currentDay.date + 'T08:00:00Z').getTime();
         const startTime = dayStartTime + (this.state.timeCursor * TIME_SLOT_DURATION * MINUTE_MS);
+        
+        // Calculate end of day (start of slot 42 = end of slot 41 = 00:00 next day in IST)
+        // Slot 41 is the last slot (23:45 IST), so we stop before slot 42 starts
+        const dayEndTime = dayStartTime + ((LAST_DAY_SLOT + 1) * TIME_SLOT_DURATION * MINUTE_MS);
 
         const slots = [];
         for (let i = 0; i < VISIBLE_TIME_SLOTS; i++) {
-            slots.push(startTime + (i * TIME_SLOT_DURATION * MINUTE_MS));
+            const slotTime = startTime + (i * TIME_SLOT_DURATION * MINUTE_MS);
+            // Stop if we've reached or exceeded the end of the day (don't cross into next day)
+            if (slotTime >= dayEndTime) {
+                break;
+            }
+            slots.push(slotTime);
         }
         return slots;
     }
