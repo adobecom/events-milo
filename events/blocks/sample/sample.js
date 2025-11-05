@@ -11144,6 +11144,8 @@ const HOUR_MS = 60 * MINUTE_MS;
 const TIME_SLOT_DURATION = 15; // 15 minutes per time slot
 const VISIBLE_TIME_SLOTS = 5; // Show 5 time slots
 const TARGET_END_SLOT = 37; // Target slot 37 = 22:45 IST (last visible time)
+const LAST_DAY_SLOT = 41; // Last slot of day = 23:45 IST (slot 37 = 22:45, slot 38 = 23:00, slot 39 = 23:15, slot 40 = 23:30, slot 41 = 23:45)
+const PAGINATION_STEP = VISIBLE_TIME_SLOTS - 1; // Move by 4 slots to create 1-slot overlap between pages
 
 // ============================================================================
 // HELPER FUNCTIONS (replacing Dexter utilities)
@@ -11887,6 +11889,7 @@ class VanillaAgendaBlock {
 
     /**
      * Get max time offset for pagination
+     * Returns the offset that shows the last 5 slots of the day (ending at 23:45 IST)
      */
     getMaxTimeOffset() {
         const daySessions = this.getSessionsForCurrentDay();
@@ -11912,14 +11915,15 @@ class VanillaAgendaBlock {
         // Calculate session end slot
         const latestSessionEndSlot = (latestSessionEndTime - dayStartTime) / (TIME_SLOT_DURATION * MINUTE_MS);
 
-        // Use the maximum of target end slot (37 = 22:45 IST) and session end slot
-        // This ensures we always show until 22:45 on both days
-        const effectiveEndSlot = Math.max(TARGET_END_SLOT, latestSessionEndSlot);
+        // Use the maximum of LAST_DAY_SLOT (41 = 23:45 IST) and session end slot
+        // This ensures the last page shows slots 37-41 (22:45-23:45 IST)
+        const effectiveEndSlot = Math.max(LAST_DAY_SLOT, latestSessionEndSlot);
 
         console.log('getMaxTimeOffset - latestSessionEndSlot:', latestSessionEndSlot);
         console.log('getMaxTimeOffset - effectiveEndSlot:', effectiveEndSlot);
         console.log('getMaxTimeOffset - maxOffset:', effectiveEndSlot - VISIBLE_TIME_SLOTS + 1);
 
+        // Return offset that shows the last 5 slots (slots 37-41 for 22:45-23:45 IST)
         return Math.max(0, effectiveEndSlot - VISIBLE_TIME_SLOTS + 1);
     }
 
@@ -12022,24 +12026,36 @@ class VanillaAgendaBlock {
 
     /**
      * Paginate time slots
+     * Uses 4-slot step to create 1-slot overlap between pages (matching old implementation)
+     * Last page of day shows slots 37-41 (22:45-23:45 IST)
      */
     paginate(direction) {
-        const step = VISIBLE_TIME_SLOTS; // Move by visible slots
+        const step = PAGINATION_STEP; // Move by 4 slots to create 1-slot overlap
         const minOffset = this.getMinTimeOffset();
         const maxOffset = this.getMaxTimeOffset();
 
         if (direction === 'next' && this.state.timeCursor < maxOffset) {
-            this.state.timeCursor = Math.min(this.state.timeCursor + step, maxOffset);
+            // Calculate next position
+            const nextPosition = this.state.timeCursor + step;
+            
+            // If next position would exceed maxOffset, snap to maxOffset (last page)
+            if (nextPosition >= maxOffset) {
+                this.state.timeCursor = maxOffset;
+            } else {
+                // Move forward by 4 slots (creating 1-slot overlap)
+                this.state.timeCursor = nextPosition;
+            }
         } else if (direction === 'next' && this.state.timeCursor >= maxOffset) {
-            // If at maxOffset and clicking next, move to next day
+            // If at maxOffset (last page of day) and clicking next, move to next day
             if (this.state.currentDay < this.state.days.length - 1) {
                 this.state.currentDay++;
-                this.initializeTimeCursor(); // Reset to first session of new day
+                this.initializeTimeCursor(); // Reset to first session of new day (starts at 00:00)
             }
         } else if (direction === 'prev' && this.state.timeCursor > minOffset) {
+            // Move backward by 4 slots (creating 1-slot overlap)
             this.state.timeCursor = Math.max(this.state.timeCursor - step, minOffset);
         } else if (direction === 'prev' && this.state.timeCursor <= minOffset) {
-            // If at minOffset and clicking prev, move to previous day
+            // If at minOffset and clicking prev, move to previous day's last page
             if (this.state.currentDay > 0) {
                 // Calculate maxOffset before changing day
                 const currentDay = this.state.days[this.state.currentDay];
@@ -12054,7 +12070,7 @@ class VanillaAgendaBlock {
                     );
                     const dayStartTime = new Date(currentDay.date + 'T08:00:00Z').getTime();
                     const latestSessionEndSlot = (latestSessionEndTime - dayStartTime) / (TIME_SLOT_DURATION * MINUTE_MS);
-                    const effectiveEndSlot = Math.max(TARGET_END_SLOT, latestSessionEndSlot);
+                    const effectiveEndSlot = Math.max(LAST_DAY_SLOT, latestSessionEndSlot);
                     prevDayMaxOffset = Math.max(0, effectiveEndSlot - VISIBLE_TIME_SLOTS + 1);
                 }
                 
