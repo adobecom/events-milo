@@ -11907,41 +11907,16 @@ class VanillaAgendaBlock {
     /**
      * Get max time offset for pagination
      * Returns the offset that shows the last 5 slots of the day (ending at 23:45 IST)
+     * Always returns offset 37 to show slots 37-41 (22:45-23:45 IST)
      */
     getMaxTimeOffset() {
         const daySessions = this.getSessionsForCurrentDay();
         if (daySessions.length === 0) return 0;
 
-        console.log('getMaxTimeOffset - daySessions:', daySessions.length);
-        
-        // Log all session end times
-        daySessions.forEach(session => {
-            console.log(`  - ${session.sessionTitle}: endTime=${getSessionEndTime(session)}`);
-        });
-
-        // Find the latest session end time for this day
-        const latestSessionEndTime = Math.max(
-            ...daySessions.map(session => new Date(getSessionEndTime(session)).getTime())
-        );
-
-        console.log('getMaxTimeOffset - latestSessionEndTime:', new Date(latestSessionEndTime).toISOString());
-
-        const currentDay = this.state.days[this.state.currentDay];
-        const dayStartTime = new Date(currentDay.date + 'T08:00:00Z').getTime();
-
-        // Calculate session end slot
-        const latestSessionEndSlot = (latestSessionEndTime - dayStartTime) / (TIME_SLOT_DURATION * MINUTE_MS);
-
-        // Use the maximum of LAST_DAY_SLOT (41 = 23:45 IST) and session end slot
-        // This ensures the last page shows slots 37-41 (22:45-23:45 IST)
-        const effectiveEndSlot = Math.max(LAST_DAY_SLOT, latestSessionEndSlot);
-
-        console.log('getMaxTimeOffset - latestSessionEndSlot:', latestSessionEndSlot);
-        console.log('getMaxTimeOffset - effectiveEndSlot:', effectiveEndSlot);
-        console.log('getMaxTimeOffset - maxOffset:', effectiveEndSlot - VISIBLE_TIME_SLOTS + 1);
-
-        // Return offset that shows the last 5 slots (slots 37-41 for 22:45-23:45 IST)
-        return Math.max(0, effectiveEndSlot - VISIBLE_TIME_SLOTS + 1);
+        // Always return offset 37 to show the last 5 slots (22:45-23:45 IST)
+        // This is slot 37 = 22:45 IST, slot 38 = 23:00 IST, slot 39 = 23:15 IST, slot 40 = 23:30 IST, slot 41 = 23:45 IST
+        // maxOffset = LAST_DAY_SLOT - VISIBLE_TIME_SLOTS + 1 = 41 - 5 + 1 = 37
+        return LAST_DAY_SLOT - VISIBLE_TIME_SLOTS + 1;
     }
 
     /**
@@ -12051,26 +12026,33 @@ class VanillaAgendaBlock {
         const minOffset = this.getMinTimeOffset();
         const maxOffset = this.getMaxTimeOffset(); // Last page offset (37 for slots 37-41)
 
-        if (direction === 'next' && this.state.timeCursor < maxOffset) {
+        if (direction === 'next') {
+            // Check if we're at the last page (maxOffset) - if so, move to next day
+            if (this.state.timeCursor >= maxOffset) {
+                // If at maxOffset (last page of day) and clicking next, move to next day
+                if (this.state.currentDay < this.state.days.length - 1) {
+                    this.state.currentDay++;
+                    this.initializeTimeCursor(); // Reset to first session of new day (starts at 00:00)
+                    this.render();
+                    this.attachEventListeners();
+                    return; // Early return to avoid double render
+                }
+                return; // No next day available
+            }
+            
             // Calculate next position with normal step (5 slots)
             const nextPosition = this.state.timeCursor + step;
             
             // Check if we're approaching the last page
-            // If next position would go past or into the last page slots, snap to last page
             // Last page is at offset 37 (showing slots 37-41 = 22:45-23:45)
-            // We want to show the last page when we would show slots that overlap with it
-            if (nextPosition >= maxOffset || (nextPosition + VISIBLE_TIME_SLOTS - 1) >= LAST_DAY_SLOT) {
+            // maxOffset = 37, so if nextPosition >= 37, we should snap to last page
+            // Also check if next page would show any slot >= 37 (start of last page)
+            if (nextPosition >= maxOffset) {
                 // Snap to last page (offset 37) to show exactly the last 5 slots (22:45-23:45)
                 this.state.timeCursor = maxOffset;
             } else {
                 // Normal pagination: move forward by 5 slots (no overlap)
                 this.state.timeCursor = nextPosition;
-            }
-        } else if (direction === 'next' && this.state.timeCursor >= maxOffset) {
-            // If at maxOffset (last page of day) and clicking next, move to next day
-            if (this.state.currentDay < this.state.days.length - 1) {
-                this.state.currentDay++;
-                this.initializeTimeCursor(); // Reset to first session of new day (starts at 00:00)
             }
         } else if (direction === 'prev' && this.state.timeCursor > minOffset) {
             // If we're at the last page (maxOffset = 37), go back to show the page before it
