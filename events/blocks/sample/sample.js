@@ -11495,6 +11495,17 @@ class VanillaAgendaBlock {
                 this.state.timeCursor = maxPossibleOffset;
             }
         }
+        
+        // CRITICAL FIX: If timeCursor would result in fewer than 5 visible slots,
+        // adjust it to show the last 5 slots (91-95) instead.
+        // Example: If timeCursor is 93, we'd only show 3 slots (93, 94, 95).
+        // Instead, we should show 5 slots (91, 92, 93, 94, 95) by setting timeCursor to 91.
+        // Calculate how many slots would be visible from current timeCursor
+        const slotsAvailableFromCursor = LAST_DAY_SLOT - this.state.timeCursor + 1;
+        if (slotsAvailableFromCursor < VISIBLE_TIME_SLOTS && slotsAvailableFromCursor > 0) {
+            // This means we'd show fewer than 5 slots, so adjust to show last 5 slots
+            this.state.timeCursor = maxOffset; // Set to 91 to show slots 91-95
+        }
 
         const html = `
             <div class="agenda-block__container">
