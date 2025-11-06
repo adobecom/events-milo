@@ -11480,9 +11480,20 @@ class VanillaAgendaBlock {
         }
         
         // Ensure timeCursor doesn't exceed maxOffset (prevent crossing day boundary)
+        // maxOffset = 91 ensures we show slots 91-95 (22:45-23:45) as the last page
         const maxOffset = this.getMaxTimeOffset();
         if (this.state.timeCursor > maxOffset) {
             this.state.timeCursor = maxOffset;
+        }
+        
+        // Also ensure we don't show slots beyond the last slot of the day (95 = 23:45)
+        // This provides an extra safety check
+        const currentDay = this.state.days[this.state.currentDay];
+        if (currentDay) {
+            const maxPossibleOffset = LAST_DAY_SLOT - VISIBLE_TIME_SLOTS + 1; // Should be 91
+            if (this.state.timeCursor > maxPossibleOffset) {
+                this.state.timeCursor = maxPossibleOffset;
+            }
         }
 
         const html = `
@@ -11869,17 +11880,29 @@ class VanillaAgendaBlock {
         const dayStartTime = new Date(currentDay.date + 'T00:00:00Z').getTime();
         const startTime = dayStartTime + (this.state.timeCursor * TIME_SLOT_DURATION * MINUTE_MS);
         
-        // Calculate end of day (start of slot 96 = end of slot 95 = 00:00 next day)
-        // Slot 95 is the last slot (23:45), so we stop before slot 96 starts
+        // Calculate end of day - the last slot is 95 (23:45), so the next slot would be 96 (00:00 next day)
+        // dayEndTime = start of slot 96 = end of slot 95 = 00:00 next day
         const dayEndTime = dayStartTime + ((LAST_DAY_SLOT + 1) * TIME_SLOT_DURATION * MINUTE_MS);
 
         const slots = [];
         for (let i = 0; i < VISIBLE_TIME_SLOTS; i++) {
+            // Calculate which slot number this is (0-95 for the current day)
+            const slotNumber = this.state.timeCursor + i;
+            
+            // CRITICAL: Stop if we've exceeded the last slot of the day (slot 95 = 23:45)
+            // Don't allow any slot beyond slot 95 - this prevents showing 00:00 from next day
+            if (slotNumber > LAST_DAY_SLOT) {
+                break;
+            }
+            
             const slotTime = startTime + (i * TIME_SLOT_DURATION * MINUTE_MS);
-            // Stop if we've reached or exceeded the end of the day (don't cross into next day)
+            
+            // Additional safety check: ensure slotTime doesn't exceed dayEndTime
+            // This provides a double-check against timezone or calculation issues
             if (slotTime >= dayEndTime) {
                 break;
             }
+            
             slots.push(slotTime);
         }
         return slots;
@@ -12027,12 +12050,9 @@ class VanillaAgendaBlock {
         const maxOffset = this.getMaxTimeOffset(); // Last page offset (91 for slots 91-95)
 
         if (direction === 'next') {
-            // Calculate next position with normal step (5 slots)
-            const nextPosition = this.state.timeCursor + step;
-            
-            // Check if we're at or would exceed the last page (maxOffset = 91, showing slots 91-95 = 22:45-23:45)
-            if (this.state.timeCursor >= maxOffset || nextPosition >= maxOffset) {
-                // If already at last page (showing 22:45-23:45) or would exceed it, move to next day
+            // Check if we're already at the last page (maxOffset = 91, showing slots 91-95 = 22:45-23:45)
+            if (this.state.timeCursor >= maxOffset) {
+                // If already at last page, move to next day
                 if (this.state.currentDay < this.state.days.length - 1) {
                     this.state.currentDay++;
                     // When moving to next day via pagination, always start at 00:00 (slot 0)
@@ -12042,14 +12062,20 @@ class VanillaAgendaBlock {
                     return; // Early return to avoid double render
                 }
                 // If at last page but no next day, stay at last page (offset 91)
-                if (this.state.timeCursor < maxOffset) {
-                    this.state.timeCursor = maxOffset;
-                }
                 return;
             }
             
-            // Normal pagination: move forward by 5 slots (no overlap)
-            this.state.timeCursor = nextPosition;
+            // Calculate next position with normal step (5 slots)
+            const nextPosition = this.state.timeCursor + step;
+            
+            // Check if next position would exceed or reach the last page
+            if (nextPosition >= maxOffset) {
+                // Snap to last page (offset 91) to show exactly the last 5 slots (22:45-23:45)
+                this.state.timeCursor = maxOffset;
+            } else {
+                // Normal pagination: move forward by 5 slots (no overlap)
+                this.state.timeCursor = nextPosition;
+            }
         } else if (direction === 'prev' && this.state.timeCursor > minOffset) {
             // If we're at the last page (maxOffset = 91), go back to show the page before it
             // Last page shows slots 91-95 (22:45-23:45)
