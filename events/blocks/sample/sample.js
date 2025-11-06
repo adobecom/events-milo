@@ -132,6 +132,42 @@ const AGENDA_CONFIG={
           ${this.renderHeader()}
         </div>`;
     }
+
+    // add inside class VanillaAgendaBlock
+renderPagination(){
+    const minOffset=this.getMinTimeOffset();
+    const maxOffset=this.getMaxTimeOffset();
+    const atMin=this.state.timeCursor<=minOffset;
+    const atMax=this.state.timeCursor>=maxOffset;
+    const hasPrevDay=this.state.currentDay>0;
+    const hasNextDay=this.state.currentDay<this.state.days.length-1;
+  
+    // enable prev if we can move left within the day or there is a previous day
+    const canPrev=!atMin || hasPrevDay;
+    // enable next if we can move right within the day or there is a next day
+    const canNext=!atMax || hasNextDay;
+  
+    return `
+      <button 
+        class="agenda-block__pagination-btn prev" 
+        data-direction="prev"
+        ${!canPrev?'disabled':''}
+        aria-label="${this.config.labels.prevAriaLabel||'Previous'}">
+        <svg class="chevron" viewBox="0 0 13 18" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+          <path d="M5.951,12.452a1.655,1.655,0,0,1,.487-1.173l6.644-6.642a1.665,1.665,0,1,1,2.39,2.307l-.041.041L9.962,12.452l5.47,5.468a1.665,1.665,0,0,1-2.308,2.389l-.041-.041L6.439,13.626a1.655,1.655,0,0,1-.488-1.174Z" fill="#747474"/>
+        </svg>
+      </button>
+      <button 
+        class="agenda-block__pagination-btn next" 
+        data-direction="next"
+        ${!canNext?'disabled':''}
+        aria-label="${this.config.labels.nextAriaLabel||'Next'}">
+        <svg class="chevron" viewBox="0 0 13 18" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+          <path d="M16.02,12.294a1.655,1.655,0,0,1-.487,1.173L8.889,20.108A1.665,1.665,0,1,1,6.5,17.8l.041-.041,5.469-5.467L6.539,6.825A1.665,1.665,0,0,1,8.847,4.436l.041.041,6.644,6.642a1.655,1.655,0,0,1,.488,1.174Z" fill="#747474"/>
+        </svg>
+      </button>
+    `;
+  }  
   
     renderHeader(){
       const tz=this.currentTz();
