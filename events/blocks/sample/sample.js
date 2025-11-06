@@ -11479,32 +11479,37 @@ class VanillaAgendaBlock {
             return;
         }
         
-        // Ensure timeCursor doesn't exceed maxOffset (prevent crossing day boundary)
+        // CRITICAL: Ensure timeCursor never exceeds the maximum offset that allows showing 5 slots
         // maxOffset = 91 ensures we show slots 91-95 (22:45-23:45) as the last page
-        const maxOffset = this.getMaxTimeOffset();
-        if (this.state.timeCursor > maxOffset) {
+        // Any timeCursor > 91 would show fewer than 5 slots or cross day boundary
+        const maxOffset = this.getMaxTimeOffset(); // Returns 91
+        const absoluteMaxOffset = LAST_DAY_SLOT - VISIBLE_TIME_SLOTS + 1; // 95 - 5 + 1 = 91
+        
+        // MOST IMPORTANT CHECK: Ensure the last slot we'd show (timeCursor + 4) never exceeds LAST_DAY_SLOT
+        // This directly prevents showing slots from the next day
+        const lastSlotWouldBe = this.state.timeCursor + (VISIBLE_TIME_SLOTS - 1); // timeCursor + 4
+        if (lastSlotWouldBe > LAST_DAY_SLOT) {
+            // If we'd show a slot beyond 95, clamp to maxOffset to show slots 91-95
             this.state.timeCursor = maxOffset;
         }
         
-        // Also ensure we don't show slots beyond the last slot of the day (95 = 23:45)
-        // This provides an extra safety check
-        const currentDay = this.state.days[this.state.currentDay];
-        if (currentDay) {
-            const maxPossibleOffset = LAST_DAY_SLOT - VISIBLE_TIME_SLOTS + 1; // Should be 91
-            if (this.state.timeCursor > maxPossibleOffset) {
-                this.state.timeCursor = maxPossibleOffset;
-            }
+        // Clamp timeCursor to ensure we always show exactly 5 slots and never cross day boundary
+        if (this.state.timeCursor > absoluteMaxOffset) {
+            this.state.timeCursor = maxOffset;
         }
         
-        // CRITICAL FIX: If timeCursor would result in fewer than 5 visible slots,
+        // Additional safety: If timeCursor would result in fewer than 5 visible slots,
         // adjust it to show the last 5 slots (91-95) instead.
-        // Example: If timeCursor is 93, we'd only show 3 slots (93, 94, 95).
-        // Instead, we should show 5 slots (91, 92, 93, 94, 95) by setting timeCursor to 91.
         // Calculate how many slots would be visible from current timeCursor
         const slotsAvailableFromCursor = LAST_DAY_SLOT - this.state.timeCursor + 1;
         if (slotsAvailableFromCursor < VISIBLE_TIME_SLOTS && slotsAvailableFromCursor > 0) {
             // This means we'd show fewer than 5 slots, so adjust to show last 5 slots
             this.state.timeCursor = maxOffset; // Set to 91 to show slots 91-95
+        }
+        
+        // Final safety check: Ensure timeCursor never exceeds LAST_DAY_SLOT
+        if (this.state.timeCursor > LAST_DAY_SLOT) {
+            this.state.timeCursor = maxOffset;
         }
 
         const html = `
@@ -11888,8 +11893,13 @@ class VanillaAgendaBlock {
         const currentDay = this.state.days[this.state.currentDay];
         if (!currentDay) return [];
 
+        // DEFENSIVE: Clamp timeCursor before using it to prevent showing next-day slots
+        // This is a safety net in case timeCursor somehow got past the checks in render()
+        const maxOffset = LAST_DAY_SLOT - VISIBLE_TIME_SLOTS + 1; // 91
+        const safeTimeCursor = Math.min(this.state.timeCursor, maxOffset);
+
         const dayStartTime = new Date(currentDay.date + 'T00:00:00Z').getTime();
-        const startTime = dayStartTime + (this.state.timeCursor * TIME_SLOT_DURATION * MINUTE_MS);
+        const startTime = dayStartTime + (safeTimeCursor * TIME_SLOT_DURATION * MINUTE_MS);
         
         // Calculate end of day - the last slot is 95 (23:45), so the next slot would be 96 (00:00 next day)
         // dayEndTime = start of slot 96 = end of slot 95 = 00:00 next day
@@ -11898,7 +11908,7 @@ class VanillaAgendaBlock {
         const slots = [];
         for (let i = 0; i < VISIBLE_TIME_SLOTS; i++) {
             // Calculate which slot number this is (0-95 for the current day)
-            const slotNumber = this.state.timeCursor + i;
+            const slotNumber = safeTimeCursor + i;
             
             // CRITICAL: Stop if we've exceeded the last slot of the day (slot 95 = 23:45)
             // Don't allow any slot beyond slot 95 - this prevents showing 00:00 from next day
