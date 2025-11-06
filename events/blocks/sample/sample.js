@@ -11440,7 +11440,17 @@ class VanillaAgendaBlock {
         const earliestSlot = (earliestSessionTime - dayStartTime) / (TIME_SLOT_DURATION * MINUTE_MS);
         
         // Round down to the nearest slot to ensure we show the session
-        this.state.timeCursor = Math.max(0, Math.floor(earliestSlot));
+        let calculatedCursor = Math.max(0, Math.floor(earliestSlot));
+        
+        // CRITICAL: Clamp to maxOffset to ensure we always show 5 slots and never cross day boundary
+        // If the earliest session is near end of day, clamp to show the last 5 slots (91-95)
+        const maxOffset = LAST_DAY_SLOT - VISIBLE_TIME_SLOTS + 1; // 91
+        const lastSlotWouldBe = calculatedCursor + (VISIBLE_TIME_SLOTS - 1);
+        if (lastSlotWouldBe > LAST_DAY_SLOT || calculatedCursor > maxOffset) {
+            calculatedCursor = maxOffset;
+        }
+        
+        this.state.timeCursor = calculatedCursor;
     }
 
     /**
@@ -11893,10 +11903,15 @@ class VanillaAgendaBlock {
         const currentDay = this.state.days[this.state.currentDay];
         if (!currentDay) return [];
 
-        // DEFENSIVE: Clamp timeCursor before using it to prevent showing next-day slots
-        // This is a safety net in case timeCursor somehow got past the checks in render()
+        // CRITICAL: Clamp timeCursor BEFORE any calculations to prevent showing next-day slots
+        // This is the most important safety check - must happen first
         const maxOffset = LAST_DAY_SLOT - VISIBLE_TIME_SLOTS + 1; // 91
-        const safeTimeCursor = Math.min(this.state.timeCursor, maxOffset);
+        // If timeCursor would result in showing slots beyond 95, clamp it to maxOffset
+        const lastSlotWouldBe = this.state.timeCursor + (VISIBLE_TIME_SLOTS - 1);
+        let safeTimeCursor = this.state.timeCursor;
+        if (lastSlotWouldBe > LAST_DAY_SLOT || safeTimeCursor > maxOffset) {
+            safeTimeCursor = maxOffset;
+        }
 
         const dayStartTime = new Date(currentDay.date + 'T00:00:00Z').getTime();
         const startTime = dayStartTime + (safeTimeCursor * TIME_SLOT_DURATION * MINUTE_MS);
@@ -11921,6 +11936,13 @@ class VanillaAgendaBlock {
             // Additional safety check: ensure slotTime doesn't exceed dayEndTime
             // This provides a double-check against timezone or calculation issues
             if (slotTime >= dayEndTime) {
+                break;
+            }
+            
+            // Final safety check: verify the calculated time is still within the current day
+            // Use dayStartTime and next day's start time to ensure we don't cross boundary
+            const nextDayStartTime = dayStartTime + (24 * HOUR_MS);
+            if (slotTime >= nextDayStartTime) {
                 break;
             }
             
@@ -12071,6 +12093,13 @@ class VanillaAgendaBlock {
         const maxOffset = this.getMaxTimeOffset(); // Last page offset (91 for slots 91-95)
 
         if (direction === 'next') {
+            // CRITICAL: First, ensure timeCursor is properly clamped before checking
+            // If timeCursor would show slots beyond day boundary, clamp it to maxOffset
+            const lastSlotWouldBe = this.state.timeCursor + (VISIBLE_TIME_SLOTS - 1);
+            if (lastSlotWouldBe > LAST_DAY_SLOT || this.state.timeCursor > maxOffset) {
+                this.state.timeCursor = maxOffset;
+            }
+            
             // Check if we're already at the last page (maxOffset = 91, showing slots 91-95 = 22:45-23:45)
             if (this.state.timeCursor >= maxOffset) {
                 // If already at last page, move to next day
