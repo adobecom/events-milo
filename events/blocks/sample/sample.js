@@ -11498,13 +11498,11 @@ class VanillaAgendaBlock {
         // MOST IMPORTANT CHECK: Ensure the last slot we'd show (timeCursor + 4) never exceeds LAST_DAY_SLOT
         // This directly prevents showing slots from the next day
         const lastSlotWouldBe = this.state.timeCursor + (VISIBLE_TIME_SLOTS - 1); // timeCursor + 4
-        if (lastSlotWouldBe > LAST_DAY_SLOT) {
-            // If we'd show a slot beyond 95, clamp to maxOffset to show slots 91-95
-            this.state.timeCursor = maxOffset;
-        }
         
-        // Clamp timeCursor to ensure we always show exactly 5 slots and never cross day boundary
-        if (this.state.timeCursor > absoluteMaxOffset) {
+        // CRITICAL: If timeCursor would result in showing any slot beyond 95, OR if it's >= maxOffset,
+        // clamp it to maxOffset to show the last 5 slots (91-95 = 22:45-23:45)
+        if (lastSlotWouldBe > LAST_DAY_SLOT || this.state.timeCursor >= maxOffset) {
+            // If we'd show a slot beyond 95, clamp to maxOffset to show slots 91-95
             this.state.timeCursor = maxOffset;
         }
         
@@ -11517,8 +11515,8 @@ class VanillaAgendaBlock {
             this.state.timeCursor = maxOffset; // Set to 91 to show slots 91-95
         }
         
-        // Final safety check: Ensure timeCursor never exceeds LAST_DAY_SLOT
-        if (this.state.timeCursor > LAST_DAY_SLOT) {
+        // Final safety check: Ensure timeCursor never exceeds LAST_DAY_SLOT or maxOffset
+        if (this.state.timeCursor > LAST_DAY_SLOT || this.state.timeCursor >= maxOffset) {
             this.state.timeCursor = maxOffset;
         }
 
@@ -11906,10 +11904,14 @@ class VanillaAgendaBlock {
         // CRITICAL: Clamp timeCursor BEFORE any calculations to prevent showing next-day slots
         // This is the most important safety check - must happen first
         const maxOffset = LAST_DAY_SLOT - VISIBLE_TIME_SLOTS + 1; // 91
-        // If timeCursor would result in showing slots beyond 95, clamp it to maxOffset
+        
+        // Calculate what the last slot would be if we use current timeCursor
         const lastSlotWouldBe = this.state.timeCursor + (VISIBLE_TIME_SLOTS - 1);
+        
+        // CRITICAL: If timeCursor is >= maxOffset OR if it would show slots beyond 95, clamp to maxOffset
+        // This ensures we ALWAYS show exactly 5 slots (91-95 = 22:45-23:45) as the last page
         let safeTimeCursor = this.state.timeCursor;
-        if (lastSlotWouldBe > LAST_DAY_SLOT || safeTimeCursor > maxOffset) {
+        if (safeTimeCursor >= maxOffset || lastSlotWouldBe > LAST_DAY_SLOT) {
             safeTimeCursor = maxOffset;
         }
 
@@ -12096,11 +12098,12 @@ class VanillaAgendaBlock {
             // CRITICAL: First, ensure timeCursor is properly clamped before checking
             // If timeCursor would show slots beyond day boundary, clamp it to maxOffset
             const lastSlotWouldBe = this.state.timeCursor + (VISIBLE_TIME_SLOTS - 1);
-            if (lastSlotWouldBe > LAST_DAY_SLOT || this.state.timeCursor > maxOffset) {
+            if (lastSlotWouldBe > LAST_DAY_SLOT || this.state.timeCursor >= maxOffset) {
                 this.state.timeCursor = maxOffset;
             }
             
             // Check if we're already at the last page (maxOffset = 91, showing slots 91-95 = 22:45-23:45)
+            // We use >= to catch both exactly at maxOffset and any value beyond it
             if (this.state.timeCursor >= maxOffset) {
                 // If already at last page, move to next day
                 if (this.state.currentDay < this.state.days.length - 1) {
@@ -12116,15 +12119,22 @@ class VanillaAgendaBlock {
             }
             
             // Calculate next position with normal step (5 slots)
-            const nextPosition = this.state.timeCursor + step;
+            let nextPosition = this.state.timeCursor + step;
             
-            // Check if next position would exceed or reach the last page
-            if (nextPosition >= maxOffset) {
+            // CRITICAL: Check if next position would result in showing slots beyond day boundary
+            // If the last slot we'd show (nextPosition + 4) exceeds LAST_DAY_SLOT, snap to maxOffset
+            const lastSlotAtNextPosition = nextPosition + (VISIBLE_TIME_SLOTS - 1);
+            if (lastSlotAtNextPosition > LAST_DAY_SLOT || nextPosition >= maxOffset) {
                 // Snap to last page (offset 91) to show exactly the last 5 slots (22:45-23:45)
+                nextPosition = maxOffset;
+            }
+            
+            // Apply the next position
+            this.state.timeCursor = nextPosition;
+            
+            // Final safety clamp - ensure timeCursor never exceeds maxOffset
+            if (this.state.timeCursor >= maxOffset) {
                 this.state.timeCursor = maxOffset;
-            } else {
-                // Normal pagination: move forward by 5 slots (no overlap)
-                this.state.timeCursor = nextPosition;
             }
         } else if (direction === 'prev' && this.state.timeCursor > minOffset) {
             // If we're at the last page (maxOffset = 91), go back to show the page before it
