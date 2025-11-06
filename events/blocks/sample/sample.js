@@ -11414,7 +11414,7 @@ class VanillaAgendaBlock {
 
     /**
      * Initialize timeCursor to show the first session for the current day
-     * Always starts at 00:00 (midnight) when changing days
+     * Calculates offset based on earliest session start time (e.g., if first session is at 18:30, starts at that slot)
      */
     initializeTimeCursor() {
         const currentDay = this.state.days[this.state.currentDay];
@@ -11423,8 +11423,24 @@ class VanillaAgendaBlock {
             return;
         }
 
-        // Always start at 00:00 (midnight) when changing days
-        this.state.timeCursor = 0;
+        const daySessions = this.getSessionsForCurrentDay();
+        if (daySessions.length === 0) {
+            this.state.timeCursor = 0;
+            return;
+        }
+
+        // Find the earliest session start time for this day
+        const earliestSessionTime = Math.min(
+            ...daySessions.map(session => new Date(session.sessionStartTime).getTime())
+        );
+
+        const dayStartTime = new Date(currentDay.date + 'T00:00:00Z').getTime();
+        
+        // Calculate offset in slots from midnight (00:00)
+        const earliestSlot = (earliestSessionTime - dayStartTime) / (TIME_SLOT_DURATION * MINUTE_MS);
+        
+        // Round down to the nearest slot to ensure we show the session
+        this.state.timeCursor = Math.max(0, Math.floor(earliestSlot));
     }
 
     /**
@@ -11870,11 +11886,25 @@ class VanillaAgendaBlock {
     }
 
     /**
-     * Get min time offset for pagination (always starts at 00:00)
+     * Get min time offset for pagination (based on earliest session for the day)
      */
     getMinTimeOffset() {
-        // Always start at slot 0 (00:00) when on a new day
-        return 0;
+        const currentDay = this.state.days[this.state.currentDay];
+        if (!currentDay) return 0;
+
+        const daySessions = this.getSessionsForCurrentDay();
+        if (daySessions.length === 0) return 0;
+
+        // Find the earliest session start time for this day
+        const earliestSessionTime = Math.min(
+            ...daySessions.map(session => new Date(session.sessionStartTime).getTime())
+        );
+
+        const dayStartTime = new Date(currentDay.date + 'T00:00:00Z').getTime();
+        
+        // Calculate offset in slots from midnight (00:00)
+        const earliestSlot = (earliestSessionTime - dayStartTime) / (TIME_SLOT_DURATION * MINUTE_MS);
+        return Math.max(0, Math.floor(earliestSlot));
     }
 
     /**
@@ -12002,7 +12032,8 @@ class VanillaAgendaBlock {
                 // If at maxOffset (last page of day) and clicking next, move to next day
                 if (this.state.currentDay < this.state.days.length - 1) {
                     this.state.currentDay++;
-                    this.initializeTimeCursor(); // Reset to first session of new day (starts at 00:00)
+                    // When moving to next day via pagination, always start at 00:00 (slot 0)
+                    this.state.timeCursor = 0;
                     this.render();
                     this.attachEventListeners();
                     return; // Early return to avoid double render
