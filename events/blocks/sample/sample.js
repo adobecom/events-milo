@@ -44,7 +44,6 @@ const AGENDA_CONFIG={
   const fmtDateTz=(ms,tz)=>new Date(ms).toLocaleDateString('en-US',{timeZone:tz,weekday:'short',month:'short',day:'numeric'});
   const fmtTimeTz=(ms,tz)=>new Date(ms).toLocaleTimeString([],{timeZone:tz,hour:'2-digit',minute:'2-digit'});
   const dayKeyTz=(ms,tz)=>new Intl.DateTimeFormat('en-CA',{timeZone:tz,year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date(ms)); // YYYY-MM-DD
-  const tzMidnightMs=(yyyyMmDd,tz)=>new Date(new Date(`${yyyyMmDd}T00:00:00`).toLocaleString('en-US',{timeZone:tz})).getTime();
   const toMs=(v)=>typeof v==='number'?v:(v?Date.parse(v):NaN);
   
   // ----- misc helpers
@@ -89,14 +88,20 @@ const AGENDA_CONFIG={
     }
   
     async fetchAndProcessData(){
-      try{
-        const resp=this.config.api.useMockData?await(new Promise(r=>setTimeout(()=>r(MOCK),300))):await fetch(this.config.api.chimeraEndpoint).then(r=>r.json());
-        this.state.sessions=(resp.cards||[]).map(s=>({...s,isLive:isSessionLive(s),isOnDemand:isSessionOnDemand(s)}));
-        this.recomputeDaysForPlace(); // tz-aware
-        if(this.state.days.length) this.initializeTimeCursor();
-        this.state.isLoading=false;
-      }catch{ this.state.isLoading=false; }
-    }
+        try{
+          const resp=await this.fetchSessions();
+          this.state.sessions=(resp.cards||[]).map(s=>({...s, isLive:isSessionLive(s), isOnDemand:isSessionOnDemand(s)}));
+          this.state.days=extractDaysFromSessions(this.state.sessions); // creates {id, date, label, startTime}
+          if(this.state.days.length>0){
+            this.state.currentDay=Math.min(this.state.currentDay, this.state.days.length-1);
+            this.initializeTimeCursor();
+          }
+          this.state.isLoading=false;
+        }catch(e){
+          this.state.isLoading=false;
+        }
+      }
+      
   
     currentTz(){ return getIana(this.state.currentPlace); }
     currentPlaceName(){ return (this.config.places.find(p=>p.id===this.state.currentPlace)?.name)||''; }
@@ -132,6 +137,18 @@ const AGENDA_CONFIG={
           ${this.renderHeader()}
         </div>`;
     }
+
+    // --- timezone helpers (put near top of class or file) ---
+getPlaceOffsetMinutes(placeId=this.state.currentPlace){
+    const m={ live: -480, americas: -480, emea: 60, apac: 540, ist: 330 };
+    return m[placeId] ?? -480; // default PST
+  }
+  tzMidnightMs(dateKey,placeId=this.state.currentPlace){
+    // UTC time for local midnight of dateKey in selected place
+    const offsetMin=this.getPlaceOffsetMinutes(placeId);
+    const utcMidnight=Date.parse(`${dateKey}T00:00:00Z`);
+    return utcMidnight - offsetMin*60*1000;
+  }
 
     // add inside class VanillaAgendaBlock
 renderPagination(){
@@ -169,67 +186,84 @@ renderPagination(){
     `;
   }  
   
-    renderHeader(){
-      const tz=this.currentTz();
-      return `
-        <div class="agenda-block__header">
-          <div class="agenda-block__watch-nav">
-            <div class="agenda-block__watch-nav-row agenda-block__geo-row">
-              <span class="agenda-block__watch-label">Watch:</span>
-              <div class="agenda-block__place-selector">
-                <ul class="agenda-block__place-list">
-                  ${this.config.places.map(p=>`
-                    <li class="agenda-block__place-item">
-                      <button class="agenda-block__place-tab ${p.id===this.state.currentPlace?'active':''}" data-place-id="${p.id}">${p.name}</button>
-                    </li>`).join('')}
-                </ul>
-              </div>
-              <div class="agenda-block__timezone-label">${this.config.labels.timeZoneLabel} ${this.currentPlaceName()}</div>
-              <div class="agenda-block__pagination">${this.renderPagination()}</div>
+  renderHeader(){
+    const dayLabel=this.state.days[this.state.currentDay]?.label || 'Select day';
+    return `
+      <div class="agenda-block__header">
+        <div class="agenda-block__watch-nav">
+          <div class="agenda-block__watch-nav-row agenda-block__geo-row">
+            <span class="agenda-block__watch-label">Watch:</span>
+            <div class="agenda-block__place-selector">
+              <ul class="agenda-block__place-list">
+                ${this.config.places.map(p=>`
+                  <li class="agenda-block__place-item">
+                    <button class="agenda-block__place-tab ${p.id===this.state.currentPlace?'active':''}" data-place-id="${p.id}">${p.name}</button>
+                  </li>`).join('')}
+              </ul>
             </div>
-            <div class="agenda-block__watch-nav-row agenda-block__date-row">
-              <div class="agenda-block__time-header">
-                <div class="agenda-block__day-dropdown-container">
-                  <button class="agenda-block__day-dropdown-toggle ${this.state.isDropdownOpen?'open':''}" data-dropdown-toggle="day-dropdown" aria-expanded="${this.state.isDropdownOpen}">
-                    <span>${this.state.days[this.state.currentDay]?.label||'Select day'}</span><span class="agenda-block__day-dropdown-chevron">▼</span>
-                  </button>
-                  <div class="agenda-block__day-dropdown ${this.state.isDropdownOpen?'open':''}" id="day-dropdown">
-                    ${this.state.days.map((d,i)=>`
-                      <button class="agenda-block__day-dropdown-item ${i===this.state.currentDay?'active':''}" data-day-index="${i}">
-                        <span>${d.label}</span>${i===this.state.currentDay?'<span class="agenda-block__day-checkmark">✓</span>':''}
-                      </button>`).join('')}
-                  </div>
-                  <div class="agenda-block__timezone-help">Date and times in ${this.currentPlaceName()}</div>
+            <div class="agenda-block__pagination">${this.renderPagination()}</div>
+          </div>
+          <div class="agenda-block__watch-nav-row agenda-block__date-row">
+            <div class="agenda-block__time-header">
+              <div class="agenda-block__day-dropdown-container">
+                <button class="agenda-block__day-dropdown-toggle ${this.state.isDropdownOpen?'open':''}" data-dropdown-toggle="day-dropdown" aria-expanded="${this.state.isDropdownOpen}">
+                  <span>${dayLabel}</span><span class="agenda-block__day-dropdown-chevron">▼</span>
+                </button>
+                <div class="agenda-block__day-dropdown ${this.state.isDropdownOpen?'open':''}" id="day-dropdown">
+                  ${this.state.days.map((d,i)=>`
+                    <button class="agenda-block__day-dropdown-item ${i===this.state.currentDay?'active':''}" data-day-index="${i}">
+                      <span>${d.label}</span>${i===this.state.currentDay?'<span class="agenda-block__day-checkmark">✓</span>':''}
+                    </button>`).join('')}
                 </div>
-                ${this.renderTimeHeader(tz)}
+                <div class="agenda-block__timezone-label">Date and times in ${this.state.currentPlace.toUpperCase()}</div>
               </div>
+              ${this.state.days.length?this.renderTimeHeader():''}
             </div>
           </div>
         </div>
-        ${this.renderTracksColumnWithGrid(tz)}
-      `;
-    }
+      </div>
+      ${this.state.days.length?this.renderTracksColumnWithGrid():''}
+    `;
+  }
   
-    renderTracksColumnWithGrid(tz){
-      return `
-        <div class="agenda-block__body">
-          <div class="agenda-block__tracks-column">${this.renderTracksColumn(tz)}</div>
-          <div class="agenda-block__grid-wrapper"><div class="agenda-block__grid-container">${this.renderGrid(tz)}</div></div>
-        </div>`;
-    }
   
-    renderTracksColumn(tz){
-      const d=this.state.days[this.state.currentDay],daySessions=this.getSessionsForCurrentDay();
-      return this.state.tracks.map(tr=>{
-        const s=daySessions.filter(x=>x.sessionTrack?.tagId===tr.tagId);
-        const rows=this.calculateNumberOfRowsForTrack(s,d,tz);
-        const h=rows*140+(rows-1)*6;
-        return `<div class="agenda-block__track-label" style="border-left:4px solid ${tr.color};height:${h}px;">
-          <div class="agenda-block__track-title-in-label">${tr.title}</div>
-          ${tr.description?`<div class="agenda-block__track-description-in-label">${tr.description}</div>`:''}
-        </div>`;
-      }).join('');
-    }
+    renderTracksColumnWithGrid(){
+        const currentDay=this.state.days[this.state.currentDay];
+        if(!currentDay) return '<div class="agenda-block__body"></div>';
+        return `
+          <div class="agenda-block__body">
+            <div class="agenda-block__tracks-column">${this.renderTracksColumn()}</div>
+            <div class="agenda-block__grid-wrapper"><div class="agenda-block__grid-container">${this.renderGrid()}</div></div>
+          </div>`;
+      }
+      
+      renderGrid(){
+        const currentDay=this.state.days[this.state.currentDay];
+        if(!currentDay) return `<div class="agenda-block__empty">${this.config.labels.noSessionsText}</div>`;
+        const daySessions=this.getSessionsForCurrentDay();
+        return this.state.tracks.map(track=>{
+          const trackSessions=daySessions.filter(s=> s.sessionTrack && s.sessionTrack.tagId===track.tagId);
+          return `<div class="agenda-block__track-row">${this.renderTrackSessions(trackSessions,currentDay)}</div>`;
+        }).join('');
+      }
+      
+  
+    renderTracksColumn(){
+        const currentDay=this.state.days[this.state.currentDay];
+        if(!currentDay) return ''; // nothing to render yet
+      
+        const daySessions=this.getSessionsForCurrentDay();
+        return this.state.tracks.map((track)=>{
+          const trackSessions=daySessions.filter(s=> s.sessionTrack && s.sessionTrack.tagId===track.tagId);
+          const numberOfRows=this.calculateNumberOfRowsForTrack(trackSessions,currentDay);
+          return `
+            <div class="agenda-block__track-label" style="border-left:4px solid ${track.color};height:${numberOfRows*140+(numberOfRows-1)*6}px;">
+              <div class="agenda-block__track-title-in-label">${track.title}</div>
+              ${track.description?`<div class="agenda-block__track-description-in-label">${track.description}</div>`:''}
+            </div>`;
+        }).join('');
+      }
+      
   
     renderTimeHeader(tz){
       const slots=this.getVisibleTimeSlots(tz),now=this.state.currentTime,hrs24=uses24hr();
@@ -245,33 +279,47 @@ renderPagination(){
       }).join('');
     }
   
-    renderGrid(tz){
-      const d=this.state.days[this.state.currentDay]; if(!d) return `<div class="agenda-block__empty">${this.config.labels.noSessionsText}</div>`;
-      const daySessions=this.getSessionsForCurrentDay();
-      return this.state.tracks.map(tr=>{
-        const ts=daySessions.filter(s=>s.sessionTrack?.tagId===tr.tagId);
-        return `<div class="agenda-block__track-row">${this.renderTrackSessions(ts,d,tz)}</div>`;
-      }).join('');
-    }
   
-    calculateSessionGridPositions(sessions,currentDay,tz){
-      const dayStart=tzMidnightMs(currentDay.id,tz);
-      const visibleStart=dayStart+(this.state.timeCursor*TIME_SLOT_DURATION*MINUTE_MS);
-      const tiles=[],occ=new Set();
-      sessions.forEach(s=>{
-        const st=toMs(s.sessionStartTime),et=toMs(getSessionEndTime(s)); if(!Number.isFinite(st)||!Number.isFinite(et)) return;
-        const startOff=(st-visibleStart)/(TIME_SLOT_DURATION*MINUTE_MS);
-        const endOffRaw=(et-visibleStart)/(TIME_SLOT_DURATION*MINUTE_MS);
-        const endOff=Math.ceil(endOffRaw)+1;
-        if(endOff<=0||startOff>=VISIBLE_TIME_SLOTS) return;
-        const startCol=Math.max(1,Math.floor(startOff)+1),endCol=Math.min(Math.ceil(endOff),VISIBLE_TIME_SLOTS+1);
-        let row=1,ok=false; while(!ok&&row<=10){ ok=true; for(let c=startCol;c<endCol;c++){ if(occ.has(`${row}-${c}`)){ ok=false; row++; break; } } }
-        for(let c=startCol;c<endCol;c++) occ.add(`${row}-${c}`);
-        tiles.push({session:s,startColumn:startCol,endColumn:endCol,rowNumber:row,track:this.state.tracks.find(t=>t.tagId===s.sessionTrack?.tagId),shouldDisplayDuration:(endCol-startCol)>2});
-      });
-      const rows=tiles.length?Math.max(...tiles.map(t=>t.rowNumber)):1;
-      return {sessionTiles:tiles,numberOfRows:rows,occupiedCells:occ};
-    }
+    calculateSessionGridPositions(sessions,currentDay){
+        if(!currentDay) return {sessionTiles:[],numberOfRows:1,occupiedCells:new Set()};
+        const tz=this.state.currentPlace;
+        const dayStart=this.tzMidnightMs(currentDay.id,tz) + (8*60*60*1000); // 08:00 local start
+        const visibleStart=dayStart + (this.state.timeCursor*TIME_SLOT_DURATION*MINUTE_MS);
+      
+        const sessionTiles=[]; const occupiedCells=new Set();
+        (sessions||[]).forEach(session=>{
+          const start= session?.sessionStartTime ? new Date(session.sessionStartTime).getTime() : null;
+          const end  = session ? new Date(getSessionEndTime(session)).getTime() : null;
+          if(!start||!end) return;
+      
+          const startOffset=(start - visibleStart)/(TIME_SLOT_DURATION*MINUTE_MS);
+          const endOffset=Math.ceil((end - visibleStart)/(TIME_SLOT_DURATION*MINUTE_MS)) + 1;
+      
+          if(endOffset>0 && startOffset<VISIBLE_TIME_SLOTS){
+            const startColumn=Math.max(1, Math.floor(startOffset)+1);
+            const endColumn=Math.min(Math.ceil(endOffset), VISIBLE_TIME_SLOTS+1);
+      
+            // find row
+            let row=1, placed=false;
+            while(!placed && row<=10){
+              placed=true;
+              for(let c=startColumn;c<endColumn;c++){
+                if(occupiedCells.has(`${row}-${c}`)){ placed=false; row++; break; }
+              }
+            }
+            for(let c=startColumn;c<endColumn;c++) occupiedCells.add(`${row}-${c}`);
+      
+            sessionTiles.push({
+              session, startColumn, endColumn, rowNumber:row,
+              shouldDisplayDuration: (endColumn-startColumn)>2
+            });
+          }
+        });
+      
+        const numberOfRows=sessionTiles.length?Math.max(...sessionTiles.map(t=>t.rowNumber)):1;
+        return {sessionTiles,numberOfRows,occupiedCells};
+      }
+      
   
     calculateNumberOfRowsForTrack(sessions,currentDay,tz){ return this.calculateSessionGridPositions(sessions,currentDay,tz).numberOfRows; }
   
