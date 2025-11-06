@@ -12027,9 +12027,12 @@ class VanillaAgendaBlock {
         const maxOffset = this.getMaxTimeOffset(); // Last page offset (91 for slots 91-95)
 
         if (direction === 'next') {
-            // Check if we're at the last page (maxOffset) - if so, move to next day
-            if (this.state.timeCursor >= maxOffset) {
-                // If at maxOffset (last page of day) and clicking next, move to next day
+            // Calculate next position with normal step (5 slots)
+            const nextPosition = this.state.timeCursor + step;
+            
+            // Check if we're at or would exceed the last page (maxOffset = 91, showing slots 91-95 = 22:45-23:45)
+            if (this.state.timeCursor >= maxOffset || nextPosition >= maxOffset) {
+                // If already at last page (showing 22:45-23:45) or would exceed it, move to next day
                 if (this.state.currentDay < this.state.days.length - 1) {
                     this.state.currentDay++;
                     // When moving to next day via pagination, always start at 00:00 (slot 0)
@@ -12038,23 +12041,15 @@ class VanillaAgendaBlock {
                     this.attachEventListeners();
                     return; // Early return to avoid double render
                 }
-                return; // No next day available
+                // If at last page but no next day, stay at last page (offset 91)
+                if (this.state.timeCursor < maxOffset) {
+                    this.state.timeCursor = maxOffset;
+                }
+                return;
             }
             
-            // Calculate next position with normal step (5 slots)
-            const nextPosition = this.state.timeCursor + step;
-            
-            // Check if we're approaching the last page
-            // Last page is at offset 91 (showing slots 91-95 = 22:45-23:45)
-            // maxOffset = 91, so if nextPosition >= 91, we should snap to last page
-            // Also check if next page would show any slot >= 91 (start of last page)
-            if (nextPosition >= maxOffset) {
-                // Snap to last page (offset 91) to show exactly the last 5 slots (22:45-23:45)
-                this.state.timeCursor = maxOffset;
-            } else {
-                // Normal pagination: move forward by 5 slots (no overlap)
-                this.state.timeCursor = nextPosition;
-            }
+            // Normal pagination: move forward by 5 slots (no overlap)
+            this.state.timeCursor = nextPosition;
         } else if (direction === 'prev' && this.state.timeCursor > minOffset) {
             // If we're at the last page (maxOffset = 91), go back to show the page before it
             // Last page shows slots 91-95 (22:45-23:45)
