@@ -1,84 +1,84 @@
 /* utils.js */
-import { PLAYLIST_VIDEOS_KEY, AUTOPLAY_PLAYLIST_KEY, VIDEO_ORIGIN } from './constants.js';
+import { PLAYLIST_VIDEOS_KEY, AUTOPLAY_PLAYLIST_KEY, VIDEO_ORIGIN, VIDEO_PLAYLIST_ID_URL_KEY } from './constants.js';
 
-/* --- Storage Helpers --- */
-
-const safeLocalStorage = (key, defaultValue, parse = true) => {
-    try {
-        const item = localStorage.getItem(key);
-        return item ? (parse ? JSON.parse(item) : item) : defaultValue;
-    } catch (error) {
-        console.error(`Error reading ${key} from localStorage:`, error);
-        return defaultValue;
-    }
+/* ---------- localStorage ---------- */
+const readJSON=(k,def)=>{
+  try{const v=localStorage.getItem(k);return v?JSON.parse(v):def;}catch(e){console.error(`ls read ${k}:`,e);return def;}
+};
+const writeJSON=(k,val)=>{
+  try{localStorage.setItem(k,JSON.stringify(val));}catch(e){console.error(`ls write ${k}:`,e);}
 };
 
-const saveToLocalStorage = (key, value) => {
-    try {
-        localStorage.setItem(key, JSON.stringify(value));
-    } catch (error) {
-        console.error(`Error saving ${key} to localStorage:`, error);
-    }
+export const getLocalStorageVideos=()=>readJSON(PLAYLIST_VIDEOS_KEY,{});
+export const saveLocalStorageVideos=(videos)=>writeJSON(PLAYLIST_VIDEOS_KEY,videos);
+export const getLocalStorageShouldAutoPlay=()=>readJSON(AUTOPLAY_PLAYLIST_KEY,true);
+export const saveShouldAutoPlayToLocalStorage=(v)=>writeJSON(AUTOPLAY_PLAYLIST_KEY,v);
+
+/* ---------- URL ---------- */
+export const getCurrentPlaylistId=()=>new URLSearchParams(window.location.search).get(VIDEO_PLAYLIST_ID_URL_KEY);
+
+/* ---------- Duration fetching (memoized) ---------- */
+const durationCache=new Map(); // id -> seconds
+const inflight=new Map(); // id -> Promise<number|null>
+
+const fetchVideoDuration=async(id)=>{
+  if(durationCache.has(id)) return durationCache.get(id);
+  if(inflight.has(id)) return inflight.get(id);
+  const p=(async()=>{
+    try{
+      const r=await fetch(`${VIDEO_ORIGIN}/v/${id}?format=json-ld`);
+      const j=await r.json();
+      const sec=convertIsoDurationToSeconds(j?.jsonLinkedData?.duration||'')||null;
+      if(sec!=null) durationCache.set(id,sec);
+      return sec;
+    }catch(e){ console.error(`duration ${id} fetch fail:`,e); return null; }
+    finally{ inflight.delete(id); }
+  })();
+  inflight.set(id,p);
+  return p;
 };
 
-export const getLocalStorageVideos = () => safeLocalStorage(PLAYLIST_VIDEOS_KEY, {});
-export const saveLocalStorageVideos = (videos) => saveToLocalStorage(PLAYLIST_VIDEOS_KEY, videos);
-export const getLocalStorageShouldAutoPlay = () => safeLocalStorage(AUTOPLAY_PLAYLIST_KEY, true);
-export const saveShouldAutoPlayToLocalStorage = (shouldAutoPlay) => saveToLocalStorage(AUTOPLAY_PLAYLIST_KEY, shouldAutoPlay);
+export const saveCurrentVideoProgress=async(id,currentTime,length=null)=>{
+  if(!id && id!==0) return;
+  const videos=getLocalStorageVideos();
+  const prev=videos[id];
 
-export const getCurrentPlaylistId = () => new URLSearchParams(window.location.search).get('playlistId');
-
-const fetchVideoDuration = async (videoId) => {
-    try {
-        const response = await fetch(`${VIDEO_ORIGIN}/v/${videoId}?format=json-ld`);
-        const data = await response.json();
-        return convertIsoDurationToSeconds(data?.jsonLinkedData?.duration || '');
-    } catch (error) {
-        console.error(`Failed to fetch duration for ${videoId}:`, error);
-        return null;
-    }
+  if(prev){
+    const completed=prev.completed||Boolean(length&&currentTime>=length);
+    videos[id]={...prev,secondsWatched:currentTime,completed};
+  }else{
+    const len=length??await fetchVideoDuration(id);
+    if(len!=null) videos[id]={secondsWatched:currentTime,length:len};
+  }
+  saveLocalStorageVideos(videos);
 };
 
-export const saveCurrentVideoProgress = async (id, currentTime, length = null) => {
-    const videos = getLocalStorageVideos();
-    const existing = videos[id];
-
-    if (existing) {
-        videos[id] = {
-            ...existing,
-            secondsWatched: currentTime,
-            completed: existing.completed || (length && currentTime >= length),
-        };
-    } else if (length) {
-        videos[id] = { secondsWatched: currentTime, length };
-    } else if (id) {
-        const duration = await fetchVideoDuration(id);
-        if (duration) videos[id] = { secondsWatched: currentTime, length: duration };
-    }
-
-    saveLocalStorageVideos(videos);
+/* ---------- Time ---------- */
+export const convertIsoDurationToSeconds=(iso)=>{
+  if(!iso||typeof iso!=='string') return 0;
+  const m=iso.match(/P(?:(\d+)Y)?(?:(\d+)M)?(?:(\d+)D)?(?:T(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?)?/);
+  if(!m) return 0;
+  const h=parseInt(m[4]||0,10), mn=parseInt(m[5]||0,10), s=parseInt(m[6]||0,10);
+  return h*3600+mn*60+s;
 };
 
-/* --- Time Conversion --- */
-
-export const convertIsoDurationToSeconds = (isoDuration) => {
-    const match = isoDuration.match(/P(?:(\d+)Y)?(?:(\d+)M)?(?:(\d+)D)?(?:T(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?)?/);
-    if (!match) return 0;
-    return (parseInt(match[4] || 0, 10) * 3600) + (parseInt(match[5] || 0, 10) * 60) + parseInt(match[6] || 0, 10);
+/* ---------- Player helpers ---------- */
+export const findVideoIdFromIframeSrc=(src='')=>{
+  if(!src) return null;
+  // MPC: https://video.tv.adobe.com/v/12345?...  -> 12345
+  const mpc=src.match(/\/v\/(\d+)\b/);
+  if(mpc) return mpc[1];
+  // YT embed/nocookie
+  const yt=src.match(/youtube(?:-nocookie)?\.com\/embed\/([a-zA-Z0-9_-]{11})/);
+  if(yt) return yt[1];
+  // Fallback: v= param on YouTube watch URLs
+  const vparam=src.match(/[?&#]v=([a-zA-Z0-9_-]{11})/);
+  return vparam?vparam[1]:null;
 };
 
-/* --- Player Helpers --- */
-
-export const findVideoIdFromIframeSrc = (src) => {
-    const mpcMatch = src.match(/v\/(\d+)\?/);
-    if (mpcMatch) return mpcMatch[1];
-    const ytMatch = src.match(/youtube\.com\/embed\/([a-zA-Z0-9_-]+)/);
-    return ytMatch ? ytMatch[1] : null;
-};
-
-export const startVideoFromSecond = (container, seconds) => {
-    container?.querySelector('iframe')?.contentWindow?.postMessage(
-        { type: 'mpcAction', action: 'play', currentTime: Math.floor(seconds) },
-        VIDEO_ORIGIN
-    );
+export const startVideoFromSecond=(container,seconds=0)=>{
+  const ifr=container?.querySelector('iframe');
+  const win=ifr?.contentWindow;
+  if(!win||Number.isNaN(seconds)) return;
+  win.postMessage({type:'mpcAction',action:'play',currentTime:Math.floor(seconds)},VIDEO_ORIGIN);
 };
