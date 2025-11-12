@@ -293,7 +293,7 @@ class VideoPlaylist {
 
     const url = buildCollectionUrl(TAG_COLLECTION_URL);
 
-    const complexQueryValue = tags.join(',');
+    const complexQueryValue = `(${tags.map((tag) => `"${tag}"`).join(' AND ')})`;
     url.searchParams.append('complexQuery', complexQueryValue);
 
     const data = await fetchJson(url.toString());
