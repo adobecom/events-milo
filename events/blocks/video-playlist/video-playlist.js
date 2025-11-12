@@ -297,7 +297,8 @@ class VideoPlaylist {
     const complexQueryValue = `(${tags.map((tag) => `"${tag}"`).join(' AND ')})`;
     url.searchParams.append('complexQuery', complexQueryValue);
 
-    const data = await fetchJson(url.toString());
+    const urlString = url.toString().replace(/\+/g, '%20');
+    const data = await fetchJson(urlString);
     const cards = prepareCards(extractCardsFromResponse(data));
     if (!cards.length) throw new Error('No cards returned from tag-based collection.');
     return cards;
