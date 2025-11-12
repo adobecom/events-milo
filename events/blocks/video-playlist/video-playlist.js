@@ -292,7 +292,12 @@ class VideoPlaylist {
     if (!tags.length) throw new Error('Tag-based playlist requires at least one tag.');
 
     const url = buildCollectionUrl(TAG_COLLECTION_URL);
-    tags.forEach((tag) => url.searchParams.append('complexQuery', tag));
+
+    const prefix = this.cfg.tagPrefix || CHIMERA_COLLECTION_DEFAULT_PARAMS.tagPrefix;
+    tags.forEach((tag) => {
+      const value = prefix ? `${prefix}${tag}` : tag;
+      url.searchParams.append('complexQuery', value);
+    });
 
     const data = await fetchJson(url.toString());
     const cards = prepareCards(extractCardsFromResponse(data));
