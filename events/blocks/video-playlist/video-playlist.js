@@ -294,10 +294,12 @@ class VideoPlaylist {
 
     const url = buildCollectionUrl(TAG_COLLECTION_URL);
 
-    const complexQueryValue = `(${tags.map((tag) => `"${tag}"`).join(' AND ')})`;
-    url.searchParams.append('complexQuery', complexQueryValue);
+    const encodedTags = tags.map((tag) => tag.replace(/ /g, '%20'));
+    const complexQuerySegment = `complexQuery=(%22${encodedTags.join('%22%20AND%20%22')}%22)`;
+    const existingSearch = url.search ? `${url.search}&` : '?';
+    url.search = `${existingSearch}${complexQuerySegment}`;
 
-    const urlString = url.toString().replace(/\+/g, '%20');
+    const urlString = url.toString();
     const data = await fetchJson(urlString);
     const cards = prepareCards(extractCardsFromResponse(data));
     if (!cards.length) throw new Error('No cards returned from tag-based collection.');
