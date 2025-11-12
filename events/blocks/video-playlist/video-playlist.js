@@ -293,11 +293,8 @@ class VideoPlaylist {
 
     const url = buildCollectionUrl(TAG_COLLECTION_URL);
 
-    const prefix = this.cfg.tagPrefix || CHIMERA_COLLECTION_DEFAULT_PARAMS.tagPrefix;
-    tags.forEach((tag) => {
-      const value = prefix ? `${prefix}${tag}` : tag;
-      url.searchParams.append('complexQuery', value);
-    });
+    const complexQueryValue = tags.join(',');
+    url.searchParams.append('complexQuery', complexQueryValue);
 
     const data = await fetchJson(url.toString());
     const cards = prepareCards(extractCardsFromResponse(data));
