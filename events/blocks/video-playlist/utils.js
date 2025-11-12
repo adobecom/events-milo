@@ -1,5 +1,5 @@
 /* utils.js */
-import { PLAYLIST_VIDEOS_KEY, AUTOPLAY_PLAYLIST_KEY, VIDEO_ORIGIN, VIDEO_PLAYLIST_ID_URL_KEY } from './constants.js';
+import { PLAYLIST_VIDEOS_KEY, AUTOPLAY_PLAYLIST_KEY, VIDEO_ORIGIN } from './constants.js';
 
 /* ---------- localStorage ---------- */
 const readJSON=(k,def)=>{
@@ -13,9 +13,6 @@ export const getLocalStorageVideos=()=>readJSON(PLAYLIST_VIDEOS_KEY,{});
 export const saveLocalStorageVideos=(videos)=>writeJSON(PLAYLIST_VIDEOS_KEY,videos);
 export const getLocalStorageShouldAutoPlay=()=>readJSON(AUTOPLAY_PLAYLIST_KEY,true);
 export const saveShouldAutoPlayToLocalStorage=(v)=>writeJSON(AUTOPLAY_PLAYLIST_KEY,v);
-
-/* ---------- URL ---------- */
-export const getCurrentPlaylistId=()=>new URLSearchParams(window.location.search).get(VIDEO_PLAYLIST_ID_URL_KEY);
 
 /* ---------- Duration fetching (memoized) ---------- */
 const durationCache=new Map(); // id -> seconds

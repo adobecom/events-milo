@@ -4,7 +4,6 @@ import {
   PROGRESS_SAVE_INTERVAL,
   RESTART_THRESHOLD,
   VIDEO_ORIGIN,
-  VIDEO_PLAYLIST_ID_URL_KEY,
 } from './constants.js';
 import {
   saveCurrentVideoProgress,
@@ -22,13 +21,11 @@ export class PlayerManager {
     highlightSession,
     updateProgressBar,
     getCards,
-    getCurrentPlaylistId,
     navigateTo,
   }) {
     this.highlightSession = highlightSession;
     this.updateProgressBar = updateProgressBar;
     this.getCards = getCards;
-    this.getCurrentPlaylistId = getCurrentPlaylistId;
     this.navigateTo = navigateTo;
 
     this.videoContainer = null;
@@ -173,15 +170,22 @@ export class PlayerManager {
     );
     if (index === -1 || index >= cards.length - 1) return;
 
-    const next = new URL(cards[index + 1].overlayLink, window.location.origin);
-    const playlistId = this.getCurrentPlaylistId?.();
-    if (playlistId) {
-      next.searchParams.set(VIDEO_PLAYLIST_ID_URL_KEY, playlistId);
-    }
+    const nextUrl = cards[index + 1].overlayLink;
+    // TODO: Add playlist ID to URL when AEM implementation is ready
+    // 1. Uncomment VIDEO_PLAYLIST_ID_URL_KEY in constants.js
+    // 2. Import getCurrentPlaylistId from utils.js (to be implemented based on AEM requirements)
+    // 3. Uncomment the following code:
+    // const playlistId = getCurrentPlaylistId();
+    // if (playlistId) {
+    //   const next = new URL(nextUrl, window.location.origin);
+    //   next.searchParams.set(VIDEO_PLAYLIST_ID_URL_KEY, playlistId);
+    //   nextUrl = next.href;
+    // }
+
     if (typeof this.navigateTo === 'function') {
-      this.navigateTo(next.href);
+      this.navigateTo(nextUrl);
     } else {
-      window.location.href = next.href;
+      window.location.href = nextUrl;
     }
   }
 

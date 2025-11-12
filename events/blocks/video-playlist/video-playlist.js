@@ -5,7 +5,6 @@ import {
   getLocalStorageVideos,
   getLocalStorageShouldAutoPlay,
   saveShouldAutoPlayToLocalStorage,
-  getCurrentPlaylistId,
 } from './utils.js';
 import {
   PLAYLIST_PLAY_ALL_ID,
@@ -13,6 +12,10 @@ import {
   ANALYTICS,
   MOCK_API,
   PLAYLIST_SKIP_TO_ID,
+  CHIMERA_COLLECTION_DEFAULT_PARAMS,
+  TAG_COLLECTION_URL,
+  FEATURED_COLLECTION_URL,
+  ENTITY_LOOKUP_URL,
 } from './constants.js';
 import { FavoritesManager } from './favorites-manager.js';
 import { PlayerManager } from './player-manager.js';
@@ -25,24 +28,186 @@ export default function init(el) {
 }
 
 /* helpers */
-const qs = (selector, root = document) => root.querySelector(selector);
-const qsa = (selector, root = document) => [...root.querySelectorAll(selector)];
-const bool = (value, defaultValue) =>
-  value == null || value === ''
-    ? defaultValue
-    : String(value).toLowerCase() === 'true';
-const int = (value, defaultValue) => {
-  const parsed = parseInt(value, 10);
-  return Number.isNaN(parsed) ? defaultValue : parsed;
-};
-const toKebab = (value) => value?.trim().toLowerCase().replace(/ /g, '-') || '';
 const getMeta = (root) =>
   Object.fromEntries(
-    [...root.querySelectorAll(':scope > div > div:first-child')].map((div) => [
-      toKebab(div.textContent),
-      div.nextElementSibling?.textContent?.trim() || '',
-    ]),
+    [...root.querySelectorAll(':scope > div > div:first-child')].map((div) => {
+      const key = div.textContent?.trim() || '';
+      return [key, div.nextElementSibling?.textContent?.trim() ?? ''];
+    }),
   );
+
+const DEFAULT_CFG = {
+  playlistId: null,
+  playlistTitle: 'Video Playlist',
+  autoplayText: 'Play All',
+  topicEyebrow: '',
+  skipPlaylistText: 'Skip playlist',
+  minimumSessions: 4,
+  isTagbased: true,
+  tags: '',
+  sort: 'default',
+  sortByTime: false,
+  socialSharing: true,
+  favoritesEnabled: true,
+  favoritesTooltipText: 'Add to favorites',
+  favoritesNotificationText: 'Session added to favorites',
+  favoritesButtonText: 'View',
+  favoritesButtonLink: '/schedule',
+  theme: 'light',
+  videoUrl: '',
+  enableFacebook: false,
+  facebookAltText: 'Share Playlist on Facebook',
+  enableTwitter: false,
+  twitterCustomText: '',
+  twitterAltText: 'Share Playlist on X',
+  enableLinkedIn: false,
+  linkedInAltText: 'Share Playlist on LinkedIn',
+  enableCopyLink: false,
+  copyLinkAltText: 'Share with link',
+  copyNotificationText: 'Link copied to clipboard!',
+  sessionPath: '',
+};
+
+// Coerce value to appropriate type based on default value
+const coerceValue = (key, value, defaults) => {
+  const defaultValue = defaults[key];
+  if (typeof defaultValue === 'boolean') {
+    if (value == null || value === '') return defaultValue;
+    return String(value).toLowerCase() === 'true';
+  }
+  if (typeof defaultValue === 'number') {
+    const parsed = parseInt(value, 10);
+    return Number.isNaN(parsed) ? defaultValue : parsed;
+  }
+  return value;
+};
+
+const parseList = (value) => {
+  if (!value) return [];
+  if (Array.isArray(value)) return value.map((item) => String(item).trim()).filter(Boolean);
+  return String(value)
+    .split(/[,\n]+/)
+    .map((item) => item.trim())
+    .filter(Boolean);
+};
+
+const extractCardsFromResponse = (data) => {
+  if (!data) return [];
+  if (Array.isArray(data)) return data;
+  if (Array.isArray(data.cards)) return data.cards;
+  if (Array.isArray(data.items)) return data.items;
+  if (Array.isArray(data.results)) return data.results;
+  return [];
+};
+
+const prepareCards = (rawCards) => {
+  if (!Array.isArray(rawCards)) return [];
+  return rawCards
+    .map((card) => {
+      const search = {
+        ...card?.search,
+        thumbnailUrl:
+          card?.search?.thumbnailUrl ||
+          card?.styles?.backgroundImage ||
+          card?.thumbnail?.url ||
+          card?.cardData?.thumbnail?.url ||
+          '',
+        videoDuration:
+          card?.search?.videoDuration ||
+          card?.cardData?.details ||
+          '',
+        videoId:
+          card?.search?.videoId ||
+          card?.cardData?.videoId ||
+          '',
+        mpcVideoId:
+          card?.search?.mpcVideoId ||
+          card?.cardData?.mpcVideoId ||
+          '',
+        sessionId:
+          card?.search?.sessionId ||
+          card?.cardData?.sessionId ||
+          '',
+        sessionTimeId:
+          card?.search?.sessionTimeId ||
+          card?.cardData?.sessionTimeId ||
+          '',
+      };
+
+      const contentArea = {
+        ...card?.contentArea,
+        title:
+          card?.contentArea?.title ||
+          card?.title ||
+          card?.cardData?.headline ||
+          '',
+        description:
+          card?.contentArea?.description ||
+          card?.description ||
+          card?.cardData?.description ||
+          '',
+      };
+
+      const overlayLink =
+        card?.overlayLink ||
+        card?.ctaLink ||
+        card?.contentArea?.url ||
+        card?.cardData?.cta?.primaryCta?.url ||
+        card?.cardData?.cta?.secondaryCta?.url ||
+        card?.url ||
+        '';
+
+      return {
+        ...card,
+        search,
+        contentArea,
+        overlayLink,
+      };
+    })
+    .filter((card) => card?.search?.thumbnailUrl);
+};
+
+const fetchJson = async (url, options = {}) => {
+  const response = await fetch(url, {
+    headers: { accept: 'application/json', ...options.headers },
+    ...options,
+  });
+
+  if (!response.ok) {
+    throw new Error(`Request failed with status ${response.status}`);
+  }
+
+  return response.json();
+};
+
+const buildCollectionUrl = (baseUrl, params = {}) => {
+  const url = new URL(baseUrl);
+  const mergedParams = { ...CHIMERA_COLLECTION_DEFAULT_PARAMS, ...params };
+  Object.entries(mergedParams).forEach(([key, value]) => {
+    if (value != null && value !== '') {
+      if (Array.isArray(value)) {
+        value.forEach((item) => url.searchParams.append(key, item));
+      } else {
+        url.searchParams.append(key, value);
+      }
+    }
+  });
+  return url;
+};
+
+const normalizeSessionUri = (value) => {
+  if (!value) return null;
+  try {
+    if (/^https?:\/\//i.test(value)) return value;
+    if (typeof window !== 'undefined') {
+      return new URL(value, window.location.origin).href;
+    }
+    return value;
+  } catch (error) {
+    console.warn('Failed to normalize session path:', value, error);
+    return null;
+  }
+};
 
 class VideoPlaylist {
   constructor(el) {
@@ -51,7 +216,6 @@ class VideoPlaylist {
     this.root = null;
     this.sessionsWrapper = null;
     this.cards = [];
-    this.currentPlaylistId = null;
     this.disposers = [];
     this.favoritesManager = null;
     this.playerManager = null;
@@ -61,12 +225,11 @@ class VideoPlaylist {
   /* lifecycle */
   async init() {
     try {
-      this.cfg = this._parseCfg();
-      this.currentPlaylistId = getCurrentPlaylistId();
-      this.root = this._createRoot();
+      this.cfg = this.parseCfg();
+      this.root = this.createRoot();
       this.el.appendChild(this.root);
-      await this._loadAndRender();
-      this._initPlayerManager();
+      await this.loadAndRender();
+      this.initPlayerManager();
     } catch (err) {
       console.error('VideoPlaylist init error:', err);
     }
@@ -86,50 +249,21 @@ class VideoPlaylist {
   }
 
   /* config */
-  _parseCfg() {
+  parseCfg() {
     const meta = getMeta(this.el);
-    return {
-      playlistId: meta['playlist-id'] || null,
-      playlistTitle: meta['playlist-title'] || 'Video Playlist',
-      topicEyebrow: meta['topic-eyebrow'] || '',
-      autoplayText: meta['autoplay-text'] || 'Play All',
-      skipPlaylistText:
-        meta['skip-playlist-text'] || meta['skip-playlist'] || 'Skip playlist',
-      minimumSessions: int(
-        meta['minimum-sessions'] || meta['minimum-session'],
-        4,
-      ),
-      sort: meta.sort || 'default',
-      sortByTime: bool(meta['sort-by-time'], false),
-      isTagBased: bool(meta['is-tagbased'], true),
-      socialSharing: bool(meta['social-sharing'], true),
-      favoritesEnabled: bool(meta['favorites-enabled'], true),
-      favoritesTooltipText:
-        meta['favorites-tooltip-text'] ||
-        meta['tooltip-text'] ||
-        'Add to favorites',
-      favoritesNotificationText:
-        meta['favorites-notification-text'] || 'Session added to favorites',
-      favoritesButtonText: meta['favorites-button-text'] || 'View',
-      favoritesButtonLink: meta['favorites-button-link'] || '/schedule',
-      theme: meta.theme || 'light',
-      enableFacebook: bool(meta['enable-facebook'], true),
-      facebookAltText: meta['facebook-alt-text'] || 'Share Playlist on Facebook',
-      enableTwitter: bool(meta['enable-twitter'], true),
-      twitterCustomText: meta['twitter-custom-text'] || '',
-      twitterAltText: meta['twitter-alt-text'] || 'Share Playlist on X',
-      enableLinkedIn: bool(meta['enable-linkedin'], true),
-      linkedInAltText:
-        meta['linked-in-alt-text'] || 'Share Playlist on LinkedIn',
-      enableCopyLink: bool(meta['enable-copy-link'], true),
-      copyLinkAltText: meta['copy-link-alt-text'] || 'Share with link',
-      copyNotificationText:
-        meta['copy-notification-text'] || 'Link copied to clipboard!',
-      sessionPaths: meta.sessionpath || '',
-    };
+    const config = { ...DEFAULT_CFG };
+
+    Object.entries(meta).forEach(([key, value]) => {
+      // Only set if key exists in DEFAULT_CFG (ignore unknown keys)
+      if (key in DEFAULT_CFG) {
+        config[key] = coerceValue(key, value, DEFAULT_CFG);
+      }
+    });
+
+    return config;
   }
 
-  _createRoot() {
+  createRoot() {
     const container = createTag('div', { class: 'video-playlist-container' });
     if (this.cfg.theme) container.classList.add(`consonant--${this.cfg.theme}`);
     container.style.display = 'none';
@@ -137,21 +271,109 @@ class VideoPlaylist {
   }
 
   /* data */
-  async _fetchCards() {
-    if (this.cfg.isTagBased) {
-      const { cards = [] } = await MOCK_API.getSessions();
-      return cards.filter((card) => card.search.thumbnailUrl);
+  async fetchCards() {
+    const execute = this.cfg.isTagbased
+      ? this.fetchTagBasedCards.bind(this)
+      : this.fetchAuthorAuthoredCards.bind(this);
+
+    try {
+      const cards = await execute();
+      if (cards.length) return cards;
+    } catch (error) {
+      console.error('VideoPlaylist data fetch failed, using fallback.', error);
+      window.lana?.log?.(`VideoPlaylist fetchCards fallback: ${error.message}`);
     }
 
-    const playlist = await MOCK_API.getUserAuthoredPlaylist(this.cfg);
-    this.cfg.playlistTitle = playlist.playlistTitle || this.cfg.playlistTitle;
-    this.cfg.topicEyebrow = playlist.topicEyebrow || this.cfg.topicEyebrow;
-    const ids = playlist.sessions.map((session) => session.entityId);
-    const { cards = [] } = await MOCK_API.getChimeraFeaturedCards(ids);
-    return cards.filter((card) => card.search.thumbnailUrl);
+    return this.fetchFallbackCards();
   }
 
-  _sortCards(cards) {
+  async fetchTagBasedCards() {
+    const tags = parseList(this.cfg.tags);
+    if (!tags.length) throw new Error('Tag-based playlist requires at least one tag.');
+
+    const url = buildCollectionUrl(TAG_COLLECTION_URL);
+    tags.forEach((tag) => url.searchParams.append('complexQuery', tag));
+
+    const data = await fetchJson(url.toString());
+    const cards = prepareCards(extractCardsFromResponse(data));
+    if (!cards.length) throw new Error('No cards returned from tag-based collection.');
+    return cards;
+  }
+
+  async fetchAuthorAuthoredCards() {
+    const sessionPaths = parseList(this.cfg.sessionPath)
+      .map(normalizeSessionUri)
+      .filter(Boolean);
+
+    if (!sessionPaths.length) {
+      throw new Error('Author-authored playlist requires at least one sessionPath.');
+    }
+
+    const entityIds = await this.lookupEntityIds(sessionPaths);
+    if (!entityIds.length) throw new Error('Failed to resolve entityIds for session paths.');
+
+    const data = await this.fetchCardsByEntityIds(entityIds);
+    const cards = prepareCards(extractCardsFromResponse(data));
+    if (!cards.length) throw new Error('No cards returned for provided entityIds.');
+    return cards;
+  }
+
+  async fetchFallbackCards() {
+    try {
+      if (this.cfg.isTagbased) {
+        const { cards = [] } = await MOCK_API.getSessions();
+        return prepareCards(cards);
+      }
+
+      const playlist = await MOCK_API.getUserAuthoredPlaylist(this.cfg);
+      this.cfg.playlistTitle = playlist.playlistTitle || this.cfg.playlistTitle;
+      this.cfg.topicEyebrow = playlist.topicEyebrow || this.cfg.topicEyebrow;
+
+      const entityIds = (playlist.sessions || [])
+        .map((session) => session.entityId)
+        .filter(Boolean);
+
+      const { cards = [] } = await MOCK_API.getChimeraFeaturedCards(entityIds);
+      return prepareCards(cards);
+    } catch (error) {
+      console.error('VideoPlaylist fallback data load failed.', error);
+      return [];
+    }
+  }
+
+  async lookupEntityIds(sessionUris) {
+    const url = new URL(ENTITY_LOOKUP_URL);
+    url.searchParams.set('env', 'prod');
+    url.searchParams.set('container', 'live');
+    sessionUris.forEach((uri) => url.searchParams.append('uri', uri));
+
+    const data = await fetchJson(url.toString());
+    const items = Array.isArray(data) ? data : [];
+
+    return items
+      .map((item) => {
+        if (item?.entityId) return item.entityId;
+        const arbitrary = createArbitraryMap(item?.arbitrary);
+        return arbitrary.entityId || arbitrary.referenceIds || null;
+      })
+      .filter(Boolean)
+      .map((value) => {
+        if (typeof value === 'string') return value;
+        if (Array.isArray(value)) return value[0];
+        return null;
+      })
+      .filter(Boolean);
+  }
+
+  async fetchCardsByEntityIds(entityIds) {
+    const url = buildCollectionUrl(FEATURED_COLLECTION_URL, {
+      featuredCards: entityIds.join(','),
+    });
+
+    return fetchJson(url.toString());
+  }
+
+  sortCards(cards) {
     if (this.cfg.sort === 'default' && !this.cfg.sortByTime) return cards;
     const sorted = [...cards];
     if (this.cfg.sortByTime) {
@@ -173,24 +395,24 @@ class VideoPlaylist {
   }
 
   /* render */
-  async _loadAndRender() {
+  async loadAndRender() {
     try {
-      const raw = await this._fetchCards();
-      this.cards = this._sortCards(raw);
+      const raw = await this.fetchCards();
+      this.cards = this.sortCards(raw);
       if (this.cards.length < this.cfg.minimumSessions) {
         console.warn('Not enough sessions:', this.cfg.minimumSessions);
         return;
       }
-      await this._render(this.cards);
+      await this.render(this.cards);
     } catch (err) {
       console.error('Failed to load sessions:', err);
     }
   }
 
-  async _render(cards) {
+  async render(cards) {
     this.root.style.display = '';
-    this.root.appendChild(this._renderHeader());
-    this.root.appendChild(this._renderSessions(cards));
+    this.root.appendChild(this.renderHeader());
+    this.root.appendChild(this.renderSessions(cards));
 
     if (this.cfg.favoritesEnabled) {
       this.favoritesManager?.cleanup();
@@ -198,7 +420,7 @@ class VideoPlaylist {
         config: this.cfg,
         getCards: () => this.cards,
         getSessionsWrapper: () => this.sessionsWrapper,
-        showToast: (...args) => this._toast(...args),
+        showToast: (...args) => this.toast(...args),
       });
       await this.favoritesManager.setup();
     }
@@ -208,7 +430,7 @@ class VideoPlaylist {
     );
   }
 
-  _renderHeader() {
+  renderHeader() {
     const header = createTag('div', {
       class: 'video-playlist-container__header',
     });
@@ -238,7 +460,7 @@ class VideoPlaylist {
         </div>
       </div>`;
 
-    const checkbox = qs(`#${PLAYLIST_PLAY_ALL_ID}`, header);
+    const checkbox = header.querySelector(`#${PLAYLIST_PLAY_ALL_ID}`);
     checkbox?.addEventListener('change', (event) => {
       saveShouldAutoPlayToLocalStorage(event.target.checked);
       event.target.setAttribute(
@@ -250,8 +472,8 @@ class VideoPlaylist {
     if (this.cfg.socialSharing) {
       const disposer = wireSocialShare(header, {
         onCopy: () => {
-          this._copy(window.location.href);
-          this._toast(this.cfg.copyNotificationText, 'info');
+          this.copy(window.location.href);
+          this.toast(this.cfg.copyNotificationText, 'info');
         },
       });
       if (disposer) this.disposers.push(disposer);
@@ -260,7 +482,7 @@ class VideoPlaylist {
     return header;
   }
 
-  _renderSessions(cards) {
+  renderSessions(cards) {
     const outer = createTag('div', {
       class: 'video-playlist-container__sessions',
     });
@@ -290,20 +512,19 @@ class VideoPlaylist {
       })
       .join('');
     outer.appendChild(this.sessionsWrapper);
-    this._initProgressBars(this.sessionsWrapper);
+    this.initProgressBars(this.sessionsWrapper);
     return outer;
   }
 
-  _initProgressBars(wrapper) {
+  initProgressBars(wrapper) {
     const videos = getLocalStorageVideos();
-    qsa('.video-playlist-container__sessions__wrapper__session', wrapper).forEach(
+    [...wrapper.querySelectorAll('.video-playlist-container__sessions__wrapper__session')].forEach(
       (session) => {
         const videoId = session.getAttribute('data-video-id');
         const data = videos[videoId];
         if (data?.length && data.secondsWatched > 0) {
-          const bar = qs(
+          const bar = session.querySelector(
             '.video-playlist-container__sessions__wrapper__session__thumbnail__progress__bar',
-            session,
           );
           if (bar) {
             bar.style.width = `${Math.min(
@@ -318,14 +539,13 @@ class VideoPlaylist {
     );
   }
 
-  _initPlayerManager() {
+  initPlayerManager() {
     this.playerManager?.cleanup();
     this.playerManager = new PlayerManager({
-      highlightSession: (videoId) => this._highlightSession(videoId),
+      highlightSession: (videoId) => this.highlightSession(videoId),
       updateProgressBar: (videoId, current, length) =>
-        this._updateProgress(videoId, current, length),
+        this.updateProgress(videoId, current, length),
       getCards: () => this.cards,
-      getCurrentPlaylistId: () => this.currentPlaylistId,
       navigateTo: (href) => {
         window.location.href = href;
       },
@@ -333,24 +553,23 @@ class VideoPlaylist {
     this.playerManager.bootstrap();
   }
 
-  _highlightSession(videoId) {
+  highlightSession(videoId) {
     if (!this.sessionsWrapper) return;
-    qsa('.highlighted', this.sessionsWrapper).forEach((element) =>
+    [...this.sessionsWrapper.querySelectorAll('.highlighted')].forEach((element) =>
       element.classList.remove('highlighted'),
     );
     if (!videoId) return;
-    const target = qs(`[data-video-id="${videoId}"]`, this.sessionsWrapper);
+    const target = this.sessionsWrapper.querySelector(`[data-video-id="${videoId}"]`);
     if (target) {
       target.classList.add('highlighted');
       target.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
   }
 
-  _updateProgress(videoId, current, length) {
-    const container = qs(`[data-video-id="${videoId}"]`, this.sessionsWrapper);
-    const bar = qs(
+  updateProgress(videoId, current, length) {
+    const container = this.sessionsWrapper.querySelector(`[data-video-id="${videoId}"]`);
+    const bar = (container || document).querySelector(
       '.video-playlist-container__sessions__wrapper__session__thumbnail__progress__bar',
-      container || document,
     );
     if (!bar) return;
     const percentage = Math.min(100, (current / length) * 100);
@@ -360,17 +579,17 @@ class VideoPlaylist {
   }
 
   /* UX bits */
-  _copy(text) {
+  copy(text) {
     if (navigator.clipboard && window.isSecureContext) {
       navigator.clipboard
         .writeText(text)
-        .catch(() => this._legacyCopy(text));
+        .catch(() => this.legacyCopy(text));
       return;
     }
-    this._legacyCopy(text);
+    this.legacyCopy(text);
   }
 
-  _legacyCopy(text) {
+  legacyCopy(text) {
     const textarea = createTag('textarea', {
       value: text,
       style: 'position:fixed;left:-9999px;top:-9999px;',
@@ -385,7 +604,7 @@ class VideoPlaylist {
     document.body.removeChild(textarea);
   }
 
-  _toast(message, type = 'default', button = null) {
+  toast(message, type = 'default', button = null) {
     let container = document.getElementById(TOAST_CONTAINER_ID);
     if (!container) {
       container = createTag('div', { id: TOAST_CONTAINER_ID });
@@ -425,10 +644,10 @@ class VideoPlaylist {
         </button>
       </div>`;
     container.appendChild(toast);
-    const closeButton = qs('.video-playlist-container__toast-close', toast);
+    const closeButton = toast.querySelector('.video-playlist-container__toast-close');
     closeButton.addEventListener('click', () => toast.remove());
     if (button) {
-      qs('.video-playlist-container__toast-button', toast)?.addEventListener(
+      toast.querySelector('.video-playlist-container__toast-button')?.addEventListener(
         'click',
         () => {
           if (button.link) window.location.href = button.link;

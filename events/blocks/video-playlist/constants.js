@@ -12,7 +12,8 @@ export const MPC_STATUS='mpcStatus';
 export const RESTART_THRESHOLD=30;
 export const PROGRESS_SAVE_INTERVAL=5;
 export const VIDEO_ORIGIN='https://video.tv.adobe.com';
-export const VIDEO_PLAYLIST_ID_URL_KEY='videoPlaylistId';
+// TODO: Re-enable when AEM playlist ID implementation is ready
+// export const VIDEO_PLAYLIST_ID_URL_KEY='videoPlaylistId';
 
 /* ---------- Event States ---------- */
 export const EVENT_STATES=Object.freeze({
@@ -51,6 +52,18 @@ export const CHIMERA_API=Object.freeze({
   }),
 });
 
+export const CHIMERA_COLLECTION_DEFAULT_PARAMS=Object.freeze({
+  contentSource:'northstar',
+  originSelection:'northstar',
+  language:'en',
+  country:'us',
+  environment:'prod',
+});
+
+export const TAG_COLLECTION_URL='https://www.adobe.com/chimera-api/collection';
+export const FEATURED_COLLECTION_URL='https://www.adobe.com/chimera-api/collection';
+export const ENTITY_LOOKUP_URL='https://14257-chidlookupservice.adobeio-static.net/api/v1/web/chidlookupservice-0.0.1/__id-lookup';
+
 /* ---------- MOCK API (dev only) ---------- */
 const delay=(ms)=>new Promise(r=>setTimeout(r,ms));
 const ONE_DAY_MS=86400000;
@@ -86,7 +99,7 @@ export const MOCK_API={
   /* User-authored playlist */
   async getUserAuthoredPlaylist(config){
     await delay(150);
-    const paths=(config.sessionPaths||'').split(',').map(s=>s.trim()).filter(Boolean);
+    const paths=(config.sessionPath||'').split(',').map(s=>s.trim()).filter(Boolean);
     const sessions=paths.map((p,i)=>{
       const m=p.match(/\/sessions\/([^/]+)\.html$/i);
       const code=(m?m[1]:(`s${744+i}`)).toUpperCase();
