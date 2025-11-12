@@ -53,15 +53,15 @@ export const CHIMERA_API=Object.freeze({
 });
 
 export const CHIMERA_COLLECTION_DEFAULT_PARAMS=Object.freeze({
-  contentSource:'northstar',
-  originSelection:'northstar',
+  contentSource:'Northstar',
+  originSelection:'Northstar',
   language:'en',
-  country:'us',
+  country:'US',
   environment:'prod',
 });
 
-export const TAG_COLLECTION_URL='https://www.adobe.com/chimera-api/collection';
-export const FEATURED_COLLECTION_URL='https://www.adobe.com/chimera-api/collection';
+export const TAG_COLLECTION_URL='/chimera-api/collection';
+export const FEATURED_COLLECTION_URL='/chimera-api/collection';
 export const ENTITY_LOOKUP_URL='https://14257-chidlookupservice.adobeio-static.net/api/v1/web/chidlookupservice-0.0.1/__id-lookup';
 
 /* ---------- MOCK API (dev only) ---------- */

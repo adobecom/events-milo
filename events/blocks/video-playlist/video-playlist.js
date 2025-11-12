@@ -181,15 +181,16 @@ const fetchJson = async (url, options = {}) => {
 };
 
 const buildCollectionUrl = (baseUrl, params = {}) => {
-  const url = new URL(baseUrl);
+  const origin = typeof window !== 'undefined' ? window.location.origin : 'https://www.adobe.com';
+  const url = new URL(baseUrl, origin);
   const mergedParams = { ...CHIMERA_COLLECTION_DEFAULT_PARAMS, ...params };
   Object.entries(mergedParams).forEach(([key, value]) => {
-    if (value != null && value !== '') {
-      if (Array.isArray(value)) {
-        value.forEach((item) => url.searchParams.append(key, item));
-      } else {
-        url.searchParams.append(key, value);
-      }
+    if (value == null || value === '') return;
+    if (url.searchParams.has(key)) return;
+    if (Array.isArray(value)) {
+      value.forEach((item) => url.searchParams.append(key, item));
+    } else {
+      url.searchParams.append(key, value);
     }
   });
   return url;
