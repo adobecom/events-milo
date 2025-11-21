@@ -65,19 +65,89 @@ export const FEATURED_COLLECTION_URL='/chimera-api/collection';
 export const ENTITY_LOOKUP_URL='https://14257-chidlookupservice.adobeio-static.net/api/v1/web/chidlookupservice-0.0.1/__id-lookup';
 
 /* ---------- MOCK API (dev only) ---------- */
-const delay=(ms)=>new Promise(r=>setTimeout(r,ms));
-const ONE_DAY_MS=86400000;
-const baseThumbnail='https://images-tv.adobe.com/mpcv3/b8f920e0-0298-4d82-9ec3-c17d4c9ceda9/38f837a1-0b27-4319-9a7c-2429d88e3058/61f09647c0884bc3840da53bd2c2ffc0_1742533829-200x113.jpg';
-const makeWindow=()=>({startDate:new Date(Date.now()-ONE_DAY_MS).toISOString(),endDate:new Date(Date.now()+ONE_DAY_MS).toISOString()});
+const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
-const makeCard=({id,mpcVideoId,videoId,sessionId,sessionCode,title,description,overlay})=>{
-  const {startDate,endDate}=makeWindow();
+const ONE_DAY_MS = 86400000;
+const baseThumbnail = 'https://images-tv.adobe.com/mpcv3/b8f920e0-0298-4d82-9ec3-c17d4c9ceda9/38f837a1-0b27-4319-9a7c-2429d88e3058/61f09647c0884bc3840da53bd2c2ffc0_1742533829-200x113.jpg';
+
+const makeWindow = () => {
+  const now = Date.now();
   return {
-    id:String(id),
-    search:{thumbnailUrl:baseThumbnail,videoDuration:'00:51:53',mpcVideoId,videoId,videoService:'mpc',sessionId,sessionCode},
-    contentArea:{title,description},
-    overlayLink:overlay,
-    startDate,endDate,
+    startDate: new Date(now - ONE_DAY_MS).toISOString(),
+    endDate: new Date(now + ONE_DAY_MS).toISOString(),
+  };
+};
+
+const makeCard = ({ id, mpcVideoId, videoId, sessionId, sessionCode, title, description, overlay }) => {
+  const { startDate, endDate } = makeWindow();
+  return {
+    id: String(id),
+    search: {
+      thumbnailUrl: baseThumbnail,
+      videoDuration: '00:51:53',
+      mpcVideoId,
+      videoId,
+      videoService: 'mpc',
+      sessionId,
+      sessionCode,
+    },
+    contentArea: {
+      title,
+      description,
+    },
+    overlayLink: overlay,
+    startDate,
+    endDate,
+  };
+};
+
+// Helper to extract values from arbitrary array format
+// Arbitrary array contains objects like [{ "sessionId": "..." }, { "videoId": "..." }]
+const extractFromArbitrary = (arbitrary, key) => {
+  if (!Array.isArray(arbitrary)) return null;
+  
+  const entry = arbitrary.find(
+    (item) => item && typeof item === 'object' && key in item
+  );
+  
+  return entry ? entry[key] : null;
+};
+
+// Transform entity lookup/featured cards response to card format
+const transformEntityCard = (item) => {
+  const arbitrary = item.arbitrary || [];
+  
+  const search = {
+    thumbnailUrl: extractFromArbitrary(arbitrary, 'thumbnailUrl') || item.thumbnail?.url || '',
+    videoDuration: extractFromArbitrary(arbitrary, 'videoDuration') || item.cardData?.details || '',
+    mpcVideoId: extractFromArbitrary(arbitrary, 'mpcVideoId') || '',
+    videoId: extractFromArbitrary(arbitrary, 'videoId') || extractFromArbitrary(arbitrary, 'mpcVideoId') || '',
+    videoService: extractFromArbitrary(arbitrary, 'videoService') || 'adobeTv',
+    sessionId: extractFromArbitrary(arbitrary, 'sessionId') || '',
+    sessionCode: extractFromArbitrary(arbitrary, 'sessionCode') || '',
+    sessionTimeId: extractFromArbitrary(arbitrary, 'sessionTimeID') || '',
+  };
+  
+  let contentUrl = item.cardData?.cta?.primaryCta?.url || item.url || '';
+  
+  // Convert relative URLs to absolute if needed
+  if (contentUrl && !contentUrl.startsWith('http') && contentUrl.startsWith('/')) {
+    contentUrl = `https://www.adobe.com${contentUrl}`;
+  }
+  
+  const contentArea = {
+    title: item.cardData?.headline || item.title || '',
+    description: item.description || item.cardData?.description || extractFromArbitrary(arbitrary, 'sessionDescription') || '',
+    url: contentUrl,
+  };
+  
+  const overlayLink = contentUrl;
+  
+  return {
+    id: item.entityId || item.contentId || '',
+    search,
+    contentArea,
+    overlayLink,
   };
 };
 
@@ -85,47 +155,70 @@ export const MOCK_API={
   /* Tag-based playlist */
   async getSessions(){
     await delay(100);
-    return {
-      cards:[
-        makeCard({id:1,mpcVideoId:'3449120',videoId:'yt_001',sessionId:'sess_001',sessionCode:'S744',title:"Unlocking Modern Marketing's Potential",description:'Discover Choreo, a transformative framework.',overlay:'https://business.adobe.com/summit/2025/sessions/s744.html'}),
-        makeCard({id:2,mpcVideoId:'5-bUvwi2L-E',videoId:'yt_002',sessionId:'sess_002',sessionCode:'S745',title:'Pitch Perfect',description:'Secure funding and resources.',overlay:'https://business.adobe.com/summit/2025/sessions/s745.html'}),
-        makeCard({id:3,mpcVideoId:'3424768',videoId:'yt_003',sessionId:'sess_003',sessionCode:'S746',title:'The Future of Adobe Workfront',description:'Transforming project management.',overlay:'https://business.adobe.com/summit/2025/sessions/s746.html'}),
-        makeCard({id:4,mpcVideoId:'3442589',videoId:'yt_004',sessionId:'sess_004',sessionCode:'S747',title:'Maximize Martech Investments',description:'Learn best practices on bridging IT and marketing.',overlay:'https://business.adobe.com/summit/2025/sessions/s747.html'}),
-        makeCard({id:5,mpcVideoId:'3424767',videoId:'yt_005',sessionId:'sess_005',sessionCode:'S748',title:'Data-Driven Marketing',description:'Analytics and insights for better ROI.',overlay:'https://business.adobe.com/summit/2025/sessions/s748.html'}),
-      ]
-    };
+    try {
+      // Load mock data from JSON file matching actual API response format
+      const response = await fetch('/events/blocks/video-playlist/mock-chimera-response.json');
+      if (response.ok) {
+        const data = await response.json();
+        return data;
+      }
+    } catch (error) {
+      console.error('Failed to load mock-chimera-response.json:', error);
+      throw error;
+    }
   },
 
-  /* User-authored playlist */
+  /* User-authored playlist - simulates entity lookup from sessionPath */
   async getUserAuthoredPlaylist(config){
     await delay(150);
-    const paths=(config.sessionPath||'').split(',').map(s=>s.trim()).filter(Boolean);
-    const sessions=paths.map((p,i)=>{
-      const m=p.match(/\/sessions\/([^/]+)\.html$/i);
-      const code=(m?m[1]:(`s${744+i}`)).toUpperCase();
-      const entityId=`entity_1234${5+i}`; // stubbed
-      return {sessionCode:code,entityId,sessionPath:p};
-    });
-    return {
-      playlistID:config.playlistId||'123',
-      playlistTitle:config.playlistTitle||'Sample playlistTitle',
-      topicEyebrow:config.topicEyebrow||'Eyebrow text',
-      sessions
-    };
+    try {
+      // Load mock entity lookup response (simulates ID lookup service)
+      const response = await fetch('/events/blocks/video-playlist/mock-entity-lookup-response.json');
+      if (response.ok) {
+        const lookupData = await response.json();
+        const paths = (config.sessionPath || '').split(',').map(s => s.trim()).filter(Boolean);
+        const sessions = lookupData.slice(0, paths.length).map((item, i) => {
+          const arbitrary = item.arbitrary || [];
+          const sessionCode = extractFromArbitrary(arbitrary, 'sessionCode') || `S${6000 + i}`;
+          const entityId = item.entityId || item.contentId || '';
+          return {
+            sessionCode,
+            entityId,
+            sessionPath: paths[i] || '',
+          };
+        });
+        return {
+          playlistID: config.playlistId || '123',
+          playlistTitle: config.playlistTitle || 'Sample playlistTitle',
+          topicEyebrow: config.topicEyebrow || 'Eyebrow text',
+          sessions,
+        };
+      }
+    } catch (error) {
+      console.error('Failed to load mock-entity-lookup-response.json:', error);
+      throw error;
+    }
   },
 
-  /* Chimera Featured Cards for user-authored */
+  /* Chimera Featured Cards for user-authored - simulates featuredCards API call */
   async getChimeraFeaturedCards(entityIds){
     await delay(200);
-    const map={
-      entity_12345: makeCard({id:1,mpcVideoId:'3449120',videoId:'yt_001',sessionId:'sess_001',sessionCode:'S744',title:'AI-Powered Marketing Automation',description:'Learn how AI transforms marketing workflows.',overlay:'https://business.adobe.com/summit/2025/sessions/s744.html'}),
-      entity_12346: makeCard({id:2,mpcVideoId:'3449121',videoId:'yt_002',sessionId:'sess_002',sessionCode:'S745',title:'Machine Learning for Personalization',description:'Advanced ML techniques for customer experiences.',overlay:'https://business.adobe.com/summit/2025/sessions/s745.html'}),
-      entity_12347: makeCard({id:3,mpcVideoId:'3449122',videoId:'yt_003',sessionId:'sess_003',sessionCode:'S746',title:'Deep Learning in Analytics',description:'Neural networks for predictive analytics.',overlay:'https://business.adobe.com/summit/2025/sessions/s746.html'}),
-      entity_12348: makeCard({id:4,mpcVideoId:'3449123',videoId:'yt_004',sessionId:'sess_004',sessionCode:'S747',title:'Advanced Analytics Strategies',description:'Data-driven insights for business growth.',overlay:'https://business.adobe.com/summit/2025/sessions/s747.html'}),
-      entity_12349: makeCard({id:5,mpcVideoId:'3424767',videoId:'yt_005',sessionId:'sess_005',sessionCode:'S748',title:'Customer Experience Optimization',description:'Enhancing user journeys with data.',overlay:'https://business.adobe.com/summit/2025/sessions/s748.html'}),
-    };
-    const cards=entityIds.map(id=>map[id]).filter(Boolean);
-    return {cards};
+    try {
+      // Load mock featured cards response (simulates Chimera featuredCards API)
+      const response = await fetch('/events/blocks/video-playlist/mock-featured-cards-response.json');
+      if (response.ok) {
+        const featuredData = await response.json();
+        // Transform entity lookup format to card format
+        const cards = featuredData
+          .slice(0, entityIds.length)
+          .map(transformEntityCard)
+          .filter(card => card.search?.thumbnailUrl);
+        return { cards };
+      }
+    } catch (error) {
+      console.error('Failed to load mock-featured-cards-response.json:', error);
+      throw error;
+    }
   },
 
   async getFavorites(){

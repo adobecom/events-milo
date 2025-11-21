@@ -16,13 +16,8 @@ export class FavoritesManager {
   }
 
   async setup() {
-    if (!this.config.favoritesEnabled) return;
-    if (!window?.feds?.utilities?.getEventData) return;
-
+    // User registration check is already done before loading this module
     try {
-      const eventData = await window.feds.utilities.getEventData();
-      if (!eventData?.isRegistered) return;
-
       const favorites = await initAPI(ENDPOINTS.GET_FAVORITES);
       if (!favorites?.sessionInterests) return;
 

@@ -1,0 +1,227 @@
+{
+  "cards": [
+    {
+      "id": "3zaib7q",
+      "showCard": {
+        "from": "",
+        "until": ""
+      },
+      "styles": {
+        "typeOverride": "caas:card-style/event-session",
+        "backgroundImage": "https://www.adobe.com/content/dam/www/us/en/max/2025/sessions/25MAX-featured-speaker-image-2-S6000-OS6000a-OS6000b-1200x675.jpg",
+        "backgroundAltText": "What They Never Taught You: Real Talk about Your Creative Career",
+        "mnemonic": "",
+        "icon": "https://www.adobe.com/content/dam/cc/images/shared/icons/event-session.svg",
+        "iconAlt": "Event Session"
+      },
+      "overlays": {
+        "banner": {
+          "backgroundColor": "",
+          "fontColor": "",
+          "description": "",
+          "icon": ""
+        },
+        "logo": {
+          "src": ""
+        },
+        "label": {
+          "description": ""
+        },
+        "videoButton": {
+          "url": ""
+        }
+      },
+      "tags": [
+        {
+          "id": "7h2x/a3h2"
+        }
+      ],
+      "contentArea": {
+        "detailText": "60 min",
+        "title": "What They Never Taught You: Real Talk about Your Creative Career",
+        "url": "https://www.adobe.com/max/2025/sessions/what-they-never-taught-you-real-talk-about-your-cr-s6000.html",
+        "description": "Join multi-award-winning Japanese illustrator and instructor Yuko Shimizu in a candid talk about what it really takes to build a lasting creative career.",
+        "dateDetailText": {
+          "type": "date-interval",
+          "startTime": "",
+          "endTime": ""
+        }
+      },
+      "footer": [
+        {
+          "divider": false,
+          "left": [
+            {
+              "type": "bookmark",
+              "saveCardIcon": "",
+              "unsaveCardIcon": "",
+              "cardSaveText": "",
+              "unsaveCardText": ""
+            },
+            {
+              "type": "date-interval",
+              "startTime": "2025-10-28T22:15:00.000Z",
+              "endTime": "2025-10-28T23:15:00.000Z"
+            }
+          ],
+          "center": [],
+          "right": [
+            {
+              "type": "button",
+              "style": "",
+              "text": "Watch now",
+              "href": "https://www.adobe.com/max/2025/sessions/what-they-never-taught-you-real-talk-about-your-cr-s6000.html"
+            }
+          ],
+          "altCta": [
+            {
+              "type": "button",
+              "style": "",
+              "text": "Learn more",
+              "href": "#"
+            }
+          ]
+        }
+      ],
+      "search": {
+        "sessionId": "1742925647385001grGT",
+        "sessionLength": "60",
+        "sessionDescription": "<p>After 20+ years as a professional illustrator — and escaping a soul-crushing corporate job — I've learned what it really takes to build a lasting creative career.</p>",
+        "sessionCode": "S6000",
+        "sessionDemoAssets": "",
+        "syncedFilesFolderLinkforSessionPage": "",
+        "sessionPresentationUpload": "",
+        "sessionWorkbookUpload": "",
+        "sessionSupplementalResourcesUpload": "",
+        "sessionStartTime": "2025-10-28T22:15:00.000Z",
+        "sessionEndTime": "2025-10-28T23:15:00.000Z",
+        "sessionSponsorText": "",
+        "sessionTimeID": "1752521868026001I4D2",
+        "referenceIds": "f344568d-7b47-3ead-a8c4-0d0bd95bb0b4",
+        "cardSourceType": "PAGE",
+        "isFeatured": "false",
+        "isDoubleBookable": "false",
+        "videoDuration": "01:07:09",
+        "thumbnailUrl": "https://images-tv.adobe.com/mpcv3/b8f920e0-0298-4d82-9ec3-c17d4c9ceda9/3ac8bf7a-a03c-4789-965f-9b47b4e15a6c/a8dea6bf9e474fe2aa3215aaa6936205_1761858422-200x113.jpg",
+        "mpcVideoId": "3458860",
+        "videoId": "3458860",
+        "videoService": "adobeTv"
+      },
+      "cardDate": "2025-11-11T20:00:06.396Z",
+      "createdDate": "2025-11-11T20:00:06.396Z",
+      "modifiedDate": "2025-10-27T19:23:43.557Z",
+      "startDate": "2025-10-28T22:15:00.000Z",
+      "endDate": "2025-10-28T23:15:00.000Z",
+      "ctaLink": "https://www.adobe.com/max/2025/sessions/what-they-never-taught-you-real-talk-about-your-cr-s6000.html",
+      "overlayLink": "https://www.adobe.com/max/2025/sessions/what-they-never-taught-you-real-talk-about-your-cr-s6000.html",
+      "origin": "Dexter"
+    },
+    {
+      "id": "f13a5o",
+      "styles": {
+        "typeOverride": "caas:card-style/event-session",
+        "backgroundImage": "https://www.adobe.com/content/dam/www/us/en/max/2025/sessions/25MAX-featured-speaker-image-10-SS1-1200x675.jpg",
+        "backgroundAltText": "Design Powerhouse Super Session: Maximizing Your Creativity"
+      },
+      "contentArea": {
+        "detailText": "60 min",
+        "title": "Design Powerhouse Super Session: Maximizing Your Creativity",
+        "url": "https://www.adobe.com/max/2025/sessions/design-powerhouse-super-session-maximizing-your-cr-ss1.html",
+        "description": "Push your creative boundaries by combining your favorite design tools to streamline your workflows with the latest innovative technologies."
+      },
+      "search": {
+        "sessionId": "1742925652369001gkUu",
+        "sessionCode": "SS1",
+        "sessionTimeID": "1748983711014001B9W5",
+        "videoDuration": "00:48:21",
+        "thumbnailUrl": "https://images-tv.adobe.com/mpcv3/b8f920e0-0298-4d82-9ec3-c17d4c9ceda9/218375e4-1ac9-4998-8a88-1faeecaf5fc1/f1b0abb00a8447e391ae9d158087196f_1762195551-200x113.jpg",
+        "mpcVideoId": "3458952",
+        "videoId": "3458952",
+        "videoService": "adobeTv"
+      },
+      "overlayLink": "https://www.adobe.com/max/2025/sessions/design-powerhouse-super-session-maximizing-your-cr-ss1.html",
+      "ctaLink": "https://www.adobe.com/max/2025/sessions/design-powerhouse-super-session-maximizing-your-cr-ss1.html"
+    },
+    {
+      "id": "1mzshfc",
+      "styles": {
+        "typeOverride": "caas:card-style/event-session",
+        "backgroundImage": "https://www.adobe.com/content/dam/www/us/en/max/2025/sessions/25MAX-featured-speaker-image-8-S6007-1200x675.jpg",
+        "backgroundAltText": "The Heart and Mind of Editing Award-Winning Music Videos"
+      },
+      "contentArea": {
+        "detailText": "60 min",
+        "title": "The Heart and Mind of Editing Award-Winning Music Videos",
+        "url": "https://www.adobe.com/max/2025/sessions/the-heart-and-mind-of-editing-awardwinning-music-v-s6007.html",
+        "description": "Explore what it means to edit with intention, how to stay inspired when burnout hits, and how to redefine success as an editor"
+      },
+      "search": {
+        "sessionId": "1746565922428001cLTL",
+        "sessionCode": "S6007",
+        "sessionTimeID": "1750974858185001NIos",
+        "videoDuration": "00:34:19",
+        "thumbnailUrl": "https://images-tv.adobe.com/mpcv3/b8f920e0-0298-4d82-9ec3-c17d4c9ceda9/18e1a9d2-3c5b-4fb7-aece-db5cc14187c9/9e21610c8df548a5b2cda091fd9a6162_1762195108-200x113.jpg",
+        "mpcVideoId": "3458867",
+        "videoId": "3458867",
+        "videoService": "adobeTv"
+      },
+      "overlayLink": "https://www.adobe.com/max/2025/sessions/the-heart-and-mind-of-editing-awardwinning-music-v-s6007.html",
+      "ctaLink": "https://www.adobe.com/max/2025/sessions/the-heart-and-mind-of-editing-awardwinning-music-v-s6007.html"
+    },
+    {
+      "id": "3x1mz7b",
+      "styles": {
+        "typeOverride": "caas:card-style/event-session",
+        "backgroundImage": "https://www.adobe.com/content/dam/www/us/en/max/2025/sessions/25MAX-featured-speaker-image-6-S6005-1200x675.jpg",
+        "backgroundAltText": "Sunshine and Storms: Weathering a Creative Life"
+      },
+      "contentArea": {
+        "detailText": "60 min",
+        "title": "Sunshine and Storms: Weathering a Creative Life",
+        "url": "https://www.adobe.com/max/2025/sessions/sunshine-and-storms-weathering-a-creative-life-s6005.html",
+        "description": "Join Tad Carpenter, co-founder of design studio Carpenter Collective, and discover how to build award-winning brand systems that capture hearts and turn heads"
+      },
+      "search": {
+        "sessionId": "1742925647674001gFi7",
+        "sessionCode": "S6005",
+        "sessionTimeID": "1748983567364001aSW8",
+        "videoDuration": "00:58:58",
+        "thumbnailUrl": "https://images-tv.adobe.com/mpcv3/b8f920e0-0298-4d82-9ec3-c17d4c9ceda9/17a05bc6-8b2b-403a-93a0-957d1042bda2/f8841805dde24d6d8f88f344dc6b7889_1762275031-200x113.jpg",
+        "mpcVideoId": "3458865",
+        "videoId": "3458865",
+        "videoService": "adobeTv"
+      },
+      "overlayLink": "https://www.adobe.com/max/2025/sessions/sunshine-and-storms-weathering-a-creative-life-s6005.html",
+      "ctaLink": "https://www.adobe.com/max/2025/sessions/sunshine-and-storms-weathering-a-creative-life-s6005.html"
+    },
+    {
+      "id": "2cwnyyc",
+      "styles": {
+        "typeOverride": "caas:card-style/event-session",
+        "backgroundImage": "https://www.adobe.com/content/dam/www/us/en/max/2025/sessions/25MAX-featured-speaker-image-1-OSS3-SS3-1200x675.jpg",
+        "backgroundAltText": "Super Session: Future-Proofing Your Design Career in the Age of AI"
+      },
+      "contentArea": {
+        "detailText": "60 min",
+        "title": "Super Session: Future-Proofing Your Design Career in the Age of AI",
+        "url": "https://www.adobe.com/max/2025/sessions/super-session-futureproofing-your-design-career-in-ss3.html",
+        "description": "Discover tips to stay relevant and thrive in a changing creative landscape by learning to amplify the human skills AI can't replicate."
+      },
+      "search": {
+        "sessionId": "1742925652515001gP9D",
+        "sessionCode": "SS3",
+        "sessionTimeID": "1748983480840001BUse",
+        "videoDuration": "00:54:52",
+        "thumbnailUrl": "https://images-tv.adobe.com/mpcv3/b8f920e0-0298-4d82-9ec3-c17d4c9ceda9/b320dd02-16b1-4831-9c4c-f01491467102/491de339a9b649caa2d818ec5d237cb0_1762194913-200x113.jpg",
+        "mpcVideoId": "3458954",
+        "videoId": "3458954",
+        "videoService": "adobeTv"
+      },
+      "overlayLink": "https://www.adobe.com/max/2025/sessions/super-session-futureproofing-your-design-career-in-ss3.html",
+      "ctaLink": "https://www.adobe.com/max/2025/sessions/super-session-futureproofing-your-design-career-in-ss3.html"
+    }
+  ],
+  "filters": [],
+  "isHashed": true
+}
+

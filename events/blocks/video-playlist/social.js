@@ -1,5 +1,11 @@
 import { SOCIAL_ICONS } from './constants.js';
 
+const SHARE_MENU_SELECTOR = '.share-menu-wrapper';
+const SHARE_TRIGGER_SELECTOR = '.video-playlist-container__social-share';
+const ACTIVE_CLASS = 'active';
+
+const qs = (selector, root = document) => root.querySelector(selector);
+
 export function createSocialShareMarkup(config) {
   if (!config.socialSharing) return '';
   const url = encodeURIComponent(window.location.href);
@@ -73,48 +79,45 @@ export function createSocialShareMarkup(config) {
     </div>`;
 }
 
-const qs = (selector, root = document) => root.querySelector(selector);
+function closeShareMenu(menu, trigger) {
+  menu.classList.remove(ACTIVE_CLASS);
+  trigger.setAttribute('aria-expanded', 'false');
+}
+
+function handleToggle(event, menu, trigger) {
+  event.stopPropagation();
+  menu.classList.toggle(ACTIVE_CLASS);
+  const isActive = menu.classList.contains(ACTIVE_CLASS);
+  trigger.setAttribute('aria-expanded', isActive ? 'true' : 'false');
+}
+
+function handleShareLinkClick(event, link, onCopy, closeMenu) {
+  const platform = link.dataset.platform;
+  if (platform === 'copy') {
+    event.preventDefault();
+    onCopy?.();
+  } else if (!link.target) {
+    event.preventDefault();
+    window.open(link.href, 'share-window', 'width=600,height=400,scrollbars=yes');
+  }
+  closeMenu();
+}
 
 export function wireSocialShare(root, { onCopy }) {
-  const trigger = qs('.video-playlist-container__social-share', root);
-  const menu = qs('.share-menu-wrapper', root);
+  const trigger = qs(SHARE_TRIGGER_SELECTOR, root);
+  const menu = qs(SHARE_MENU_SELECTOR, root);
+
   if (!trigger || !menu) return () => {};
-
-  const closeMenu = () => {
-    menu.classList.remove('active');
-    trigger.setAttribute('aria-expanded', 'false');
-  };
-
-  const onDocumentClick = () => closeMenu();
+  const boundCloseMenu = () => closeShareMenu(menu, trigger);
+  const onDocumentClick = () => boundCloseMenu();
   document.addEventListener('click', onDocumentClick);
 
-  const onToggle = (event) => {
-    event.stopPropagation();
-    menu.classList.toggle('active');
-    trigger.setAttribute(
-      'aria-expanded',
-      menu.classList.contains('active') ? 'true' : 'false',
-    );
-  };
+  const onToggle = (event) => handleToggle(event, menu, trigger);
   trigger.addEventListener('click', onToggle);
 
   const linkHandlers = [];
   menu.querySelectorAll('a').forEach((link) => {
-    const handler = (event) => {
-      const platform = link.dataset.platform;
-      if (platform === 'copy') {
-        event.preventDefault();
-        onCopy?.();
-        closeMenu();
-        return;
-      }
-      // allow default behaviour but open in controlled window for analytics consistency
-      if (!link.target) {
-        event.preventDefault();
-        window.open(link.href, 'share-window', 'width=600,height=400,scrollbars=yes');
-      }
-      closeMenu();
-    };
+    const handler = (event) => handleShareLinkClick(event, link, onCopy, boundCloseMenu);
     link.addEventListener('click', handler);
     linkHandlers.push(() => link.removeEventListener('click', handler));
   });
@@ -122,8 +125,6 @@ export function wireSocialShare(root, { onCopy }) {
   return () => {
     document.removeEventListener('click', onDocumentClick);
     trigger.removeEventListener('click', onToggle);
-    linkHandlers.forEach((fn) => fn());
+    linkHandlers.forEach((removeListener) => removeListener());
   };
 }
-
-
