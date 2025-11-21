@@ -29,7 +29,6 @@ const [{
   getConfig,
 }, {
   setEventConfig,
-  getEventConfig,
   decorateEvent,
   getNonProdData,
   validatePageAndRedirect,
@@ -73,7 +72,7 @@ function renderWithNonProdMetadata() {
 
   if (!isEventDetailsPage) return false;
 
-  const isLiveProd = getEventConfig().eventServiceEnv.name === 'prod' && window.location.hostname === 'www.adobe.com';
+  const isLiveProd = getEventServiceEnv().name === 'prod' && window.location.hostname === 'www.adobe.com';
   const isMissingEventId = !getMetadata('event-id');
 
   if (!isLiveProd && isMissingEventId) return true;
