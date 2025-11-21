@@ -416,6 +416,7 @@ class VideoPlaylist {
   }
 
   updateProgress(videoId, current, length) {
+    if (!this.sessionsWrapper) return;
     const container = this.sessionsWrapper.querySelector(`[data-video-id="${videoId}"]`);
     if (!container) return;
 
