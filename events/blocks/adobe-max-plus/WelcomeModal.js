@@ -15,8 +15,7 @@ export default function WelcomeModal() {
     // Check if user has already seen the modal
     const hasSeenModal = localStorage.getItem(STORAGE_KEY);
     
-    // Forcing for now to show the modal to all users
-    if (!hasSeenModal || true) {
+    if (!hasSeenModal) {
       // Show modal after a brief delay for better UX
       setTimeout(() => {
         setIsVisible(true);
