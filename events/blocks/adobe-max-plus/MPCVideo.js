@@ -29,6 +29,7 @@ const MPCVideo = ({
   const [error, setError] = useState(null);
   const [scrollProgress, setScrollProgress] = useState(0); // 0 = normal, 1 = full PiP
   const [isHidden, setIsHidden] = useState(false);
+  const [isDismissed, setIsDismissed] = useState(false); // User manually closed PiP
 
   // Construct the video URL with parameters
   const getVideoUrl = () => {
@@ -116,18 +117,33 @@ const MPCVideo = ({
   }, [videoId, onStateChange]);
 
   // Continuous scroll-based transition from normal to PiP
+  // Observe the wrapper itself to track when the video player scrolls out
   useEffect(() => {
-    if (!containerRef.current || !wrapperRef.current) return;
+    if (!wrapperRef.current) return;
 
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
-          // Calculate progress: 1 (fully visible) → 0 (not visible)
           const visibilityRatio = entry.intersectionRatio;
           
-          // Invert so 0 = normal, 1 = PiP
-          // Apply easing for smoother transition
-          const progress = Math.max(0, Math.min(1, 1 - visibilityRatio));
+          // Start transition when 60% visible (40% scrolled past)
+          // Complete transition when 20% visible (80% scrolled past)
+          const transitionStart = 0.6; // Start morphing at 60% visibility
+          const transitionEnd = 0.2;   // End morphing at 20% visibility
+          
+          let progress;
+          if (visibilityRatio >= transitionStart) {
+            progress = 0; // Still mostly in view, normal mode
+          } else if (visibilityRatio <= transitionEnd) {
+            progress = 1; // Mostly scrolled past, full PiP
+          } else {
+            // Linear interpolation between start and end
+            // Map [0.6 → 0.2] to [0 → 1]
+            progress = (transitionStart - visibilityRatio) / (transitionStart - transitionEnd);
+          }
+          
+          // Clamp to ensure valid range
+          progress = Math.max(0, Math.min(1, progress));
           
           setScrollProgress(progress);
 
@@ -138,29 +154,36 @@ const MPCVideo = ({
         });
       },
       {
-        threshold: Array.from({ length: 21 }, (_, i) => i * 0.05), // 0, 0.05, 0.1, ... 1
-        rootMargin: '0px 0px -50px 0px'
+        threshold: Array.from({ length: 61 }, (_, i) => i * (1/60)), // 0, 0.0167, 0.033, ... 1 (very granular)
+        rootMargin: '0px 0px 0px 0px'
       }
     );
 
-    const currentContainer = containerRef.current;
-    observer.observe(currentContainer);
+    const currentWrapper = wrapperRef.current;
+    observer.observe(currentWrapper);
 
     return () => {
-      if (currentContainer) {
-        observer.unobserve(currentContainer);
+      if (currentWrapper) {
+        observer.unobserve(currentWrapper);
       }
     };
   }, []);
 
-  // Determine if we're in PiP mode (scrolled past video)
-  const isPiP = scrollProgress > 0.8;
 
-  // Handle PiP close - scroll back to video
-  const handleClosePiP = () => {
-    if (wrapperRef.current) {
-      wrapperRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  // Reset hidden and dismissed state when returning to normal mode (scrolled back to video)
+  useEffect(() => {
+    if (scrollProgress < 0.1) {
+      if (isHidden) setIsHidden(false);
+      if (isDismissed) setIsDismissed(false);
     }
+  }, [scrollProgress, isHidden, isDismissed]);
+
+  // Determine if we should show PiP (not dismissed and scrolled past)
+  const shouldShowPiP = scrollProgress > 0.5 && !isDismissed;
+
+  // Handle PiP close - dismiss PiP without scrolling
+  const handleClosePiP = () => {
+    setIsDismissed(true);
     setIsHidden(false);
   };
 
@@ -198,15 +221,15 @@ const MPCVideo = ({
       <div \
         ref=${wrapperRef} \
         class="mpc-video-wrapper ${className}" \
-        style="--pip-progress: ${scrollProgress}" \
+        style="--pip-progress: ${isDismissed ? 0 : scrollProgress}" \
       >
         <!-- Single persistent iframe wrapper - continuously transforms based on scroll -->
         <div \
           class="mpc-video-iframe-wrapper ${isHidden ? 'mpc-video-pip-hidden' : ''}" \
-          data-pip-active=${isPiP} \
+          data-pip-active=${shouldShowPiP} \
         >
           <!-- PiP controls - fade in as scroll progress increases -->
-          ${scrollProgress > 0.5 && html`
+          ${shouldShowPiP && scrollProgress > 0.2 && html`
             <div class="mpc-video-pip-controls">
               <button \
                 class="mpc-video-pip-btn mpc-video-pip-hide" \
@@ -253,7 +276,7 @@ const MPCVideo = ({
         </div>
       </div>
 
-      ${isPiP && isHidden && html`
+      ${shouldShowPiP && isHidden && html`
         <button \
           class="mpc-video-pip-tab" \
           onClick=${handleShow} \
