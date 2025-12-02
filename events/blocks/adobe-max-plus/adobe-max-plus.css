@@ -4,12 +4,20 @@
   height: 100%;
 }
 
-/* Scroll detection anchor - positioned below video */
+/* Video wrapper - contains iframe and scroll anchor */
+.mpc-video-wrapper {
+  position: relative;
+}
+
+/* Scroll detection anchor - positioned absolutely at bottom of video */
 .mpc-video-scroll-anchor {
+  position: absolute;
+  bottom: 0;
+  left: 0;
   width: 100%;
-  height: 1px; /* Minimal height for IntersectionObserver tracking */
+  height: 1px;
   pointer-events: none; /* Don't interfere with clicks */
-  visibility: hidden; /* Invisible but still trackable by IntersectionObserver */
+  opacity: 0; /* Invisible but still trackable by IntersectionObserver */
 }
 
 /* Iframe Wrapper - controls positioning based on mode */

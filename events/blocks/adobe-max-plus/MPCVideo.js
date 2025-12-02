@@ -222,53 +222,56 @@ const MPCVideo = ({
   // Single iframe wrapper that repositions with CSS to prevent recreation
   return html`
     <div>
-      <!-- Single persistent iframe wrapper - always rendered, repositioned with CSS -->
-      <div class="mpc-video-iframe-wrapper ${isPiP ? 'mpc-iframe-pip-mode' : 'mpc-iframe-normal-mode'} ${isPiP && isHidden ? 'mpc-video-pip-hidden' : ''}">
-        <!-- PiP controls - only shown in PiP mode -->
-        ${isPiP && html`
-          <div class="mpc-video-pip-controls">
-            <button \
-              class="mpc-video-pip-btn mpc-video-pip-hide" \
-              onClick=${handleHide} \
-              aria-label="Hide video" \
-              title="Hide to side" \
-            >
-              ←
-            </button>
-            <button \
-              class="mpc-video-pip-btn mpc-video-pip-close" \
-              onClick=${handleClosePiP} \
-              aria-label="Close picture-in-picture" \
-              title="Return to page" \
-            >
-              ✕
-            </button>
-          </div>
-        `}
+      <!-- Wrapper for video and scroll anchor to enable absolute positioning -->
+      <div class="mpc-video-wrapper ${className}">
+        <!-- Single persistent iframe wrapper - always rendered, repositioned with CSS -->
+        <div class="mpc-video-iframe-wrapper ${isPiP ? 'mpc-iframe-pip-mode' : 'mpc-iframe-normal-mode'} ${isPiP && isHidden ? 'mpc-video-pip-hidden' : ''}">
+          <!-- PiP controls - only shown in PiP mode -->
+          ${isPiP && html`
+            <div class="mpc-video-pip-controls">
+              <button \
+                class="mpc-video-pip-btn mpc-video-pip-hide" \
+                onClick=${handleHide} \
+                aria-label="Hide video" \
+                title="Hide to side" \
+              >
+                ←
+              </button>
+              <button \
+                class="mpc-video-pip-btn mpc-video-pip-close" \
+                onClick=${handleClosePiP} \
+                aria-label="Close picture-in-picture" \
+                title="Return to page" \
+              >
+                ✕
+              </button>
+            </div>
+          `}
 
-        <!-- Single iframe instance - never unmounted -->
-        <iframe \
-          ref=${iframeRef} \
-          src=${videoUrl} \
-          class="adobetv" \
-          scrolling="no" \
-          allow="encrypted-media; fullscreen" \
-          title=${videoTitle} \
-          data-playing=${isPlaying} \
-          aria-label=${videoTitle} \
-          allowfullscreen \
-          frameborder="0" \
-          width="100%" \
-          height="100%" \
-        />
-      </div>
+          <!-- Single iframe instance - never unmounted -->
+          <iframe \
+            ref=${iframeRef} \
+            src=${videoUrl} \
+            class="adobetv" \
+            scrolling="no" \
+            allow="encrypted-media; fullscreen" \
+            title=${videoTitle} \
+            data-playing=${isPlaying} \
+            aria-label=${videoTitle} \
+            allowfullscreen \
+            frameborder="0" \
+            width="100%" \
+            height="100%" \
+          />
+        </div>
 
-      <!-- Scroll detection anchor positioned BELOW the video -->
-      <div \
-        ref=${containerRef} \
-        class="mpc-video-scroll-anchor ${className}" \
-        data-video-id="${videoId}" \
-      >
+        <!-- Scroll detection anchor positioned absolutely at bottom -->
+        <div \
+          ref=${containerRef} \
+          class="mpc-video-scroll-anchor" \
+          data-video-id="${videoId}" \
+        >
+        </div>
       </div>
 
       ${isPiP && isHidden && html`
