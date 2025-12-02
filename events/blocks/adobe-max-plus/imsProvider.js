@@ -16,18 +16,25 @@ export function IMSProvider({ children }) {
 
   useEffect(() => {
     async function loadIMS() {
-      const { loadIms } = await import(`${LIBS}/utils/utils.js`);
-      await loadIms();
+      try {
+        const { loadIms } = await import(`${LIBS}/utils/utils.js`);
+        await loadIms();
 
-      if (window.adobeIMS.isSignedInUser()) {
-        const profileData = await window.adobeIMS.getProfile();
-        setProfile(profileData);
-      } else {
+        if (window.adobeIMS?.isSignedInUser()) {
+          const profileData = await window.adobeIMS.getProfile();
+          setProfile(profileData);
+        } else {
+          setProfile(null);
+        }
+
+        setLoading(false);
+        setError(null);
+      } catch (err) {
+        console.error('Error loading IMS:', err);
+        setError(err);
         setProfile(null);
+        setLoading(false);
       }
-
-      setLoading(false);
-      setError(null);
     }
     loadIMS();
   }, []);
@@ -41,12 +48,10 @@ export function IMSProvider({ children }) {
     signOut: () => window.adobeIMS?.signOut(),
   };
 
-  console.log('value', value);
-
   return html`
     <${IMSContext.Provider} value=${value}>
       ${children}
-    <//>
+    </${IMSContext.Provider}>
   `;
 }
 
