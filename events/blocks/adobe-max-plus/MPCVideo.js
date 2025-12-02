@@ -24,11 +24,22 @@ const MPCVideo = ({
   const iframeRef = useRef(null);
   const containerRef = useRef(null);
   const pipTransitionTimeoutRef = useRef(null);
+  const isPiPRef = useRef(false);
+  const isPlayingRef = useRef(false);
   const [videoTitle, setVideoTitle] = useState('Adobe Video Publishing Cloud Player');
   const [isPlaying, setIsPlaying] = useState(false);
   const [error, setError] = useState(null);
   const [isPiP, setIsPiP] = useState(false);
   const [isHidden, setIsHidden] = useState(false);
+
+  // Keep refs in sync with state
+  useEffect(() => {
+    isPiPRef.current = isPiP;
+  }, [isPiP]);
+
+  useEffect(() => {
+    isPlayingRef.current = isPlaying;
+  }, [isPlaying]);
 
   // Construct the video URL with parameters
   const getVideoUrl = () => {
@@ -121,47 +132,59 @@ const MPCVideo = ({
   useEffect(() => {
     if (!containerRef.current) return;
 
+    let lastScrollY = window.scrollY;
+
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
+          // Determine scroll direction
+          const currentScrollY = window.scrollY;
+          const scrollDirection = currentScrollY > lastScrollY ? 'down' : 'up';
+          lastScrollY = currentScrollY;
+
           // Clear any pending transition
           if (pipTransitionTimeoutRef.current) {
             clearTimeout(pipTransitionTimeoutRef.current);
             pipTransitionTimeoutRef.current = null;
           }
 
-          // Add debounce to prevent rapid toggling
-          pipTransitionTimeoutRef.current = setTimeout(() => {
-            // Anchor is OUT of view (scrolled past the video) -> Enable PiP
-            if (!entry.isIntersecting && !isPiP && isPlaying) {
+          // Use refs to avoid recreating observer on state changes
+          const currentIsPiP = isPiPRef.current;
+
+          // Scrolling down and anchor is out of view -> Enable PiP
+          if (!entry.isIntersecting && !currentIsPiP && scrollDirection === 'down') {
+            pipTransitionTimeoutRef.current = setTimeout(() => {
               setIsPiP(true);
-            } 
-            // Anchor is back IN view (scrolled back to video area) -> Disable PiP
-            else if (entry.isIntersecting && isPiP) {
+            }, 100);
+          } 
+          // Scrolling up and anchor is back in view -> Disable PiP
+          else if (entry.isIntersecting && currentIsPiP && scrollDirection === 'up') {
+            pipTransitionTimeoutRef.current = setTimeout(() => {
               setIsPiP(false);
               setIsHidden(false);
-            }
-          }, 100);
+            }, 200);
+          }
         });
       },
       { 
         threshold: [0, 1],
-        // Negative bottom margin creates a buffer zone
+        // Buffer zone to prevent activation too early
         rootMargin: '0px 0px -100px 0px'
       }
     );
 
-    observer.observe(containerRef.current);
+    const currentContainer = containerRef.current;
+    observer.observe(currentContainer);
 
     return () => {
       if (pipTransitionTimeoutRef.current) {
         clearTimeout(pipTransitionTimeoutRef.current);
       }
-      if (containerRef.current) {
-        observer.unobserve(containerRef.current);
+      if (currentContainer) {
+        observer.unobserve(currentContainer);
       }
     };
-  }, [isPiP, isPlaying]);
+  }, []); // Empty deps - observer is created once and uses refs for current state
 
   // Handle PiP close
   const handleClosePiP = () => {
