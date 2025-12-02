@@ -4,6 +4,30 @@
   height: 100%;
 }
 
+/* MPC Video Container Styles */
+.mpc-video-container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  position: relative;
+}
+
+/* 16:9 Aspect Ratio */
+.mpc-video-container::before {
+  content: '';
+  display: block;
+  padding-top: 56.25%; /* 16:9 aspect ratio (9/16 = 0.5625) */
+}
+
+.mpc-video-container iframe {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border: none;
+}
+
 /* Welcome Modal Styles */
 .welcome-modal-overlay {
   position: fixed;
