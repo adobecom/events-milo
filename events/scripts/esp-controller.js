@@ -160,13 +160,13 @@ export async function getAttendee() {
     //   };
     // }
     const json = {
-      "firstName": "Shawn",
+      "firstName": "Michael",
       "lastName": "Clark",
       "isGuest": false,
       "companyName": "Adobe",
       "jobTitle": "Animator",
       "attendeeId": "17a929ce63be75c40a495cca@adobeid",
-      "email": "shawn.clark@gmail.com",
+      "email": "michael.clark@gmail.com",
       "creationTime": 1760166130891,
       "modificationTime": 1760166130891
     }
