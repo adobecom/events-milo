@@ -33,14 +33,14 @@ const MPCVideo = ({
     const url = new URL(`https://video.tv.adobe.com/v/${videoId}`);
 
     url.searchParams.set('fullscreen', 'true');
-    url.searchParams.set('autoplay', 'true');
     url.searchParams.set('mute', 'false');
     
-    // Add autoplay parameter
+    // Add autoplay parameter based on prop
     if (autoplay) {
       url.searchParams.set('autoplay', 'true');
+    } else {
+      url.searchParams.set('autoplay', 'false');
     }
-    
     // Add loop/replay parameter
     if (loop) {
       url.searchParams.set('end', 'replay');

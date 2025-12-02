@@ -7,9 +7,8 @@ export default function AdobeMaxPlus() {
   return html`
     <${IMSProvider}>
       <div class="adobe-max-plus">
-        <h1>Adobe Max Plus</h1>
         <${WelcomeModal} />
-        <${MPCVideo} videoId="3458790"/>
+        <${MPCVideo} videoId="3458790" autoplay=${true} />
       </div>
     </${IMSProvider}>
   `;
