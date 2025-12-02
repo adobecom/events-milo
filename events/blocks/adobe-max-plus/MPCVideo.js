@@ -111,34 +111,6 @@ const MPCVideo = ({
     };
   }, [videoId, onStateChange]);
 
-  // Auto-pause when scrolled out of view
-  useEffect(() => {
-    if (!iframeRef.current) return;
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          // If video is playing and scrolled out of view, pause it
-          if (!entry.isIntersecting && isPlaying && iframeRef.current) {
-            iframeRef.current.contentWindow?.postMessage(
-              { type: 'mpcAction', action: 'pause' },
-              iframeRef.current.src
-            );
-          }
-        });
-      },
-      { rootMargin: '0px' }
-    );
-
-    observer.observe(iframeRef.current);
-
-    return () => {
-      if (iframeRef.current) {
-        observer.unobserve(iframeRef.current);
-      }
-    };
-  }, [isPlaying]);
-
   if (error) {
     return html`
       <div class="mpc-video-error" role="alert">
