@@ -23,23 +23,12 @@ const MPCVideo = ({
 }) => {
   const iframeRef = useRef(null);
   const containerRef = useRef(null);
-  const pipTransitionTimeoutRef = useRef(null);
-  const isPiPRef = useRef(false);
-  const isPlayingRef = useRef(false);
+  const wrapperRef = useRef(null);
   const [videoTitle, setVideoTitle] = useState('Adobe Video Publishing Cloud Player');
   const [isPlaying, setIsPlaying] = useState(false);
   const [error, setError] = useState(null);
-  const [isPiP, setIsPiP] = useState(false);
+  const [scrollProgress, setScrollProgress] = useState(0); // 0 = normal, 1 = full PiP
   const [isHidden, setIsHidden] = useState(false);
-
-  // Keep refs in sync with state
-  useEffect(() => {
-    isPiPRef.current = isPiP;
-  }, [isPiP]);
-
-  useEffect(() => {
-    isPlayingRef.current = isPlaying;
-  }, [isPlaying]);
 
   // Construct the video URL with parameters
   const getVideoUrl = () => {
@@ -126,50 +115,31 @@ const MPCVideo = ({
     };
   }, [videoId, onStateChange]);
 
-  // Picture-in-Picture: Detect when video scrolls out of view
-  // The anchor is positioned BELOW the video, so when it's not visible, 
-  // the user has scrolled past the video
+  // Continuous scroll-based transition from normal to PiP
   useEffect(() => {
-    if (!containerRef.current) return;
-
-    let lastScrollY = window.scrollY;
+    if (!containerRef.current || !wrapperRef.current) return;
 
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
-          // Determine scroll direction
-          const currentScrollY = window.scrollY;
-          const scrollDirection = currentScrollY > lastScrollY ? 'down' : 'up';
-          lastScrollY = currentScrollY;
+          // Calculate progress: 1 (fully visible) → 0 (not visible)
+          const visibilityRatio = entry.intersectionRatio;
+          
+          // Invert so 0 = normal, 1 = PiP
+          // Apply easing for smoother transition
+          const progress = Math.max(0, Math.min(1, 1 - visibilityRatio));
+          
+          setScrollProgress(progress);
 
-          // Clear any pending transition
-          if (pipTransitionTimeoutRef.current) {
-            clearTimeout(pipTransitionTimeoutRef.current);
-            pipTransitionTimeoutRef.current = null;
-          }
-
-          // Use refs to avoid recreating observer on state changes
-          const currentIsPiP = isPiPRef.current;
-
-          // Scrolling down and anchor is out of view -> Enable PiP
-          if (!entry.isIntersecting && !currentIsPiP && scrollDirection === 'down') {
-            pipTransitionTimeoutRef.current = setTimeout(() => {
-              setIsPiP(true);
-            }, 100);
-          } 
-          // Scrolling up and anchor is back in view -> Disable PiP
-          else if (entry.isIntersecting && currentIsPiP && scrollDirection === 'up') {
-            pipTransitionTimeoutRef.current = setTimeout(() => {
-              setIsPiP(false);
-              setIsHidden(false);
-            }, 200);
+          // Update CSS custom properties for smooth animation
+          if (wrapperRef.current) {
+            wrapperRef.current.style.setProperty('--pip-progress', progress.toString());
           }
         });
       },
-      { 
-        threshold: [0, 1],
-        // Buffer zone to prevent activation too early
-        rootMargin: '0px 0px -100px 0px'
+      {
+        threshold: Array.from({ length: 21 }, (_, i) => i * 0.05), // 0, 0.05, 0.1, ... 1
+        rootMargin: '0px 0px -50px 0px'
       }
     );
 
@@ -177,18 +147,20 @@ const MPCVideo = ({
     observer.observe(currentContainer);
 
     return () => {
-      if (pipTransitionTimeoutRef.current) {
-        clearTimeout(pipTransitionTimeoutRef.current);
-      }
       if (currentContainer) {
         observer.unobserve(currentContainer);
       }
     };
-  }, []); // Empty deps - observer is created once and uses refs for current state
+  }, []);
 
-  // Handle PiP close
+  // Determine if we're in PiP mode (scrolled past video)
+  const isPiP = scrollProgress > 0.8;
+
+  // Handle PiP close - scroll back to video
   const handleClosePiP = () => {
-    setIsPiP(false);
+    if (wrapperRef.current) {
+      wrapperRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
     setIsHidden(false);
   };
 
@@ -219,15 +191,22 @@ const MPCVideo = ({
     `;
   }
 
-  // Single iframe wrapper that repositions with CSS to prevent recreation
+  // Single iframe wrapper that morphs smoothly based on scroll
   return html`
     <div>
-      <!-- Wrapper for video and scroll anchor to enable absolute positioning -->
-      <div class="mpc-video-wrapper ${className}">
-        <!-- Single persistent iframe wrapper - always rendered, repositioned with CSS -->
-        <div class="mpc-video-iframe-wrapper ${isPiP ? 'mpc-iframe-pip-mode' : 'mpc-iframe-normal-mode'} ${isPiP && isHidden ? 'mpc-video-pip-hidden' : ''}">
-          <!-- PiP controls - only shown in PiP mode -->
-          ${isPiP && html`
+      <!-- Wrapper for video and scroll anchor -->
+      <div \
+        ref=${wrapperRef} \
+        class="mpc-video-wrapper ${className}" \
+        style="--pip-progress: ${scrollProgress}" \
+      >
+        <!-- Single persistent iframe wrapper - continuously transforms based on scroll -->
+        <div \
+          class="mpc-video-iframe-wrapper ${isHidden ? 'mpc-video-pip-hidden' : ''}" \
+          data-pip-active=${isPiP} \
+        >
+          <!-- PiP controls - fade in as scroll progress increases -->
+          ${scrollProgress > 0.5 && html`
             <div class="mpc-video-pip-controls">
               <button \
                 class="mpc-video-pip-btn mpc-video-pip-hide" \
