@@ -2,6 +2,7 @@ import { createContext } from '../../scripts/deps/preact/index.js';
 import { useState, useEffect, useContext } from '../../scripts/deps/preact/hooks/index.js';
 import html from '../../scripts/html.js';
 import sessionsData from './mock/sessions-data.json' with { type: 'json' };
+import { useIMS } from './imsProvider.js';
 
 // Create the Sessions context
 const SessionsContext = createContext(null);
@@ -22,6 +23,7 @@ const TRACKS_CONFIG = [
  * Sessions Provider component that manages session data and user schedule
  */
 export function SessionsProvider({ children }) {
+  const { profile } = useIMS();
   const [sessions, setSessions] = useState([]);
   const [tracks, setTracks] = useState([]);
   const [userSchedule, setUserSchedule] = useState([]);
@@ -67,12 +69,22 @@ export function SessionsProvider({ children }) {
           };
         });
 
-        console.log('Tracks built:', builtTracks);
-        setTracks(builtTracks);
-
-        // Mock user schedule with a few sessions from sessions data
+        
+        // Mock user schedule with random sessions from sessions data
         // In the future, this would come from a user schedule API
-        const mockSchedule = allSessions.slice(0, 3).map((session) => session.id);
+        const shuffled = [...allSessions].sort(() => 0.5 - Math.random());
+        const mockSchedule = shuffled.slice(0, 6).map((session) => session.id);
+
+        // Create user track with profile name or fallback
+        const userName = profile?.first_name || "My";
+        const userTrack = { 
+          videoId: "3458790", 
+          name: `${userName}'s sessions`, 
+          sessions: mockSchedule, 
+          id: "user-sessions" 
+        };
+
+        setTracks([userTrack, ...builtTracks]);
         setUserSchedule(mockSchedule);
 
         setLoading(false);
@@ -88,7 +100,7 @@ export function SessionsProvider({ children }) {
     }
     
     loadSessions();
-  }, []);
+  }, [profile]);
 
   /**
    * Add a session to the user's schedule
