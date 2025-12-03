@@ -77,6 +77,21 @@
   z-index: 10;
 }
 
+.mpc-video-pip-drag-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 5;
+  cursor: grab;
+  touch-action: pan-y;
+}
+
+.mpc-video-pip-drag-overlay:active {
+  cursor: grabbing;
+}
+
 .mpc-video-pip-btn {
   width: 32px;
   height: 32px;
@@ -116,7 +131,7 @@
   border: none;
   border-radius: 12px 0 0 12px;
   color: white;
-  cursor: pointer;
+  cursor: grab;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -124,6 +139,11 @@
   z-index: 9999;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   animation: tabPulse 2s ease-in-out infinite;
+  touch-action: pan-y;
+}
+
+.mpc-video-pip-tab:active {
+  cursor: grabbing;
 }
 
 @keyframes tabPulse {
