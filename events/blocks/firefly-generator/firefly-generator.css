@@ -1,0 +1,415 @@
+/* Firefly Generator Block Styles */
+
+.firefly-generator {
+  --ff-bg-gradient: linear-gradient(135deg, #1a1a2e 0%, #4a1942 50%, #1a1a2e 100%);
+  --ff-card-bg: rgba(30, 30, 40, 0.95);
+  --ff-primary: #4f6cf7;
+  --ff-primary-hover: #6b82f9;
+  --ff-text: #ffffff;
+  --ff-text-muted: #a0a0b0;
+  --ff-border: rgba(255, 255, 255, 0.08);
+  --ff-input-bg: transparent;
+  --ff-radius-lg: 24px;
+  --ff-radius-md: 16px;
+  --ff-radius-sm: 12px;
+  --ff-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  --ff-font: 'Adobe Clean', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+
+  font-family: var(--ff-font);
+  padding: 60px 24px;
+  background: var(--ff-bg-gradient);
+  min-height: 400px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.firefly-container {
+  width: 100%;
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+/* Title */
+.firefly-title {
+  font-size: 2.5rem;
+  font-weight: 800;
+  color: var(--ff-text);
+  text-align: center;
+  margin: 0 0 32px;
+  letter-spacing: -0.02em;
+  text-shadow: 0 2px 20px rgba(0, 0, 0, 0.3);
+}
+
+/* Prompt Box */
+.firefly-prompt-box {
+  background: var(--ff-card-bg);
+  border-radius: var(--ff-radius-lg);
+  padding: 24px;
+  box-shadow: var(--ff-shadow);
+  border: 1px solid var(--ff-border);
+  backdrop-filter: blur(20px);
+}
+
+/* Label */
+.firefly-label {
+  display: block;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  color: var(--ff-text-muted);
+  margin-bottom: 12px;
+}
+
+/* Input Wrapper */
+.firefly-input-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Textarea */
+.firefly-input {
+  width: 100%;
+  min-height: 80px;
+  padding: 0;
+  font-size: 1.25rem;
+  font-family: var(--ff-font);
+  font-style: italic;
+  color: var(--ff-text);
+  background: var(--ff-input-bg);
+  border: none;
+  outline: none;
+  resize: none;
+  line-height: 1.5;
+}
+
+.firefly-input::placeholder {
+  color: var(--ff-text-muted);
+  opacity: 0.7;
+}
+
+.firefly-input:focus {
+  outline: none;
+}
+
+/* Generate Button */
+.firefly-generate-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  align-self: flex-end;
+  padding: 14px 28px;
+  font-size: 1.125rem;
+  font-weight: 700;
+  font-family: var(--ff-font);
+  color: var(--ff-text);
+  background: var(--ff-primary);
+  border: none;
+  border-radius: 100px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 16px rgba(79, 108, 247, 0.4);
+}
+
+.firefly-generate-btn:hover:not(:disabled) {
+  background: var(--ff-primary-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(79, 108, 247, 0.5);
+}
+
+.firefly-generate-btn:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.firefly-generate-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.firefly-generate-btn.loading {
+  pointer-events: none;
+}
+
+.firefly-btn-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+}
+
+.firefly-btn-icon svg {
+  width: 20px;
+  height: 20px;
+}
+
+.firefly-btn-text {
+  white-space: nowrap;
+}
+
+/* Result Area */
+.firefly-result {
+  margin-top: 32px;
+  animation: ffGeneratorFadeIn 0.3s ease;
+}
+
+.firefly-result.hidden {
+  display: none;
+}
+
+/* Loading State */
+.firefly-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 24px;
+  background: var(--ff-card-bg);
+  border-radius: var(--ff-radius-lg);
+  border: 1px solid var(--ff-border);
+}
+
+.firefly-loading.hidden {
+  display: none;
+}
+
+.firefly-spinner {
+  width: 48px;
+  height: 48px;
+  border: 3px solid var(--ff-border);
+  border-top-color: var(--ff-primary);
+  border-radius: 50%;
+  animation: ffGeneratorSpin 1s linear infinite;
+}
+
+.firefly-loading-text {
+  margin-top: 16px;
+  font-size: 1rem;
+  color: var(--ff-text-muted);
+}
+
+/* Image Container */
+.firefly-image-container {
+  background: var(--ff-card-bg);
+  border-radius: var(--ff-radius-lg);
+  padding: 16px;
+  border: 1px solid var(--ff-border);
+  overflow: hidden;
+}
+
+.firefly-image-container.hidden {
+  display: none;
+}
+
+.firefly-generated-image {
+  width: 100%;
+  height: auto;
+  border-radius: var(--ff-radius-md);
+  display: block;
+}
+
+.firefly-image-actions {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--ff-border);
+}
+
+.firefly-download-btn {
+  display: inline-flex;
+  align-items: center;
+  padding: 10px 20px;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--ff-text);
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 100px;
+  text-decoration: none;
+  transition: background 0.2s ease;
+}
+
+.firefly-download-btn:hover {
+  background: rgba(255, 255, 255, 0.15);
+  color: var(--ff-text);
+}
+
+/* Redirect Notice */
+.firefly-redirect-notice {
+  text-align: center;
+  padding: 48px 32px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.firefly-redirect-icon {
+  width: 64px;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, var(--ff-primary) 0%, #9b59b6 100%);
+  border-radius: 50%;
+  margin-bottom: 16px;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+.firefly-redirect-icon svg {
+  width: 32px;
+  height: 32px;
+  color: white;
+}
+
+.firefly-redirect-message {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--ff-text);
+  margin: 0;
+}
+
+.firefly-prompt-preview {
+  font-size: 1rem;
+  font-style: italic;
+  color: var(--ff-text-muted);
+  margin: 8px 0 24px;
+  max-width: 400px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.firefly-open-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 16px 32px;
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--ff-text);
+  background: linear-gradient(90deg, #D73220 0%, #D92361 33%, #7155FA 100%);
+  border-radius: 100px;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 20px rgba(215, 50, 32, 0.3);
+}
+
+.firefly-open-link:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 24px rgba(215, 50, 32, 0.4);
+  color: var(--ff-text);
+}
+
+.firefly-redirect-hint {
+  font-size: 0.875rem;
+  color: var(--ff-text-muted);
+  margin: 16px 0 0;
+  opacity: 0.7;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(79, 108, 247, 0.4);
+  }
+  50% {
+    transform: scale(1.05);
+    box-shadow: 0 0 20px 10px rgba(79, 108, 247, 0);
+  }
+}
+
+/* Error State */
+.firefly-error {
+  padding: 16px 24px;
+  background: rgba(220, 53, 69, 0.15);
+  border: 1px solid rgba(220, 53, 69, 0.3);
+  border-radius: var(--ff-radius-sm);
+  color: #ff6b7a;
+  font-size: 0.9375rem;
+  text-align: center;
+}
+
+.firefly-error.hidden {
+  display: none;
+}
+
+/* Animations */
+@keyframes ffGeneratorFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes ffGeneratorSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .firefly-generator {
+    padding: 40px 16px;
+  }
+
+  .firefly-title {
+    font-size: 1.75rem;
+    margin-bottom: 24px;
+  }
+
+  .firefly-prompt-box {
+    padding: 20px;
+    border-radius: var(--ff-radius-md);
+  }
+
+  .firefly-input {
+    font-size: 1.0625rem;
+  }
+
+  .firefly-generate-btn {
+    width: 100%;
+    justify-content: center;
+    padding: 16px 24px;
+  }
+
+  .firefly-result {
+    margin-top: 24px;
+  }
+
+  .firefly-loading,
+  .firefly-image-container {
+    border-radius: var(--ff-radius-md);
+  }
+}
+
+@media (max-width: 480px) {
+  .firefly-title {
+    font-size: 1.5rem;
+  }
+
+  .firefly-prompt-box {
+    padding: 16px;
+  }
+
+  .firefly-label {
+    font-size: 0.875rem;
+  }
+
+  .firefly-input {
+    font-size: 1rem;
+    min-height: 60px;
+  }
+
+  .firefly-generate-btn {
+    font-size: 1rem;
+  }
+}
+

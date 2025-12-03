@@ -6,6 +6,8 @@ import WelcomeModal from './WelcomeModal.js';
 import MPCVideo from './MPCVideo.js';
 import TrackSelector from './TrackSelector.js';
 import SessionDrawer from './SessionDrawer.js';
+import FireflyGenerator from './FireflyGenerator.js';
+import FireflyGallery from './FireflyGallery.js';
 
 /**
  * Main content component that has access to provider data
@@ -35,12 +37,6 @@ export default function AdobeMaxPlusContent() {
     setShouldOpenDrawer(true);
   };
 
-  const handleAIChatOpen = () => {
-    // Placeholder for AI chat modal
-    // TODO: Open AI chat modal when implemented
-    console.log('AI Chat button clicked - opening AI assistant...');
-  };
-
   // Find the current track
   const currentTrack = tracks.find((track) => track.id === selectedTrack);
   const currentVideoId = currentTrack?.videoId || tracks[0]?.videoId;
@@ -65,15 +61,24 @@ export default function AdobeMaxPlusContent() {
         selectedTrack=${selectedTrack} \
         onTrackSelect=${handleTrackSelect} \
       />
+      <${FireflyGenerator} \
+        title="Create with Firefly" \
+        promptLabel="Prompt" \
+        placeholder="Describe the image you want to generate" \
+        buttonText="Generate" \
+      />
+      <${FireflyGallery} \
+        title="Remix with the community." \
+        category="VideoGeneration" \
+        count=${6} \
+      />
       <div style="height: 100vh; background-color: red;" />
       <${SessionDrawer} \
         selectedTrack=${selectedTrack} \
         isOpen=${drawerOpen} \
         onToggle=${setDrawerOpen} \
         openOnMount=${shouldOpenDrawer} \
-        onAIChatOpen=${handleAIChatOpen} \
       />
     </div>
   `;
 }
-
