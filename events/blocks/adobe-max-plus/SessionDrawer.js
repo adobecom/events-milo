@@ -1,6 +1,7 @@
 import html from '../../scripts/html.js';
 import { useState, useEffect, useRef } from '../../scripts/deps/preact/hooks/index.js';
 import { useSessions } from './sessionProvider.js';
+import LiveSessionCard from './LiveSessionCard.js';
 
 const DRAWER_STORAGE_KEY = 'adobe-max-plus-drawer-opened';
 
@@ -239,6 +240,13 @@ export default function SessionDrawer({ selectedTrack, isOpen, onToggle, openOnM
             <p>No sessions available for this track.</p>
           </div>
         ` : html`
+          ${sessions[0] && html`
+            <${LiveSessionCard} \
+              session=${sessions[0]} \
+              onScheduleToggle=${handleScheduleToggle} \
+              isInSchedule=${isInSchedule} \
+            />
+          `}
           <div class="session-drawer-list">
             ${sessions.map((session) => {
               const isLive = isSessionLive(session.sessionStartTime, session.sessionEndTime);
@@ -258,12 +266,6 @@ export default function SessionDrawer({ selectedTrack, isOpen, onToggle, openOnM
 
               return html`
                 <div key=${selectedTrack + '-' + session.id} class="session-card">
-                  ${isLive ? html`
-                    <div class="session-live-badge">
-                      <span class="session-live-dot"></span>
-                      Live now
-                    </div>
-                  ` : null}
 
                   <div class="session-card-time">${startTime}</div>
 
@@ -309,15 +311,7 @@ export default function SessionDrawer({ selectedTrack, isOpen, onToggle, openOnM
                   </div>
 
                   <div class="session-card-actions">
-                    ${isLive ? html`
-                      <button class="session-btn session-btn-primary">
-                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                          <path d="M3 2L13 8L3 14V2Z" fill="currentColor"/>
-                        </svg>
-                        Watch now
-                      </button>
-                    ` : html`
-                      <button \
+                    <button \
                         class="session-btn ${inSchedule ? 'session-btn-added' : 'session-btn-secondary'}" \
                         onClick=${(e) => handleScheduleToggle(session.id, e)} \
                       >
@@ -328,7 +322,6 @@ export default function SessionDrawer({ selectedTrack, isOpen, onToggle, openOnM
                           Added
                         ` : 'Add to schedule'}
                       </button>
-                    `}
                   </div>
                 </div>
               `;
