@@ -35,6 +35,12 @@ export default function AdobeMaxPlusContent() {
     setShouldOpenDrawer(true);
   };
 
+  const handleAIChatOpen = () => {
+    // Placeholder for AI chat modal
+    // TODO: Open AI chat modal when implemented
+    console.log('AI Chat button clicked - opening AI assistant...');
+  };
+
   // Find the current track
   const currentTrack = tracks.find((track) => track.id === selectedTrack);
   const currentVideoId = currentTrack?.videoId || tracks[0]?.videoId;
@@ -65,6 +71,7 @@ export default function AdobeMaxPlusContent() {
         isOpen=${drawerOpen} \
         onToggle=${setDrawerOpen} \
         openOnMount=${shouldOpenDrawer} \
+        onAIChatOpen=${handleAIChatOpen} \
       />
     </div>
   `;

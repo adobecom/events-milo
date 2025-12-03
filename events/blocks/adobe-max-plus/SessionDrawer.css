@@ -54,11 +54,33 @@
   display: flex;
   align-items: center;
   width: 100%;
+  justify-content: space-between;
 }
 
 .session-drawer-header-content-left {
   display: flex;
   align-items: center;
+}
+
+.session-drawer-header-content-right-button {
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  outline: none;
+  transition: opacity 0.2s ease;
+}
+
+.session-drawer-header-content-right-button:hover {
+  opacity: 0.8;
+}
+
+.session-drawer-header-content-right-button:active {
+  opacity: 0.6;
 }
 
 .session-drawer-title {
