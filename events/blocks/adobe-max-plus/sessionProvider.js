@@ -130,7 +130,7 @@ export function SessionsProvider({ children }) {
    * @returns {boolean} True if the session is in the schedule
    */
   const isInSchedule = (sessionId) => {
-    return userSchedule.includes(sessionId);
+    return userSchedule.some((session) => session.id === sessionId);
   };
 
   /**

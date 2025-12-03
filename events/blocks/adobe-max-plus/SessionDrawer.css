@@ -36,7 +36,7 @@
   gap: 12px;
   position: relative;
   flex-shrink: 0;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  height: 40px;
 }
 
 .session-drawer-handle {
@@ -44,7 +44,7 @@
   top: 8px;
   left: 50%;
   transform: translateX(-50%);
-  width: 40px;
+  width: 120px;
   height: 4px;
   background: rgba(255, 255, 255, 0.3);
   border-radius: 2px;
@@ -318,15 +318,16 @@
 /* ===== RESPONSIVE (MOBILE) ===== */
 @media (max-width: 600px) {
   .session-drawer.closed {
-    height: 60px;
+    height: 68px;
   }
 
   .session-drawer-header {
-    padding: 12px 16px;
+    padding: 14px 17px;
   }
 
   .session-drawer-title {
-    font-size: 16px;
+    font-size: 18px;
+    font-weight: 800;
   }
 
   .session-drawer-list {

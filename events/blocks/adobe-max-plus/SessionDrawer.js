@@ -57,8 +57,6 @@ export default function SessionDrawer({ selectedTrack, isOpen, onToggle, openOnM
   const trackName = currentTrack?.name || 'Sessions';
   const sessions = currentTrack?.sessions || [];
 
-  console.log('sessions', sessions);
-
   // Auto-open drawer on mount if requested (first-time flow)
   useEffect(() => {
     const hasAutoOpened = localStorage.getItem(DRAWER_STORAGE_KEY);
@@ -209,7 +207,7 @@ export default function SessionDrawer({ selectedTrack, isOpen, onToggle, openOnM
               
               // Get speaker photos
               const speakers = session.eventSpeakers || [];
-              const speakerPhotos = speakers.slice(0, 4).map(s => s.profilePicture).filter(Boolean);
+              const speakerPhotos = speakers.slice(0, 4).map(s => s.backgroundImage).filter(Boolean);
               
               // Get product tags for display
               const productTags = (session.tags || [])
