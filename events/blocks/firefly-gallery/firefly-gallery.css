@@ -82,6 +82,27 @@
   aspect-ratio: 3 / 4;
 }
 
+/* User generated card highlight */
+.gallery-card.user-generated {
+  position: relative;
+  box-shadow: 0 0 0 2px rgba(82, 0, 144, 0.6);
+}
+
+.gallery-card.user-generated::after {
+  content: 'Your Creation';
+  position: absolute;
+  bottom: 8px;
+  left: 8px;
+  padding: 4px 8px;
+  background: linear-gradient(90deg, #520090 0%, #992C87 100%);
+  color: #fff;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
 /* Loading State */
 .gallery-loading {
   display: flex;
