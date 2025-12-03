@@ -7,7 +7,7 @@ const STORAGE_KEY = 'adobe-max-plus-welcome-seen';
 /**
  * Welcome Modal component that shows on first visit
  */
-export default function WelcomeModal() {
+export default function WelcomeModal({ onClose }) {
   const [isVisible, setIsVisible] = useState(false);
   const { profile } = useIMS();
 
@@ -27,6 +27,11 @@ export default function WelcomeModal() {
     // Mark modal as seen in localStorage
     localStorage.setItem(STORAGE_KEY, 'true');
     setIsVisible(false);
+    
+    // Trigger onClose callback if provided
+    if (onClose) {
+      onClose();
+    }
   };
 
   if (!isVisible) {

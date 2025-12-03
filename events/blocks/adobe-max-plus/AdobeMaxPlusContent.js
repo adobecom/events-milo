@@ -5,6 +5,7 @@ import { useIMS } from './imsProvider.js';
 import WelcomeModal from './WelcomeModal.js';
 import MPCVideo from './MPCVideo.js';
 import TrackSelector from './TrackSelector.js';
+import SessionDrawer from './SessionDrawer.js';
 
 /**
  * Main content component that has access to provider data
@@ -17,6 +18,8 @@ export default function AdobeMaxPlusContent() {
   console.log('tracks', tracks);
 
   const [selectedTrack, setSelectedTrack] = useState(null);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [shouldOpenDrawer, setShouldOpenDrawer] = useState(false);
 
   // Set initial track once tracks are loaded
   if (!selectedTrack && tracks.length > 0) {
@@ -25,6 +28,11 @@ export default function AdobeMaxPlusContent() {
 
   const handleTrackSelect = (trackId) => {
     setSelectedTrack(trackId);
+  };
+
+  const handleModalClose = () => {
+    // Signal drawer to open after modal closes (first-time flow)
+    setShouldOpenDrawer(true);
   };
 
   // Find the current track
@@ -44,7 +52,7 @@ export default function AdobeMaxPlusContent() {
 
   return html`
     <div class="adobe-max-plus">
-      <${WelcomeModal} />
+      <${WelcomeModal} onClose=${handleModalClose} />
       <${MPCVideo} videoId=${currentVideoId} autoplay=${true} />
       <${TrackSelector} \
         tracks=${tracks} \
@@ -52,6 +60,12 @@ export default function AdobeMaxPlusContent() {
         onTrackSelect=${handleTrackSelect} \
       />
       <div style="height: 100vh; background-color: red;" />
+      <${SessionDrawer} \
+        selectedTrack=${selectedTrack} \
+        isOpen=${drawerOpen} \
+        onToggle=${setDrawerOpen} \
+        openOnMount=${shouldOpenDrawer} \
+      />
     </div>
   `;
 }
