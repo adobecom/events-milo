@@ -80,6 +80,9 @@ export default function SessionDrawer({ selectedTrack, isOpen, onToggle, openOnM
   const handleDragMove = (e) => {
     if (!isDragging) return;
     
+    // Prevent default scrolling behavior
+    e.preventDefault();
+    
     const clientY = e.type === 'touchmove' ? e.touches[0].clientY : e.clientY;
     const offset = clientY - dragStartY;
     
