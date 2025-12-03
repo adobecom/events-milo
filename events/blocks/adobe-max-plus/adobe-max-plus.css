@@ -125,48 +125,39 @@
   position: fixed;
   right: 0;
   top: 120px;
-  width: 48px;
-  height: 72px;
-  background: linear-gradient(135deg, #1473E6 0%, #0D66D0 100%);
+  width: 44px;
+  height: 80px;
+  background: rgba(58, 58, 58, 0.95);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
   border: none;
-  border-radius: 12px 0 0 12px;
-  color: white;
+  border-radius: 16px 0 0 16px;
+  color: rgba(255, 255, 255, 0.85);
   cursor: grab;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: -4px 4px 16px rgba(0, 0, 0, 0.3);
+  box-shadow: -2px 0 12px rgba(0, 0, 0, 0.3);
   z-index: 9999;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  animation: tabPulse 2s ease-in-out infinite;
+  transition: all 0.2s ease-out;
   touch-action: pan-y;
 }
 
+.mpc-video-pip-tab:hover {
+  background: rgba(58, 58, 58, 1);
+  color: rgba(255, 255, 255, 1);
+  box-shadow: -2px 0 16px rgba(0, 0, 0, 0.4);
+}
+
 .mpc-video-pip-tab:active {
+  background: rgba(70, 70, 70, 0.95);
+  transform: scale(0.97);
   cursor: grabbing;
 }
 
-@keyframes tabPulse {
-  0%, 100% {
-    box-shadow: -4px 4px 16px rgba(20, 115, 230, 0.4);
-  }
-  50% {
-    box-shadow: -4px 4px 24px rgba(20, 115, 230, 0.8);
-  }
-}
-
-.mpc-video-pip-tab:hover {
-  transform: translateX(-6px) scale(1.05);
-  background: linear-gradient(135deg, #0D66D0 0%, #0A59B8 100%);
-}
-
-.mpc-video-pip-tab:active {
-  transform: translateX(-3px) scale(0.95);
-}
-
 .mpc-video-pip-tab svg {
-  width: 24px;
-  height: 24px;
+  width: 18px;
+  height: 28px;
 }
 
 /* ===== WELCOME MODAL ===== */
@@ -330,12 +321,14 @@
 
   .mpc-video-pip-tab {
     width: 40px;
-    height: 60px;
+    height: 70px;
     top: 80px;
+    border-radius: 14px 0 0 14px;
   }
 
-  .mpc-video-pip-tab:hover {
-    transform: translateX(-4px) scale(1.05);
+  .mpc-video-pip-tab svg {
+    width: 16px;
+    height: 24px;
   }
 
   .mpc-video-pip-btn {

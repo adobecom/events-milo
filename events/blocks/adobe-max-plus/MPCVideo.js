@@ -335,7 +335,7 @@ const MPCVideo = ({
               ? `transform: translateX(${dragOffset}px); opacity: ${Math.max(0.5, 1 - dragOffset / 200)}; transition: none;` 
               : showDragOffset < 0 && isHidden
                 ? `transform: translateX(calc(100% + 16px + ${showDragOffset}px)); opacity: ${Math.min(1, Math.abs(showDragOffset) / 150)}; transition: none;`
-                : 'transition: transform 0.3s ease-out, opacity 0.3s ease-out;'
+                : ''
           }" \
         >
           <!-- Drag handle overlay for swipe gestures - only in PiP mode, not hidden -->
@@ -391,10 +391,10 @@ const MPCVideo = ({
           onClick=${handleShow} \
           aria-label="Show video" \
           title="Show video or swipe left to reveal" \
-          style="${showDragOffset < 0 ? `transform: translateX(${showDragOffset}px); transition: none;` : 'transition: transform 0.3s ease-out;'}" \
+          style="${showDragOffset < 0 ? `transform: translateX(${showDragOffset}px); transition: none;` : ''}" \
         >
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-            <path d="M8 5v14l11-7z" fill="currentColor"/>
+          <svg width="18" height="28" viewBox="0 0 18 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M11 22L5 14L11 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity="0.7"/>
           </svg>
         </button>
       `}
