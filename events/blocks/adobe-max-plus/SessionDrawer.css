@@ -88,6 +88,7 @@
   pointer-events: none;
   transition: opacity 0.2s ease-in-out;
   background: #1a1a1a;
+  overscroll-behavior: contain;
 }
 
 .session-drawer.open .session-drawer-content {

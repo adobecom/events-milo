@@ -9,6 +9,8 @@ const SessionsContext = createContext(null);
 
 // const CHIMERA_ENDPOINT = "https://www.adobe.com/chimera-api/collection?originSelection=northstar&contentTypeTags=&secondSource=&secondaryTags=&collectionTags=&excludeContentWithTags=&language=en&country=us&complexQuery=%28%22caas%3Aevents%2Fmax%22%2BAND%2B%22caas%3Aevents%2Fsession-format%2Fonline%22%2BAND%2B%22caas%3Aevents%2Fyear%2F2025%22%29&excludeIds=&currentEntityId=&featuredCards=&environment=&draft=false&size=200&flatFile=false"
 
+const STORAGE_KEY = 'adobe-max-plus-user-schedule';
+
 const TRACKS_CONFIG = [
   { id: 'caas:events/max/primary-track/live-broadcast', name: 'Mainstage', videoId: '3458791' },
   { id: 'caas:events/max/category/generative-ai', name: 'Generative AI', videoId: '3458792' },
@@ -56,8 +58,8 @@ export function SessionsProvider({ children }) {
 
           // Sort sessions by sessionStartTime
           const sortedSessions = matchedSessions.sort((a, b) => {
-            const timeA = a.search?.sessionStartTime || '';
-            const timeB = b.search?.sessionStartTime || '';
+            const timeA = a.sessionStartTime || '';
+            const timeB = b.sessionStartTime || '';
             return timeA.localeCompare(timeB);
           });
 
@@ -69,11 +71,45 @@ export function SessionsProvider({ children }) {
           };
         });
 
-        
-        // Mock user schedule with random sessions from sessions data
-        // In the future, this would come from a user schedule API
-        const shuffled = [...allSessions].sort(() => 0.5 - Math.random());
-        const mockSchedule = shuffled.slice(0, 6).map((session) => session);
+        // Check localStorage for existing schedule
+        let mockSchedule = [];
+        try {
+          const savedSchedule = localStorage.getItem(STORAGE_KEY);
+          if (savedSchedule) {
+            const savedSessionIds = JSON.parse(savedSchedule);
+            // Reconstruct full session objects from saved IDs
+            mockSchedule = savedSessionIds
+              .map((id) => allSessions.find((session) => session.id === id))
+              .filter(Boolean) // Remove any sessions that no longer exist
+              .sort((a, b) => {
+                const timeA = a.sessionStartTime || '';
+                const timeB = b.sessionStartTime || '';
+                return timeA.localeCompare(timeB);
+              });
+            console.log('Loaded user schedule from localStorage:', mockSchedule.length, 'sessions');
+          }
+        } catch (storageError) {
+          console.warn('Error reading from localStorage:', storageError);
+        }
+
+        // If no saved schedule, create a random mock schedule
+        if (mockSchedule.length === 0) {
+          const shuffled = [...allSessions].sort(() => 0.5 - Math.random());
+          mockSchedule = shuffled.slice(0, 6).map((session) => session).sort((a, b) => {
+            const timeA = a.sessionStartTime || '';
+            const timeB = b.sessionStartTime || '';
+            return timeA.localeCompare(timeB);
+          });
+          
+          // Save the initial schedule to localStorage
+          try {
+            const scheduleIds = mockSchedule.map((session) => session.id);
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(scheduleIds));
+            console.log('Created and saved new user schedule to localStorage');
+          } catch (storageError) {
+            console.warn('Error saving to localStorage:', storageError);
+          }
+        }
 
         // Create user track with profile name or fallback
         const userName = profile?.first_name || "My";
@@ -102,15 +138,47 @@ export function SessionsProvider({ children }) {
     loadSessions();
   }, [profile]);
 
+  // Update the user track whenever the schedule changes
+  useEffect(() => {
+    if (tracks.length > 0 && !loading) {
+      const userName = profile?.first_name || "My";
+      const updatedUserTrack = { 
+        videoId: "3458790", 
+        name: `${userName}'s sessions`, 
+        sessions: userSchedule, 
+        id: "user-sessions" 
+      };
+      
+      // Update tracks with the new user schedule
+      setTracks((prevTracks) => [updatedUserTrack, ...prevTracks.slice(1)]);
+    }
+  }, [userSchedule, loading, profile]);
+
   /**
    * Add a session to the user's schedule
    * @param {string} sessionId - The ID of the session to add
    */
   const addToSchedule = (sessionId) => {
-    if (!userSchedule.includes(sessionId)) {
-      setUserSchedule([...userSchedule, sessionId]);
-      console.log('Session added to schedule:', sessionId);
-      // In the future, this would make an API call to save the schedule
+    if (!isInSchedule(sessionId)) {
+      const sessionToAdd = sessions.find((session) => session.id === sessionId);
+      if (sessionToAdd) {
+        const updatedSchedule = [...userSchedule, sessionToAdd].sort((a, b) => {
+          const timeA = a.sessionStartTime || '';
+          const timeB = b.sessionStartTime || '';
+          return timeA.localeCompare(timeB);
+        });
+        setUserSchedule(updatedSchedule);
+        
+        // Save to localStorage
+        try {
+          const scheduleIds = updatedSchedule.map((session) => session.id);
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(scheduleIds));
+          console.log('Session added to schedule and saved:', sessionId);
+        } catch (storageError) {
+          console.warn('Error saving to localStorage:', storageError);
+        }
+        // In the future, this would make an API call to save the schedule
+      }
     }
   };
 
@@ -119,8 +187,17 @@ export function SessionsProvider({ children }) {
    * @param {string} sessionId - The ID of the session to remove
    */
   const removeFromSchedule = (sessionId) => {
-    setUserSchedule(userSchedule.filter((id) => id !== sessionId));
-    console.log('Session removed from schedule:', sessionId);
+    const updatedSchedule = userSchedule.filter((session) => session.id !== sessionId);
+    setUserSchedule(updatedSchedule);
+    
+    // Save to localStorage
+    try {
+      const scheduleIds = updatedSchedule.map((session) => session.id);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(scheduleIds));
+      console.log('Session removed from schedule and saved:', sessionId);
+    } catch (storageError) {
+      console.warn('Error saving to localStorage:', storageError);
+    }
     // In the future, this would make an API call to save the schedule
   };
 
@@ -138,7 +215,7 @@ export function SessionsProvider({ children }) {
    * @returns {Array} Array of session objects
    */
   const getScheduledSessions = () => {
-    return sessions.filter((session) => userSchedule.includes(session.id));
+    return userSchedule;
   };
 
   const value = {

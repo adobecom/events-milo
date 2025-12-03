@@ -199,7 +199,6 @@ export default function SessionDrawer({ selectedTrack, isOpen, onToggle, openOnM
         ` : html`
           <div class="session-drawer-list">
             ${sessions.map((session) => {
-              console.log('session', session);
               const isLive = isSessionLive(session.sessionStartTime, session.sessionEndTime);
               const inSchedule = isInSchedule(session.id);
               const startTime = formatTime(session.sessionStartTime);
