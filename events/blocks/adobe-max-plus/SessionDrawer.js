@@ -56,9 +56,6 @@ export default function SessionDrawer({ selectedTrack, isOpen, onToggle, openOnM
   const currentTrack = tracks.find((track) => track.id === selectedTrack);
   const trackName = currentTrack?.name || 'Sessions';
   const sessions = currentTrack?.sessions || [];
-  console.log('sessions in session drawer', sessions);
-console.log('session IDs:', sessions.map(s => s.id));
-console.log('session titles:', sessions.map(s => s.title));
 
   // Auto-open drawer on mount if requested (first-time flow)
   useEffect(() => {
