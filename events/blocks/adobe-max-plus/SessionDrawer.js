@@ -57,6 +57,8 @@ export default function SessionDrawer({ selectedTrack, isOpen, onToggle, openOnM
   const trackName = currentTrack?.name || 'Sessions';
   const sessions = currentTrack?.sessions || [];
 
+  console.log('sessions', sessions);
+
   // Auto-open drawer on mount if requested (first-time flow)
   useEffect(() => {
     const hasAutoOpened = localStorage.getItem(DRAWER_STORAGE_KEY);
@@ -127,19 +129,34 @@ export default function SessionDrawer({ selectedTrack, isOpen, onToggle, openOnM
     }
   };
 
-  // Calculate transform based on drag offset
-  const getTransform = () => {
+  // Calculate dynamic height during drag
+  const getDrawerStyle = () => {
+    const style = {};
+    
     if (isDragging && dragOffset !== 0) {
-      return `translateY(${dragOffset}px)`;
+      if (!isOpen && dragOffset < 0) {
+        // Dragging up from closed state - increase height
+        const maxHeight = window.innerHeight - 60; // Account for navbar
+        const minHeight = 70;
+        const newHeight = Math.min(maxHeight, minHeight + Math.abs(dragOffset));
+        style.height = `${newHeight}px`;
+      } else if (isOpen && dragOffset > 0) {
+        // Dragging down from open state - decrease height
+        const maxHeight = window.innerHeight - 60;
+        const minHeight = 70;
+        const newHeight = Math.max(minHeight, maxHeight - dragOffset);
+        style.height = `${newHeight}px`;
+      }
     }
-    return '';
+    
+    return style;
   };
 
   return html`
     <div \
       class="session-drawer ${isOpen ? 'open' : 'closed'}" \
       ref=${drawerRef} \
-      style=${{ transform: getTransform() }} \
+      style=${getDrawerStyle()} \
     >
       <div \
         class="session-drawer-header" \
@@ -184,6 +201,7 @@ export default function SessionDrawer({ selectedTrack, isOpen, onToggle, openOnM
         ` : html`
           <div class="session-drawer-list">
             ${sessions.map((session) => {
+              console.log('session', session);
               const isLive = isSessionLive(session.sessionStartTime, session.sessionEndTime);
               const inSchedule = isInSchedule(session.id);
               const startTime = formatTime(session.sessionStartTime);

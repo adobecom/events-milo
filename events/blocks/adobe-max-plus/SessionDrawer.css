@@ -85,11 +85,19 @@
   overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
   opacity: 0;
-  visibility: hidden;
-  transition: opacity 0.2s ease-in-out, visibility 0.2s ease-in-out;
+  pointer-events: none;
+  transition: opacity 0.2s ease-in-out;
+  background: #1a1a1a;
 }
 
 .session-drawer.open .session-drawer-content {
+  opacity: 1;
+  pointer-events: auto;
+  visibility: visible;
+}
+
+/* Show content when height is more than just header */
+.session-drawer.closed .session-drawer-content {
   opacity: 1;
   visibility: visible;
 }

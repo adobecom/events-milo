@@ -73,7 +73,7 @@ export function SessionsProvider({ children }) {
         // Mock user schedule with random sessions from sessions data
         // In the future, this would come from a user schedule API
         const shuffled = [...allSessions].sort(() => 0.5 - Math.random());
-        const mockSchedule = shuffled.slice(0, 6).map((session) => session.id);
+        const mockSchedule = shuffled.slice(0, 6).map((session) => session);
 
         // Create user track with profile name or fallback
         const userName = profile?.first_name || "My";
