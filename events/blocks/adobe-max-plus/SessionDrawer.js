@@ -321,30 +321,37 @@ export default function SessionDrawer({ selectedTrack, isOpen, onToggle, openOnM
 
                       return html`
                         <div key=${session.id} class="session-drawer-upcoming-card">
-                          ${thumbnailImage && html`
-                            <div class="session-drawer-upcoming-card-image">
-                              <img src=${thumbnailImage} alt=${session.title} />
-                            </div>
-                          `}
-                          <div class="session-drawer-upcoming-card-content">
+                          <div class="session-drawer-upcoming-card-upper">
+                            ${thumbnailImage && html`
+                              <div class="session-drawer-upcoming-card-image">
+                                <img src=${thumbnailImage} alt=${session.title} />
+                              </div>
+                            `}
                             <h4 class="session-drawer-upcoming-card-title">${session.title}</h4>
+                          </div>
+                          <div class="session-drawer-upcoming-card-lower">
                             ${duration && html`
                               <div class="session-drawer-upcoming-card-duration">${duration}</div>
                             `}
-                          </div>
-                          <div class="session-drawer-upcoming-card-actions">
                             <button \
                               class="session-drawer-upcoming-card-button ${inSchedule ? 'session-drawer-upcoming-card-button-added' : 'session-drawer-upcoming-card-button-add'}" \
                               onClick=${(e) => handleScheduleToggle(session.id, e)} \
                             >
                               ${inSchedule ? html`
-                                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                                  <path d="M13 4L6 11L3 8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                  <mask id="mask0_1_3463" style="mask-type:alpha" maskUnits="userSpaceOnUse" x="0" y="0" width="16" height="16">
+                                  <path d="M8 15C4.13984 15 1 11.8602 1 8C1 4.13984 4.13984 1 8 1C11.8602 1 15 4.13984 15 8C15 11.8602 11.8602 15 8 15ZM8 2.2C4.80156 2.2 2.2 4.80156 2.2 8C2.2 11.1984 4.80156 13.8 8 13.8C11.1984 13.8 13.8 11.1984 13.8 8C13.8 4.80156 11.1984 2.2 8 2.2Z" fill="#292929"/>
+                                  <path d="M7.37813 10.8C7.2086 10.8 7.0461 10.7281 6.93203 10.6015L4.92344 8.36796C4.70157 8.12109 4.72188 7.74217 4.96797 7.5203C5.21406 7.29843 5.59297 7.31874 5.81563 7.56483L7.33047 9.24999L10.1203 5.4453C10.3148 5.17812 10.6891 5.11796 10.9586 5.3164C11.2258 5.51171 11.2836 5.88749 11.0875 6.15468L7.86171 10.5547C7.75546 10.7008 7.58827 10.7906 7.4078 10.7992C7.39843 10.8 7.38829 10.8 7.37813 10.8Z" fill="#292929"/>
+                                  </mask>
+                                  <g mask="url(#mask0_1_3463)">
+                                  <rect width="16" height="16" fill="black"/>
+                                  </g>
                                 </svg>
                                 Added
                               ` : html`
-                                <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                  <path d="M14 11H11V14H9V11H6V9H9V6H11V9H14V11Z" fill="currentColor"/>
+                                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                  <path d="M6.91485 13.2H3.40001C3.06915 13.2 2.80001 12.9309 2.80001 12.6V6.8H13.2V6.91484C13.2 7.24609 13.4688 7.51484 13.8 7.51484C14.1313 7.51484 14.4 7.24609 14.4 6.91484V4.2C14.4 3.20742 13.5926 2.4 12.6 2.4H11V1.6C11 1.26875 10.7313 1 10.4 1C10.0688 1 9.80001 1.26875 9.80001 1.6V2.4H6.20001V1.6C6.20001 1.26875 5.93125 1 5.60001 1C5.26876 1 5.00001 1.26875 5.00001 1.6V2.4H3.40001C2.40743 2.4 1.60001 3.20742 1.60001 4.2V12.6C1.60001 13.5926 2.40743 14.4 3.40001 14.4H6.91485C7.24609 14.4 7.51485 14.1312 7.51485 13.8C7.51485 13.4688 7.24609 13.2 6.91485 13.2ZM3.40001 3.6H5.00001V4C5.00001 4.33125 5.26876 4.6 5.60001 4.6C5.93125 4.6 6.20001 4.33125 6.20001 4V3.6H9.80001V4C9.80001 4.33125 10.0688 4.6 10.4 4.6C10.7313 4.6 11 4.33125 11 4V3.6H12.6C12.9309 3.6 13.2 3.86914 13.2 4.2V5.6H2.80001V4.2C2.80001 3.86914 3.06915 3.6 3.40001 3.6Z" fill="#292929"/>
+                                  <path d="M12 8.40002C10.0118 8.40002 8.39999 10.0117 8.39999 12C8.39999 13.9883 10.0118 15.6 12 15.6C13.9882 15.6 15.6 13.9883 15.6 12C15.6 10.0117 13.9882 8.40002 12 8.40002ZM14 12.5H12.5V14C12.5 14.2762 12.2762 14.5 12 14.5C11.7238 14.5 11.5 14.2762 11.5 14V12.5H9.99999C9.72383 12.5 9.49999 12.2762 9.49999 12C9.49999 11.7239 9.72383 11.5 9.99999 11.5H11.5V10C11.5 9.72386 11.7238 9.50002 12 9.50002C12.2762 9.50002 12.5 9.72386 12.5 10V11.5H14C14.2762 11.5 14.5 11.7239 14.5 12C14.5 12.2762 14.2762 12.5 14 12.5Z" fill="#292929"/>
                                 </svg>
                                 Add session
                               `}
