@@ -134,6 +134,10 @@
 
 .session-drawer-list {
   padding: 16px 16px 80px;
+  background: #121212;
+  margin-left: 8px;
+  margin-right: 8px;
+  border-radius: 12px;
 }
 
 /* ===== SESSION CARD ===== */
@@ -350,6 +354,157 @@
   border-color: rgba(76, 175, 80, 0.4);
 }
 
+/* ===== UPCOMING SESSIONS SECTION ===== */
+.session-drawer-upcoming-header {
+  margin: 0 0 20px 0;
+  padding: 0 16px;
+  font-family: Adobe Clean;
+  font-weight: 700;
+  font-size: 14px;
+  line-height: 16px;
+  vertical-align: bottom;
+  color: #FF9A00;
+  text-align: left;
+}
+
+.session-drawer-time-block {
+  display: grid;
+  grid-template-columns: 80px 1fr;
+  gap: 16px;
+  padding: 0 16px;
+}
+
+.session-drawer-time-block-header {
+  margin: 0;
+  padding: 0;
+  font-weight: 700;
+  font-size: 16px;
+  line-height: 16px;
+  color: #ffffff;
+  text-transform: uppercase;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  position: relative;
+  top: 4px;
+}
+
+.session-drawer-time-block-sessions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 0;
+}
+
+/* ===== UPCOMING SESSION CARD ===== */
+.session-drawer-upcoming-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #1a1a1a;
+  border-radius: 8px;
+  padding: 10px;
+  transition: background 0.2s ease;
+}
+
+.session-drawer-upcoming-card:hover {
+  background: #222222;
+}
+
+.session-drawer-upcoming-card-image {
+  width: 80px;
+  height: 80px;
+  border-radius: 8px;
+  overflow: hidden;
+  flex-shrink: 0;
+  background: #2a2a2a;
+}
+
+.session-drawer-upcoming-card-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.session-drawer-upcoming-card-content {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.session-drawer-upcoming-card-title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #ffffff;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.session-drawer-upcoming-card-duration {
+  font-size: 11px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.6);
+  background: rgba(255, 255, 255, 0.08);
+  padding: 2px 8px;
+  border-radius: 4px;
+  width: fit-content;
+}
+
+.session-drawer-upcoming-card-actions {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.session-drawer-upcoming-card-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 16px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  border: none;
+  white-space: nowrap;
+  min-height: 40px;
+}
+
+.session-drawer-upcoming-card-button-add {
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.session-drawer-upcoming-card-button-add:hover {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.session-drawer-upcoming-card-button-added {
+  background: rgba(76, 175, 80, 0.2);
+  color: #4CAF50;
+  border: 1px solid rgba(76, 175, 80, 0.3);
+}
+
+.session-drawer-upcoming-card-button-added:hover {
+  background: rgba(76, 175, 80, 0.25);
+  border-color: rgba(76, 175, 80, 0.4);
+}
+
+.session-drawer-upcoming-card-button svg {
+  flex-shrink: 0;
+}
+
 /* ===== RESPONSIVE (MOBILE) ===== */
 @media (max-width: 600px) {
   .session-drawer.closed {
@@ -415,13 +570,52 @@
     width: 100%;
     min-width: auto;
   }
+
+  .session-drawer-upcoming-header {
+    margin-bottom: 16px;
+    padding: 0 12px;
+  }
+
+  .session-drawer-time-block {
+    grid-template-columns: 50px 1fr;
+    gap: 9px;
+    padding: 8px 12px;
+  }
+
+  .session-drawer-time-block-sessions {
+    gap: 10px;
+  }
+
+  .session-drawer-upcoming-card {
+    gap: 12px;
+    padding: 8px 10px 10px 10px;
+  }
+
+  .session-drawer-upcoming-card-image {
+    width: 60px;
+    height: 60px;
+  }
+
+  .session-drawer-upcoming-card-title {
+    font-size: 13px;
+  }
+
+  .session-drawer-upcoming-card-duration {
+    font-size: 10px;
+  }
+
+  .session-drawer-upcoming-card-button {
+    padding: 8px 12px;
+    font-size: 12px;
+    min-height: 36px;
+  }
 }
 
 /* ===== LIVE SESSION CARD ===== */
 .session-drawer-live-session {
   margin-left: 8px;
   margin-right: 8px;
-  margin-bottom: 16px;
+  margin-bottom: 8px;
   padding: 8px 13px 12px;
   background-color: #121212;
   border-radius: 10px;

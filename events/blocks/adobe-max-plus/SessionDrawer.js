@@ -45,6 +45,28 @@ function formatDuration(minutes) {
 }
 
 /**
+ * Group sessions by their start time
+ * Returns an array of time blocks: [{ time: "1:00 PM", sessions: [...] }, ...]
+ */
+function groupSessionsByTime(sessions) {
+  const grouped = new Map();
+  
+  sessions.forEach((session) => {
+    const timeKey = formatTime(session.sessionStartTime);
+    if (!grouped.has(timeKey)) {
+      grouped.set(timeKey, []);
+    }
+    grouped.get(timeKey).push(session);
+  });
+  
+  // Convert to array of time blocks, maintaining order
+  return Array.from(grouped.entries()).map(([time, sessions]) => ({
+    time,
+    sessions,
+  }));
+}
+
+/**
  * SessionDrawer Component - Draggable bottom drawer showing track sessions
  */
 export default function SessionDrawer({ selectedTrack, isOpen, onToggle, openOnMount }) {
@@ -270,85 +292,73 @@ export default function SessionDrawer({ selectedTrack, isOpen, onToggle, openOnM
               onClose=${() => onToggle(false)} \
             />
           `}
-          <div class="session-drawer-list">
-            ${sessions.map((session) => {
-              const isLive = isSessionLive(session.sessionStartTime, session.sessionEndTime);
-              const inSchedule = isInSchedule(session.id);
-              const startTime = formatTime(session.sessionStartTime);
-              const duration = formatDuration(session.sessionDuration);
-              
-              // Get speaker photos
-              const speakers = session.eventSpeakers || [];
-              const speakerPhotos = speakers.slice(0, 4).map(s => s.backgroundImage).filter(Boolean);
-              
-              // Get product tags with icons for display
-              const productTags = getProductsFromTags(session.tags || [], true, true).slice(0, 3);
+          ${sessions.length > 1 && html`
+            <div class="session-drawer-list">
+              <h2 class="session-drawer-upcoming-header">Upcoming</h2>
+              ${groupSessionsByTime(sessions.slice(1)).map((timeBlock) => {
+                // Split time into time part and AM/PM part
+                const timeMatch = timeBlock.time.match(/^(\d+:\d+)\s*(AM|PM)$/);
+                const timePart = timeMatch ? timeMatch[1] : timeBlock.time;
+                const ampmPart = timeMatch ? timeMatch[2] : '';
+                
+                return html`
+                <div key=${selectedTrack + '-' + timeBlock.time} class="session-drawer-time-block">
+                  <h3 class="session-drawer-time-block-header">
+                    <span>${timePart}</span>
+                    ${ampmPart && html`<span>${ampmPart}</span>`}
+                  </h3>
+                  <div class="session-drawer-time-block-sessions">
+                    ${timeBlock.sessions.map((session) => {
+                      const inSchedule = isInSchedule(session.id);
+                      const duration = formatDuration(session.sessionDuration);
+                      
+                      // Get speaker photos for fallback
+                      const speakers = session.eventSpeakers || [];
+                      const speakerPhotos = speakers.slice(0, 2).map(s => s.backgroundImage).filter(Boolean);
+                      
+                      // Prefer backgroundImage, fallback to speaker photos
+                      const thumbnailImage = session.backgroundImage || speakerPhotos[0];
 
-              return html`
-                <div key=${selectedTrack + '-' + session.id} class="session-card">
-
-                  <div class="session-card-time">${startTime}</div>
-
-                  <div class="session-card-main">
-                    ${speakerPhotos.length > 0 ? html`
-                      <div class="session-card-speakers">
-                        ${speakerPhotos.map((photo, idx) => html`
-                          <img \
-                            key=${idx} \
-                            src=${photo} \
-                            alt="Speaker" \
-                            class="session-speaker-photo" \
-                          />
-                        `)}
-                      </div>
-                    ` : session.backgroundImage ? html`
-                      <div class="session-card-image">
-                        <img src=${session.backgroundImage} alt=${session.title} />
-                      </div>
-                    ` : null}
-
-                    <div class="session-card-content">
-                      ${productTags.length > 0 ? html`
-                        <div class="session-card-tags">
-                          ${productTags.map((product, idx) => html`
-                            <span key=${idx} class="session-tag" title=${product.title}>
-                              ${product.icon()}
-                            </span>
-                          `)}
+                      return html`
+                        <div key=${session.id} class="session-drawer-upcoming-card">
+                          ${thumbnailImage && html`
+                            <div class="session-drawer-upcoming-card-image">
+                              <img src=${thumbnailImage} alt=${session.title} />
+                            </div>
+                          `}
+                          <div class="session-drawer-upcoming-card-content">
+                            <h4 class="session-drawer-upcoming-card-title">${session.title}</h4>
+                            ${duration && html`
+                              <div class="session-drawer-upcoming-card-duration">${duration}</div>
+                            `}
+                          </div>
+                          <div class="session-drawer-upcoming-card-actions">
+                            <button \
+                              class="session-drawer-upcoming-card-button ${inSchedule ? 'session-drawer-upcoming-card-button-added' : 'session-drawer-upcoming-card-button-add'}" \
+                              onClick=${(e) => handleScheduleToggle(session.id, e)} \
+                            >
+                              ${inSchedule ? html`
+                                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                                  <path d="M13 4L6 11L3 8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                                Added
+                              ` : html`
+                                <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                  <path d="M14 11H11V14H9V11H6V9H9V6H11V9H14V11Z" fill="currentColor"/>
+                                </svg>
+                                Add session
+                              `}
+                            </button>
+                          </div>
                         </div>
-                      ` : null}
-
-                      <h3 class="session-card-title">${session.title}</h3>
-
-                      ${session.description ? html`
-                        <p class="session-card-description">
-                          ${session.description.replace(/<[^>]*>/g, '').substring(0, 120)}${session.description.length > 120 ? '...' : ''}
-                        </p>
-                      ` : null}
-
-                      ${duration ? html`
-                        <div class="session-card-duration">${duration}</div>
-                      ` : null}
-                    </div>
-                  </div>
-
-                  <div class="session-card-actions">
-                    <button \
-                        class="session-btn ${inSchedule ? 'session-btn-added' : 'session-btn-secondary'}" \
-                        onClick=${(e) => handleScheduleToggle(session.id, e)} \
-                      >
-                        ${inSchedule ? html`
-                          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                            <path d="M13 4L6 11L3 8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                          </svg>
-                          Added
-                        ` : 'Add to schedule'}
-                      </button>
+                      `;
+                    })}
                   </div>
                 </div>
               `;
-            })}
-          </div>
+              })}
+            </div>
+          `}
         `}
       </div>
     </div>
