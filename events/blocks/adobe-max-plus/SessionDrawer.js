@@ -72,6 +72,20 @@ export default function SessionDrawer({ selectedTrack, isOpen, onToggle, openOnM
     }
   }, [openOnMount, onToggle]);
 
+  // Reset scroll position when drawer opens
+  useEffect(() => {
+    if (isOpen && contentRef.current) {
+      contentRef.current.scrollTop = 0;
+    }
+  }, [isOpen]);
+
+  // Reset scroll position when track changes
+  useEffect(() => {
+    if (contentRef.current) {
+      contentRef.current.scrollTop = 0;
+    }
+  }, [selectedTrack]);
+
   // Drag handlers
   const handleDragStart = (e) => {
     const clientY = e.type === 'touchstart' ? e.touches[0].clientY : e.clientY;
