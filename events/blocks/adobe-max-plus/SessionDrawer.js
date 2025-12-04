@@ -3,6 +3,7 @@ import { useState, useEffect, useRef } from '../../scripts/deps/preact/hooks/ind
 import { useSessions } from './sessionProvider.js';
 import LiveSessionCard from './LiveSessionCard.js';
 import ScheduleAssistant from './ScheduleAssistant.js';
+import { getProductsFromTags } from './productMapping.js';
 
 const DRAWER_STORAGE_KEY = 'adobe-max-plus-drawer-opened';
 
@@ -266,11 +267,8 @@ export default function SessionDrawer({ selectedTrack, isOpen, onToggle, openOnM
               const speakers = session.eventSpeakers || [];
               const speakerPhotos = speakers.slice(0, 4).map(s => s.backgroundImage).filter(Boolean);
               
-              // Get product tags for display
-              const productTags = (session.tags || [])
-                .filter(tag => tag.tagId?.includes('products/') && !tag.tagId.includes('creative-cloud'))
-                .map(tag => tag.title)
-                .slice(0, 3);
+              // Get product tags with icons for display
+              const productTags = getProductsFromTags(session.tags || [], true, true).slice(0, 3);
 
               return html`
                 <div key=${selectedTrack + '-' + session.id} class="session-card">
@@ -298,8 +296,10 @@ export default function SessionDrawer({ selectedTrack, isOpen, onToggle, openOnM
                     <div class="session-card-content">
                       ${productTags.length > 0 ? html`
                         <div class="session-card-tags">
-                          ${productTags.map((tag, idx) => html`
-                            <span key=${idx} class="session-tag">${tag}</span>
+                          ${productTags.map((product, idx) => html`
+                            <span key=${idx} class="session-tag" title=${product.title}>
+                              ${product.icon()}
+                            </span>
                           `)}
                         </div>
                       ` : null}

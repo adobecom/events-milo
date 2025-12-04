@@ -1,4 +1,5 @@
 import html from '../../scripts/html.js';
+import { getProductsFromTags } from './productMapping.js';
 
 /**
  * Format ISO timestamp to readable time (e.g., "9:00 AM")
@@ -44,11 +45,8 @@ export default function LiveSessionCard({ session, onScheduleToggle, isInSchedul
   const speakers = session.eventSpeakers || [];
   const speakerPhotos = speakers.slice(0, 2).map(s => s.backgroundImage).filter(Boolean);
   
-  // Get product tags for display
-  const productTags = (session.tags || [])
-    .filter(tag => tag.tagId?.includes('products/') && !tag.tagId.includes('creative-cloud') && !tag.tagId.includes('not-product-specific'))
-    .map(tag => tag.title)
-    .slice(0, 2);
+  // Get product tags with icons for display
+  const productTags = getProductsFromTags(session.tags || [], true, true).slice(0, 2);
   
   // Get track tags for display
   const trackTags = (session.tags || [])
@@ -82,9 +80,9 @@ export default function LiveSessionCard({ session, onScheduleToggle, isInSchedul
             `}
             ${productTags.length > 0 && html`
               <div class="session-drawer-live-session-product-chips">
-                ${productTags.map((tag, idx) => html`
-                  <div key=${idx} class="session-drawer-live-session-product-chip">
-                    <span class="session-drawer-live-session-product-chip-text">${tag}</span>
+                ${productTags.map((product, idx) => html`
+                  <div key=${idx} class="session-drawer-live-session-product-chip" title=${product.title}>
+                    ${product.icon()}
                   </div>
                 `)}
               </div>
