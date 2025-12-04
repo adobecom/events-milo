@@ -229,7 +229,7 @@
   font-size: 32px;
   font-weight: 700;
   color: #ffffff;
-  margin: 0 0 20px;
+  margin: 0 0 16px;
   line-height: 1.2;
   letter-spacing: -0.5px;
 }
@@ -238,24 +238,25 @@
   font-size: 16px;
   color: #e0e0e0;
   line-height: 1.6;
-  margin: 0 0 32px;
+  margin: 0 0 24px;
 }
 
 .welcome-modal-cta {
-  background: #1473E6;
+  background: #4069FD;
   color: white;
   border: none;
   border-radius: 20px;
   padding: 12px 28px;
   font-size: 15px;
+  line-height: 1.25;
   font-weight: 600;
+  font-family: "Adobe Clean", adobe-clean, "Source Sans Pro", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   cursor: pointer;
   transition: background 0.2s, transform 0.1s;
-  width: 100%;
 }
 
 .welcome-modal-cta:hover {
-  background: #0D66D0;
+  background: #3B63FB;
 }
 
 .welcome-modal-cta:active {
@@ -300,11 +301,11 @@
   }
 
   .welcome-modal-content {
-    padding: 40px 24px 28px;
+    padding: 40px;
   }
 
   .welcome-modal-icon {
-    margin-bottom: 20px;
+    margin-bottom: 24px;
   }
 
   .welcome-modal-icon svg {
@@ -314,15 +315,17 @@
 
   .welcome-modal-title {
     font-size: 28px;
+    width: 220px;
   }
 
   .welcome-modal-text {
-    font-size: 15px;
+    font-size: 18px;
+    line-height: 1.5;
   }
 
   .welcome-modal-cta {
-    font-size: 14px;
-    padding: 11px 24px;
+    font-size: 15px;
+    padding: 5px 18px 6px 18px;
   }
 
   /* Mobile PiP adjustments */
