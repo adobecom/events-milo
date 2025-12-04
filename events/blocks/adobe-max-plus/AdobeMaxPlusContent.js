@@ -6,6 +6,7 @@ import MPCVideo from './MPCVideo.js';
 import TrackSelector from './TrackSelector.js';
 import SessionDrawer from './SessionDrawer.js';
 import FireflyGenerator from './FireflyGenerator.js';
+import PhotoshopGenerator from './PhotoshopGenerator.js';
 import FireflyGallery from './FireflyGallery.js';
 
 /**
@@ -36,6 +37,9 @@ export default function AdobeMaxPlusContent() {
   // Find the current track
   const currentTrack = tracks.find((track) => track.id === selectedTrack);
   const currentVideoId = currentTrack?.videoId || tracks[0]?.videoId;
+  
+  // Check if photography track is selected
+  const isPhotographyTrack = selectedTrack === 'caas:events/max/track/photography';
 
   // Show loading state while sessions are loading
   if (sessionsLoading) {
@@ -57,12 +61,15 @@ export default function AdobeMaxPlusContent() {
         selectedTrack=${selectedTrack} \
         onTrackSelect=${handleTrackSelect} \
       />
-      <${FireflyGenerator} \
-        title="Create with Firefly" \
-        promptLabel="Prompt" \
-        placeholder="Describe the image you want to generate" \
-        buttonText="Generate" \
-      />
+      ${isPhotographyTrack 
+        ? html`<${PhotoshopGenerator} />`
+        : html`<${FireflyGenerator} \
+            title="Create with Firefly" \
+            promptLabel="Prompt" \
+            placeholder="Describe the image you want to generate" \
+            buttonText="Generate" \
+          />`
+      }
       <${FireflyGallery} \
         title="Remix with the community." \
         category="VideoGeneration" \
