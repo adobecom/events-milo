@@ -151,6 +151,12 @@ const MPCVideo = ({
       } else {
         // Normal behavior: activate/deactivate based on visibility
         setIsPiPMode(shouldActivatePiP);
+        
+        // When transitioning to normal mode, always ensure we're not hidden
+        // This makes hidden PiP → normal work the same as visible PiP → normal
+        if (!shouldActivatePiP && isHidden) {
+          setIsHidden(false);
+        }
       }
       
       ticking = false;
@@ -171,9 +177,9 @@ const MPCVideo = ({
     return () => {
       window.removeEventListener('scroll', handleScroll);
     };
-  }, [wasManuallyDismissed]);
+  }, [wasManuallyDismissed, isHidden]);
 
-  // Auto-unhide when returning to normal mode
+  // Safety: Auto-unhide when returning to normal mode (backup for edge cases)
   useEffect(() => {
     if (!isPiPMode && isHidden) {
       setIsHidden(false);
@@ -184,6 +190,10 @@ const MPCVideo = ({
   const handleClosePiP = () => {
     setIsPiPMode(false);
     setWasManuallyDismissed(true); // Mark as manually dismissed
+    // Ensure we're not hidden when returning to normal mode
+    if (isHidden) {
+      setIsHidden(false);
+    }
   };
 
   // Handle hide to side
