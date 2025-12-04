@@ -30,6 +30,7 @@ const MPCVideo = ({
   const [isHidden, setIsHidden] = useState(false);
   const [dragOffset, setDragOffset] = useState(0); // Track drag position for swipe gesture (when visible)
   const [showDragOffset, setShowDragOffset] = useState(0); // Track drag position for show gesture (when hidden)
+  const [wasManuallyDismissed, setWasManuallyDismissed] = useState(false); // Track if user closed PiP manually
   const pipPlayerRef = useRef(null);
   const dragOverlayRef = useRef(null);
   const tabButtonRef = useRef(null);
@@ -140,7 +141,18 @@ const MPCVideo = ({
       // Activate PiP when less than 40% visible (60% scrolled past)
       const shouldActivatePiP = visibilityRatio < 0.4;
       
-      setIsPiPMode(shouldActivatePiP);
+      // If PiP was manually dismissed, only reactivate when scrolling back to original position
+      if (wasManuallyDismissed) {
+        // Video is now visible again (more than 40%), so reset the dismissal flag
+        if (!shouldActivatePiP) {
+          setWasManuallyDismissed(false);
+        }
+        // Don't reactivate PiP while dismissed flag is set
+      } else {
+        // Normal behavior: activate/deactivate based on visibility
+        setIsPiPMode(shouldActivatePiP);
+      }
+      
       ticking = false;
     };
 
@@ -159,7 +171,7 @@ const MPCVideo = ({
     return () => {
       window.removeEventListener('scroll', handleScroll);
     };
-  }, []);
+  }, [wasManuallyDismissed]);
 
   // Auto-unhide when returning to normal mode
   useEffect(() => {
@@ -171,6 +183,7 @@ const MPCVideo = ({
   // Handle PiP close
   const handleClosePiP = () => {
     setIsPiPMode(false);
+    setWasManuallyDismissed(true); // Mark as manually dismissed
   };
 
   // Handle hide to side
