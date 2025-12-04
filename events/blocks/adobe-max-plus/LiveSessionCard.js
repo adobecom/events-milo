@@ -59,6 +59,11 @@ export default function LiveSessionCard({ session, onScheduleToggle, isInSchedul
   
   const inSchedule = isInSchedule?.(session.id);
 
+  const handleWatchNow = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    onClose?.();
+  };
+
   return html`
     <section class="session-drawer-live-session">
       <div class="session-drawer-live-session-badge">
@@ -124,7 +129,7 @@ export default function LiveSessionCard({ session, onScheduleToggle, isInSchedul
             <div class="session-drawer-live-session-actions">
               <button \
                 class="session-drawer-live-session-actions-button session-drawer-live-session-actions-button-primary" \
-                onClick=${onClose} \
+                onClick=${handleWatchNow} \
               >
                 <svg width="31" height="24" viewBox="0 0 31 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <mask id="mask0_510_2790" style="mask-type:alpha" maskUnits="userSpaceOnUse" x="10" y="4" width="16" height="16">
