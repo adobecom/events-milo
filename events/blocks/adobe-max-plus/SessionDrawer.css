@@ -548,6 +548,7 @@
   padding: 0 4px;
   border-radius: 2px;
   width: fit-content;
+  max-width: 150px;
 }
 
 .session-drawer-live-session-track-chip-text {
@@ -555,6 +556,7 @@
   font-weight: 700;
   line-height: 16px;
   display: block;
+  white-space: nowrap;
 }
 
 .session-drawer-live-session-track-chip:first-child .session-drawer-live-session-track-chip-text {

@@ -48,10 +48,13 @@ export default function LiveSessionCard({ session, onScheduleToggle, isInSchedul
   // Get product tags with icons for display
   const productTags = getProductsFromTags(session.tags || [], true, true).slice(0, 2);
   
-  // Get track tags for display
+  // Get track tags for display (max 2 words)
   const trackTags = (session.tags || [])
     .filter(tag => tag.tagId?.includes('caas:events/max/track'))
-    .map(tag => tag.title)
+    .map(tag => {
+      const words = tag.title.split(' ');
+      return words.slice(0, 2).join(' ');
+    })
     .slice(0, 2);
   
   const inSchedule = isInSchedule?.(session.id);
