@@ -517,7 +517,7 @@
   align-items: stretch;
   gap: 12px;
   width: 100%;
-  margin-top: auto;
+  margin-top: 50px;
   padding-bottom: 24px;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
@@ -795,7 +795,7 @@
   }
 
   .schedule-assistant-modal {
-    height: calc(100vh - 40px);
+    height: calc(100vh - 60px);
   }
 
   .schedule-assistant-title {
