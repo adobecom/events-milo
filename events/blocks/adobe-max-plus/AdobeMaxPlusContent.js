@@ -1,7 +1,6 @@
 import html from '../../scripts/html.js';
 import { useState } from '../../scripts/deps/preact/hooks/index.js';
 import { useSessions } from './sessionProvider.js';
-import { useIMS } from './imsProvider.js';
 import WelcomeModal from './WelcomeModal.js';
 import MPCVideo from './MPCVideo.js';
 import TrackSelector from './TrackSelector.js';
@@ -15,9 +14,6 @@ import FireflyGallery from './FireflyGallery.js';
 export default function AdobeMaxPlusContent() {
   // Access provider data
   const { tracks, loading: sessionsLoading } = useSessions();
-  const { profile, isSignedIn } = useIMS();
-
-  console.log('tracks', tracks);
 
   const [selectedTrack, setSelectedTrack] = useState(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
