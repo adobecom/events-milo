@@ -1075,7 +1075,6 @@
 }
 
 .photoshop-upload-icon {
-  margin-bottom: 16px;
   display: flex;
   justify-content: center;
 }
@@ -1083,8 +1082,10 @@
 .photoshop-upload-text {
   color: #fff;
   font-size: 1rem;
+  line-height: 1.25;
+  font-weight: 600;
   margin: 0 0 24px;
-  font-weight: 400;
+  width: 90%;
 }
 
 .photoshop-browse-btn {
@@ -1161,7 +1162,10 @@
   }
 
   .photoshop-generator-title {
-    font-size: 1.5rem;
+    font-size: 24px;
+    font-family: 'Adobe Clean Display', 'Adobe Clean', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-weight: 900;
+    line-height: 1.1;
     margin-bottom: 24px;
   }
 
