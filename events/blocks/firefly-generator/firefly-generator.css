@@ -449,7 +449,7 @@
 /* Responsive */
 @media (max-width: 768px) {
   .firefly-generator {
-    padding: 40px 16px;
+    padding: 10px 16px;
   }
 
   .firefly-title {
