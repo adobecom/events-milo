@@ -72,7 +72,6 @@ export default function AdobeMaxPlusContent() {
         category="VideoGeneration" \
         count=${6} \
       />
-      <div style="height: 100vh; background-color: red;" />
       <${SessionDrawer} \
         selectedTrack=${selectedTrack} \
         isOpen=${drawerOpen} \

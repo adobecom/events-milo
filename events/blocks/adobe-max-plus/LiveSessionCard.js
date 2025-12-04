@@ -29,7 +29,7 @@ function formatDuration(minutes) {
 /**
  * LiveSessionCard Component - Highlights a live session in the drawer
  */
-export default function LiveSessionCard({ session, onScheduleToggle, isInSchedule }) {
+export default function LiveSessionCard({ session, onScheduleToggle, isInSchedule, onClose }) {
   if (!session) return null;
 
   const startTime = formatTime(session.sessionStartTime);
@@ -46,13 +46,13 @@ export default function LiveSessionCard({ session, onScheduleToggle, isInSchedul
   
   // Get product tags for display
   const productTags = (session.tags || [])
-    .filter(tag => tag.tagId?.includes('products/') && !tag.tagId.includes('creative-cloud'))
+    .filter(tag => tag.tagId?.includes('products/') && !tag.tagId.includes('creative-cloud') && !tag.tagId.includes('not-product-specific'))
     .map(tag => tag.title)
     .slice(0, 2);
   
   // Get track tags for display
   const trackTags = (session.tags || [])
-    .filter(tag => tag.tagId?.includes('topics/'))
+    .filter(tag => tag.tagId?.includes('caas:events/max/track'))
     .map(tag => tag.title)
     .slice(0, 2);
   
@@ -121,25 +121,20 @@ export default function LiveSessionCard({ session, onScheduleToggle, isInSchedul
               </div>
             `}
             <div class="session-drawer-live-session-actions">
-              <button class="session-drawer-live-session-actions-button session-drawer-live-session-actions-button-primary">
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                  <path d="M3 2L13 8L3 14V2Z" fill="currentColor"/>
+              <button \
+                class="session-drawer-live-session-actions-button session-drawer-live-session-actions-button-primary" \
+                onClick=${onClose} \
+              >
+                <svg width="31" height="24" viewBox="0 0 31 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <mask id="mask0_510_2790" style="mask-type:alpha" maskUnits="userSpaceOnUse" x="10" y="4" width="16" height="16">
+                    <path d="M13.7992 18.403C13.4809 18.403 13.1629 18.3171 12.8766 18.146C12.3277 17.8179 12 17.2397 12 16.6007V7.3991C12 6.76004 12.3277 6.18192 12.8766 5.85379C13.425 5.52645 14.0887 5.51004 14.652 5.81395L23.2129 10.4147C23.7973 10.7288 24.1602 11.3366 24.1602 11.9999C24.1602 12.6632 23.7973 13.271 23.2129 13.5851L14.652 18.1858C14.3828 18.3312 14.0906 18.403 13.7992 18.403ZM13.802 6.79676C13.6594 6.79676 13.5473 6.85145 13.4922 6.88426C13.4043 6.93661 13.2 7.09208 13.2 7.3991V16.6007C13.2 16.9077 13.4043 17.0632 13.4922 17.1155C13.5801 17.1678 13.8133 17.2741 14.084 17.1296L22.6445 12.5288C22.9293 12.3749 22.9602 12.1077 22.9602 11.9999C22.9602 11.8921 22.9293 11.6249 22.6445 11.471L14.084 6.8702C13.9828 6.81629 13.8871 6.79676 13.802 6.79676Z" fill="#292929"/>
+                  </mask>
+                  <g mask="url(#mask0_510_2790)">
+                    <rect x="10" y="4" width="16" height="16" fill="currentColor"/>
+                  </g>
                 </svg>
                 Watch now
               </button>
-              ${onScheduleToggle && html`
-                <button \
-                  class="session-drawer-live-session-actions-button ${inSchedule ? 'session-drawer-live-session-actions-button-added' : 'session-drawer-live-session-actions-button-secondary'}" \
-                  onClick=${(e) => { e.stopPropagation(); onScheduleToggle(session.id, e); }} \
-                >
-                  ${inSchedule ? html`
-                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                      <path d="M13 4L6 11L3 8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                    </svg>
-                    Added
-                  ` : 'Add to schedule'}
-                </button>
-              `}
             </div>
           </div>
         </div>

@@ -94,10 +94,11 @@
 .session-drawer-chevron {
   color: rgba(255, 255, 255, 0.7);
   transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transform: rotate(180deg);
 }
 
 .session-drawer.open .session-drawer-chevron {
-  transform: rotate(180deg);
+  transform: rotate(0deg);
 }
 
 /* ===== DRAWER CONTENT ===== */
@@ -525,12 +526,16 @@
 
 .session-drawer-live-session-track-chip {
   display: block;
+  background: #0000006E;
+  padding: 0 4px;
+  border-radius: 2px;
+  width: fit-content;
 }
 
 .session-drawer-live-session-track-chip-text {
-  font-size: 14px;
-  font-weight: 600;
-  line-height: 1.2;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 16px;
   display: block;
 }
 
@@ -548,13 +553,21 @@
 
 .session-drawer-live-session-duration-chip {
   margin-top: auto;
-  padding-top: 8px;
+  background: #131313E5;
+  padding: 0 8px;
+  border-radius: 2px;
+  width: fit-content;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .session-drawer-live-session-duration-chip-text {
-  font-size: 14px;
+  font-size: 11px;
   font-weight: 400;
-  color: rgba(255, 255, 255, 0.6);
+  line-height: 1.5;
+  color: #ffffff;
 }
 
 .session-drawer-live-session-highlight-content-right {
@@ -565,7 +578,7 @@
 
 .session-drawer-live-session-image {
   width: 100%;
-  height: 220px;
+  aspect-ratio: 16 / 10;
   border-radius: 12px;
   overflow: hidden;
   background: #2a2a2a;
@@ -575,6 +588,9 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
+  display: block;
+  max-width: 100%;
+  max-height: 100%;
 }
 
 .session-drawer-live-session-title {
@@ -583,10 +599,14 @@
 
 .session-drawer-live-session-title-text {
   margin: 0;
-  font-size: 28px;
+  font-size: 14px;
   font-weight: 700;
   color: #ffffff;
-  line-height: 1.2;
+  line-height: 1.45;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .session-drawer-live-session-description {
@@ -596,9 +616,14 @@
 
 .session-drawer-live-session-description-text {
   margin: 0;
-  font-size: 15px;
+  font-size: 12px;
+  font-weight: 400;
   color: rgba(255, 255, 255, 0.7);
   line-height: 1.5;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .session-drawer-live-session-actions {
@@ -610,27 +635,23 @@
 .session-drawer-live-session-actions-button {
   display: inline-flex;
   align-items: center;
-  gap: 10px;
-  padding: 12px 28px;
+  gap: 4px;
+  padding: 4px 12px 4px 8px;
   border-radius: 24px;
   font-size: 16px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   border: none;
-  min-height: 48px;
   justify-content: center;
 }
 
 .session-drawer-live-session-actions-button-primary {
-  background: #4B5FF5;
+  background: #3B63FB;
   color: #ffffff;
-}
-
-.session-drawer-live-session-actions-button-primary:hover {
-  background: #3d4dd4;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 16px rgba(75, 95, 245, 0.4);
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 700;
 }
 
 .session-drawer-live-session-actions-button-primary:active {

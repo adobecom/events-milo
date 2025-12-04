@@ -252,6 +252,7 @@ export default function SessionDrawer({ selectedTrack, isOpen, onToggle, openOnM
               session=${sessions[0]} \
               onScheduleToggle=${handleScheduleToggle} \
               isInSchedule=${isInSchedule} \
+              onClose=${() => onToggle(false)} \
             />
           `}
           <div class="session-drawer-list">
