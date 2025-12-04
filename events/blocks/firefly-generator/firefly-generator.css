@@ -2,10 +2,10 @@
 
 .firefly-generator {
   --ff-card-bg: rgba(30, 30, 40, 0.95);
-  --ff-primary: #4f6cf7;
+  --ff-primary: #3B63FB;
   --ff-primary-hover: #6b82f9;
   --ff-text: #ffffff;
-  --ff-text-muted: #a0a0b0;
+  --ff-text-muted: #AFAFAF;
   --ff-border: rgba(255, 255, 255, 0.08);
   --ff-input-bg: transparent;
   --ff-radius-lg: 24px;
@@ -15,8 +15,8 @@
   --ff-font: 'Adobe Clean', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 
   font-family: var(--ff-font);
-  padding: 60px 24px;
-  min-height: 400px;
+  padding: 24px 18px 24px 18px;
+  height: 236px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -43,8 +43,10 @@
 
 /* Title */
 .firefly-title {
-  font-size: 2.5rem;
+  font-size: 24px;
+  font-family: 'Adobe Clean Display', 'Adobe Clean', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   font-weight: 800;
+  line-height: 1.1;
   color: var(--ff-text);
   text-align: center;
   margin: 0 0 32px;
@@ -54,9 +56,9 @@
 
 /* Prompt Box */
 .firefly-prompt-box {
-  background: var(--ff-card-bg);
+  background: #171717;
   border-radius: var(--ff-radius-lg);
-  padding: 24px;
+  padding: 13px 14px 13px 14px;
   box-shadow: var(--ff-shadow);
   border: 1px solid var(--ff-border);
   backdrop-filter: blur(20px);
@@ -68,14 +70,14 @@
   font-size: 0.9375rem;
   font-weight: 500;
   color: var(--ff-text-muted);
-  margin-bottom: 12px;
+  margin-bottom: 8px;
 }
 
 /* Input Wrapper */
 .firefly-input-wrapper {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 8px;
 }
 
 /* Textarea */
@@ -115,7 +117,7 @@
   font-weight: 700;
   font-family: var(--ff-font);
   color: var(--ff-text);
-  background: var(--ff-primary);
+  background: #3B63FB;
   border: none;
   border-radius: 100px;
   cursor: pointer;
@@ -454,7 +456,7 @@
 
   .firefly-title {
     font-size: 1.75rem;
-    margin-bottom: 24px;
+    margin-bottom: 16px;
   }
 
   .firefly-prompt-box {
@@ -467,9 +469,8 @@
   }
 
   .firefly-generate-btn {
-    width: 100%;
     justify-content: center;
-    padding: 16px 24px;
+    padding: 8px 16px;
   }
 
   .firefly-result {
