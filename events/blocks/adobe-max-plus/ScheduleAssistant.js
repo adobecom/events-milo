@@ -3,7 +3,7 @@ import html from '../../scripts/html.js';
 import { useSessions } from './sessionProvider.js';
 
 const BEDROCK_API_URL = 'https://bedrock-runtime.us-west-2.amazonaws.com/model/us.anthropic.claude-sonnet-4-5-20250929-v1:0/converse';
-const BEDROCK_API_KEY = 'Replacewithrealkey';
+const BEDROCK_API_KEY = () => window.BEDROCK_API_KEY
 
 const SUGGESTED_QUESTIONS = [
   "I'm a Graphic Designer getting started with Photography. Which sessions will help?",
@@ -541,7 +541,7 @@ export default function ScheduleAssistant({ renderTrigger, showFloatingButton = 
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${BEDROCK_API_KEY}`,
+          Authorization: `Bearer ${BEDROCK_API_KEY()}`,
         },
         body: JSON.stringify({
           system: [{ text: systemPrompt }],
