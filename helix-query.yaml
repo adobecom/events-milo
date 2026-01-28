@@ -1,4 +1,4 @@
-version: 1.2
+version: 1.3
 
 indices:
   website: &website
@@ -409,4 +409,26 @@ indices:
     include:
       - '/vn_vi/events/**'
     target: /vn_vi/events/query-index.xlsx
+
+  # Lingo mapping indices for French locales
+  lingo-mapping-fr:
+    include:
+      - '/fr/events/**'
+    target: /fr/assets/lingo/query-index.json
+  lingo-mapping-ca_fr:
+    include:
+      - '/ca_fr/events/**'
+    target: /ca_fr/assets/lingo/query-index.json
+  lingo-mapping-be_fr:
+    include:
+      - '/be_fr/events/**'
+    target: /be_fr/assets/lingo/query-index.json
+  lingo-mapping-ch_fr:
+    include:
+      - '/ch_fr/events/**'
+    target: /ch_fr/assets/lingo/query-index.json
+  lingo-mapping-lu_fr:
+    include:
+      - '/lu_fr/events/**'
+    target: /lu_fr/assets/lingo/query-index.json
   
